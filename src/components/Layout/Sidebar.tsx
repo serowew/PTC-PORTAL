@@ -14,8 +14,8 @@ const studentLinks = [
 const adminLinks = [
   { label: " Dashboard", path: "/admin/dashboard" },
   { label: " Admissions", path: "/admin/Admissions" },
-  { label: " Students", path: "/admin/students" },
-  { label: " Announcements", path: "/admin/announcements" },
+  { label: " Students", path: "/admin/Students" },
+  { label: " Announcements", path: "/admin/Announcements" },
 ];
 
 export default function Sidebars() {

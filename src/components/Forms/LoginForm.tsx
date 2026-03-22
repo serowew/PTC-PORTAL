@@ -4,14 +4,14 @@ import { authService } from "../../services/auth.service";
 import styles from "../../styles/auth.module.css";
 
 export default function LoginForm() {
-  const [email, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const user = authService.login(email, password); // ✅ using service now
+    const user = authService.login(username, password); // ✅ using service now
 
     if (!user) {
       alert("Invalid credentials");
@@ -39,12 +39,12 @@ export default function LoginForm() {
 
         <form onSubmit={handleSubmit}>
           <div className={styles.inputgroup}>
-            <label>Email</label>
+            <label>Username</label>
             <input
-              type="email"
-              placeholder="r@ptc.edu.ph"
-              value={email}
-              onChange={(e) => setName(e.target.value)}
+              type="text"
+              placeholder="admin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
 

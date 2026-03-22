@@ -1,41 +1,19 @@
 export default function Footer() {
   return (
     <footer className="bg-dark text-light mt-auto">
-      <div className="container-fluid py-4">
-        <div className="row text-center text-md-start">
-          
-          {/* Portal Info */}
-          <div className="col-12 col-md-4 mb-3">
-            <h6 className="fw-bold">PTC Portal</h6>
-            <p className="small mb-0">
-              Online Admission, Scheduling, and Student Information System.
-            </p>
+      <div className="container-fluid py-1">
+        <div className="row text-center">
+          <div className="col-12 col-md-4">
+            <small>PTC Portal - Online Admission & Student System</small>
           </div>
-
-          {/* Quick Links */}
-          <div className="col-12 col-md-4 mb-3">
-            <h6 className="fw-bold">Quick Links</h6>
-            <ul className="list-unstyled small">
-              <li>Student Dashboard</li>
-              <li>Admin Panel</li>
-              <li>Contact Support</li>
-            </ul>
+          <div className="col-12 col-md-4">
+            <small>Quick Links: Dashboard | Admin | Support</small>
           </div>
-
-          {/* Contact */}
-          <div className="col-12 col-md-4 mb-3">
-            <h6 className="fw-bold">Contact</h6>
-            <p className="small mb-0">
-              Email: support@ptcportal.com <br />
-              Phone: +63 912 345 6789
-            </p>
+          <div className="col-12 col-md-4">
+            <small>Contact: support@ptcportal.com | +63 912 345 6789</small>
           </div>
-
         </div>
-
-        <hr className="border-secondary" />
-
-        <div className="text-center small">
+        <div className="text-center small mt-1">
           © {new Date().getFullYear()} PTC Portal. All rights reserved.
         </div>
       </div>
