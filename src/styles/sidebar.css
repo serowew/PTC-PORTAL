@@ -1,0 +1,262 @@
+/* Sidebar Styles */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #f8f9fa 0%, #f5f6fa 100%);
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  flex-shrink: 0;
+  border-right: 1px solid #e5e7eb;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo img {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.sidebar-logo h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.sidebar-content {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Solo Links */
+.solo-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: rgba(0, 0, 0, 0.7);
+  text-decoration: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-align: left;
+  position: relative;
+}
+
+.solo-link:hover {
+  background: rgba(10, 238, 10, 0.1);
+  color: #1a1a1a;
+}
+
+.solo-link.active {
+  background: var(--primary-green, rgb(10, 238, 10));
+  color: white;
+  font-weight: 600;
+}
+
+.solo-link .icon {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.solo-link .label {
+  flex: 1;
+}
+
+.solo-link .badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* Nav Group */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-align: left;
+  position: relative;
+}
+
+.group-btn:hover {
+  background: rgba(10, 238, 10, 0.1);
+  color: #1a1a1a;
+}
+
+.group-btn.open {
+  color: var(--primary-green, rgb(10, 238, 10));
+  background: rgba(10, 238, 10, 0.08);
+}
+
+.group-btn .icon {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.group-btn .label {
+  flex: 1;
+}
+
+.group-btn .badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* Chevron Icon */
+.chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.chevron.rotated {
+  transform: rotate(90deg);
+}
+
+/* Sub Items */
+.sub-items {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.22s ease;
+}
+
+.sub-items.open {
+  max-height: 600px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 40px;
+  background: none;
+  border: none;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-align: left;
+  position: relative;
+  margin: 2px 8px;
+}
+
+.nav-item:hover {
+  background: rgba(10, 238, 10, 0.08);
+  color: #1a1a1a;
+}
+
+.nav-item.active {
+  color: var(--primary-green, rgb(10, 238, 10));
+  font-weight: 500;
+  background: rgba(10, 238, 10, 0.12);
+  border-left: 3px solid var(--primary-green, rgb(10, 238, 10));
+  padding-left: 37px;
+}
+
+.nav-item .dot {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin: 0 -6px 0 0;
+}
+
+.nav-item .badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+}

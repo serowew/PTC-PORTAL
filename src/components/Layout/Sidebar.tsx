@@ -1,62 +1,112 @@
-import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { authService } from "../../services/auth.service";
 import logo from "../../assets/ptclogo.jpg";
+import { studentNavGroups, studentSoloLinks } from "../../config/studentNav";
+import { adminNavGroups } from "../../config/adminNav";
+import "../../styles/sidebar.css";
 
-const studentLinks = [
-  { label: "Dashboard", path: "/student/dashboard" },
-  { label: "My Admission", path: "/student/admission" },
-  { label: "Announcements", path: "/student/announcements" },
-  { label: "My Records", path: "/student/records" },
-  { label: "Schedule", path: "/student/schedule" },
-  { label: "Profile", path: "/student/profile" },
-];
+interface NavGroup {
+  id: string;
+  label: string;
+  icon: string | React.ReactNode;
+  badge?: number;
+  children: { label: string; path: string; badge?: number }[];
+}
 
-const facultyLinks = [
-  { label: "Dashboard", path: "/faculty/dashboard" },
-  // add more faculty links here as you build them out
-];
+interface SidebarProps {
+  groups?: NavGroup[];
+  soloLinks?: { label: string; path: string; badge?: number; icon: string | React.ReactNode }[];
+}
 
-const adminLinks = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Admissions", path: "/admin/Admissions" },
-  { label: "Students", path: "/admin/Students" },
-  { label: "Announcements", path: "/admin/Announcements" },
-];
+function ChevronIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={`chevron ${className}`}
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M6 2L12 8L6 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-// Map every role to the right link list
-const linksByRole = {
-  student: studentLinks,
-  faculty: facultyLinks,
-  admin: adminLinks,
-};
-
-export default function Sidebars() {
+export default function Sidebars({ groups, soloLinks }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const user = authService.getSession();
 
-  // If somehow there is no session, render nothing
+  const isStudent = user?.role === "student";
+  const navGroups = groups || (isStudent ? studentNavGroups : adminNavGroups);
+  const navSoloLinks = soloLinks || (isStudent ? studentSoloLinks : []);
+
+  const [openGroup, setOpenGroup] = useState<string | null>(() => {
+    return navGroups.find((g) =>
+      g.children.some((c) => location.pathname.startsWith(c.path))
+    )?.id ?? null;
+  });
+
+  // ✅ Fixed: was `!isStudent` which blocked admins entirely
   if (!user) return null;
 
-  const links = linksByRole[user.role] ?? [];
+  function toggle(id: string) {
+    setOpenGroup((prev) => (prev === id ? null : id));
+  }
+
+  function isActive(path: string) {
+    return location.pathname.startsWith(path);
+  }
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-logo">
-        <img src={logo} alt="PTC Logo" />
-        <h3>PTC</h3>
+    <nav className="sidebar">
+      <div className="sidebar-header">
+        <div className="sidebar-logo">
+          <img src={logo} alt="PTC Logo" />
+          <h3>PTC Portal</h3>
+        </div>
       </div>
-      <nav className="sidebar-nav">
-        {links.map((link) => (
-          <NavLink
+
+      <div className="sidebar-content">
+        {navSoloLinks.map((link) => (
+          <button
             key={link.path}
-            to={link.path}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active" : "sidebar-link"
-            }
+            className={`solo-link ${isActive(link.path) ? "active" : ""}`}
+            onClick={() => navigate(link.path)}
           >
-            {link.label}
-          </NavLink>
+            <span className="icon">{link.icon}</span>
+            <span className="label">{link.label}</span>
+          </button>
         ))}
-      </nav>
-    </div>
+
+        {navGroups.map((group) => (
+          <div key={group.id} className="nav-group">
+            <button
+              className={`group-btn ${openGroup === group.id ? "open" : ""}`}
+              onClick={() => toggle(group.id)}
+            >
+              <span className="icon">{group.icon}</span>
+              <span className="label">{group.label}</span>
+              <ChevronIcon className={openGroup === group.id ? "rotated" : ""} />
+            </button>
+
+            <div className={`sub-items ${openGroup === group.id ? "open" : ""}`}>
+              {group.children.map((child) => (
+                <button
+                  key={child.path}
+                  className={`nav-item ${isActive(child.path) ? "active" : ""}`}
+                  onClick={() => navigate(child.path)}
+                >
+                  <span className="dot" />
+                  {child.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </nav>
   );
 }

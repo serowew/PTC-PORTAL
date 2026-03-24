@@ -46,27 +46,7 @@ body {
 }
 
 /* SIDEBAR */
-.sidebar {
-  width: 240px;
-  background: #f5f6fa;
-  color: rgb(0, 0, 0);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 0;
-  flex-shrink: 0;
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 20px;
-}
-
-.sidebar-logo img {
-  width: 50px;
-  height: auto;
-}
+/* Sidebar styles are now in sidebar.css */
 
 .sidebar-nav {
   display: flex;
@@ -92,6 +72,106 @@ body {
   background: var(--primary-green);
   color: rgb(33, 233, 83);
   font-weight: 600;
+}
+
+/* DROPBAR STYLES */
+.dropbar {
+  background: #f5f6fa;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.dropbar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  height: 60px;
+}
+
+.dropbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropbar-logo img {
+  width: 40px;
+  height: auto;
+}
+
+.dropbar-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a1a1a;
+}
+
+.dropbar-toggle {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  color: #1a1a1a;
+  transition: 0.2s;
+}
+
+.dropbar-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+}
+
+.dropbar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 0;
+  animation: slideDown 0.3s ease;
+}
+
+.dropbar-link {
+  padding: 12px 20px;
+  color: rgba(0, 0, 0, 0.7);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.dropbar-link:hover {
+  background: rgb(10, 238, 10);
+  color: white;
+}
+
+.dropbar-link.active {
+  background: var(--primary-green);
+  color: rgb(33, 233, 83);
+  font-weight: 600;
+  border-left-color: rgb(10, 238, 10);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Show dropbar on mobile */
+@media (max-width: 768px) {
+  .dropbar {
+    display: flex;
+  }
+
+  .sidebar {
+    display: none;
+  }
 }
 
 /* MAIN AREA */
