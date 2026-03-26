@@ -160,7 +160,7 @@ body {
 /* CONTENT */
 .dashboard-content {
   flex: 1;
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
   background: #f5f6fa;
 }

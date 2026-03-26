@@ -1,8 +1,8 @@
 export default function Footer() {
   return (
-    <footer className="footer">
-      <div className="container py-5">
-        <div className="row gy-4">
+    <footer className="bg-dark text-light mt-auto footer">
+      <div className="container py-3">
+        <div className="row gy-1">
           {/* Portal Info */}
           <div className="col-md-4">
             <h5 className="footer-title">PTC Portal</h5>

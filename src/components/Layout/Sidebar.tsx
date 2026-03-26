@@ -17,10 +17,17 @@ const facultyLinks = [
 ];
 
 const adminLinks = [
+
+  { label: " Dashboard", path: "/admin/dashboard" },
+  { label: " Admissions", path: "/admin/Admissions" },
+  { label: " Students", path: "/admin/Students" },
+  { label: " Announcements", path: "/admin/Announcements" },
+
   { label: "Dashboard", path: "/admin/dashboard" },
   { label: "Admissions", path: "/admin/Admissions" },
   { label: "Students", path: "/admin/Students" },
   { label: "Announcements", path: "/admin/Announcements" },
+
 ];
 
 // Map every role to the right link list
