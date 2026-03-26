@@ -71,3 +71,53 @@ export default defineConfig([
   },
 ])
 ```
+
+-----------------------------------------------------------------------------------------------------
+HOW TO RUN 
+# PTC Portal
+
+## Requirements
+- Node.js
+- XAMPP (MySQL running)
+- Redis Cloud account
+- Ethereal email account
+
+## Setup
+
+### Backend
+1. cd server
+2. npm install
+3. Create .env file (see .env.example)
+4. node seed.js
+5. node server.js
+
+### Frontend
+1. cd frontend
+2. npm install
+3. npm run dev
+
+## Test accounts
+| Email | Password | Role |
+|-------|----------|------|
+| admin@ptc.edu.ph | 1234 | admin |
+| student@ptc.edu.ph | 5678 | student |
+| faculty@ptc.edu.ph | 9012 | faculty |
+
+## Note
+OTP emails use Ethereal (fake SMTP). Check terminal for preview URL after login.
+
+
+---------------------------------------------------------------------------------
+fOR PROTOTYPE USE THIS 
+(server/.env)
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=Testing_db
+
+REDIS_URL=redis://:yourpassword@your-redis-host:port (ganto dapat format di gagana kapag hindi ganyan)
+
+ETHEREAL_USER=your_ethereal_user
+ETHEREAL_PASS=your_ethereal_pass
+
+FRONTEND_URL=http://localhost:5173
