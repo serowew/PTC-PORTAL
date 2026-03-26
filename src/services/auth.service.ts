@@ -1,19 +1,6 @@
-// Fake users for now - replace with real API call later
-const USERS = [
-  { username: "admin@ptc.edu.ph", password: "1234", role: "admin" as const },
-  {
-    username: "student@ptc.edu.ph",
-    password: "5678",
-    role: "student" as const,
-  },
-  {
-    username: "faculty@ptc.edu.ph",
-    password: "9012",
-    role: "faculty" as const,
-  }, // ← added
-];
+const API_BASE_URL = "http://localhost:3000";
 
-export type UserRole = "admin" | "student" | "faculty"; // ← added faculty
+export type UserRole = "admin" | "student" | "faculty";
 
 export type User = {
   username: string;
@@ -21,12 +8,48 @@ export type User = {
 };
 
 export const authService = {
-  login(username: string, password: string): User | null {
-    const user = USERS.find(
-      (u) => u.username === username && u.password === password,
-    );
-    if (!user) return null;
-    return { username: user.username, role: user.role };
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ message: string } | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async verifyOtp(email: string, otp: string): Promise<User | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return { username: data.email, role: data.role };
+    } catch {
+      return null;
+    }
+  },
+
+  savePendingEmail(email: string): void {
+    sessionStorage.setItem("pending_email", email);
+  },
+
+  getPendingEmail(): string | null {
+    return sessionStorage.getItem("pending_email");
+  },
+
+  clearPendingEmail(): void {
+    sessionStorage.removeItem("pending_email");
   },
 
   saveSession(user: User): void {
@@ -40,5 +63,6 @@ export const authService = {
 
   logout(): void {
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("pending_email");
   },
 };

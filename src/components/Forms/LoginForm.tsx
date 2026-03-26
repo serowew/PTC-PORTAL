@@ -6,29 +6,26 @@ import styles from "../../styles/auth.module.css";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    const user = authService.login(email, password);
+    const result = await authService.login(email, password);
 
-    if (!user) {
-      alert("Invalid credentials");
+    setLoading(false);
+
+    if (!result) {
+      setError("Invalid email or password.");
       return;
     }
 
-    authService.saveSession(user);
-
-    // Route each role to their own dashboard
-    if (user.role === "admin") {
-      navigate("/admin/dashboard");
-    } else if (user.role === "faculty") {
-      // ← added
-      navigate("/faculty/dashboard");
-    } else {
-      navigate("/student/dashboard");
-    }
+    authService.savePendingEmail(email);
+    navigate("/otp");
   }
 
   return (
@@ -49,6 +46,7 @@ export default function LoginForm() {
               placeholder="r@ptc.edu.ph"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -59,10 +57,19 @@ export default function LoginForm() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
 
-          <button type="submit">Login</button>
+          {error && (
+            <p style={{ color: "red", fontSize: "13px", marginBottom: "8px" }}>
+              {error}
+            </p>
+          )}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Verifying..." : "Login"}
+          </button>
         </form>
 
         <div className={styles.authlinks}>

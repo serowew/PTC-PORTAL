@@ -4,6 +4,7 @@ import { authService } from "../services/auth.service";
 import Home from "../pages/auth/Index";
 import LoginAuth from "../pages/auth/Login";
 import RegisterAuth from "../pages/auth/Register";
+import OtpAuth from "../pages/auth/Otp";
 // Student pages
 import StudentDashboard from "../pages/student/Dashboard";
 import StudentProfile from "../pages/student/Profile";
@@ -56,6 +57,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginAuth />} />
       <Route path="/register" element={<RegisterAuth />} />
+      <Route path="/otp" element={<OtpAuth />} />
 
       {/* Student — only role === "student" may enter */}
       <Route
