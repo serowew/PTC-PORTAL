@@ -1,5 +1,5 @@
-import DashboardLayout from "../../components/Layout/DashboardLayout";
-import { authService } from "../../services/auth.service";
+import DashboardLayout from "../../../components/Layout/DashboardLayout";
+import { authService } from "../../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 
 export default function StudentSchedule() {

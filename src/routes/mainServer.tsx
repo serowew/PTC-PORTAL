@@ -8,10 +8,10 @@ import OtpAuth from "../pages/auth/Otp";
 // Student pages
 import StudentDashboard from "../pages/student/Dashboard";
 import StudentProfile from "../pages/student/Profile";
-import StudentSchedule from "../pages/student/Schedule";
+import StudentSchedule from "../pages/student/AcademicRecord/Schedule";
 import StudentAdmission from "../pages/student/Admission";
 import StudentAnnouncement from "../pages/student/Announcement";
-import StudentRecord from "../pages/student/StudentRecord";
+import StudentRecord from "../pages/student/AcademicRecord/StudentRecord";
 // Faculty pages
 import FacultyDashboard from "../pages/faculty/FacultyDashboard";
 // Admin pages
