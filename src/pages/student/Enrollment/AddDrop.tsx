@@ -2,7 +2,7 @@ import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 
-export default function SubmitRequirements() {
+export default function AddDropSubjects() {
   const navigate = useNavigate();
   const user = authService.getSession();
 
@@ -13,8 +13,8 @@ export default function SubmitRequirements() {
 
   return (
     <DashboardLayout>
-      <div className="submit-requirements">
-        <p>This is your requirements submission page.</p>
+      <div className="add-drop-subjects">
+        <p>This is the add / drop subjects page.</p>
       </div>
     </DashboardLayout>
   );

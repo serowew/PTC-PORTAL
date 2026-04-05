@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { authService } from "../../services/auth.service";
 import logo from "../../assets/ptclogo.jpg";
 import { studentNavGroups, studentSoloLinks } from "../../config/studentNav";
-import { adminNavGroups } from "../../config/adminNav";
+import { adminNavGroups, adminSoloLinks } from "../../config/adminNav";
+import { facultyNavGroups, facultySoloLinks } from "../../config/facultyNav";
 import "../../styles/sidebar.css";
 
 interface NavGroup {
@@ -16,7 +17,12 @@ interface NavGroup {
 
 interface SidebarProps {
   groups?: NavGroup[];
-  soloLinks?: { label: string; path: string; badge?: number; icon: string | React.ReactNode }[];
+  soloLinks?: {
+    label: string;
+    path: string;
+    badge?: number;
+    icon: string | React.ReactNode;
+  }[];
 }
 
 function ChevronIcon({ className = "" }: { className?: string }) {
@@ -29,9 +35,27 @@ function ChevronIcon({ className = "" }: { className?: string }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M6 2L12 8L6 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M6 2L12 8L6 14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
+}
+
+function getNavByRole(role: string) {
+  switch (role) {
+    case "student":
+      return { groups: studentNavGroups, soloLinks: studentSoloLinks };
+    case "faculty":
+      return { groups: facultyNavGroups, soloLinks: facultySoloLinks };
+    case "admin":
+      return { groups: adminNavGroups, soloLinks: adminSoloLinks };
+    default:
+      return { groups: [], soloLinks: [] };
+  }
 }
 
 export default function Sidebars({ groups, soloLinks }: SidebarProps) {
@@ -39,17 +63,21 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
   const navigate = useNavigate();
   const user = authService.getSession();
 
-  const isStudent = user?.role === "student";
-  const navGroups = groups || (isStudent ? studentNavGroups : adminNavGroups);
-  const navSoloLinks = soloLinks || (isStudent ? studentSoloLinks : []);
+  // ✅ Derive nav before hooks — safe with optional chaining if user is null
+  const roleNav = getNavByRole(user?.role ?? "");
+  const navGroups = groups ?? roleNav.groups;
+  const navSoloLinks = soloLinks ?? roleNav.soloLinks;
 
+  // ✅ ALL hooks must be called before any early return
   const [openGroup, setOpenGroup] = useState<string | null>(() => {
-    return navGroups.find((g) =>
-      g.children.some((c) => location.pathname.startsWith(c.path))
-    )?.id ?? null;
+    return (
+      navGroups.find((g) =>
+        g.children.some((c) => location.pathname.startsWith(c.path)),
+      )?.id ?? null
+    );
   });
 
-  // ✅ Fixed: was `!isStudent` which blocked admins entirely
+  // ✅ Early return AFTER all hooks
   if (!user) return null;
 
   function toggle(id: string) {
@@ -70,6 +98,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
       </div>
 
       <div className="sidebar-content">
+        {/* ── Solo links (Dashboard, Profile, etc.) ── */}
         {navSoloLinks.map((link) => (
           <button
             key={link.path}
@@ -81,6 +110,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
           </button>
         ))}
 
+        {/* ── Collapsible nav groups ── */}
         {navGroups.map((group) => (
           <div key={group.id} className="nav-group">
             <button
@@ -89,10 +119,14 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
             >
               <span className="icon">{group.icon}</span>
               <span className="label">{group.label}</span>
-              <ChevronIcon className={openGroup === group.id ? "rotated" : ""} />
+              <ChevronIcon
+                className={openGroup === group.id ? "rotated" : ""}
+              />
             </button>
 
-            <div className={`sub-items ${openGroup === group.id ? "open" : ""}`}>
+            <div
+              className={`sub-items ${openGroup === group.id ? "open" : ""}`}
+            >
               {group.children.map((child) => (
                 <button
                   key={child.path}

@@ -1,5 +1,5 @@
-import DashboardLayout from "../../components/Layout/DashboardLayout";
-import { authService } from "../../services/auth.service";
+import DashboardLayout from "../../../components/Layout/DashboardLayout";
+import { authService } from "../../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 
 export default function ManageStudents() {
@@ -13,8 +13,9 @@ export default function ManageStudents() {
 
   return (
     <DashboardLayout>
-      <div className="admin-Students">
-        <p>student for admin.</p>
+      <div className="admin-manage-students">
+        <h1>Add / Edit Students</h1>
+        <p>This page is under construction.</p>
       </div>
     </DashboardLayout>
   );

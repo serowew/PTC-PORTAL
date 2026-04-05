@@ -1,34 +1,70 @@
 export const studentNavGroups = [
   {
-    id: 'academic',
-    label: 'Academic Records',
-    icon: '📚',
+    id: "academic",
+    label: "Academic Records",
+    icon: "📚",
     children: [
-      { label: 'Grades & Results', path: '/student/records' },
-      { label: 'Schedule', path: '/student/schedule' },
-    ]
+      { label: "Grades & Results", path: "/student/records" },
+      { label: "Transcript", path: "/student/transcript" },
+      { label: "Course History", path: "/student/course-history" },
+      { label: "Schedule", path: "/student/schedule" },
+    ],
   },
   {
-    id: 'admission',
-    label: 'Admissions',
-    icon: '📋',
+    id: "courses",
+    label: "Course Management",
+    icon: "📖",
     children: [
-      { label: 'My Admission', path: '/student/admission' },
-      { label: 'Status', path: '/student/admission' },
-    ]
+      { label: "View Subjects", path: "/student/courses/subjects" },
+      { label: "Assignments", path: "/student/courses/assignments" },
+      { label: "Lecture Notes", path: "/student/courses/notes" },
+      { label: "Syllabus", path: "/student/courses/syllabus" },
+      { label: "Submit Requirements", path: "/student/courses/submissions" },
+    ],
   },
   {
-    id: 'announcements',
-    label: 'Announcements',
-    icon: '📢',
+    id: "enrollment",
+    label: "Enrollment System",
+    icon: "📋",
     children: [
-      { label: 'View all', path: '/student/announcements' },
-      { label: 'Important', path: '/student/announcements' },
-    ]
-  }
+      { label: "Available Courses", path: "/student/enrollment/courses" },
+      { label: "Add / Drop Subjects", path: "/student/enrollment/add-drop" },
+      { label: "Submit Enrollment", path: "/student/enrollment/submit" },
+      { label: "Enrollment Status", path: "/student/enrollment/status" },
+    ],
+  },
+  {
+    id: "financial",
+    label: "Financial",
+    icon: "💰",
+    children: [
+      { label: "Tuition Fees", path: "/student/financial/tuition" },
+      { label: "Payment History", path: "/student/financial/history" },
+      { label: "Balance Inquiry", path: "/student/financial/balance" },
+      { label: "Online Payment", path: "/student/financial/pay" },
+    ],
+  },
+  {
+    id: "admission",
+    label: "Admissions",
+    icon: "🎓",
+    children: [
+      { label: "My Admission", path: "/student/admission" },
+      { label: "Status", path: "/student/admission/status" },
+    ],
+  },
+  {
+    id: "announcements",
+    label: "Announcements",
+    icon: "📢",
+    children: [
+      { label: "View All", path: "/student/announcements" },
+      { label: "Important", path: "/student/announcements/important" },
+    ],
+  },
 ];
 
 export const studentSoloLinks = [
-  { label: 'Profile', path: '/student/profile', icon: '👤' },
-  { label: 'Dashboard', path: '/student/dashboard', icon: '🏠' }
+  { label: "Dashboard", path: "/student/dashboard", icon: "🏠" },
+  { label: "Profile", path: "/student/profile", icon: "👤" },
 ];

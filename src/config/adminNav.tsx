@@ -1,38 +1,53 @@
 export const adminNavGroups = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: '📊',
+    id: "student-management",
+    label: "Student Management",
+    icon: "👥",
     children: [
-      { label: 'Overview', path: '/admin/dashboard' },
-      { label: 'Analytics', path: '/admin/dashboard' },
-    ]
+      { label: "Add / Edit Students", path: "/admin/students/manage" },
+      { label: "Records Management", path: "/admin/students/records" },
+    ],
   },
   {
-    id: 'admissions',
-    label: 'Admissions',
-    icon: '📝',
+    id: "enrollment-management",
+    label: "Enrollment Management",
+    icon: "📋",
     children: [
-      { label: 'Manage Admissions', path: '/admin/Admissions' },
-      { label: 'Applications', path: '/admin/Admissions' },
-    ]
+      { label: "Approve Enrollment", path: "/admin/enrollment/approve" },
+      { label: "Class Scheduling", path: "/admin/enrollment/scheduling" },
+    ],
   },
   {
-    id: 'students',
-    label: 'Students',
-    icon: '👥',
+    id: "financial-management",
+    label: "Financial Management",
+    icon: "💰",
     children: [
-      { label: 'Manage Students', path: '/admin/Students' },
-      { label: 'Student List', path: '/admin/Students' },
-    ]
+      { label: "Fees Setup", path: "/admin/financial/fees" },
+      { label: "Payment Monitoring", path: "/admin/financial/payments" },
+    ],
   },
   {
-    id: 'announcements',
-    label: 'Announcements',
-    icon: '📢',
+    id: "system-management",
+    label: "System Management",
+    icon: "⚙️",
     children: [
-      { label: 'Manage Announcements', path: '/admin/Announcements' },
-      { label: 'Post New', path: '/admin/Announcements' },
-    ]
-  }
+      { label: "User Accounts", path: "/admin/system/accounts" },
+      { label: "Roles & Permissions", path: "/admin/system/roles" },
+      { label: "System Settings", path: "/admin/system/settings" },
+    ],
+  },
+  {
+    id: "reports",
+    label: "Reports & Analytics",
+    icon: "📊",
+    children: [
+      { label: "Student Reports", path: "/admin/reports/students" },
+      { label: "Financial Reports", path: "/admin/reports/financial" },
+      { label: "Usage Analytics", path: "/admin/reports/analytics" },
+    ],
+  },
+];
+
+export const adminSoloLinks = [
+  { label: "Dashboard", path: "/admin/dashboard", icon: "🏠" },
 ];

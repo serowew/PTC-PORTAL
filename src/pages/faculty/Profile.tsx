@@ -2,19 +2,20 @@ import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 
-export default function ManageAdmissions() {
+export default function FacultyProfile() {
   const navigate = useNavigate();
   const user = authService.getSession();
 
-  if (!user || user.role !== "admin") {
+  if (!user || user.role !== "faculty") {
     navigate("/login");
     return null;
   }
 
   return (
     <DashboardLayout>
-      <div className="admin-Admissions">
-        <p>This is your admin dashboard.</p>
+      <div className="faculty-profile">
+        <h1>My Profile</h1>
+        <p>This page is under construction.</p>
       </div>
     </DashboardLayout>
   );
