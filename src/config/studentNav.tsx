@@ -2,7 +2,7 @@ export const studentNavGroups = [
   {
     id: "academic",
     label: "Academic Records",
-    icon: "📚",
+    icon: "",
     children: [
       { label: "Grades & Results", path: "/student/records" },
       { label: "Transcript", path: "/student/transcript" },
@@ -13,7 +13,7 @@ export const studentNavGroups = [
   {
     id: "courses",
     label: "Course Management",
-    icon: "📖",
+    icon: "",
     children: [
       { label: "View Subjects", path: "/student/courses/subjects" },
       { label: "Assignments", path: "/student/courses/assignments" },
@@ -25,7 +25,7 @@ export const studentNavGroups = [
   {
     id: "enrollment",
     label: "Enrollment System",
-    icon: "📋",
+    icon: "",
     children: [
       { label: "Available Courses", path: "/student/enrollment/courses" },
       { label: "Add / Drop Subjects", path: "/student/enrollment/add-drop" },
@@ -36,7 +36,7 @@ export const studentNavGroups = [
   {
     id: "financial",
     label: "Financial",
-    icon: "💰",
+    icon: "",
     children: [
       { label: "Tuition Fees", path: "/student/financial/tuition" },
       { label: "Payment History", path: "/student/financial/history" },
@@ -44,27 +44,8 @@ export const studentNavGroups = [
       { label: "Online Payment", path: "/student/financial/pay" },
     ],
   },
-  {
-    id: "admission",
-    label: "Admissions",
-    icon: "🎓",
-    children: [
-      { label: "My Admission", path: "/student/admission" },
-      { label: "Status", path: "/student/admission/status" },
-    ],
-  },
-  {
-    id: "announcements",
-    label: "Announcements",
-    icon: "📢",
-    children: [
-      { label: "View All", path: "/student/announcements" },
-      { label: "Important", path: "/student/announcements/important" },
-    ],
-  },
 ];
-
 export const studentSoloLinks = [
-  { label: "Dashboard", path: "/student/dashboard", icon: "🏠" },
-  { label: "Profile", path: "/student/profile", icon: "👤" },
+  { label: "Dashboard", path: "/student/dashboard", icon: "" },
+  { label: "Profile", path: "/student/profile", icon: "" },
 ];

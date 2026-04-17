@@ -2,7 +2,7 @@ export const adminNavGroups = [
   {
     id: "student-management",
     label: "Student Management",
-    icon: "👥",
+    icon: "",
     children: [
       { label: "Add / Edit Students", path: "/admin/students/manage" },
       { label: "Records Management", path: "/admin/students/records" },
@@ -11,7 +11,7 @@ export const adminNavGroups = [
   {
     id: "enrollment-management",
     label: "Enrollment Management",
-    icon: "📋",
+    icon: "",
     children: [
       { label: "Approve Enrollment", path: "/admin/enrollment/approve" },
       { label: "Class Scheduling", path: "/admin/enrollment/scheduling" },
@@ -20,7 +20,7 @@ export const adminNavGroups = [
   {
     id: "financial-management",
     label: "Financial Management",
-    icon: "💰",
+    icon: "",
     children: [
       { label: "Fees Setup", path: "/admin/financial/fees" },
       { label: "Payment Monitoring", path: "/admin/financial/payments" },
@@ -29,7 +29,7 @@ export const adminNavGroups = [
   {
     id: "system-management",
     label: "System Management",
-    icon: "⚙️",
+    icon: "",
     children: [
       { label: "User Accounts", path: "/admin/system/accounts" },
       { label: "Roles & Permissions", path: "/admin/system/roles" },
@@ -39,7 +39,7 @@ export const adminNavGroups = [
   {
     id: "reports",
     label: "Reports & Analytics",
-    icon: "📊",
+    icon: "",
     children: [
       { label: "Student Reports", path: "/admin/reports/students" },
       { label: "Financial Reports", path: "/admin/reports/financial" },
@@ -49,5 +49,5 @@ export const adminNavGroups = [
 ];
 
 export const adminSoloLinks = [
-  { label: "Dashboard", path: "/admin/dashboard", icon: "🏠" },
+  { label: "Dashboard", path: "/admin/dashboard", icon: "" },
 ];

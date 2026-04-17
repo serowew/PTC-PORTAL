@@ -2,7 +2,7 @@ export const facultyNavGroups = [
   {
     id: "classes",
     label: "Manage Classes",
-    icon: "🏫",
+    icon: "",
     children: [
       { label: "My Classes", path: "/faculty/classes" },
       { label: "Class Schedule", path: "/faculty/classes/schedule" },
@@ -12,7 +12,7 @@ export const facultyNavGroups = [
   {
     id: "materials",
     label: "Upload Materials",
-    icon: "📂",
+    icon: "",
     children: [
       { label: "Lecture Notes", path: "/faculty/materials/notes" },
       { label: "Syllabus", path: "/faculty/materials/syllabus" },
@@ -21,7 +21,7 @@ export const facultyNavGroups = [
   {
     id: "grades",
     label: "Post Grades",
-    icon: "📝",
+    icon: "",
     children: [
       { label: "Enter Grades", path: "/faculty/grades/enter" },
       { label: "Grade Summary", path: "/faculty/grades/summary" },
@@ -31,7 +31,7 @@ export const facultyNavGroups = [
   {
     id: "attendance",
     label: "Attendance",
-    icon: "✅",
+    icon: "",
     children: [
       { label: "Take Attendance", path: "/faculty/attendance/take" },
       { label: "Attendance Records", path: "/faculty/attendance/records" },
@@ -41,7 +41,7 @@ export const facultyNavGroups = [
   {
     id: "communication",
     label: "Communication",
-    icon: "💬",
+    icon: "",
     children: [
       { label: "Messages", path: "/faculty/communication/messages" },
       { label: "Announcements", path: "/faculty/communication/announcements" },
@@ -51,6 +51,6 @@ export const facultyNavGroups = [
 ];
 
 export const facultySoloLinks = [
-  { label: "Dashboard", path: "/faculty/dashboard", icon: "🏠" },
-  { label: "Profile", path: "/faculty/profile", icon: "👤" },
+  { label: "Dashboard", path: "/faculty/dashboard", icon: "" },
+  { label: "Profile", path: "/faculty/profile", icon: "" },
 ];

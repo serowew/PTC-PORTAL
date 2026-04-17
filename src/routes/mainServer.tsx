@@ -10,8 +10,6 @@ import OtpAuth from "../pages/auth/Otp";
 import StudentDashboard from "../pages/student/Dashboard";
 import StudentProfile from "../pages/student/Profile";
 import StudentSchedule from "../pages/student/AcademicRecord/Schedule";
-import StudentAdmission from "../pages/student/Admission";
-import StudentAnnouncement from "../pages/student/Announcement";
 import StudentRecord from "../pages/student/AcademicRecord/StudentRecord";
 
 // Student pages — Academic Records
@@ -36,10 +34,6 @@ import TuitionFees from "../pages/student/Financial/Tuitionfees";
 import PaymentHistory from "../pages/student/Financial/PaymentHistory";
 import BalanceInquiry from "../pages/student/Financial/Balance";
 import OnlinePayment from "../pages/student/Financial/OnlinePayment";
-
-// Student pages — Admission & Announcements (sub-routes)
-import AdmissionStatus from "../pages/student/Admission";
-import ImportantAnnouncements from "../pages/student/Announcement";
 
 // Faculty pages
 import FacultyDashboard from "../pages/faculty/FacultyDashboard";
@@ -207,24 +201,6 @@ export default function AppRoutes() {
       <Route
         path="/student/financial/pay"
         element={<StudentRoute element={<OnlinePayment />} />}
-      />
-      {/* ── Student: Admissions ── */}
-      <Route
-        path="/student/admission"
-        element={<StudentRoute element={<StudentAdmission />} />}
-      />
-      <Route
-        path="/student/admission/status"
-        element={<StudentRoute element={<AdmissionStatus />} />}
-      />
-      {/* ── Student: Announcements ── */}
-      <Route
-        path="/student/announcements"
-        element={<StudentRoute element={<StudentAnnouncement />} />}
-      />
-      <Route
-        path="/student/announcements/important"
-        element={<StudentRoute element={<ImportantAnnouncements />} />}
       />
       {/* ── Faculty ── */}
       <Route
