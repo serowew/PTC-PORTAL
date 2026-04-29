@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 
 const db = await mysql.createConnection({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
@@ -18,11 +19,13 @@ await db.execute(`
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
 `);
+await db.execute("DELETE FROM users");
+console.log("Cleared existing users.");
 
 const users = [
-  { email: "admin@ptc.edu.ph", password: "1234", role: "admin" },
-  { email: "student@ptc.edu.ph", password: "5678", role: "student" },
-  { email: "faculty@ptc.edu.ph", password: "9012", role: "faculty" },
+  { email: "admin@ptc.edu.ph", password: "12345", role: "admin" },
+  { email: "student@ptc.edu.ph", password: "12345", role: "student" },
+  { email: "faculty@ptc.edu.ph", password: "12345", role: "faculty" },
 ];
 
 for (const u of users) {
