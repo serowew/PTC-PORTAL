@@ -10,9 +10,14 @@ export default function DashboardLayout({ children }: Props) {
   return (
     <div className="dashboard-wrapper">
       <Sidebars />
+
       <div className="dashboard-main">
-        <Header />
+        <div className="header-container">
+          <Header />
+        </div>
+
         <div className="dashboard-content">{children}</div>
+
         <Footer />
       </div>
     </div>

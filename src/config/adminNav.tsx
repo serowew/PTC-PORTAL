@@ -4,10 +4,47 @@ export const adminNavGroups = [
     label: "Student Management",
     icon: "",
     children: [
-      { label: "Add / Edit Students", path: "/admin/students/manage" },
-      { label: "Records Management", path: "/admin/students/records" },
+      {
+        id: "student-management-modify",
+        label: "Modify Student",
+        children: [
+          {
+            id: "student-management-modify-edit",
+            label: "Edit",
+            children: [
+              { label: "sample", path: "/admin/students/modify/edit/sample-1" },
+              { label: "sample", path: "/admin/students/modify/edit/sample-2" },
+            ],
+          },
+          {
+            id: "student-management-modify-delete",
+            label: "Delete",
+            children: [
+              { label: "sample", path: "/admin/students/modify/delete/sample-1" },
+              { label: "sample", path: "/admin/students/modify/delete/sample-2" },
+            ],
+          },
+
+          {
+            id: "student-management-modify-add",
+            label: "Add",
+            children: [
+              { label: "sample", path: "/admin/students/modify/add/sample-1" },
+              { label: "sample", path: "/admin/students/modify/add/sample-2" },
+            ],
+          },
+
+
+        ],
+      },
+
+      { id: "student-management-list",
+        label: "Student List", path: "/admin/students/list",
+      },
     ],
   },
+
+
   {
     id: "enrollment-management",
     label: "Enrollment Management",

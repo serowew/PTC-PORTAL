@@ -66,6 +66,7 @@
   transition: all 0.2s ease;
   text-align: left;
   position: relative;
+  width: 100%;
 }
 
 .solo-link:hover {
@@ -122,6 +123,7 @@
   transition: all 0.2s ease;
   text-align: left;
   position: relative;
+  width: 100%;
 }
 
 .group-btn:hover {
@@ -129,6 +131,8 @@
   color: #1a1a1a;
 }
 
+/* A folder that's currently open — this same row is the back button:
+   clicking it again pops back up one level. */
 .group-btn.open {
   color: var(--primary-green, rgb(10, 238, 10));
   background: rgba(10, 238, 10, 0.08);
@@ -161,21 +165,40 @@
   flex-shrink: 0;
   transition: transform 0.2s ease;
   color: rgba(0, 0, 0, 0.5);
+  margin-left: auto;
 }
 
 .chevron.rotated {
   transform: rotate(90deg);
 }
 
-/* Sub Items */
+/* Sub Items
+   Previously this used max-height:0 / max-height.open to animate an
+   accordion. That's no longer how this opens/closes — a folder's children
+   now mount only while that folder is selected, so there's nothing to
+   collapse. Kept as a light fade-in on mount instead, so drilling into a
+   folder still feels smooth rather than an abrupt swap. */
 .sub-items {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.22s ease;
+  display: flex;
+  flex-direction: column;
+  animation: sidebarLevelIn 0.15s ease;
 }
 
-.sub-items.open {
-  max-height: 600px;
+@keyframes sidebarLevelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sub-items {
+    animation: none;
+  }
 }
 
 .nav-item {
@@ -189,10 +212,11 @@
   font-size: 0.9rem;
   cursor: pointer;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   text-align: left;
   position: relative;
   margin: 2px 8px;
+  width: calc(100% - 16px);
 }
 
 .nav-item:hover {
@@ -205,7 +229,15 @@
   font-weight: 500;
   background: rgba(10, 238, 10, 0.12);
   border-left: 3px solid var(--primary-green, rgb(10, 238, 10));
-  padding-left: 37px;
+}
+
+/* A nested folder (e.g. BSIT under Courses) that's currently open — the
+   deeper-level equivalent of .group-btn.open. Also acts as its own back
+   button when clicked again. */
+.nav-item.folder-open {
+  color: var(--primary-green, rgb(10, 238, 10));
+  font-weight: 600;
+  background: rgba(10, 238, 10, 0.08);
 }
 
 .nav-item .dot {
