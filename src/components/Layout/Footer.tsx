@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="bg-dark text-light mt-auto footer">
-      <div className="container py-3">
+      <div className="container py-0.1">
         <div className="row gy-1">
           {/* Portal Info */}
           <div className="col-md-4">
