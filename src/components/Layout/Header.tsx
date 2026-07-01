@@ -13,7 +13,7 @@ export default function Header() {
   return (
     <header className="app-header">
       <div className="header-left">
-        <h2 className="logo">PTC Portal</h2>
+        <h2 className="logo"></h2>
       </div>
 
       <div className="header-right">
