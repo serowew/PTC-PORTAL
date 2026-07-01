@@ -14,7 +14,7 @@ export default function ManageStudents() {
   return (
     <DashboardLayout>
       <div className="admin-manage-students">
-        <h1>Add / Edit Students</h1>
+        <h1>Student List</h1>
         <p>This page is under construction.</p>
       </div>
     </DashboardLayout>

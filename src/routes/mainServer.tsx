@@ -58,6 +58,7 @@ import SendNotice from "../pages/faculty/Communication/SendNotice";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import ManageStudentsNew from "../pages/admin/Students/ManageStudents";
 import RecordsManagement from "../pages/admin/Students/Recordmanagement";
+import AddEditDrop from "../pages/admin/Students/AddEditDrop";
 // ── Admin: Enrollment Management ──
 import ApproveEnrollment from "../pages/admin/Enrollment/ApproveEnrollment";
 import ClassScheduling from "../pages/admin/Enrollment/ClassScheduling";
@@ -299,6 +300,10 @@ export default function AppRoutes() {
       <Route
         path="/admin/students/records"
         element={<AdminRoute element={<RecordsManagement />} />}
+      />
+       <Route
+        path="/admin/students/addeditdrop"
+        element={<AdminRoute element={<AddEditDrop />} />}
       />
       {/* ── Admin: Enrollment Management ── */}
       <Route
