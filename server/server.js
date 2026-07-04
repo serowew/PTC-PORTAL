@@ -22,19 +22,9 @@ const db = await mysql.createConnection({
 });
 console.log("MySQL connected");
 
-// ── Redis ─────────────────────────────────────────────────────
-const redis = createClient({
-  username: "default",
-  password: "nOAslzeA1PonVzzcU8yY6UVlcYB8KBnb",
-  socket: {
-    host: "redis-10754.c299.asia-northeast1-1.gce.cloud.redislabs.com",
-    port: 10754,
-  },
-});
-
-redis.on("error", (err) => console.log("Redis Client Error", err));
-await redis.connect();
-console.log("Redis connected");
+// ── Redis (temporarily disabled while developing User Management) ──
+let redis = null;
+console.log("Redis temporarily disabled");
 
 // ── Nodemailer ────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -131,4 +121,75 @@ app.post("/auth/verify-otp", async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log("Backend running on http://localhost:3000"));
+
+
+// ── GET ALL USERS ─────────────────────────────────────────────
+app.get("/users", async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      "SELECT id, full_name, email, role FROM users ORDER BY id DESC"
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch users." });
+  }
+});
+
+// ── ADD USER ──────────────────────────────────────────────────
+app.post("/users", async (req, res) => {
+  const { full_name, email, role } = req.body;
+
+  try {
+    await db.execute(
+      "INSERT INTO users (full_name, email, role) VALUES (?, ?, ?)",
+      [full_name, email, role]
+    );
+
+    res.json({ message: "User added successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add user." });
+  }
+});
+
+// ── UPDATE USER ───────────────────────────────────────────────
+app.put("/users/:id", async (req, res) => {
+  const { id } = req.params;
+  const { full_name, email, role } = req.body;
+
+  try {
+    await db.execute(
+      "UPDATE users SET full_name=?, email=?, role=? WHERE id=?",
+      [full_name, email, role, id]
+    );
+
+    res.json({ message: "User updated." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update user." });
+  }
+});
+
+// ── DELETE USER ───────────────────────────────────────────────
+app.delete("/users/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db.execute("DELETE FROM users WHERE id=?", [id]);
+
+    res.json({ message: "User deleted." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete user." });
+  }
+});
+app.get("/test", (req, res) => {
+  res.send("Backend is updated!");
+});
+
+// ── START SERVER ──────────────────────────────────────────────
+app.listen(3000, () => {
+  console.log("Backend running on http://localhost:3000");
+});
