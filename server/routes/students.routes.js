@@ -2,9 +2,45 @@
 
 import express from "express";
 import bcrypt from "bcrypt";
+import fs from "fs/promises";
+import path from "path";
+import multer from "multer";
 import db from "../db.js";
 
 const router = express.Router();
+
+const studentPhotoStorage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const studentId = req.params.studentId || "unknown";
+    const uploadDir = path.join(process.cwd(), "uploads", "students", studentId);
+
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error, "");
+    }
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage: studentPhotoStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp/i;
+    if (!allowedTypes.test(file.mimetype)) {
+      return cb(new Error("Only JPG, JPEG, PNG, and WEBP images are allowed."));
+    }
+
+    cb(null, true);
+  },
+});
 
 // =====================================================
 // SHARED STUDENT SELECT
@@ -93,6 +129,73 @@ LEFT JOIN student_addresses addr
 ON addr.student_id = s.student_id
 
 `;
+
+// =====================================================
+// STUDENT PROFILE PHOTO
+// =====================================================
+
+router.post("/:studentId/photo", upload.single("photo"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file was uploaded.",
+      });
+    }
+
+    const studentId = req.params.studentId;
+    const uploadDir = path.join(process.cwd(), "uploads", "students", studentId);
+    const existingFiles = await fs.readdir(uploadDir).catch(() => []);
+
+    await Promise.all(
+      existingFiles.map((fileName) =>
+        fs.unlink(path.join(uploadDir, fileName)).catch(() => undefined),
+      ),
+    );
+
+    const photoUrl = `${req.protocol}://${req.get("host")}/uploads/students/${studentId}/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      message: "Profile picture uploaded successfully.",
+      url: photoUrl,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload profile picture.",
+    });
+  }
+});
+
+router.delete("/:studentId/photo", async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const uploadDir = path.join(process.cwd(), "uploads", "students", studentId);
+
+    const existingFiles = await fs.readdir(uploadDir).catch(() => []);
+
+    await Promise.all(
+      existingFiles.map((fileName) =>
+        fs.unlink(path.join(uploadDir, fileName)).catch(() => undefined),
+      ),
+    );
+
+    res.json({
+      success: true,
+      message: "Profile picture removed successfully.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to remove profile picture.",
+    });
+  }
+});
 
 // =====================================================
 // GET ALL STUDENTS
