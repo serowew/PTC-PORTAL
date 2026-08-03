@@ -42,6 +42,30 @@ const upload = multer({
   },
 });
 
+const resolveStudentId = async (studentIdentifier) => {
+  const normalized = String(studentIdentifier ?? "").trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const numericIdentifier = Number(normalized);
+
+  const [rows] = await db.execute(
+    `
+      SELECT student_id AS studentId
+      FROM students
+      WHERE student_id = ?
+         OR student_number = ?
+         OR user_id = ?
+      LIMIT 1
+    `,
+    [normalized, normalized, Number.isNaN(numericIdentifier) ? null : numericIdentifier],
+  );
+
+  return rows[0]?.studentId ?? null;
+};
+
 // =====================================================
 // SHARED STUDENT SELECT
 // =====================================================
@@ -154,6 +178,26 @@ router.post("/:studentId/photo", upload.single("photo"), async (req, res) => {
     );
 
     const photoUrl = `${req.protocol}://${req.get("host")}/uploads/students/${studentId}/${req.file.filename}`;
+    const resolvedStudentId = await resolveStudentId(studentId);
+
+    if (resolvedStudentId) {
+      const [profileRows] = await db.execute(
+        `SELECT profile_id AS profileId FROM student_profiles WHERE student_id = ? LIMIT 1`,
+        [resolvedStudentId],
+      );
+
+      if (profileRows.length) {
+        await db.execute(
+          `UPDATE student_profiles SET photo = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?`,
+          [photoUrl, profileRows[0].profileId],
+        );
+      } else {
+        await db.execute(
+          `INSERT INTO student_profiles (student_id, photo, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [resolvedStudentId, photoUrl],
+        );
+      }
+    }
 
     res.json({
       success: true,
@@ -182,6 +226,22 @@ router.delete("/:studentId/photo", async (req, res) => {
         fs.unlink(path.join(uploadDir, fileName)).catch(() => undefined),
       ),
     );
+
+    const resolvedStudentId = await resolveStudentId(studentId);
+
+    if (resolvedStudentId) {
+      const [profileRows] = await db.execute(
+        `SELECT profile_id AS profileId FROM student_profiles WHERE student_id = ? LIMIT 1`,
+        [resolvedStudentId],
+      );
+
+      if (profileRows.length) {
+        await db.execute(
+          `UPDATE student_profiles SET photo = NULL, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?`,
+          [profileRows[0].profileId],
+        );
+      }
+    }
 
     res.json({
       success: true,

@@ -1,8 +1,9 @@
-import DashboardLayout from "../../components/Layout/DashboardLayout";
+﻿import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Camera, LoaderCircle, ShieldCheck, Trash2, UserRound } from "lucide-react";
+import type { StudentProfile } from "../../types/studentProfile";
 import "../styles/Profile.css";
 
 type StudentStatus = "Active" | "Inactive" | "Graduated" | "Dropped" | "Suspended" | "On Leave";
@@ -26,7 +27,12 @@ type Student = {
   city?: string;
   province?: string;
   zipCode?: string;
+  address?: string;
+  enrollmentStatus?: string;
   studentStatus?: StudentStatus;
+  guardianName?: string;
+  guardianRelationship?: string;
+  guardianContact?: string;
   avatar?: string | null;
 };
 
@@ -71,7 +77,12 @@ export default function StudentProfile() {
     city: "",
     province: "",
     zipCode: "",
+    address: "",
+    enrollmentStatus: "Active",
     studentStatus: "Active",
+    guardianName: "",
+    guardianRelationship: "",
+    guardianContact: "",
     avatar: null,
   });
 
@@ -93,6 +104,66 @@ export default function StudentProfile() {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const mapProfileResponse = (profile: StudentProfile): Student => {
+    const addressParts = [profile.address].filter(Boolean);
+
+    return {
+      studentNumber: profile.studentNumber || profile.studentId?.toString() || "",
+      firstName: profile.firstName || "",
+      middleName: profile.middleName || "",
+      lastName: profile.lastName || "",
+      gender: profile.gender || "",
+      birthDate: profile.birthDate || "",
+      course: profile.course || "",
+      yearLevel: profile.yearLevel || "",
+      section: profile.section || "",
+      semester: "",
+      contactNumber: profile.phoneNumber || "",
+      email: profile.email || "",
+      address: addressParts.join(", ") || "",
+      enrollmentStatus: profile.enrollmentStatus || "",
+      studentStatus: (profile.enrollmentStatus === "Active" ? "Active" : "Inactive") as StudentStatus,
+      guardianName: profile.guardianName || "",
+      guardianRelationship: profile.guardianRelationship || "",
+      guardianContact: profile.guardianContact || "",
+      avatar: profile.photo || null,
+    };
+  };
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) {
+        return;
+      }
+
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/profile/${encodeURIComponent(String(user.user_id))}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Unable to load your profile.");
+        }
+
+        const profile = data?.data as StudentProfile | undefined;
+        if (profile) {
+          const mappedStudent = mapProfileResponse(profile);
+          const mergedStudent = { ...buildFallbackStudent(), ...mappedStudent };
+          setStudent(mergedStudent);
+          localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(mergedStudent));
+        }
+      } catch (error) {
+        setFeedback({
+          type: "error",
+          message: error instanceof Error ? error.message : "Unable to load your profile.",
+        });
+      } finally {
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   useEffect(() => {
     if (!selectedPhoto) {
@@ -316,19 +387,19 @@ export default function StudentProfile() {
               <h3>Account Overview</h3>
               <div className="summary-item">
                 <span>Student No.</span>
-                <strong>{student.studentNumber}</strong>
+                <strong>{student.studentNumber || "â€”"}</strong>
               </div>
               <div className="summary-item">
                 <span>Course</span>
-                <strong>{student.course || "—"}</strong>
+                <strong>{student.course || "â€”"}</strong>
               </div>
               <div className="summary-item">
                 <span>Year Level</span>
-                <strong>{student.yearLevel || "—"}</strong>
+                <strong>{student.yearLevel || "â€”"}</strong>
               </div>
               <div className="summary-item">
                 <span>Section</span>
-                <strong>{student.section || "—"}</strong>
+                <strong>{student.section || "â€”"}</strong>
               </div>
             </div>
           </div>
@@ -352,7 +423,35 @@ export default function StudentProfile() {
                   </strong>
                 </div>
                 <div className="info-card">
-                  <span className="info-label">Program / Course</span>
+                  <span className="info-label">Email</span>
+                  <strong>{student.email || "Not provided"}</strong>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Phone Number</span>
+                  <strong>{student.contactNumber || "Not provided"}</strong>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Gender</span>
+                  <strong>{student.gender || "Not provided"}</strong>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Birth Date</span>
+                  <strong>{student.birthDate || "Not provided"}</strong>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Address</span>
+                  <strong>{student.address || "Not provided"}</strong>
+                </div>
+              </div>
+
+              <div className="section-header">
+                <h2>Academic Information</h2>
+                <small>Enrollment details are maintained as part of the student record.</small>
+              </div>
+
+              <div className="info-grid">
+                <div className="info-card">
+                  <span className="info-label">Course</span>
                   <strong>{student.course || "Not provided"}</strong>
                 </div>
                 <div className="info-card">
@@ -364,16 +463,28 @@ export default function StudentProfile() {
                   <strong>{student.section || "Not provided"}</strong>
                 </div>
                 <div className="info-card">
-                  <span className="info-label">Gender</span>
-                  <strong>{student.gender || "Not provided"}</strong>
+                  <span className="info-label">Enrollment Status</span>
+                  <strong>{student.enrollmentStatus || "Not provided"}</strong>
+                </div>
+              </div>
+
+              <div className="section-header">
+                <h2>Guardian Information</h2>
+                <small>Emergency and family contact details are stored separately for privacy and clarity.</small>
+              </div>
+
+              <div className="info-grid">
+                <div className="info-card">
+                  <span className="info-label">Guardian Name</span>
+                  <strong>{student.guardianName || "Not provided"}</strong>
                 </div>
                 <div className="info-card">
-                  <span className="info-label">Birth Date</span>
-                  <strong>{student.birthDate || "Not provided"}</strong>
+                  <span className="info-label">Guardian Relationship</span>
+                  <strong>{student.guardianRelationship || "Not provided"}</strong>
                 </div>
                 <div className="info-card">
-                  <span className="info-label">Semester</span>
-                  <strong>{student.semester || "Not provided"}</strong>
+                  <span className="info-label">Guardian Contact</span>
+                  <strong>{student.guardianContact || "Not provided"}</strong>
                 </div>
               </div>
 
@@ -435,3 +546,4 @@ export default function StudentProfile() {
     </DashboardLayout>
   );
 }
+
