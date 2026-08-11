@@ -15,6 +15,7 @@ export type UserRole =
 // ======================
 export interface User {
   user_id: number;
+  student_id?: number;
   username: string;
   email: string;
   role: UserRole;
@@ -77,6 +78,7 @@ export const authService = {
 
       return {
         user_id: data.user_id,
+        student_id: data.student_id,
         username: data.username,
         email: data.email,
         role: data.role,

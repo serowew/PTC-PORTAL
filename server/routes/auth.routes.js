@@ -151,10 +151,13 @@ router.post("/verify-otp", async (req, res) => {
         u.role_id,
         u.is_verified,
         u.is_active,
-        r.role_name
+        r.role_name,
+        s.student_id
       FROM users u
       INNER JOIN roles r
         ON u.role_id = r.role_id
+      LEFT JOIN students s
+        ON s.user_id = u.user_id
       WHERE u.username = ?
       `,
       [username],
@@ -225,6 +228,7 @@ router.post("/verify-otp", async (req, res) => {
 
     res.json({
       user_id: user.user_id,
+      student_id: user.student_id,
       username: user.username,
       email: user.email,
       role: user.role_name,
