@@ -102,6 +102,10 @@ router.get("/", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `${STUDENT_SELECT}
+WHERE
+  s.user_id IS NOT NULL
+  AND s.section_id IS NOT NULL
+  AND s.semester_id IS NOT NULL      
 
 ORDER BY
 
@@ -121,34 +125,257 @@ s.first_name`,
 });
 
 // =====================================================
-// GET SINGLE STUDENT
+// GET STUDENTS THAT NEED SETUP
 // =====================================================
 
+router.get("/needs-setup", async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `
+      SELECT
+        s.student_id,
+        s.user_id,
+        s.student_number,
+
+        s.first_name,
+        s.middle_name,
+        s.last_name,
+
+        s.gender,
+        s.birth_date,
+        s.contact_number,
+
+        s.course_id,
+        c.course_code,
+        c.course_name,
+
+        s.year_level,
+
+        s.section_id,
+        COALESCE(
+          sec.section_name,
+          'Not Assigned'
+        ) AS section_name,
+
+        s.academic_year_id,
+        ay.academic_year,
+
+        s.semester_id,
+        sem.semester_name,
+
+        s.admission_date
+
+      FROM students s
+
+      INNER JOIN courses c
+        ON c.course_id = s.course_id
+
+      INNER JOIN academic_years ay
+        ON ay.academic_year_id = s.academic_year_id
+
+      LEFT JOIN sections sec
+        ON sec.section_id = s.section_id
+
+      LEFT JOIN semesters sem
+        ON sem.semester_id = s.semester_id
+
+      WHERE
+        s.user_id IS NULL
+        OR s.section_id IS NULL
+        OR s.semester_id IS NULL
+
+      ORDER BY
+        s.admission_date DESC,
+        s.student_id DESC
+      `
+    );
+
+    return res.json({
+      success: true,
+      students: rows
+    });
+
+  } catch (error) {
+    console.error("Get students needing setup error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch students needing setup.",
+      error: error.message
+    });
+  }
+});
+
+
+
+// MUST COME AFTER /needs-setup
 router.get("/:id", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `${STUDENT_SELECT}
-
-WHERE s.student_number = ?`,
-
-      [req.params.id],
+      WHERE s.student_number = ?
+      LIMIT 1
+      `,
+      [req.params.id]
     );
 
     if (rows.length === 0) {
       return res.status(404).json({
-        error: "Student not found",
+        error: "Student not found"
       });
     }
 
     res.json(rows[0]);
+
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
-      error: "Failed to fetch student",
+      error: "Failed to fetch student"
     });
   }
 });
+
+
+// =====================================================
+// CREATE STUDENT ACCOUNT DURING SETUP
+// =====================================================
+
+router.patch("/:studentNumber/setup/account", async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const { studentNumber } = req.params;
+
+    // 1. Find the student
+    const [studentRows] = await connection.execute(
+      `
+      SELECT
+        student_id,
+        user_id,
+        student_number,
+        first_name,
+        last_name
+      FROM students
+      WHERE student_number = ?
+      LIMIT 1
+      FOR UPDATE
+      `,
+      [studentNumber]
+    );
+
+    if (studentRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Student not found."
+      });
+    }
+
+    const student = studentRows[0];
+
+    // 2. Make sure an account does not already exist
+    if (student.user_id !== null) {
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "Student account already exists.",
+        userId: student.user_id
+      });
+    }
+
+    // 3. Generate account information
+    const username = student.student_number;
+
+    const email =
+      `${student.student_number.replace("-", "").toLowerCase()}@student.ptc.edu.ph`;
+
+    const temporaryPassword = "PTC12345";
+
+    const passwordHash = await bcrypt.hash(
+      temporaryPassword,
+      10
+    );
+
+    // 4. Student role
+    // Your current enrollment approval uses role_id 5.
+    const roleId = 5;
+
+    // 5. Create user account
+    const [userResult] = await connection.execute(
+      `
+      INSERT INTO users
+      (
+        username,
+        email,
+        password_hash,
+        role_id
+      )
+      VALUES
+      (?, ?, ?, ?)
+      `,
+      [
+        username,
+        email,
+        passwordHash,
+        roleId
+      ]
+    );
+
+    const userId = userResult.insertId;
+
+    // 6. Link account to student
+    await connection.execute(
+      `
+      UPDATE students
+      SET user_id = ?
+      WHERE student_id = ?
+      `,
+      [
+        userId,
+        student.student_id
+      ]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Student account created successfully.",
+      account: {
+        user_id: userId,
+        username,
+        email,
+        temporary_password: temporaryPassword
+      }
+    });
+
+  } catch (error) {
+
+    await connection.rollback();
+
+    console.error(
+      "Create student account error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create student account.",
+      error: error.message
+    });
+
+  } finally {
+
+    connection.release();
+
+  }
+});
+
 
 // =====================================================
 // CREATE STUDENT
@@ -926,6 +1153,391 @@ WHERE user_id=?
     if (conn) {
       conn.release();
     }
+  }
+});
+
+
+router.patch("/:studentNumber/setup/section", async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const { studentNumber } = req.params;
+    const { section_id } = req.body;
+
+    if (!section_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Section is required."
+      });
+    }
+
+    await connection.beginTransaction();
+
+    // Find student
+    const [studentRows] = await connection.query(
+      `
+      SELECT
+        student_id,
+        student_number,
+        course_id,
+        year_level,
+        academic_year_id
+      FROM students
+      WHERE student_number = ?
+      LIMIT 1
+      `,
+      [studentNumber]
+    );
+
+    if (studentRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Student not found."
+      });
+    }
+
+    const student = studentRows[0];
+
+    // Verify section belongs to the student's
+    // course, year level, and academic year
+    const [sectionRows] = await connection.query(
+      `
+      SELECT
+        section_id,
+        section_name
+      FROM sections
+      WHERE section_id = ?
+        AND course_id = ?
+        AND year_level = ?
+        AND academic_year_id = ?
+      LIMIT 1
+      `,
+      [
+        section_id,
+        student.course_id,
+        student.year_level,
+        student.academic_year_id
+      ]
+    );
+
+    if (sectionRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid section for this student."
+      });
+    }
+
+    // Assign section
+    await connection.query(
+      `
+      UPDATE students
+      SET section_id = ?
+      WHERE student_id = ?
+      `,
+      [section_id, student.student_id]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Section assigned successfully.",
+      section: sectionRows[0]
+    });
+
+  } catch (err) {
+    await connection.rollback();
+
+    console.error("Assign section error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+router.get("/:studentNumber/setup/sections", async (req, res) => {
+  try {
+    const { studentNumber } = req.params;
+
+    const [rows] = await db.query(
+      `
+      SELECT
+        sec.section_id,
+        sec.section_name
+      FROM students s
+
+      INNER JOIN sections sec
+        ON sec.course_id = s.course_id
+        AND sec.year_level = s.year_level
+        AND sec.academic_year_id = s.academic_year_id
+
+      WHERE s.student_number = ?
+
+      ORDER BY sec.section_name
+      `,
+      [studentNumber]
+    );
+
+    return res.json({
+      success: true,
+      sections: rows
+    });
+
+  } catch (err) {
+    console.error("Get setup sections error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message
+    });
+  }
+});
+// =====================================================
+// GET AVAILABLE SEMESTERS FOR STUDENT SETUP
+// =====================================================
+router.get("/:studentNumber/setup/semesters", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT
+        semester_id,
+        semester_name
+      FROM semesters
+      ORDER BY semester_id
+      `
+    );
+
+    return res.json({
+      success: true,
+      semesters: rows,
+    });
+  } catch (err) {
+    console.error("Get setup semesters error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch semesters.",
+      error: err.message,
+    });
+  }
+});
+// =====================================================
+// ASSIGN SEMESTER DURING STUDENT SETUP
+// =====================================================
+router.patch("/:studentNumber/setup/semester", async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const { studentNumber } = req.params;
+    const { semester_id } = req.body;
+
+    if (!semester_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Semester is required.",
+      });
+    }
+
+    await connection.beginTransaction();
+
+    // Find student
+    const [studentRows] = await connection.query(
+      `
+      SELECT
+        student_id,
+        student_number
+      FROM students
+      WHERE student_number = ?
+      LIMIT 1
+      `,
+      [studentNumber]
+    );
+
+    if (studentRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    const student = studentRows[0];
+
+    // Verify semester exists
+    const [semesterRows] = await connection.query(
+      `
+      SELECT
+        semester_id,
+        semester_name
+      FROM semesters
+      WHERE semester_id = ?
+      LIMIT 1
+      `,
+      [semester_id]
+    );
+
+    if (semesterRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid semester.",
+      });
+    }
+
+    // Assign semester
+    await connection.query(
+      `
+      UPDATE students
+      SET semester_id = ?
+      WHERE student_id = ?
+      `,
+      [semester_id, student.student_id]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Semester assigned successfully.",
+      semester: semesterRows[0],
+    });
+  } catch (err) {
+    await connection.rollback();
+
+    console.error("Assign semester error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message,
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+// =====================================================
+// STUDENT SETUP - ASSIGN SEMESTER
+// PATCH endpoint used by ManageStudentSetup.tsx
+// Place this immediately after the GET semesters route
+// =====================================================
+
+router.patch("/:studentNumber/setup/semester", async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const { studentNumber } = req.params;
+    const { semester_id } = req.body;
+
+    // -------------------------------------------------
+    // Validate semester selection
+    // -------------------------------------------------
+
+    if (!semester_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Semester is required.",
+      });
+    }
+
+    await connection.beginTransaction();
+
+    // -------------------------------------------------
+    // Find the student
+    // -------------------------------------------------
+
+    const [studentRows] = await connection.query(
+      `
+      SELECT
+        student_id,
+        student_number
+      FROM students
+      WHERE student_number = ?
+      LIMIT 1
+      `,
+      [studentNumber]
+    );
+
+    if (studentRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    const student = studentRows[0];
+
+    // -------------------------------------------------
+    // Verify that the semester exists
+    // -------------------------------------------------
+
+    const [semesterRows] = await connection.query(
+      `
+      SELECT
+        semester_id,
+        semester_name
+      FROM semesters
+      WHERE semester_id = ?
+      LIMIT 1
+      `,
+      [semester_id]
+    );
+
+    if (semesterRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid semester.",
+      });
+    }
+
+    // -------------------------------------------------
+    // Assign semester to the student
+    // -------------------------------------------------
+
+    await connection.query(
+      `
+      UPDATE students
+      SET semester_id = ?
+      WHERE student_id = ?
+      `,
+      [semester_id, student.student_id]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Semester assigned successfully.",
+      semester: semesterRows[0],
+    });
+  } catch (err) {
+    await connection.rollback();
+
+    console.error("Assign semester error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message,
+    });
+  } finally {
+    connection.release();
   }
 });
 

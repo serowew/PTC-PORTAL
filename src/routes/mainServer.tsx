@@ -29,6 +29,7 @@ import AddDropSubjects from "../pages/student/Enrollment/AddDrop";
 import SubmitEnrollment from "../pages/student/Enrollment/SubmitEnrollment";
 import EnrollmentStatus from "../pages/student/Enrollment/EnrollmentStatus";
 
+
 // Student pages — Financial
 import TuitionFees from "../pages/student/Financial/Tuitionfees";
 import PaymentHistory from "../pages/student/Financial/PaymentHistory";
@@ -61,12 +62,17 @@ import AddEditDrop from "../pages/admin/Students/AddEditDrop";
 import CreateStudent from "../pages/admin/Students/createstudent";
 import EditStudent from "../pages/admin/Students/editstudent";
 import Sprofile from "../pages/admin/Students/Sprofile";
+import StudentsForSetup from "../pages/admin/Students/StudentsForSetup";
+import ManageStudentSetup from "../pages/admin/Students/ManageStudentSetup";
 
 // ── Admin: Enrollment Management ──
-import ApproveEnrollment from "../pages/admin/Enrollment/ApproveEnrollment";
+
 import EnrollmentRequests from "../pages/admin/Enrollment/EnrollmentRequests";
 import EnrollmentHistory from "../pages/admin/Enrollment/EnrollmentHistory";
 import EnrollmentAnalytics from "../pages/admin/Enrollment/EnrollmentAnalytics";
+import PendingRequests from "../pages/admin/Enrollment/PendingRequests";
+import EnrolledStudents from "../pages/admin/Enrollment/EnrolledStudents";
+
 // ── Admin: Financial Management ──
 import Payment from "../pages/admin/FinancialManagement/Payments";
 import Billing from "../pages/admin/FinancialManagement/Billings";
@@ -96,6 +102,12 @@ import RegistrarDashboard from "../pages/registrar/Dashboard";
 import type { ReactElement } from "react";
 import PendingGrades from "../pages/programhead/GradeApproval/PendingGrades";
 import RStudentRecord from "../pages/registrar/GradeApproval/Studentrecord";
+
+// ── Registar: Enrollment ──
+import ModifyEnrollment from "../pages/registrar/Enrollment/ModifyEnrollment";
+import MyRequests from "../pages/registrar/Enrollment/MyRequests";
+import NewEnrollment from "../pages/registrar/Enrollment/NewEnrollment";
+
 
 // ─── Role guard ───────────────────────────────────────────────
 function ProtectedRoute({
@@ -328,11 +340,24 @@ export default function AppRoutes() {
         path="/admin/students/profile/:id"
         element={<AdminRoute element={<Sprofile />} />}
       />
+
+                    {/* Students for Setup - LIST */}
+<Route
+  path="/admin/students/setup"
+  element={
+    <AdminRoute element={<StudentsForSetup />} />
+  }
+/>
+
+<Route
+  path="/admin/students/setup/:studentNumber"
+  element={
+    <AdminRoute element={<ManageStudentSetup />} />
+  }
+/>
+              
       {/* ── Admin: Enrollment Management ── */}
-      <Route
-        path="/admin/enrollment/approve"
-        element={<AdminRoute element={<ApproveEnrollment />} />}
-      />
+
       <Route
         path="/admin/enrollment/request"
         element={<AdminRoute element={<EnrollmentRequests />} />}
@@ -345,6 +370,18 @@ export default function AppRoutes() {
         path="/admin/enrollment/analytics"
         element={<AdminRoute element={<EnrollmentAnalytics />} />}
       />
+
+          <Route
+      path="/admin/enrollment/pending"
+      element={<AdminRoute element={<PendingRequests />} />}
+    />
+
+
+      <Route
+        path="/admin/enrollment/students"
+        element={<EnrolledStudents />}
+      />
+      
       {/* ── Admin: Financial Management ── */}
       <Route
         path="/admin/financial/payments"
@@ -432,17 +469,38 @@ export default function AppRoutes() {
         element={<ProgramHeadRoute element={<PendingGrades />} />}
       />
 
+
+    {/* ── registar: Dashboard ── */}
       <Route
         path="/registrar/dashboard"
         element={<RegistrarRoute element={<RegistrarDashboard />} />}
       />
-
+ 
       <Route
         path="/registrar/student/records"
         element={<RegistrarRoute element={<RStudentRecord />} />}
       />
+
+    
+      <Route
+        path="/registrar/enrollment/modify/:id"
+        element={<ModifyEnrollment />}
+      />
+
+      <Route
+        path="/registrar/enrollment/requests"
+        element={<MyRequests />}
+      />
+
+      <Route
+        path="/registrar/enrollment/new"
+        element={<RegistrarRoute element={<NewEnrollment />} />}
+      />
+
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+
+    
   );
 }

@@ -1,0 +1,92 @@
+.explorer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.explorer-folder,
+.explorer-year,
+.explorer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.folder-content {
+  margin-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 6px;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  text-align: left;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.folder-item:hover {
+  background: #eef5ff;
+  color: #2563eb;
+}
+
+.folder-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.folder-subtitle {
+  font-weight: 500;
+  color: #374151;
+}
+
+.explorer-student {
+  justify-content: flex-start;
+  padding: 7px 10px;
+  color: #4b5563;
+}
+
+.explorer-student:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.tree-arrow {
+  width: 14px;
+  text-align: center;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.explorer-layout,
+.enrollment-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.explorer-sidebar {
+  border-right: 1px solid #e5e7eb;
+  padding: 12px;
+  background: #fafafa;
+  overflow-y: auto;
+}
+
+.explorer-content {
+  padding: 20px;
+  overflow-y: auto;
+}

@@ -6,17 +6,30 @@ export const adminNavGroups = [
     children: [
       { label: "Student List", path: "/admin/students/manage" },
       { label: "Student Management", path: "/admin/students/addeditdrop" },
+      {
+  label: "Students for Setup",
+  path: "/admin/students/setup"
+}
     ],
   },
+  
   {
-    id: "enrollment-management",
-    label: "Enrollment Management",
-    icon: "",
-    children: [
-      { label: "Approve Enrollment", path: "/admin/enrollment/approve" },
-      { label: "EnrollmentRequest", path: "/admin/enrollment/request" },
-    ],
-  },
+  id: "enrollment-management",
+  label: "Enrollment Management",
+  icon: "",
+  children: [
+    {
+      label: "Pending Requests",
+      path: "/admin/enrollment/pending"
+    },
+    {
+      label: "Enrolled Students",
+      path: "/admin/enrollment/students"
+    }
+  ]
+},
+
+
   {
     id: "financial-management",
     label: "Financial Management",
