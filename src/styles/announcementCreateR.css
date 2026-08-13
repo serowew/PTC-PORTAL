@@ -1,0 +1,74 @@
+.registrar-announcement-createR {
+  padding: 30px;
+  min-height: calc(100vh - 80px);
+  background: #f5f7fb;
+}
+
+.registrar-announcement-createR .announcement-create-card {
+  background: white;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.registrar-announcement-createR h1 {
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 25px;
+}
+
+.registrar-announcement-createR form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.registrar-announcement-createR label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.registrar-announcement-createR input,
+.registrar-announcement-createR textarea,
+.registrar-announcement-createR select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 15px;
+}
+
+.registrar-announcement-createR textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.registrar-announcement-createR .recipient-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.registrar-announcement-createR .recipient-container label {
+  background: #f3f4f6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.registrar-announcement-createR button {
+  width: fit-content;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  background: #16a34a;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.registrar-announcement-createR button:hover {
+  background: #15803d;
+}

@@ -5,14 +5,15 @@ import { authService } from "../../../services/auth.service";
 import "../../../styles/activitylogger.css";
 
 type ActivityLog = {
-  log_id: number;
+  activity_id: number;
+  user_id: number;
   username: string;
+  role: string;
   activity_type: string;
   module_name: string;
   description: string;
   created_at: string;
 };
-
 const API_BASE_URL = "http://localhost:3000/api/activity-logs";
 
 export default function UserActivity() {
@@ -57,6 +58,7 @@ export default function UserActivity() {
 
     return (
       log.username.toLowerCase().includes(q) ||
+      log.role.toLowerCase().includes(q) ||
       log.activity_type.toLowerCase().includes(q) ||
       log.module_name.toLowerCase().includes(q) ||
       log.description.toLowerCase().includes(q)
@@ -77,50 +79,60 @@ export default function UserActivity() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
-        <table className="activity-table">
-          <thead>
-            <tr>
-              <th>Date & Time</th>
-              <th>User</th>
-              <th>Activity</th>
-              <th>Module</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
+        <div className="activity-table-wrapper">
+          <table className="activity-table">
+            <thead>
               <tr>
-                <td colSpan={5} style={{ textAlign: "center" }}>
-                  Loading activity logs...
-                </td>
+                <th>Date & Time</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Activity</th>
+                <th>Module</th>
+                <th>Description</th>
               </tr>
-            ) : filteredLogs.length === 0 ? (
-              <tr>
-                <td colSpan={5} style={{ textAlign: "center" }}>
-                  No activity found.
-                </td>
-              </tr>
-            ) : (
-              filteredLogs.map((log) => (
-                <tr key={log.log_id}>
-                  <td>{new Date(log.created_at).toLocaleString()}</td>
+            </thead>
 
-                  <td>{log.username}</td>
-
-                  <td>
-                    <span className="activity-badge">{log.activity_type}</span>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center" }}>
+                    Loading activity logs...
                   </td>
-
-                  <td>{log.module_name}</td>
-
-                  <td>{log.description}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center" }}>
+                    No activity found.
+                  </td>
+                </tr>
+              ) : (
+                filteredLogs.map((log) => (
+                  <tr key={log.activity_id}>
+                    <td>{new Date(log.created_at).toLocaleString()}</td>
+
+                    <td>{log.username}</td>
+
+                    <td>{log.role}</td>
+
+                    <td>
+                      <span
+                        className={`activity-badge ${log.activity_type
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}`}
+                      >
+                        {log.activity_type}
+                      </span>
+                    </td>
+
+                    <td>{log.module_name}</td>
+
+                    <td>{log.description}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </DashboardLayout>
   );

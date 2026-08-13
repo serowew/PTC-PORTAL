@@ -1,0 +1,197 @@
+/* ==========================================
+   CREATE ANNOUNCEMENT PAGE
+========================================== */
+
+.admin-announcement-create {
+  padding: 30px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Header */
+
+.announcement-create-header {
+  margin-bottom: 25px;
+}
+
+.announcement-create-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.announcement-create-header p {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* ==========================================
+   FORM CARD
+========================================== */
+
+.announcement-form {
+  background: white;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  max-width: 900px;
+}
+
+/* ==========================================
+   FORM GROUP
+========================================== */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+/* Inputs */
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  font-size: 14px;
+  color: #1e293b;
+
+  outline: none;
+
+  transition: 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #2563eb;
+
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Textarea */
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+
+/* ==========================================
+   TWO COLUMN ROW
+========================================== */
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 20px;
+}
+
+/* ==========================================
+   BUTTON AREA
+========================================== */
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 15px;
+
+  margin-top: 25px;
+}
+
+/* Cancel Button */
+
+.cancel-btn {
+  padding: 12px 22px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #e2e8f0;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #cbd5e1;
+}
+
+/* Save Button */
+
+.save-btn {
+  padding: 12px 25px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.save-btn:hover {
+  background: #1d4ed8;
+}
+
+.save-btn:disabled {
+  background: #94a3b8;
+
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 768px) {
+  .admin-announcement-create {
+    padding: 15px;
+  }
+
+  .announcement-form {
+    padding: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+  }
+}

@@ -4,22 +4,9 @@ export const studentNavGroups = [
     label: "Academic Records",
     icon: "",
     children: [
-      { label: "Grades & Results", path: "/student/records" },
-      { label: "Transcript", path: "/student/transcript" },
-      { label: "Course History", path: "/student/course-history" },
       { label: "Schedule", path: "/student/schedule" },
-    ],
-  },
-  {
-    id: "courses",
-    label: "Course Management",
-    icon: "",
-    children: [
-      { label: "View Subjects", path: "/student/courses/subjects" },
-      { label: "Assignments", path: "/student/courses/assignments" },
-      { label: "Lecture Notes", path: "/student/courses/notes" },
-      { label: "Syllabus", path: "/student/courses/syllabus" },
-      { label: "Submit Requirements", path: "/student/courses/submissions" },
+      { label: "Grades", path: "/student/records" },
+      { label: "Academic History", path: "/student/course-history" },
     ],
   },
   {
@@ -44,8 +31,24 @@ export const studentNavGroups = [
       { label: "Online Payment", path: "/student/financial/pay" },
     ],
   },
+  {
+    id: "document",
+    label: "Document",
+    icon: "",
+    children: [
+      { label: "Request Document", path: "/student/document/request" },
+      { label: "Document Release", path: "/student/document/release" },
+    ],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: "",
+    children: [{ label: "User Management", path: "/student/setting/user" }],
+  },
 ];
 export const studentSoloLinks = [
   { label: "Dashboard", path: "/student/dashboard", icon: "" },
   { label: "Profile", path: "/student/profile", icon: "" },
+  { label: "Announcement", path: "/student/announcement", icon: "" },
 ];

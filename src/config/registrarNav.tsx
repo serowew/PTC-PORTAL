@@ -6,6 +6,11 @@ export const registrarSoloLinks = [
     path: "/registrar/dashboard",
     icon: "🏠",
   },
+  {
+    label: "Announcement",
+    path: "/registrar/announcement/listR",
+    icon: "🏠",
+  },
 ];
 
 export const registrarNavGroups = [
@@ -15,8 +20,8 @@ export const registrarNavGroups = [
     icon: "👨‍🎓",
     children: [
       {
-        label: "Records",
-        path: "/registrar/student/records",
+        label: "Student List",
+        path: "/registrar/student/listR",
       },
     ],
   },

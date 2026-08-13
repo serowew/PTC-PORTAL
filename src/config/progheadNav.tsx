@@ -4,7 +4,12 @@ export const programHeadSoloLinks = [
   {
     label: "Dashboard",
     path: "/programhead/dashboard",
-    icon: "🏠",
+    icon: "",
+  },
+  {
+    label: "Announcement",
+    path: "/programhead/announcementprog",
+    icon: "",
   },
 ];
 

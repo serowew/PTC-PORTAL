@@ -6,6 +6,13 @@ import "../../../styles/createuser.css";
 
 const API_BASE_URL = "http://localhost:3000/api/users";
 
+const ROLE_MAP: Record<string, number> = {
+  Admin: 1,
+  Faculty: 2,
+  Student: 3,
+  "Program Head": 4,
+  Registrar: 5,
+};
 export default function CreateUser() {
   const navigate = useNavigate();
   const session = authService.getSession();
@@ -54,10 +61,10 @@ export default function CreateUser() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
+          username: formData.username.trim().toUpperCase(),
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
-          role: formData.role,
+          role_id: ROLE_MAP[formData.role],
         }),
       });
 

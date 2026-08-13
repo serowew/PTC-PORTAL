@@ -1,0 +1,61 @@
+.registrar-announcement-editR {
+  padding: 30px;
+  min-height: calc(100vh - 80px);
+  background: #f5f7fb;
+}
+
+.registrar-announcement-editR .announcement-edit-card {
+  background: white;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.registrar-announcement-editR h1 {
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 25px;
+}
+
+.registrar-announcement-editR form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.registrar-announcement-editR label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.registrar-announcement-editR input,
+.registrar-announcement-editR textarea,
+.registrar-announcement-editR select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 15px;
+}
+
+.registrar-announcement-editR textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.registrar-announcement-editR button {
+  width: fit-content;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.registrar-announcement-editR button:hover {
+  background: #1d4ed8;
+}

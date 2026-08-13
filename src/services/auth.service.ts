@@ -35,29 +35,24 @@ export const authService = {
   // ----------------------
   // Step 1 - Login
   // ----------------------
-  async login(
-    username: string,
-    password: string,
-  ): Promise<LoginResponse | null> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
+  async login(username: string, password: string): Promise<LoginResponse> {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        password,
+      }),
+    });
+    const data = await res.json();
 
-      if (!res.ok) return null;
-
-      return await res.json();
-    } catch (err) {
-      console.error(err);
-      return null;
+    if (!res.ok) {
+      throw new Error(data.error);
     }
+
+    return data;
   },
 
   // ----------------------

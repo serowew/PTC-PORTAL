@@ -1,0 +1,333 @@
+/* ===========================
+   Registrar Student List
+=========================== */
+
+.registrar-listR-container {
+  padding: 30px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+/* ===========================
+   Header
+=========================== */
+
+.registrar-listR-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.registrar-listR-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #1f2937;
+}
+
+.registrar-listR-header p {
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+/* ===========================
+   Statistics Cards
+=========================== */
+
+.registrar-listR-statistics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.registrar-listR-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.registrar-listR-card span {
+  display: block;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.registrar-listR-card h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 32px;
+}
+
+/* ===========================
+   Toolbar
+=========================== */
+
+.registrar-listR-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.registrar-listR-search {
+  flex: 1;
+}
+
+.registrar-listR-search input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 15px;
+  outline: none;
+}
+
+.registrar-listR-search input:focus {
+  border-color: #2563eb;
+}
+
+.registrar-listR-filters {
+  display: flex;
+  gap: 12px;
+}
+
+.registrar-listR-filters select {
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+}
+
+/* ===========================
+   Table
+=========================== */
+
+.registrar-listR-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.student-table-container {
+  overflow-x: auto;
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.student-table thead {
+  background: #1e3a8a;
+  color: white;
+}
+
+.student-table th,
+.student-table td {
+  padding: 16px;
+  text-align: left;
+}
+
+.student-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.student-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.table-message {
+  text-align: center;
+  padding: 30px;
+}
+
+.table-message.error {
+  color: red;
+}
+
+/* ===========================
+   Student Info
+=========================== */
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.student-info strong {
+  display: block;
+}
+
+.student-info small {
+  color: #6b7280;
+}
+
+/* ===========================
+   Status Badges
+=========================== */
+
+.status {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status.inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status.enrolled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status.graduated {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+/* ===========================
+   Buttons
+=========================== */
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.view-btn,
+.record-btn,
+.document-btn {
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.view-btn {
+  background: #2563eb;
+}
+
+.view-btn:hover {
+  background: #1d4ed8;
+}
+
+.record-btn {
+  background: #059669;
+}
+
+.record-btn:hover {
+  background: #047857;
+}
+
+.document-btn {
+  background: #ea580c;
+}
+
+.document-btn:hover {
+  background: #c2410c;
+}
+
+/* ===========================
+   Pagination
+=========================== */
+
+.registrar-listR-pagination {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination-btn {
+  padding: 10px 16px;
+  border: none;
+  background: #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #2563eb;
+  color: white;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.active-page {
+  background: #2563eb;
+  color: white;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 1200px) {
+  .registrar-listR-statistics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .registrar-listR-container {
+    padding: 20px;
+  }
+
+  .registrar-listR-statistics {
+    grid-template-columns: 1fr;
+  }
+
+  .registrar-listR-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .registrar-listR-filters {
+    flex-direction: column;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,532 @@
+/* =====================================================
+   REGISTRAR TRANSCRIPT PREVIEW
+   ===================================================== */
+
+.transcript-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px;
+  box-sizing: border-box;
+  background: #f5f6f8;
+}
+
+/* =====================================================
+   ACTION BAR
+   ===================================================== */
+
+.transcript-action-bar {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.transcript-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.transcript-back-btn,
+.transcript-print-btn,
+.transcript-generate-btn {
+  border: none;
+  border-radius: 7px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.transcript-back-btn {
+  background: #e9ecef;
+  color: #333;
+}
+
+.transcript-back-btn:hover {
+  background: #dfe3e6;
+}
+
+.transcript-print-btn {
+  background: #ffffff;
+  color: #333;
+  border: 1px solid #d5d8dc;
+}
+
+.transcript-print-btn:hover {
+  background: #f1f3f5;
+}
+
+.transcript-generate-btn {
+  background: #1f6feb;
+  color: #ffffff;
+}
+
+.transcript-generate-btn:hover {
+  background: #1558bd;
+}
+
+/* =====================================================
+   TRANSCRIPT DOCUMENT
+   ===================================================== */
+
+.transcript-document {
+  width: 100%;
+  max-width: 1100px;
+  min-height: 1100px;
+  margin: 0 auto;
+  padding: 55px 65px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #dcdfe3;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+
+.transcript-header {
+  text-align: center;
+  margin-bottom: 35px;
+  border-bottom: 2px solid #222;
+  padding-bottom: 20px;
+}
+
+.transcript-header h1 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #222;
+}
+
+.transcript-header p {
+  margin: 6px 0 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.8px;
+}
+
+.transcript-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #222;
+}
+
+/* =====================================================
+   STUDENT INFORMATION
+   ===================================================== */
+
+.transcript-student-info {
+  margin-bottom: 30px;
+  padding: 18px 20px;
+  border: 1px solid #d9dde2;
+  background: #fafafa;
+}
+
+.student-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 14px;
+}
+
+.student-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.student-info-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-info-row span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.student-info-row strong {
+  font-size: 14px;
+  color: #222;
+}
+
+/* =====================================================
+   ACADEMIC HISTORY
+   ===================================================== */
+
+.transcript-academic-history {
+  width: 100%;
+}
+
+.transcript-academic-year {
+  margin-bottom: 30px;
+}
+
+.transcript-academic-year h3 {
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+  background: #f0f2f4;
+  border-left: 4px solid #333;
+}
+
+.transcript-semester {
+  margin-bottom: 25px;
+}
+
+.transcript-semester h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* =====================================================
+   TRANSCRIPT TABLE
+   ===================================================== */
+
+.transcript-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.transcript-table th,
+.transcript-table td {
+  border: 1px solid #bfc4ca;
+  padding: 9px 8px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.transcript-table th {
+  background: #eeeeee;
+  color: #222;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.transcript-table td {
+  color: #333;
+  background: #ffffff;
+}
+
+/* Subject Code */
+.transcript-table th:nth-child(1),
+.transcript-table td:nth-child(1) {
+  width: 15%;
+}
+
+/* Subject Description */
+.transcript-table th:nth-child(2),
+.transcript-table td:nth-child(2) {
+  width: 43%;
+}
+
+/* Units */
+.transcript-table th:nth-child(3),
+.transcript-table td:nth-child(3) {
+  width: 10%;
+  text-align: center;
+}
+
+/* Grade */
+.transcript-table th:nth-child(4),
+.transcript-table td:nth-child(4) {
+  width: 12%;
+  text-align: center;
+}
+
+/* Remarks */
+.transcript-table th:nth-child(5),
+.transcript-table td:nth-child(5) {
+  width: 20%;
+}
+
+/* =====================================================
+   SEMESTER TOTAL
+   ===================================================== */
+
+.semester-total {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #333;
+  border-left: 1px solid #bfc4ca;
+  border-right: 1px solid #bfc4ca;
+  border-bottom: 1px solid #bfc4ca;
+  background: #fafafa;
+}
+
+/* =====================================================
+   SUMMARY
+   ===================================================== */
+
+.transcript-summary {
+  display: flex;
+  justify-content: flex-end;
+  gap: 45px;
+  margin-top: 35px;
+  padding: 18px 0;
+  border-top: 2px solid #333;
+  border-bottom: 1px solid #ccc;
+}
+
+.transcript-summary > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.transcript-summary span {
+  font-size: 11px;
+  color: #777;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.transcript-summary strong {
+  font-size: 18px;
+  color: #222;
+}
+
+/* =====================================================
+   CERTIFICATION
+   ===================================================== */
+
+.transcript-certification {
+  margin-top: 50px;
+  max-width: 750px;
+}
+
+.transcript-certification p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #444;
+  text-align: justify;
+}
+
+/* =====================================================
+   SIGNATURE
+   ===================================================== */
+
+.transcript-signature {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 80px;
+}
+
+.signature-line {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.signature-line strong {
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid #222;
+  font-size: 13px;
+  color: #222;
+}
+
+.signature-line span {
+  margin-top: 5px;
+  font-size: 11px;
+  color: #777;
+}
+
+/* =====================================================
+   LOADING / ERROR / EMPTY
+   ===================================================== */
+
+.transcript-message {
+  width: 100%;
+  max-width: 1100px;
+  margin: 80px auto;
+  padding: 30px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #555;
+  box-sizing: border-box;
+}
+
+.transcript-message.error {
+  color: #b42318;
+  border-color: #f0b7b2;
+  background: #fff7f6;
+}
+
+.transcript-empty {
+  padding: 30px;
+  text-align: center;
+  color: #777;
+  border: 1px solid #ddd;
+  background: #fafafa;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 900px) {
+  .transcript-page {
+    padding: 20px;
+  }
+
+  .transcript-document {
+    padding: 35px 30px;
+  }
+
+  .student-info-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .transcript-table {
+    min-width: 750px;
+  }
+
+  .transcript-academic-history {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .transcript-page {
+    padding: 12px;
+  }
+
+  .transcript-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transcript-actions {
+    width: 100%;
+  }
+
+  .transcript-back-btn,
+  .transcript-print-btn,
+  .transcript-generate-btn {
+    flex: 1;
+  }
+
+  .transcript-document {
+    padding: 25px 18px;
+  }
+
+  .transcript-header h1 {
+    font-size: 19px;
+  }
+
+  .transcript-header h2 {
+    font-size: 16px;
+  }
+
+  .transcript-summary {
+    gap: 20px;
+  }
+}
+
+/* =====================================================
+   PRINT
+   ===================================================== */
+@media print {
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  /* Hide EVERYTHING by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show ONLY the transcript */
+  .transcript-document,
+  .transcript-document * {
+    visibility: visible !important;
+  }
+
+  /* Put transcript at the top-left of the printed page */
+  .transcript-document {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+
+    margin: 0 !important;
+    padding: 15mm !important;
+
+    border: none !important;
+    box-shadow: none !important;
+
+    background: #ffffff !important;
+  }
+
+  /* Hide buttons/action bar */
+  .transcript-action-bar,
+  .transcript-actions {
+    display: none !important;
+  }
+
+  /* Make sure DashboardLayout doesn't affect printing */
+  .dashboard-header,
+  .dashboard-sidebar,
+  .dashboard-footer,
+  .sidebar,
+  .header,
+  .footer,
+  nav {
+    display: none !important;
+  }
+
+  /* Keep transcript tables together */
+  .transcript-academic-year {
+    page-break-inside: avoid;
+  }
+
+  .transcript-semester {
+    page-break-inside: avoid;
+  }
+
+  .transcript-table {
+    page-break-inside: auto;
+  }
+
+  .transcript-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .transcript-summary,
+  .transcript-signature {
+    page-break-inside: avoid;
+  }
+}

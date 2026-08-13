@@ -1,0 +1,105 @@
+.student-schedule-page {
+    padding: 30px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.schedule-header {
+    margin-bottom: 30px;
+}
+
+.schedule-header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #1e293b;
+}
+
+.month-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.month-navigation button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.month-navigation button:hover {
+    background: #1d4ed8;
+}
+
+.calendar-container,
+.holiday-container,
+.legend-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.calendar-placeholder {
+    height: 400px;
+    border: 2px dashed #cbd5e1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #64748b;
+    border-radius: 10px;
+}
+
+.fc {
+    background: white;
+}
+
+.fc-toolbar-title {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.fc-button {
+    background: #2563eb !important;
+    border: none !important;
+}
+
+.fc-button:hover {
+    background: #1d4ed8 !important;
+}
+
+.holiday-item {
+    color: #030303;
+    font-weight: 600;
+}
+
+.holiday-date {
+    background: #dc2626;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+/* Holiday events only */
+.holiday-event {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
+}
+
+.holiday-event .fc-event-title {
+    color: white !important;
+    font-weight: 600;
+}
+
+.holiday-date-text {
+    color: #dc2626;
+    font-weight: bold;
+}
