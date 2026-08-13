@@ -121,3 +121,53 @@ ETHEREAL_USER=your_ethereal_user
 ETHEREAL_PASS=your_ethereal_pass
 
 FRONTEND_URL=http://localhost:5173
+
+Academic WOrkflow 
+
+Admin
+    │
+    ▼
+Create Student
+    │
+    ▼
+Assign Course
+    │
+    ▼
+Assign Section
+    │
+    ▼
+Assign Curriculum
+    │
+    ▼
+Student Enrollment
+    │
+    ▼
+Registrar Verifies Enrollment
+    │
+    ▼
+Registrar Creates Class Offerings
+    │
+    ▼
+Registrar Assigns Faculty & Program Head
+    │
+    ▼
+Faculty / Program Head Teach Classes
+    │
+    ▼
+Faculty / Program Head Encode Grades
+    │
+    ▼
+Program Head Approves Grades
+    │
+    ▼
+Transcript Updated
+    │
+    ▼
+Registrar Student Records
+    │
+    ▼
+Document Request
+    │
+    ▼
+Document Release
+<img width="772" height="544" alt="image" src="https://github.com/user-attachments/assets/93dd80e3-3a59-4aeb-94d3-fb375f5fb4e9" />

@@ -65,6 +65,7 @@ export const adminNavGroups = [
       { label: "Usage Analytics", path: "/admin/reports/analytics" },
     ],
   },
+
   {
     id: "user-management",
     label: "User Management",
@@ -73,6 +74,15 @@ export const adminNavGroups = [
       { label: "User List", path: "/admin/user/list" },
       { label: "UserActivity", path: "/admin/user/activity" },
       { label: "User Roles", path: "/admin/user/roles" },
+    ],
+  },
+  {
+    id: "annoucement-management",
+    label: "Announcement",
+    icon: "",
+    children: [
+      { label: "Announcement List", path: "/admin/announcement/list" },
+      { label: "Announcement create", path: "/admin/announcement/create" },
     ],
   },
 ];

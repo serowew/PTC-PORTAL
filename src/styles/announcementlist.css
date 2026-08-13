@@ -1,0 +1,273 @@
+/* ===================================
+   Announcement Management
+=================================== */
+
+.admin-announcement-list {
+  padding: 30px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Header */
+
+.announcement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  gap: 20px;
+}
+
+.announcement-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.announcement-header p {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* Create Button */
+
+.create-announcement-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.create-announcement-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+/* Toolbar */
+
+.announcement-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.announcement-search {
+  flex: 1;
+  min-width: 260px;
+  max-width: 420px;
+  padding: 12px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.announcement-search:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.announcement-filter {
+  width: 190px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Table */
+
+.announcement-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+}
+
+.announcement-table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+}
+
+.announcement-table thead {
+  background: #1e3a8a;
+}
+
+.announcement-table th {
+  color: white;
+  padding: 18px 22px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.announcement-table td {
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #334155;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.announcement-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Column Sizes */
+
+.announcement-table th:nth-child(1),
+.announcement-table td:nth-child(1) {
+  min-width: 280px;
+}
+
+.announcement-table th:nth-child(2),
+.announcement-table td:nth-child(2) {
+  min-width: 140px;
+}
+
+.announcement-table th:nth-child(3),
+.announcement-table td:nth-child(3) {
+  min-width: 150px;
+}
+
+.announcement-table th:nth-child(4),
+.announcement-table td:nth-child(4) {
+  min-width: 130px;
+}
+
+.announcement-table th:nth-child(5),
+.announcement-table td:nth-child(5) {
+  min-width: 160px;
+}
+
+.announcement-table th:nth-child(6),
+.announcement-table td:nth-child(6) {
+  min-width: 170px;
+}
+
+.announcement-table th:nth-child(7),
+.announcement-table td:nth-child(7) {
+  min-width: 220px;
+}
+
+/* Status Badge */
+
+.status {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 30px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Status Colors */
+
+.status.published {
+  background: #16a34a;
+}
+
+.status.scheduled {
+  background: #2563eb;
+}
+
+.status.draft {
+  background: #f59e0b;
+}
+
+.status.expired {
+  background: #dc2626;
+}
+
+/* Action Buttons */
+
+.action-btn {
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-right: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.action-btn:last-child {
+  margin-right: 0;
+}
+
+.action-btn.view {
+  background: #3b82f6;
+  color: white;
+}
+
+.action-btn.view:hover {
+  background: #2563eb;
+}
+
+.action-btn.edit {
+  background: #f59e0b;
+  color: white;
+}
+
+.action-btn.edit:hover {
+  background: #d97706;
+}
+
+.action-btn.delete {
+  background: #ef4444;
+  color: white;
+}
+
+.action-btn.delete:hover {
+  background: #dc2626;
+}
+
+/* Empty Row */
+
+.coming-soon {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 35px;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .announcement-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .announcement-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .announcement-search,
+  .announcement-filter {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .create-announcement-btn {
+    width: 100%;
+  }
+}

@@ -8,10 +8,12 @@ const router = express.Router();
 // GET /api/activity-logs
 // ==========================================
 router.get("/", async (req, res) => {
+  console.log("GET /api/activity-logs called");
+
   try {
     const [rows] = await db.execute(`
       SELECT
-        a.log_id,
+        a.activity_id,
         a.user_id,
         u.username,
         r.role_name AS role,
@@ -25,15 +27,15 @@ router.get("/", async (req, res) => {
       INNER JOIN roles r
         ON u.role_id = r.role_id
       ORDER BY a.created_at DESC
+      LIMIT 50
     `);
+
+    console.log(rows);
 
     res.json(rows);
   } catch (err) {
-    console.error("Activity Logs Error:", err);
-
-    res.status(500).json({
-      error: "Failed to load activity logs.",
-    });
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -48,7 +50,7 @@ router.get("/user/:id", async (req, res) => {
     const [rows] = await db.execute(
       `
       SELECT
-        a.log_id,
+        a.activity_id,
         a.user_id,
         u.username,
         r.role_name AS role,

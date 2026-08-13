@@ -23,6 +23,7 @@ const transporter = nodemailer.createTransport({
 // LOGIN
 // =======================
 router.post("/login", async (req, res) => {
+  console.log("LOGIN REQUEST:", req.body);
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -60,7 +61,6 @@ router.post("/login", async (req, res) => {
 
     const user = rows[0];
 
-    // Wrong password
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (!match) {
@@ -90,43 +90,21 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Not verified
-    if (!user.is_verified) {
-      await logActivity(
-        user.user_id,
-        "LOGIN BLOCKED",
-        "Authentication",
-        `${user.username} attempted to login before verification.`,
-      );
-
-      return res.status(403).json({
-        error: "Please verify your account first.",
-      });
-    }
-
     // Generate OTP
     const otp = crypto.randomInt(100000, 999999).toString();
 
-    await db.execute(
-      `
-      UPDATE users
-      SET last_login = NOW()
-      WHERE user_id = ?
-      `,
-      [user.user_id],
-    );
-
-    await db.execute("DELETE FROM otp_codes WHERE email = ?", [user.email]);
+    // Remove any existing OTP for this user
+    await db.execute("DELETE FROM otp_codes WHERE user_id = ?", [user.user_id]);
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     await db.execute(
       `
       INSERT INTO otp_codes
-      (email, otp, expires_at)
+      (user_id, otp_code, expires_at)
       VALUES (?, ?, ?)
       `,
-      [user.email, otp, expiresAt],
+      [user.user_id, otp, expiresAt],
     );
 
     const info = await transporter.sendMail({
@@ -134,14 +112,7 @@ router.post("/login", async (req, res) => {
       to: user.email,
       subject: "PTC Portal OTP",
       text: `Your OTP is ${otp}.`,
-      html: `
-        <div style="font-family:Arial">
-          <h2>PTC Portal</h2>
-          <p>Your OTP is:</p>
-          <h1 style="letter-spacing:5px">${otp}</h1>
-          <p>This code expires in 5 minutes.</p>
-        </div>
-      `,
+      html: `...`,
     });
 
     console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
@@ -157,4 +128,116 @@ router.post("/login", async (req, res) => {
     });
   }
 });
+
+// =======================
+// VERIFY OTP
+// =======================
+router.post("/verify-otp", async (req, res) => {
+  const { username, otp } = req.body;
+
+  if (!username || !otp) {
+    return res.status(400).json({
+      error: "Username and OTP are required.",
+    });
+  }
+
+  try {
+    const [users] = await db.execute(
+      `
+      SELECT
+        u.user_id,
+        u.username,
+        u.email,
+        u.role_id,
+        u.is_verified,
+        u.is_active,
+        r.role_name
+      FROM users u
+      INNER JOIN roles r
+        ON u.role_id = r.role_id
+      WHERE u.username = ?
+      `,
+      [username],
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        error: "User not found.",
+      });
+    }
+
+    const user = users[0];
+
+    const [otpRows] = await db.execute(
+      `
+      SELECT otp_code, expires_at
+      FROM otp_codes
+      WHERE user_id = ?
+      `,
+      [user.user_id],
+    );
+
+    if (otpRows.length === 0) {
+      return res.status(400).json({
+        error: "OTP not found.",
+      });
+    }
+
+    const storedOtp = otpRows[0];
+
+    if (new Date() > new Date(storedOtp.expires_at)) {
+      await db.execute("DELETE FROM otp_codes WHERE user_id = ?", [
+        user.user_id,
+      ]);
+
+      return res.status(400).json({
+        error: "OTP has expired.",
+      });
+    }
+
+    if (storedOtp.otp_code !== otp) {
+      return res.status(400).json({
+        error: "Invalid OTP.",
+      });
+    }
+
+    // Verify account after successful OTP
+    if (!user.is_verified) {
+      await db.execute(
+        `
+        UPDATE users
+        SET is_verified = 1
+        WHERE user_id = ?
+        `,
+        [user.user_id],
+      );
+    }
+
+    // Delete used OTP (no re-insert needed)
+    await db.execute("DELETE FROM otp_codes WHERE user_id = ?", [user.user_id]);
+
+    await logActivity(
+      user.user_id,
+      "LOGIN",
+      "Authentication",
+      `${user.username} logged in successfully.`,
+    );
+
+    res.json({
+      user_id: user.user_id,
+      username: user.username,
+      email: user.email,
+      role: user.role_name,
+      role_id: user.role_id,
+    });
+  } catch (err) {
+    console.error("VERIFY OTP ERROR:");
+    console.error(err);
+
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
 export default router;

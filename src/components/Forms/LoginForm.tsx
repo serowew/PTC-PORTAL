@@ -12,20 +12,20 @@ export default function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
-    const result = await authService.login(username, password);
+    try {
+      await authService.login(username, password);
 
-    setLoading(false);
-
-    if (!result) {
-      setError("Invalid email or password.");
-      return;
+      authService.savePendingUsername(username);
+      navigate("/otp");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed.");
+    } finally {
+      setLoading(false);
     }
-
-    authService.savePendingUsername(username);
-    navigate("/otp");
   }
 
   return (
@@ -80,6 +80,7 @@ export default function LoginForm() {
         <div style={{ marginTop: "20px" }}>
           <h4>Development Access</h4>
 
+          {/* ADMIN */}
           <button
             type="button"
             onClick={() => {
@@ -97,51 +98,35 @@ export default function LoginForm() {
             Login as Admin
           </button>
 
+          {/* REGISTRAR */}
           <button
             type="button"
             onClick={() => {
               authService.saveSession({
                 user_id: 2,
-                username: "faculty",
-                email: "faculty@ptc.edu.ph",
-                role: "Faculty",
+                username: "registrar",
+                email: "registrar@ptc.edu.ph",
+                role: "Registrar",
                 role_id: 2,
               });
 
-              navigate("/faculty/dashboard");
+              navigate("/registrar/dashboard");
             }}
             style={{ marginLeft: "10px" }}
           >
-            Login as Faculty
+            Login as Registrar
           </button>
 
+          {/* PROGRAM HEAD */}
           <button
             type="button"
             onClick={() => {
               authService.saveSession({
                 user_id: 3,
-                username: "student",
-                email: "student@ptc.edu.ph",
-                role: "Student",
-                role_id: 3,
-              });
-
-              navigate("/student/dashboard");
-            }}
-            style={{ marginLeft: "10px" }}
-          >
-            Login as Student
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              authService.saveSession({
-                user_id: 4,
-                username: "programhead",
-                email: "programhead@ptc.edu.ph",
+                username: "proghead",
+                email: "proghead@ptc.edu.ph",
                 role: "Program Head",
-                role_id: 4,
+                role_id: 3,
               });
 
               navigate("/programhead/dashboard");
@@ -151,22 +136,42 @@ export default function LoginForm() {
             Login as Program Head
           </button>
 
+          {/* FACULTY */}
+          <button
+            type="button"
+            onClick={() => {
+              authService.saveSession({
+                user_id: 4,
+                username: "faculty",
+                email: "faculty@ptc.edu.ph",
+                role: "Faculty",
+                role_id: 4,
+              });
+
+              navigate("/faculty/dashboard");
+            }}
+            style={{ marginLeft: "10px" }}
+          >
+            Login as Faculty
+          </button>
+
+          {/* STUDENT */}
           <button
             type="button"
             onClick={() => {
               authService.saveSession({
                 user_id: 5,
-                username: "registrar",
-                email: "registrar@ptc.edu.ph",
-                role: "Registrar",
+                username: "student",
+                email: "student@ptc.edu.ph",
+                role: "Student",
                 role_id: 5,
               });
 
-              navigate("/registrar/dashboard");
+              navigate("/student/dashboard");
             }}
             style={{ marginLeft: "10px" }}
           >
-            Login as Registrar
+            Login as Student
           </button>
         </div>
       </div>

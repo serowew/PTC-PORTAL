@@ -28,7 +28,7 @@ export default function StudentDashboard() {
         <div className="dashboard-header">
           <div className="header-content">
             <div>
-              <h1>Welcome, {user.username}!</h1>
+              <h1>Welcome, {user.email}!</h1>
               <p>
                 Student Portal - View your schedule, grades, announcements, and
                 admission status
