@@ -1,0 +1,308 @@
+/* ===========================
+   PAGE
+=========================== */
+
+.enrollment-page {
+    max-width: 1300px;
+    margin: auto;
+    padding: 30px;
+}
+
+.enrollment-title {
+    margin-bottom: 25px;
+}
+
+.enrollment-title h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.enrollment-title p {
+    color: #64748b;
+    margin-top: 5px;
+}
+
+
+/* ===========================
+   FORM CARD
+=========================== */
+
+.enrollment-form {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 30px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.08);
+}
+
+
+/* ===========================
+   SECTION CARD
+=========================== */
+
+.form-section {
+    margin-bottom: 35px;
+}
+
+.form-section h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #0f172a;
+    border-left: 5px solid #2563eb;
+    padding-left: 12px;
+}
+
+
+/* ===========================
+   GRID
+=========================== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap: 20px;
+}
+
+
+/* ===========================
+   INPUTS
+=========================== */
+
+.form-grid label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+
+    width:100%;
+    padding:12px 14px;
+
+    border:1px solid #dbe3ef;
+    border-radius:10px;
+
+    font-size:15px;
+
+    transition:.2s;
+    background:white;
+
+    box-sizing:border-box;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus{
+
+    outline:none;
+    border-color:#2563eb;
+
+    box-shadow:
+    0 0 0 4px rgba(37,99,235,.15);
+
+}
+
+
+/* ===========================
+   PREVIEW
+=========================== */
+
+.preview-card{
+
+    grid-column:1/-1;
+
+    display:flex;
+    justify-content:space-between;
+    gap:25px;
+
+    margin-top:15px;
+
+    padding:22px;
+
+    border-radius:12px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+    );
+
+    color:white;
+
+}
+
+.preview-box{
+
+    flex:1;
+
+}
+
+.preview-box span{
+
+    display:block;
+
+    opacity:.8;
+    font-size:13px;
+    margin-bottom:5px;
+
+}
+
+.preview-box h3{
+
+    margin:0;
+
+    font-size:24px;
+
+}
+
+
+/* ===========================
+   SUMMARY
+=========================== */
+
+.summary-card{
+
+    margin-top:30px;
+
+    background:#f8fafc;
+
+    border:1px solid #dbe3ef;
+
+    border-radius:12px;
+
+    padding:25px;
+
+}
+
+.summary-card h3{
+
+    margin-top:0;
+    margin-bottom:20px;
+
+}
+
+.summary-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:15px;
+
+}
+
+.summary-item{
+
+    background:white;
+
+    border-radius:10px;
+
+    padding:15px;
+
+}
+
+.summary-item span{
+
+    display:block;
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+.summary-item strong{
+
+    font-size:16px;
+
+}
+
+
+/* ===========================
+   BUTTON
+=========================== */
+
+.submit-row{
+
+    display:flex;
+    justify-content:flex-end;
+
+    margin-top:35px;
+
+}
+
+.submit-btn{
+
+    background:#2563eb;
+    color:white;
+
+    border:none;
+
+    padding:14px 34px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.submit-btn:hover{
+
+    background:#1d4ed8;
+
+    transform:translateY(-2px);
+
+}
+
+
+/* ===========================
+   DIVIDER
+=========================== */
+
+.enrollment-form hr{
+
+    margin:35px 0;
+
+    border:none;
+
+    border-top:1px solid #e2e8f0;
+
+}
+
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:900px){
+
+.preview-card{
+
+    flex-direction:column;
+
+}
+
+.submit-row{
+
+    justify-content:stretch;
+
+}
+
+.submit-btn{
+
+    width:100%;
+
+}
+
+}
