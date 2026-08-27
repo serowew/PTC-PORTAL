@@ -172,7 +172,9 @@ router.post("/:studentId/photo", upload.single("photo"), async (req, res) => {
     const existingFiles = await fs.readdir(uploadDir).catch(() => []);
 
     await Promise.all(
-      existingFiles.map((fileName) =>
+      existingFiles
+       .filter((fileName) => fileName !== req.file.filename)
+       .map((fileName) =>
         fs.unlink(path.join(uploadDir, fileName)).catch(() => undefined),
       ),
     );
@@ -188,12 +190,12 @@ router.post("/:studentId/photo", upload.single("photo"), async (req, res) => {
 
       if (profileRows.length) {
         await db.execute(
-          `UPDATE student_profiles SET photo = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?`,
+          `UPDATE student_profiles SET photo = ? WHERE profile_id = ?`,
           [photoUrl, profileRows[0].profileId],
         );
       } else {
         await db.execute(
-          `INSERT INTO student_profiles (student_id, photo, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          `INSERT INTO student_profiles (student_id, photo, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)`,
           [resolvedStudentId, photoUrl],
         );
       }
@@ -237,7 +239,7 @@ router.delete("/:studentId/photo", async (req, res) => {
 
       if (profileRows.length) {
         await db.execute(
-          `UPDATE student_profiles SET photo = NULL, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?`,
+          `UPDATE student_profiles SET photo = NULL WHERE profile_id = ?`,
           [profileRows[0].profileId],
         );
       }

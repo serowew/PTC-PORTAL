@@ -10,11 +10,11 @@ import OtpAuth from "../pages/auth/Otp";
 import StudentDashboard from "../pages/student/Dashboard";
 import StudentProfile from "../pages/student/Profile";
 import StudentSchedule from "../pages/student/AcademicRecord/Schedule";
-import StudentRecord from "../pages/student/AcademicRecord/StudentRecord";
 
 // Student pages — Academic Records
 import StudentTranscript from "../pages/student/AcademicRecord/Transcript";
-import StudentCourseHistory from "../pages/student/AcademicRecord/CourseHistory";
+import StudentAcademicHistory from "../pages/student/AcademicRecord/AcademicHistory";
+import StudentGrades from "../pages/student/AcademicRecord/Grades";
 
 // Student pages — Course Management
 import ViewSubjects from "../pages/student/CourseManagement/Viewsubjects";
@@ -165,16 +165,16 @@ export default function AppRoutes() {
       />
       {/* ── Student: Academic Records ── */}
       <Route
-        path="/student/records"
-        element={<StudentRoute element={<StudentRecord />} />}
+        path="/student/grades"
+        element={<StudentRoute element={<StudentGrades />} />}
       />
       <Route
         path="/student/transcript"
         element={<StudentRoute element={<StudentTranscript />} />}
       />
       <Route
-        path="/student/course-history"
-        element={<StudentRoute element={<StudentCourseHistory />} />}
+        path="/student/academic-history"
+        element={<StudentRoute element={<StudentAcademicHistory />} />}
       />
       <Route
         path="/student/schedule"

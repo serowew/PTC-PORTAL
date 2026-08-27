@@ -4,9 +4,7 @@ export const studentNavGroups = [
     label: "Academic Records",
     icon: "",
     children: [
-      { label: "Grades & Results", path: "/student/records" },
-      { label: "Transcript", path: "/student/transcript" },
-      { label: "Course History", path: "/student/course-history" },
+      { label: "Grades", path: "/student/grades" },
       { label: "Schedule", path: "/student/schedule" },
     ],
   },

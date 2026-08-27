@@ -27,7 +27,6 @@ export const studentProfileModel = {
           sp.guardian_relationship AS guardianRelationship,
           sp.guardian_contact AS guardianContact,
           sp.created_at AS createdAt,
-          sp.updated_at AS updatedAt,
           s.student_number AS studentNumber,
           s.first_name AS firstName,
           s.middle_name AS middleName,
@@ -35,13 +34,16 @@ export const studentProfileModel = {
           s.gender,
           s.birth_date AS birthDate,
           s.contact_number AS contactNumber,
-          s.course,
+          c.course_name AS course,
           s.year_level AS yearLevel,
-          s.section,
-          s.enrollment_status AS enrollmentStatus,
+          sec.section_name AS section,
+          ss.status_name AS enrollmentStatus,
           u.email
         FROM student_profiles sp
         INNER JOIN students s ON s.student_id = sp.student_id
+        LEFT JOIN courses c ON c.course_id = s.course_id
+        LEFT JOIN sections sec ON sec.section_id = s.section_id
+        LEFT JOIN student_statuses ss ON ss.status_id = s.status_id
         LEFT JOIN users u ON u.user_id = s.user_id
         WHERE s.student_id = ?
            OR s.student_number = ?

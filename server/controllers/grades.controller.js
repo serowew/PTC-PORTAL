@@ -49,6 +49,7 @@ class GradesController {
           subjectCode: row.subject_code,
           subjectName: row.subject_name,
           units: row.units,
+          prelim: row.prelim_grade,
           midterm: row.midterm_grade,
           final: row.final_grade,
           finalGrade: row.final_rating,

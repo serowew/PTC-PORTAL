@@ -119,7 +119,7 @@ export default function StudentProfile() {
       yearLevel: profile.yearLevel || "",
       section: profile.section || "",
       semester: "",
-      contactNumber: profile.phoneNumber || "",
+      contactNumber: profile.contactNumber || "",
       email: profile.email || "",
       address: addressParts.join(", ") || "",
       enrollmentStatus: profile.enrollmentStatus || "",
@@ -436,7 +436,15 @@ export default function StudentProfile() {
                 </div>
                 <div className="info-card">
                   <span className="info-label">Birth Date</span>
-                  <strong>{student.birthDate || "Not provided"}</strong>
+                  <strong>
+                   {student.birthDate
+                    ? new Date(student.birthDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                    : "Not provided"}
+                  </strong>
                 </div>
                 <div className="info-card">
                   <span className="info-label">Address</span>

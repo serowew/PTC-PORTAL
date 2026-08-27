@@ -8,9 +8,9 @@ interface StudentGrade {
   subjectCode: string;
   subjectName: string;
   units: number;
+  prelim: number | string | null;
   midterm: number | string | null;
   final: number | string | null;
-  finalGrade: number | string | null;
   remarks: string;
 }
 
@@ -18,7 +18,7 @@ interface StudentInfo {
   studentNumber: string;
   name: string;
   course: string;
-  yearLevel: string;
+  yearLevel: number | string;
   section: string;
   enrollmentStatus?: string;
 }
@@ -126,6 +126,9 @@ export default function Grades() {
         }
 
         const payload = (await response.json()) as GradesResponse;
+
+        console.log("🔥 GRADES PAYLOAD RECEIVED BY REACT:", payload);
+
         setData(payload);
       } catch (err) {
         setData(null);
@@ -142,6 +145,9 @@ export default function Grades() {
     void loadGrades();
   }, [academicYear, navigate, semester]);
 
+  console.log("🔥 DATA STATE:", data);
+  console.log("🔥 GRADES ARRAY:", data?.grades);
+
   const summary = useMemo(() => {
     if (!data?.grades?.length) {
       return {
@@ -153,7 +159,7 @@ export default function Grades() {
 
     const totalUnits = data.grades.reduce((sum, grade) => sum + grade.units, 0);
     const weightedSum = data.grades.reduce(
-      (sum, grade) => sum + (grade.finalGrade ?? 0) * grade.units,
+      (sum, grade) => sum + (Number(grade.final) || 0) * grade.units,
       0,
     );
     const semesterGwa = totalUnits > 0 ? weightedSum / totalUnits : null;
@@ -316,9 +322,9 @@ export default function Grades() {
                       <th>Subject Code</th>
                       <th>Subject Title</th>
                       <th>Units</th>
+                      <th>Prelim Grade</th>
                       <th>Midterm Grade</th>
                       <th>Final Grade</th>
-                      <th>Final Rating</th>
                       <th>Remarks</th>
                     </tr>
                   </thead>
@@ -328,10 +334,10 @@ export default function Grades() {
                         <td className="subject-code-cell">{grade.subjectCode}</td>
                         <td className="subject-title-cell">{grade.subjectName}</td>
                         <td>{grade.units}</td>
+                        <td>{formatGrade(grade.prelim)}</td>
                         <td>{formatGrade(grade.midterm)}</td>
-                        <td>{formatGrade(grade.final)}</td>
                         <td>
-                          <strong>{formatGrade(grade.finalGrade)}</strong>
+                          <strong>{formatGrade(grade.final)}</strong>
                         </td>
                         <td>
                           <span className={getRemarkClass(grade.remarks)}>{grade.remarks}</span>

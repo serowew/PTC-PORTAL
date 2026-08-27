@@ -24,22 +24,27 @@ class GradesModel {
         sub.subject_name,
         sub.units,
 
+        g.prelim_grade,
         g.midterm_grade,
         g.final_grade,
-        g.final_rating,
-        g.remarks,
-        g.approval_status
+        g.remarks
 
       FROM grades g
 
       INNER JOIN students s
         ON s.student_id = g.student_id
 
-      INNER JOIN subject_offerings so
-        ON so.offering_id = g.offering_id
-
       INNER JOIN subjects sub
-        ON sub.subject_id = so.subject_id
+        ON sub.subject_id = g.subject_id
+
+      INNER JOIN enrollments e
+        ON e.enrollment_id = g.enrollment_id
+
+      INNER JOIN academic_years ay
+        ON ay.academic_year_id = e.academic_year_id
+
+      INNER JOIN semesters sem
+        ON sem.semester_id = e.semester_id
 
       INNER JOIN sections sec
         ON sec.section_id = s.section_id
@@ -47,17 +52,10 @@ class GradesModel {
       INNER JOIN courses c
         ON c.course_id = s.course_id
 
-      INNER JOIN academic_years ay
-        ON ay.academic_year_id = so.academic_year_id
-
-      INNER JOIN semesters sem
-        ON sem.semester_id = so.semester_id
-
       WHERE
         s.student_id = ?
         AND ay.academic_year = ?
         AND sem.semester_name = ?
-        AND g.approval_status = 'Published'
 
       ORDER BY sub.subject_code;
     `;
