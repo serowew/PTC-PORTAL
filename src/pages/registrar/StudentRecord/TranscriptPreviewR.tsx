@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-
 import { useNavigate, useParams } from "react-router-dom";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
@@ -7,21 +6,16 @@ import { authService } from "../../../services/auth.service";
 
 import "../../../styles/RegistrarTranscriptPreview.css";
 
-// =====================================================
-// API
-// =====================================================
-
 const API_BASE_URL = "http://localhost:3000/api/registrar/students";
 
-// =====================================================
-// TYPES
-// =====================================================
+type AcademicRecordType = "PTC_GRADE" | "TRANSFER_CREDIT";
 
-type AcademicClassification = "Passed" | "Incomplete" | "Failed" | "Unknown";
-
-// =====================================================
-// STUDENT
-// =====================================================
+type AcademicClassification =
+  | "Passed"
+  | "Incomplete"
+  | "Failed"
+  | "Credited"
+  | "Unknown";
 
 interface Student {
   student_id: number;
@@ -31,49 +25,54 @@ interface Student {
   middle_name: string | null;
   last_name: string;
 
-  gender?: string | null;
-  birth_date?: string | null;
-  contact_number?: string | null;
-  email?: string | null;
-
-  course_id?: number | null;
   course_code: string;
   course_name?: string | null;
 
   year_level: number;
 
-  status: string;
-
-  section_id?: number | null;
   section_name?: string | null;
-
-  semester_id?: number | null;
   semester_name?: string | null;
 
-  house_no?: string | null;
-  street?: string | null;
-  barangay?: string | null;
-  city?: string | null;
-  province?: string | null;
-  zip_code?: string | null;
+  status: string;
 }
 
-// =====================================================
-// ACADEMIC RECORD
-// =====================================================
+interface TransferSource {
+  school: string;
+
+  course: string | null;
+
+  student_number: string | null;
+
+  subject_code: string | null;
+  subject_name: string;
+
+  units: number | null;
+
+  grade: string | null;
+
+  remarks: string | null;
+
+  academic_year: string | null;
+
+  year_level: number | null;
+
+  semester: string | null;
+}
 
 interface AcademicRecord {
-  enrollment_id: number;
+  record_type: AcademicRecordType;
 
-  academic_year_id: number;
-  academic_year: string;
+  academic_source: string;
 
-  semester_id: number;
-  semester_name: string;
+  official_record: boolean;
 
-  enrollment_status: string;
+  grade_id: number | null;
 
-  enrollment_subject_id: number;
+  enrollment_subject_id: number | null;
+  enrollment_id: number | null;
+
+  transfer_evaluation_id: number | null;
+  transfer_subject_id: number | null;
 
   subject_id: number;
 
@@ -82,51 +81,81 @@ interface AcademicRecord {
 
   units: number;
 
-  lecture_hours?: number | null;
-  laboratory_hours?: number | null;
+  academic_year_id: number | null;
+  academic_year: string | null;
+
+  semester_id: number | null;
+  semester_name: string | null;
+
+  enrollment_status: string | null;
 
   subject_status: string;
-
-  offering_id?: number | null;
-
-  section_id?: number | null;
-  section_subject_id?: number | null;
-  section_name?: string | null;
-
-  grade_id: number;
-
-  faculty_id?: number | null;
 
   prelim_grade: number | null;
   midterm_grade: number | null;
   final_grade: number | null;
 
-  // =================================================
-  // OFFICIAL RESULT
-  // =================================================
-
   final_rating: number | null;
 
-  academic_result?: "Passed" | "Incomplete" | "Failed" | null;
+  source_grade: string | null;
 
-  remarks: "Passed" | "Incomplete" | "Failed" | null;
+  remarks: string | null;
 
-  grade_status: "Draft" | "Submitted" | "Returned" | "Approved";
+  grade_status: "Draft" | "Submitted" | "Returned" | "Approved" | null;
 
-  submitted_at?: string | null;
+  result_code?: string | null;
 
-  reviewed_by?: number | null;
-  reviewed_by_username?: string | null;
-  reviewed_at?: string | null;
-  review_remarks?: string | null;
+  academic_result?: AcademicClassification | null;
 
-  grade_created_at?: string | null;
-  grade_updated_at?: string | null;
+  classification?: AcademicClassification | null;
+
+  passed?: boolean;
+
+  retake?: boolean;
+
+  curriculum_satisfied?: boolean;
+
+  transfer_source?: TransferSource | null;
+
+  approval?: {
+    reviewed_by: number | null;
+    reviewed_by_username: string | null;
+    reviewed_at: string | null;
+    review_remarks?: string | null;
+  } | null;
+
+  transfer_completion?: {
+    evaluation_status: string;
+
+    completed_by: number | null;
+
+    completed_by_username: string | null;
+
+    completed_at: string | null;
+
+    completion_remarks: string | null;
+  } | null;
 }
 
-// =====================================================
-// API RESPONSE
-// =====================================================
+interface AcademicSummary {
+  total_official_records?: number;
+
+  total_recorded_units?: number;
+
+  earned_units?: number;
+
+  total_approved_subjects?: number;
+
+  passed_subjects?: number;
+
+  incomplete_subjects?: number;
+
+  failed_subjects?: number;
+
+  official_transfer_credit_records?: number;
+
+  transfer_credited_units?: number;
+}
 
 interface AcademicResponse {
   success: boolean;
@@ -137,31 +166,36 @@ interface AcademicResponse {
 
   records?: AcademicRecord[];
 
+  summary?: AcademicSummary;
+
+  ptc_grade_records?: AcademicRecord[];
+
+  transfer_credit_records?: AcademicRecord[];
+
   message?: string;
+
   error?: string;
 }
 
-// =====================================================
-// GROUP TYPES
-// =====================================================
-
 interface SemesterGroup {
-  semesterId: number;
+  key: string;
+
   semesterName: string;
+
+  sortOrder: number;
 
   records: AcademicRecord[];
 }
 
 interface AcademicYearGroup {
-  academicYearId: number;
+  key: string;
+
   academicYear: string;
+
+  sortOrder: number;
 
   semesters: SemesterGroup[];
 }
-
-// =====================================================
-// SAFE JSON
-// =====================================================
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
@@ -180,65 +214,32 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// =====================================================
-// FORMAT GRADE
-// =====================================================
+function isTransferCredit(record: AcademicRecord): boolean {
+  return record.record_type === "TRANSFER_CREDIT";
+}
 
-function formatGrade(value: number | null | undefined): string {
-  if (value === null || value === undefined) {
+function formatGrade(value: number | string | null | undefined): string {
+  if (value === null || value === undefined || value === "") {
     return "—";
   }
 
   const numeric = Number(value);
 
   if (!Number.isFinite(numeric)) {
-    return "—";
+    return String(value);
   }
 
   return numeric.toFixed(2);
 }
 
-// =====================================================
-// FORMAT DATE
-// =====================================================
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleDateString("en-PH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-// =====================================================
-// CLASSIFY FINAL RATING
-// =====================================================
-//
-// 1.00 - 3.00 = Passed
-// 4.00        = Incomplete / Retake
-// 5.00        = Failed / Retake
-//
-// final_rating is the official academic value.
-// =====================================================
-
 function classifyFinalRating(
-  finalRating: number | null | undefined,
+  value: number | null | undefined,
 ): AcademicClassification {
-  if (finalRating === null || finalRating === undefined) {
+  if (value === null || value === undefined) {
     return "Unknown";
   }
 
-  const rating = Number(finalRating);
+  const rating = Number(value);
 
   if (!Number.isFinite(rating)) {
     return "Unknown";
@@ -259,16 +260,11 @@ function classifyFinalRating(
   return "Unknown";
 }
 
-// =====================================================
-// GET RESULT
-// =====================================================
-//
-// Prefer backend academic_result.
-//
-// final_rating remains the fallback source of truth.
-// =====================================================
-
 function getClassification(record: AcademicRecord): AcademicClassification {
+  if (isTransferCredit(record)) {
+    return "Credited";
+  }
+
   if (
     record.academic_result === "Passed" ||
     record.academic_result === "Incomplete" ||
@@ -277,42 +273,78 @@ function getClassification(record: AcademicRecord): AcademicClassification {
     return record.academic_result;
   }
 
+  if (
+    record.classification === "Passed" ||
+    record.classification === "Incomplete" ||
+    record.classification === "Failed"
+  ) {
+    return record.classification;
+  }
+
   return classifyFinalRating(record.final_rating);
 }
 
-// =====================================================
-// RETAKE
-// =====================================================
-
-function requiresRetake(record: AcademicRecord): boolean {
-  const result = getClassification(record);
-
-  return result === "Incomplete" || result === "Failed";
+function getAcademicYearLabel(record: AcademicRecord): string {
+  return (
+    record.academic_year ||
+    record.transfer_source?.academic_year ||
+    "Transfer Credit"
+  );
 }
 
-// =====================================================
-// STUDENT NAME
-// =====================================================
+function getSemesterLabel(record: AcademicRecord): string {
+  return (
+    record.semester_name ||
+    record.transfer_source?.semester ||
+    "Transfer Credit"
+  );
+}
 
-function getStudentName(student: Student): string {
-  const first = student.first_name?.trim() || "";
+function getAcademicYearSortOrder(value: string): number {
+  const match = value.match(/^(\d{4})/);
 
-  const middle = student.middle_name?.trim() || "";
-
-  const last = student.last_name?.trim() || "";
-
-  const givenName = [first, middle].filter(Boolean).join(" ");
-
-  if (last && givenName) {
-    return `${last}, ${givenName}`;
+  if (!match) {
+    return 0;
   }
 
-  return [last, givenName].filter(Boolean).join(", ") || student.student_number;
+  const year = Number(match[1]);
+
+  return Number.isFinite(year) ? year : 0;
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+function getSemesterSortOrder(value: string): number {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized.includes("first")) {
+    return 1;
+  }
+
+  if (normalized.includes("second")) {
+    return 2;
+  }
+
+  if (normalized.includes("summer")) {
+    return 3;
+  }
+
+  return 99;
+}
+
+function getRecordKey(record: AcademicRecord): string {
+  if (isTransferCredit(record) && record.transfer_subject_id !== null) {
+    return `transfer-${record.transfer_subject_id}`;
+  }
+
+  if (record.grade_id !== null) {
+    return `grade-${record.grade_id}`;
+  }
+
+  if (record.enrollment_subject_id !== null) {
+    return `es-${record.enrollment_subject_id}`;
+  }
+
+  return `${record.record_type}-${record.subject_id}`;
+}
 
 export default function TranscriptPreviewR() {
   const navigate = useNavigate();
@@ -321,35 +353,23 @@ export default function TranscriptPreviewR() {
     id: string;
   }>();
 
-  // ===================================================
-  // AUTHENTICATION
-  // ===================================================
-
   const user = authService.getSession();
 
   const token = authService.getToken();
 
-  const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
-  // ===================================================
-  // STATE
-  // ===================================================
+  const userRole = user?.role;
 
   const [student, setStudent] = useState<Student | null>(null);
 
   const [records, setRecords] = useState<AcademicRecord[]>([]);
 
+  const [apiSummary, setApiSummary] = useState<AcademicSummary | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
-
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // ===================================================
-  // AUTHORIZATION
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated) {
@@ -363,8 +383,8 @@ export default function TranscriptPreviewR() {
     }
 
     if (userRole !== "Registrar") {
-      if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), {
+      if (user) {
+        navigate(authService.getDashboardRoute(user.role), {
           replace: true,
         });
       } else {
@@ -373,11 +393,7 @@ export default function TranscriptPreviewR() {
         });
       }
     }
-  }, [authenticated, userRole, navigate]);
-
-  // ===================================================
-  // FETCH TRANSCRIPT DATA
-  // ===================================================
+  }, [authenticated, userRole, user, navigate]);
 
   useEffect(() => {
     if (!authenticated || userRole !== "Registrar") {
@@ -407,27 +423,23 @@ export default function TranscriptPreviewR() {
     const fetchTranscriptData = async () => {
       try {
         setLoading(true);
+
         setError("");
 
-        const requestUrl = `${API_BASE_URL}/${studentId}/academic-records`;
+        const response = await authService.authFetch(
+          `${API_BASE_URL}/${studentId}/academic-records`,
+          {
+            method: "GET",
 
-        console.log("GET REGISTRAR TRANSCRIPT:", requestUrl);
+            signal: controller.signal,
 
-        const response = await authService.authFetch(requestUrl, {
-          method: "GET",
-
-          signal: controller.signal,
-
-          headers: {
-            Accept: "application/json",
+            headers: {
+              Accept: "application/json",
+            },
           },
-        });
+        );
 
         const data = await readJsonResponse<AcademicResponse>(response);
-
-        // =============================================
-        // 401
-        // =============================================
 
         if (response.status === 401) {
           authService.logout();
@@ -439,26 +451,13 @@ export default function TranscriptPreviewR() {
           return;
         }
 
-        // =============================================
-        // 403
-        // =============================================
-
         if (response.status === 403) {
-          throw new Error(
-            data.message ||
-              "Registrar access is required to view this transcript.",
-          );
+          throw new Error(data.message || "Registrar access is required.");
         }
-
-        // =============================================
-        // HTTP / API ERROR
-        // =============================================
 
         if (!response.ok || !data.success) {
           throw new Error(
-            data.message ||
-              data.error ||
-              `Unable to load transcript (${response.status}).`,
+            data.message || data.error || "Failed to load transcript records.",
           );
         }
 
@@ -468,30 +467,32 @@ export default function TranscriptPreviewR() {
           );
         }
 
-        // =============================================
-        // OFFICIAL TRANSCRIPT FILTER
-        //
-        // Transcript must contain ONLY:
-        //
-        // - Approved enrollment
-        // - Approved grade
-        // - final_rating present
-        // - First Semester / Second Semester
-        //
-        // Summer is excluded.
-        // =============================================
-
         const officialRecords = Array.isArray(data.records)
-          ? data.records.filter(
-              (record) =>
+          ? data.records.filter((record) => {
+              if (record.official_record !== true) {
+                return false;
+              }
+
+              if (isTransferCredit(record)) {
+                return (
+                  record.subject_status === "Credited" &&
+                  record.transfer_evaluation_id !== null &&
+                  record.transfer_subject_id !== null
+                );
+              }
+
+              return (
                 record.enrollment_status === "Approved" &&
                 record.grade_status === "Approved" &&
                 record.final_rating !== null &&
-                [1, 2].includes(Number(record.semester_id)),
-            )
+                [1, 2].includes(Number(record.semester_id))
+              );
+            })
           : [];
 
         setStudent(data.student);
+
+        setApiSummary(data.summary || null);
 
         setRecords(officialRecords);
       } catch (requestError) {
@@ -506,15 +507,9 @@ export default function TranscriptPreviewR() {
 
         setStudent(null);
 
+        setApiSummary(null);
+
         setRecords([]);
-
-        if (requestError instanceof TypeError) {
-          setError(
-            "Unable to connect to the transcript server. Make sure the backend is running on port 3000.",
-          );
-
-          return;
-        }
 
         setError(
           requestError instanceof Error
@@ -533,225 +528,153 @@ export default function TranscriptPreviewR() {
     return () => {
       controller.abort();
     };
-  }, [id, authenticated, userRole, navigate, refreshKey]);
-
-  // ===================================================
-  // GROUP OFFICIAL RECORDS
-  //
-  // Transcript is chronological:
-  //
-  // Oldest AY
-  //   First Semester
-  //   Second Semester
-  //
-  // Newest AY
-  // ===================================================
+  }, [id, authenticated, userRole, navigate]);
 
   const groupedRecords = useMemo<AcademicYearGroup[]>(() => {
-    const yearMap = new Map<number, AcademicYearGroup>();
+    const yearMap = new Map<string, AcademicYearGroup>();
 
     records.forEach((record) => {
-      let year = yearMap.get(record.academic_year_id);
+      const academicYear = getAcademicYearLabel(record);
 
-      if (!year) {
-        year = {
-          academicYearId: record.academic_year_id,
+      let yearGroup = yearMap.get(academicYear);
 
-          academicYear: record.academic_year,
+      if (!yearGroup) {
+        yearGroup = {
+          key: academicYear,
+
+          academicYear,
+
+          sortOrder: getAcademicYearSortOrder(academicYear),
 
           semesters: [],
         };
 
-        yearMap.set(record.academic_year_id, year);
+        yearMap.set(academicYear, yearGroup);
       }
 
-      let semester = year.semesters.find(
-        (item) => item.semesterId === record.semester_id,
+      const semesterName = getSemesterLabel(record);
+
+      const semesterKey = `${academicYear}-${semesterName}`;
+
+      let semesterGroup = yearGroup.semesters.find(
+        (semester) => semester.key === semesterKey,
       );
 
-      if (!semester) {
-        semester = {
-          semesterId: record.semester_id,
+      if (!semesterGroup) {
+        semesterGroup = {
+          key: semesterKey,
 
-          semesterName: record.semester_name,
+          semesterName,
+
+          sortOrder: getSemesterSortOrder(semesterName),
 
           records: [],
         };
 
-        year.semesters.push(semester);
+        yearGroup.semesters.push(semesterGroup);
       }
 
-      semester.records.push(record);
+      semesterGroup.records.push(record);
     });
 
     const groups = Array.from(yearMap.values());
 
-    // Oldest academic year first
-    groups.sort((a, b) => a.academicYearId - b.academicYearId);
+    groups.sort((a, b) => b.sortOrder - a.sortOrder);
 
     groups.forEach((year) => {
-      year.semesters.sort((a, b) => a.semesterId - b.semesterId);
-
-      year.semesters.forEach((semester) => {
-        semester.records.sort(
-          (a, b) => a.enrollment_subject_id - b.enrollment_subject_id,
-        );
-      });
+      year.semesters.sort((a, b) => a.sortOrder - b.sortOrder);
     });
 
     return groups;
   }, [records]);
 
-  // ===================================================
-  // SUMMARY
-  // ===================================================
-
-  const summary = useMemo(() => {
-    const passed = records.filter(
-      (record) => getClassification(record) === "Passed",
+  const totalRecordedUnits = useMemo(() => {
+    return (
+      apiSummary?.total_recorded_units ??
+      records.reduce((total, record) => total + Number(record.units || 0), 0)
     );
+  }, [records, apiSummary]);
 
-    const incomplete = records.filter(
-      (record) => getClassification(record) === "Incomplete",
-    );
+  const earnedUnits = useMemo(() => {
+    if (apiSummary?.earned_units !== undefined) {
+      return apiSummary.earned_units;
+    }
 
-    const failed = records.filter(
-      (record) => getClassification(record) === "Failed",
-    );
+    const subjects = new Map<number, number>();
 
-    const retakes = records.filter(requiresRetake);
+    records.forEach((record) => {
+      if (!record.curriculum_satisfied) {
+        return;
+      }
 
-    const recordedUnits = records.reduce(
-      (total, record) => total + Number(record.units || 0),
+      if (!subjects.has(record.subject_id)) {
+        subjects.set(record.subject_id, Number(record.units || 0));
+      }
+    });
+
+    return Array.from(subjects.values()).reduce(
+      (total, units) => total + units,
       0,
     );
+  }, [records, apiSummary]);
 
-    const earnedUnits = passed.reduce(
-      (total, record) => total + Number(record.units || 0),
-      0,
+  const transferCreditCount = useMemo(() => {
+    return (
+      apiSummary?.official_transfer_credit_records ??
+      records.filter(isTransferCredit).length
     );
-
-    return {
-      totalSubjects: records.length,
-
-      recordedUnits,
-
-      earnedUnits,
-
-      passed: passed.length,
-
-      incomplete: incomplete.length,
-
-      failed: failed.length,
-
-      retakes: retakes.length,
-    };
-  }, [records]);
-
-  // ===================================================
-  // STUDENT NAME
-  // ===================================================
+  }, [records, apiSummary]);
 
   const studentName = useMemo(() => {
     if (!student) {
       return "";
     }
 
-    return getStudentName(student);
+    const givenName = [student.first_name, student.middle_name]
+      .filter(Boolean)
+      .join(" ");
+
+    return `${student.last_name}, ${givenName}`;
   }, [student]);
-
-  // ===================================================
-  // ACTIONS
-  // ===================================================
-
-  const refresh = () => {
-    setRefreshKey((current) => current + 1);
-  };
-
-  const printTranscript = () => {
-    window.print();
-  };
-
-  // ===================================================
-  // AUTH RENDER GUARD
-  // ===================================================
 
   if (!authenticated || !user || userRole !== "Registrar") {
     return null;
   }
 
-  // ===================================================
-  // LOADING
-  // ===================================================
-
   if (loading) {
     return (
       <DashboardLayout>
-        <main className="transcript-page">
-          <div className="transcript-loading">
-            <div className="transcript-loading-spinner" />
-
-            <div>
-              <strong>Loading transcript</strong>
-
-              <span>Retrieving approved academic records...</span>
-            </div>
-          </div>
-        </main>
+        <div className="transcript-page">
+          <div className="transcript-message">Loading transcript...</div>
+        </div>
       </DashboardLayout>
     );
   }
-
-  // ===================================================
-  // ERROR
-  // ===================================================
 
   if (error || !student) {
     return (
       <DashboardLayout>
-        <main className="transcript-page">
-          <div className="transcript-error">
-            <div>
-              <strong>Transcript could not be loaded</strong>
-
-              <p>{error || "Student record not found."}</p>
-            </div>
-
-            <div className="transcript-error-actions">
-              <button
-                type="button"
-                className="transcript-back-btn"
-                onClick={() => navigate(-1)}
-              >
-                Go Back
-              </button>
-
-              <button
-                type="button"
-                className="transcript-retry-btn"
-                onClick={refresh}
-              >
-                Try Again
-              </button>
-            </div>
+        <div className="transcript-page">
+          <div className="transcript-message error">
+            {error || "Student record not found."}
           </div>
-        </main>
+
+          <button
+            type="button"
+            className="transcript-back-btn"
+            onClick={() => navigate(-1)}
+          >
+            Go Back
+          </button>
+        </div>
       </DashboardLayout>
     );
   }
 
-  // ===================================================
-  // RENDER
-  // ===================================================
-
   return (
     <DashboardLayout>
-      <main className="transcript-page">
-        {/* =================================================
-            ACTION BAR
-        ================================================= */}
-
-        <section className="transcript-action-bar">
+      <div className="transcript-page">
+        <div className="transcript-action-bar">
           <button
             type="button"
             className="transcript-back-btn"
@@ -763,64 +686,32 @@ export default function TranscriptPreviewR() {
           <div className="transcript-actions">
             <button
               type="button"
-              className="transcript-refresh-btn"
-              onClick={refresh}
+              className="transcript-print-btn"
+              onClick={() => window.print()}
             >
-              Refresh
+              Print
             </button>
 
             <button
               type="button"
-              className="transcript-print-btn"
-              onClick={printTranscript}
+              className="transcript-generate-btn"
+              onClick={() => window.print()}
             >
-              Print Preview
+              Generate TOR
             </button>
           </div>
-        </section>
+        </div>
 
-        {/* =================================================
-            OFFICIAL DATA NOTICE
-        ================================================= */}
-
-        <section className="transcript-official-notice">
-          <div className="transcript-official-icon">✓</div>
-
-          <div>
-            <strong>Approved Academic Records Only</strong>
-
-            <p>
-              This transcript preview contains only approved grades from
-              approved enrollments. Draft, Submitted, and Returned grades are
-              excluded.
-            </p>
-          </div>
-        </section>
-
-        {/* =================================================
-            TRANSCRIPT DOCUMENT
-        ================================================= */}
-
-        <article className="transcript-document">
-          {/* ===============================================
-              SCHOOL HEADER
-          =============================================== */}
-
-          <header className="transcript-header">
+        <div className="transcript-document">
+          <div className="transcript-header">
             <h1>PATEROS TECHNOLOGICAL COLLEGE</h1>
 
             <p>OFFICE OF THE REGISTRAR</p>
 
             <h2>TRANSCRIPT OF RECORDS</h2>
+          </div>
 
-            <span className="transcript-preview-label">REGISTRAR PREVIEW</span>
-          </header>
-
-          {/* ===============================================
-              STUDENT INFORMATION
-          =============================================== */}
-
-          <section className="transcript-student-info">
+          <div className="transcript-student-info">
             <div className="student-info-row">
               <div>
                 <span>Student Number</span>
@@ -836,7 +727,7 @@ export default function TranscriptPreviewR() {
             </div>
 
             <div className="student-info-row">
-              <div className="student-info-full">
+              <div>
                 <span>Name</span>
 
                 <strong>{studentName}</strong>
@@ -847,7 +738,9 @@ export default function TranscriptPreviewR() {
               <div>
                 <span>Program</span>
 
-                <strong>{student.course_code || "—"}</strong>
+                <strong>{student.course_code}</strong>
+
+                {student.course_name && <small>{student.course_name}</small>}
               </div>
 
               <div>
@@ -856,286 +749,199 @@ export default function TranscriptPreviewR() {
                 <strong>Year {student.year_level}</strong>
               </div>
             </div>
+          </div>
 
-            <div className="student-info-row">
-              <div>
-                <span>Current Section</span>
-
-                <strong>{student.section_name || "Not Assigned"}</strong>
-              </div>
-
-              <div>
-                <span>Current Semester</span>
-
-                <strong>{student.semester_name || "—"}</strong>
-              </div>
-            </div>
-          </section>
-
-          {/* ===============================================
-              ACADEMIC HISTORY
-          =============================================== */}
-
-          <section className="transcript-academic-history">
+          <div className="transcript-academic-history">
             {groupedRecords.length === 0 ? (
               <div className="transcript-empty">
-                <strong>No approved academic records found.</strong>
-
-                <p>
-                  Approved grades will appear here after Program Head approval.
-                </p>
+                No official academic records found.
               </div>
             ) : (
-              groupedRecords.map((academicYear) => (
-                <section
-                  className="transcript-academic-year"
-                  key={academicYear.academicYearId}
-                >
-                  <h3>Academic Year {academicYear.academicYear}</h3>
+              groupedRecords.map((year) => (
+                <div className="transcript-academic-year" key={year.key}>
+                  <h3>Academic Year {year.academicYear}</h3>
 
-                  {academicYear.semesters.map((semester) => {
-                    const recordedUnits = semester.records.reduce(
+                  {year.semesters.map((semester) => {
+                    const semesterUnits = semester.records.reduce(
                       (total, record) => total + Number(record.units || 0),
                       0,
                     );
 
-                    const earnedUnits = semester.records
-                      .filter(
-                        (record) => getClassification(record) === "Passed",
-                      )
+                    const semesterEarnedUnits = semester.records
+                      .filter((record) => record.curriculum_satisfied === true)
                       .reduce(
                         (total, record) => total + Number(record.units || 0),
                         0,
                       );
 
                     return (
-                      <section
-                        className="transcript-semester"
-                        key={`${academicYear.academicYearId}-${semester.semesterId}`}
-                      >
-                        <div className="transcript-semester-heading">
-                          <h4>{semester.semesterName}</h4>
+                      <div className="transcript-semester" key={semester.key}>
+                        <h4>{semester.semesterName}</h4>
 
-                          <span>
-                            {semester.records.length} subject
-                            {semester.records.length === 1 ? "" : "s"}
-                          </span>
-                        </div>
+                        <table className="transcript-table">
+                          <thead>
+                            <tr>
+                              <th>Subject Code</th>
 
-                        {/* =============================
-                                TRANSCRIPT TABLE
-                            ============================= */}
+                              <th>Subject Description</th>
 
-                        <div className="transcript-table-wrapper">
-                          <table className="transcript-table">
-                            <thead>
-                              <tr>
-                                <th>Subject Code</th>
+                              <th>Units</th>
 
-                                <th>Subject Description</th>
+                              <th>Academic Source</th>
 
-                                <th>Units</th>
+                              <th>Official Result</th>
 
-                                <th>Final Rating</th>
+                              <th>Remarks</th>
+                            </tr>
+                          </thead>
 
-                                <th>Result</th>
+                          <tbody>
+                            {semester.records.map((record) => {
+                              const transfer = isTransferCredit(record);
 
-                                <th>Academic Status</th>
-                              </tr>
-                            </thead>
+                              const classification = getClassification(record);
 
-                            <tbody>
-                              {semester.records.map((record) => {
-                                const result = getClassification(record);
+                              return (
+                                <tr key={getRecordKey(record)}>
+                                  <td>{record.subject_code}</td>
 
-                                return (
-                                  <tr key={record.enrollment_subject_id}>
-                                    <td>
-                                      <strong className="transcript-subject-code">
-                                        {record.subject_code}
-                                      </strong>
-                                    </td>
+                                  <td>
+                                    <strong>{record.subject_name}</strong>
 
-                                    <td>{record.subject_name}</td>
+                                    {transfer && record.transfer_source && (
+                                      <>
+                                        <br />
 
-                                    <td>{record.units}</td>
+                                        <small>
+                                          Previous School:{" "}
+                                          {record.transfer_source.school}
+                                        </small>
 
-                                    <td>
-                                      <strong className="transcript-final-rating">
+                                        <br />
+
+                                        <small>
+                                          Previous Subject:{" "}
+                                          {record.transfer_source.subject_code
+                                            ? `${record.transfer_source.subject_code} — `
+                                            : ""}
+                                          {record.transfer_source.subject_name}
+                                        </small>
+                                      </>
+                                    )}
+                                  </td>
+
+                                  <td>{record.units}</td>
+
+                                  <td>
+                                    {transfer ? (
+                                      <>
+                                        <strong>Transfer Credit</strong>
+
+                                        <br />
+
+                                        <small>
+                                          {record.transfer_source?.school}
+                                        </small>
+                                      </>
+                                    ) : (
+                                      "PTC Grade"
+                                    )}
+                                  </td>
+
+                                  <td>
+                                    {transfer ? (
+                                      <strong>Credited</strong>
+                                    ) : (
+                                      <strong>
                                         {formatGrade(record.final_rating)}
                                       </strong>
-                                    </td>
+                                    )}
+                                  </td>
 
-                                    <td>
-                                      <div className="transcript-result-cell">
-                                        <span
-                                          className={`transcript-result ${result.toLowerCase()}`}
-                                        >
-                                          {result}
-                                        </span>
+                                  <td>
+                                    {transfer ? (
+                                      <>
+                                        <strong>
+                                          Source Grade:{" "}
+                                          {formatGrade(record.source_grade)}
+                                        </strong>
 
-                                        {requiresRetake(record) && (
-                                          <small className="transcript-retake">
-                                            Retake Required
-                                          </small>
-                                        )}
-                                      </div>
-                                    </td>
+                                        <br />
 
-                                    <td>
-                                      <span
-                                        className={`transcript-subject-status ${record.subject_status
-                                          .toLowerCase()
-                                          .replace(/\s+/g, "-")}`}
-                                      >
-                                        {record.subject_status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
+                                        <small>
+                                          External previous-school grade — not a
+                                          PTC Final Rating
+                                        </small>
+                                      </>
+                                    ) : (
+                                      classification
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+
+                        <div className="semester-total">
+                          <strong>Semester Recorded Units:</strong>{" "}
+                          {semesterUnits}
+                          {" • "}
+                          <strong>Earned Units:</strong> {semesterEarnedUnits}
                         </div>
-
-                        {/* =============================
-                                SEMESTER SUMMARY
-                            ============================= */}
-
-                        <div className="transcript-semester-summary">
-                          <div>
-                            <span>Recorded Units</span>
-
-                            <strong>{recordedUnits}</strong>
-                          </div>
-
-                          <div>
-                            <span>Earned Units</span>
-
-                            <strong>{earnedUnits}</strong>
-                          </div>
-                        </div>
-                      </section>
+                      </div>
                     );
                   })}
-                </section>
+                </div>
               ))
             )}
-          </section>
+          </div>
 
-          {/* ===============================================
-              OVERALL SUMMARY
-          =============================================== */}
-
-          <section className="transcript-summary">
+          <div className="transcript-summary">
             <div>
-              <span>Official Subjects</span>
+              <span>Official Records</span>
 
-              <strong>{summary.totalSubjects}</strong>
+              <strong>{records.length}</strong>
             </div>
 
             <div>
               <span>Recorded Units</span>
 
-              <strong>{summary.recordedUnits}</strong>
+              <strong>{totalRecordedUnits}</strong>
             </div>
 
             <div>
               <span>Earned Units</span>
 
-              <strong>{summary.earnedUnits}</strong>
+              <strong>{earnedUnits}</strong>
             </div>
 
             <div>
-              <span>Passed</span>
+              <span>Transfer Credits</span>
 
-              <strong>{summary.passed}</strong>
+              <strong>{transferCreditCount}</strong>
             </div>
+          </div>
 
-            <div>
-              <span>Incomplete</span>
-
-              <strong>{summary.incomplete}</strong>
-            </div>
-
-            <div>
-              <span>Failed</span>
-
-              <strong>{summary.failed}</strong>
-            </div>
-          </section>
-
-          {/* ===============================================
-              RESULT GUIDE
-          =============================================== */}
-
-          <section className="transcript-grade-guide">
-            <strong>Grade Interpretation</strong>
-
-            <div className="transcript-grade-guide-items">
-              <span>
-                <b>1.00–3.00</b> Passed
-              </span>
-
-              <span>
-                <b>4.00</b> Incomplete
-              </span>
-
-              <span>
-                <b>5.00</b> Failed
-              </span>
-            </div>
-          </section>
-
-          {/* ===============================================
-              CERTIFICATION
-          =============================================== */}
-
-          <section className="transcript-certification">
+          <div className="transcript-certification">
             <p>
-              This transcript preview contains academic records currently marked
-              official in the PTC Student Portal. Only Program Head-approved
-              grades from approved enrollments are included.
+              This transcript contains official academic records currently
+              recognized by the PTC Portal. Approved PTC grades and completed
+              transfer credits are maintained as separate academic sources.
+              Previous-school source grades are not converted into PTC Final
+              Rating values.
             </p>
+          </div>
 
-            <p className="transcript-certification-note">
-              This screen is a Registrar preview. Formal release of an official
-              Transcript of Records remains subject to Registrar verification
-              and document issuance procedures.
-            </p>
-          </section>
-
-          {/* ===============================================
-              DOCUMENT INFORMATION
-          =============================================== */}
-
-          <section className="transcript-document-info">
-            <div>
-              <span>Student Number</span>
-
-              <strong>{student.student_number}</strong>
-            </div>
-
-            <div>
-              <span>Preview Date</span>
-
-              <strong>{formatDate(new Date().toISOString())}</strong>
-            </div>
-          </section>
-
-          {/* ===============================================
-              REGISTRAR SIGNATURE
-          =============================================== */}
-
-          <section className="transcript-signature">
+          <div className="transcript-signature">
             <div className="signature-line">
               <strong>REGISTRAR</strong>
 
-              <span>Authorized Registrar</span>
+              <span>Registrar</span>
             </div>
-          </section>
-        </article>
-      </main>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 }

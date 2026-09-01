@@ -25,4 +25,15 @@ export const programHeadNavGroups = [
       },
     ],
   },
+  {
+    id: "class-management",
+    label: "Class Management",
+    icon: "📋",
+    children: [
+      {
+        label: "Classes",
+        path: "/programhead/class/management",
+      },
+    ],
+  },
 ];

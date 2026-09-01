@@ -577,7 +577,6 @@ export default function StudentDetailsR() {
             {/* ================================================
                   ACTION BUTTONS
               ================================================ */}
-
             <div className="details-actions">
               <button
                 type="button"
@@ -599,6 +598,18 @@ export default function StudentDetailsR() {
                 }
               >
                 Go to Student COG
+              </button>
+
+              <button
+                type="button"
+                className="record-btn"
+                onClick={() =>
+                  navigate(
+                    `/registrar/student/${student.student_id}/TransferEvaluationR`,
+                  )
+                }
+              >
+                Transfer Evaluation
               </button>
             </div>
           </>

@@ -1,19 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 
 import "../../../styles/EnterGrades.css";
 
-// =====================================================
-// API
-// =====================================================
-
 const API_BASE_URL = "http://localhost:3000/api/faculty/classes";
-
-// =====================================================
-// TYPES
-// =====================================================
 
 type GradeStatus = "Draft" | "Submitted" | "Returned" | "Approved";
 
@@ -200,14 +193,24 @@ interface GradeForm {
   remarks: GradeRemark;
 }
 
+interface GradeComputation {
+  complete: boolean;
+  rawAverage: number | null;
+  finalRating: number | null;
+  finalRatingText: string;
+  remarks: GradeRemark;
+}
+
 interface RowFeedback {
   type: "success" | "error";
   message: string;
 }
 
-// =====================================================
-// SAFE JSON
-// =====================================================
+type EditableGradeField = "prelimGrade" | "midtermGrade" | "finalGrade";
+
+const OFFICIAL_GRADE_SCALE = [
+  1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 4, 5,
+] as const;
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
@@ -225,10 +228,6 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 
   return response.json() as Promise<T>;
 }
-
-// =====================================================
-// HELPERS
-// =====================================================
 
 function parsePositiveInt(value: string | null): number | null {
   if (!value) {
@@ -252,20 +251,6 @@ function gradeValueToString(value: number | null | undefined): string {
   return String(value);
 }
 
-function createGradeForm(grade: FacultyGrade | null): GradeForm {
-  return {
-    prelimGrade: gradeValueToString(grade?.prelim_grade),
-
-    midtermGrade: gradeValueToString(grade?.midterm_grade),
-
-    finalGrade: gradeValueToString(grade?.final_grade),
-
-    finalRating: gradeValueToString(grade?.final_rating),
-
-    remarks: grade?.remarks || "",
-  };
-}
-
 function toNullableNumber(value: string): number | null {
   const clean = value.trim();
 
@@ -276,6 +261,134 @@ function toNullableNumber(value: string): number | null {
   const parsed = Number(clean);
 
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getRemarkFromFinalRating(value: number | null): GradeRemark {
+  if (value === null) {
+    return "";
+  }
+
+  if (value >= 1 && value <= 3) {
+    return "Passed";
+  }
+
+  if (value === 4) {
+    return "Incomplete";
+  }
+
+  if (value === 5) {
+    return "Failed";
+  }
+
+  return "";
+}
+
+function normalizeToOfficialGradeScale(average: number): number {
+  let closest: number = OFFICIAL_GRADE_SCALE[0];
+  let closestDistance = Math.abs(average - closest);
+
+  for (const grade of OFFICIAL_GRADE_SCALE) {
+    const distance = Math.abs(average - grade);
+
+    if (distance < closestDistance) {
+      closest = grade;
+      closestDistance = distance;
+      continue;
+    }
+
+    if (distance === closestDistance && grade > closest) {
+      closest = grade;
+    }
+  }
+
+  return closest;
+}
+
+function calculateGrade(
+  prelimGrade: string,
+  midtermGrade: string,
+  finalGrade: string,
+): GradeComputation {
+  const prelimText = prelimGrade.trim();
+  const midtermText = midtermGrade.trim();
+  const finalText = finalGrade.trim();
+
+  if (!prelimText || !midtermText || !finalText) {
+    return {
+      complete: false,
+      rawAverage: null,
+      finalRating: null,
+      finalRatingText: "",
+      remarks: "",
+    };
+  }
+
+  const prelim = Number(prelimText);
+  const midterm = Number(midtermText);
+  const final = Number(finalText);
+
+  if (
+    !Number.isFinite(prelim) ||
+    !Number.isFinite(midterm) ||
+    !Number.isFinite(final)
+  ) {
+    return {
+      complete: false,
+      rawAverage: null,
+      finalRating: null,
+      finalRatingText: "",
+      remarks: "",
+    };
+  }
+
+  const rawAverage = (prelim + midterm + final) / 3;
+
+  const normalizedFinalRating = normalizeToOfficialGradeScale(rawAverage);
+
+  const remarks = getRemarkFromFinalRating(normalizedFinalRating);
+
+  return {
+    complete: true,
+    rawAverage,
+    finalRating: normalizedFinalRating,
+    finalRatingText: normalizedFinalRating.toFixed(2),
+    remarks,
+  };
+}
+
+function createGradeForm(grade: FacultyGrade | null): GradeForm {
+  const prelimGrade = gradeValueToString(grade?.prelim_grade);
+
+  const midtermGrade = gradeValueToString(grade?.midterm_grade);
+
+  const finalGrade = gradeValueToString(grade?.final_grade);
+
+  if (
+    grade &&
+    (grade.grade_status === "Draft" || grade.grade_status === "Returned")
+  ) {
+    const calculated = calculateGrade(prelimGrade, midtermGrade, finalGrade);
+
+    return {
+      prelimGrade,
+      midtermGrade,
+      finalGrade,
+
+      finalRating: calculated.complete ? calculated.finalRatingText : "",
+
+      remarks: calculated.complete ? calculated.remarks : "",
+    };
+  }
+
+  return {
+    prelimGrade,
+    midtermGrade,
+    finalGrade,
+
+    finalRating: gradeValueToString(grade?.final_rating),
+
+    remarks: grade?.remarks || "",
+  };
 }
 
 function formatDays(value: string | null): string {
@@ -345,36 +458,6 @@ function isEditable(student: GradebookStudent): boolean {
   );
 }
 
-function getSuggestedRemark(value: string): string | null {
-  if (!value.trim()) {
-    return null;
-  }
-
-  const rating = Number(value);
-
-  if (!Number.isFinite(rating)) {
-    return null;
-  }
-
-  if (rating >= 1 && rating <= 3) {
-    return "Passed";
-  }
-
-  if (rating === 4) {
-    return "Incomplete";
-  }
-
-  if (rating === 5) {
-    return "Failed";
-  }
-
-  return null;
-}
-
-// =====================================================
-// EMPTY SUMMARY
-// =====================================================
-
 function emptySummary(): GradebookSummary {
   return {
     total_students: 0,
@@ -386,28 +469,15 @@ function emptySummary(): GradebookSummary {
   };
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
-
 export default function EnterGrades() {
   const navigate = useNavigate();
 
-  // ===================================================
-  // AUTH
-  // ===================================================
-
   const session = authService.getSession();
-
   const token = authService.getToken();
 
   const userRole = session?.role;
 
   const authenticated = Boolean(session && token);
-
-  // ===================================================
-  // FACULTY / CLASSES
-  // ===================================================
 
   const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
 
@@ -420,10 +490,6 @@ export default function EnterGrades() {
   const [selectedOfferingId, setSelectedOfferingId] = useState<number | null>(
     null,
   );
-
-  // ===================================================
-  // GRADEBOOK
-  // ===================================================
 
   const [gradebookClass, setGradebookClass] = useState<FacultyClass | null>(
     null,
@@ -439,10 +505,6 @@ export default function EnterGrades() {
 
   const [gradebookRefreshKey, setGradebookRefreshKey] = useState(0);
 
-  // ===================================================
-  // FORMS
-  // ===================================================
-
   const [forms, setForms] = useState<Record<number, GradeForm>>({});
 
   const [rowFeedback, setRowFeedback] = useState<Record<number, RowFeedback>>(
@@ -453,17 +515,9 @@ export default function EnterGrades() {
 
   const [submittingId, setSubmittingId] = useState<number | null>(null);
 
-  // ===================================================
-  // FILTERS
-  // ===================================================
-
   const [studentSearch, setStudentSearch] = useState("");
 
   const [statusFilter, setStatusFilter] = useState("All");
-
-  // ===================================================
-  // AUTHORIZATION
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated) {
@@ -484,14 +538,6 @@ export default function EnterGrades() {
       }
     }
   }, [authenticated, userRole, session, navigate]);
-  // ===================================================
-  // LOAD ASSIGNED FACULTY CLASSES
-  //
-  // IMPORTANT:
-  // This effect does NOT depend on searchParams.
-  // It therefore cannot continually reload just because
-  // we update ?offering_id= in the URL.
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated || userRole !== "Faculty") {
@@ -503,12 +549,10 @@ export default function EnterGrades() {
     const loadClasses = async () => {
       try {
         setClassesLoading(true);
-
         setClassesError("");
 
         const response = await authService.authFetch(API_BASE_URL, {
           method: "GET",
-
           signal: controller.signal,
         });
 
@@ -544,7 +588,6 @@ export default function EnterGrades() {
 
         if (loadedClasses.length === 0) {
           setSelectedOfferingId(null);
-
           return;
         }
 
@@ -589,25 +632,11 @@ export default function EnterGrades() {
       controller.abort();
     };
   }, [authenticated, userRole, navigate]);
-  // ===================================================
-  // LOAD GRADEBOOK
-  //
-  // IMPORTANT FIX:
-  // `faculty` is NOT a dependency of this callback.
-  //
-  // The previous version did:
-  //
-  // loadGradebook -> setFaculty -> faculty changes
-  // -> callback changes -> effect runs -> repeat
-  //
-  // That dependency cycle is now removed.
-  // ===================================================
 
   const loadGradebook = useCallback(
     async (signal?: AbortSignal) => {
       if (!selectedOfferingId) {
         setGradebookClass(null);
-
         setStudents([]);
         setForms({});
         setSummary(emptySummary());
@@ -617,14 +646,12 @@ export default function EnterGrades() {
 
       try {
         setGradebookLoading(true);
-
         setGradebookError("");
 
         const response = await authService.authFetch(
           `${API_BASE_URL}/${selectedOfferingId}/gradebook`,
           {
             method: "GET",
-
             signal,
           },
         );
@@ -658,11 +685,6 @@ export default function EnterGrades() {
         const loadedStudents = Array.isArray(data.students)
           ? data.students
           : [];
-
-        // -------------------------------------------
-        // THIS IS SAFE NOW.
-        // faculty is not a loadGradebook dependency.
-        // -------------------------------------------
 
         if (data.faculty) {
           setFaculty(data.faculty);
@@ -704,10 +726,6 @@ export default function EnterGrades() {
             ).length,
         });
 
-        // -------------------------------------------
-        // BUILD EDITABLE FORMS FROM SERVER DATA
-        // -------------------------------------------
-
         const nextForms: Record<number, GradeForm> = {};
 
         loadedStudents.forEach((student) => {
@@ -728,7 +746,6 @@ export default function EnterGrades() {
         console.error("LOAD FACULTY GRADEBOOK ERROR:", requestError);
 
         setGradebookClass(null);
-
         setStudents([]);
         setForms({});
         setSummary(emptySummary());
@@ -746,10 +763,6 @@ export default function EnterGrades() {
     },
     [selectedOfferingId, navigate],
   );
-
-  // ===================================================
-  // GRADEBOOK EFFECT
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated || userRole !== "Faculty" || !selectedOfferingId) {
@@ -771,10 +784,6 @@ export default function EnterGrades() {
     loadGradebook,
   ]);
 
-  // ===================================================
-  // SELECTED CLASS
-  // ===================================================
-
   const selectedClass = useMemo(() => {
     return (
       classes.find((item) => item.offering_id === selectedOfferingId) ||
@@ -782,10 +791,6 @@ export default function EnterGrades() {
       null
     );
   }, [classes, selectedOfferingId, gradebookClass]);
-
-  // ===================================================
-  // FILTER STUDENTS
-  // ===================================================
 
   const filteredStudents = useMemo(() => {
     const query = studentSearch.trim().toLowerCase();
@@ -806,10 +811,6 @@ export default function EnterGrades() {
     });
   }, [students, studentSearch, statusFilter]);
 
-  // ===================================================
-  // CHANGE CLASS
-  // ===================================================
-
   const handleClassChange = (value: string) => {
     const nextId = parsePositiveInt(value);
 
@@ -827,34 +828,46 @@ export default function EnterGrades() {
     setStatusFilter("All");
 
     setRowFeedback({});
-
     setGradebookError("");
   };
 
-  // ===================================================
-  // FORM CHANGE
-  // ===================================================
-
   const updateForm = (
     enrollmentSubjectId: number,
-    field: keyof GradeForm,
+    field: EditableGradeField,
     value: string,
   ) => {
-    setForms((current) => ({
-      ...current,
+    setForms((current) => {
+      const currentForm = current[enrollmentSubjectId] || {
+        prelimGrade: "",
+        midtermGrade: "",
+        finalGrade: "",
+        finalRating: "",
+        remarks: "",
+      };
 
-      [enrollmentSubjectId]: {
-        ...(current[enrollmentSubjectId] || {
-          prelimGrade: "",
-          midtermGrade: "",
-          finalGrade: "",
-          finalRating: "",
-          remarks: "",
-        }),
-
+      const nextForm: GradeForm = {
+        ...currentForm,
         [field]: value,
-      },
-    }));
+      };
+
+      const calculation = calculateGrade(
+        nextForm.prelimGrade,
+        nextForm.midtermGrade,
+        nextForm.finalGrade,
+      );
+
+      nextForm.finalRating = calculation.complete
+        ? calculation.finalRatingText
+        : "";
+
+      nextForm.remarks = calculation.complete ? calculation.remarks : "";
+
+      return {
+        ...current,
+
+        [enrollmentSubjectId]: nextForm,
+      };
+    });
 
     setRowFeedback((current) => {
       const next = {
@@ -867,11 +880,13 @@ export default function EnterGrades() {
     });
   };
 
-  // ===================================================
-  // REQUEST BODY
-  // ===================================================
-
   const buildGradeBody = (form: GradeForm) => {
+    const calculation = calculateGrade(
+      form.prelimGrade,
+      form.midtermGrade,
+      form.finalGrade,
+    );
+
     return {
       prelim_grade: toNullableNumber(form.prelimGrade),
 
@@ -879,37 +894,27 @@ export default function EnterGrades() {
 
       final_grade: toNullableNumber(form.finalGrade),
 
-      final_rating: toNullableNumber(form.finalRating),
+      final_rating: calculation.complete ? calculation.finalRating : null,
 
-      remarks: form.remarks || null,
+      remarks: calculation.complete ? calculation.remarks : null,
     };
   };
-
-  // ===================================================
-  // NUMERIC VALIDATION
-  // ===================================================
 
   const validateNumericFields = (form: GradeForm): string | null => {
     const fields = [
       {
         label: "Prelim grade",
-
         value: form.prelimGrade,
       },
+
       {
         label: "Midterm grade",
-
         value: form.midtermGrade,
       },
+
       {
         label: "Final grade",
-
         value: form.finalGrade,
-      },
-      {
-        label: "Final rating",
-
-        value: form.finalRating,
       },
     ];
 
@@ -920,17 +925,19 @@ export default function EnterGrades() {
         continue;
       }
 
-      if (!Number.isFinite(Number(clean))) {
+      const numeric = Number(clean);
+
+      if (!Number.isFinite(numeric)) {
         return `${field.label} must be a valid number.`;
+      }
+
+      if (numeric < 1 || numeric > 5) {
+        return `${field.label} must be between 1.00 and 5.00.`;
       }
     }
 
     return null;
   };
-
-  // ===================================================
-  // SUBMIT VALIDATION
-  // ===================================================
 
   const validateForSubmit = (form: GradeForm): string | null => {
     const numericError = validateNumericFields(form);
@@ -939,43 +946,40 @@ export default function EnterGrades() {
       return numericError;
     }
 
-    if (!form.remarks) {
-      return "Grade remarks are required before submission.";
+    const missing: string[] = [];
+
+    if (!form.prelimGrade.trim()) {
+      missing.push("Prelim");
     }
 
-    // Passed / Failed require complete grades.
+    if (!form.midtermGrade.trim()) {
+      missing.push("Midterm");
+    }
 
-    if (form.remarks === "Passed" || form.remarks === "Failed") {
-      const missing: string[] = [];
+    if (!form.finalGrade.trim()) {
+      missing.push("Final Grade");
+    }
 
-      if (!form.prelimGrade.trim()) {
-        missing.push("Prelim");
-      }
+    if (missing.length > 0) {
+      return `Complete the following before submission: ${missing.join(", ")}.`;
+    }
 
-      if (!form.midtermGrade.trim()) {
-        missing.push("Midterm");
-      }
+    const calculation = calculateGrade(
+      form.prelimGrade,
+      form.midtermGrade,
+      form.finalGrade,
+    );
 
-      if (!form.finalGrade.trim()) {
-        missing.push("Final Grade");
-      }
-
-      if (!form.finalRating.trim()) {
-        missing.push("Final Rating");
-      }
-
-      if (missing.length > 0) {
-        return `Complete the following before submission: ${missing.join(
-          ", ",
-        )}.`;
-      }
+    if (
+      !calculation.complete ||
+      calculation.finalRating === null ||
+      !calculation.remarks
+    ) {
+      return "The Final Rating could not be calculated.";
     }
 
     return null;
   };
-  // ===================================================
-  // INTERNAL SAVE REQUEST
-  // ===================================================
 
   const saveDraftRequest = async (
     student: GradebookStudent,
@@ -1043,10 +1047,6 @@ export default function EnterGrades() {
     return data;
   };
 
-  // ===================================================
-  // SAVE DRAFT
-  // ===================================================
-
   const saveDraft = async (student: GradebookStudent) => {
     const id = student.enrollment_subject_id;
 
@@ -1090,10 +1090,6 @@ export default function EnterGrades() {
     }
   };
 
-  // ===================================================
-  // SUBMIT GRADE
-  // ===================================================
-
   const submitGrade = async (student: GradebookStudent) => {
     if (!selectedOfferingId) {
       return;
@@ -1127,8 +1123,20 @@ export default function EnterGrades() {
       return;
     }
 
+    const calculation = calculateGrade(
+      form.prelimGrade,
+      form.midtermGrade,
+      form.finalGrade,
+    );
+
     const confirmed = window.confirm(
-      `Submit the grade for ${student.student_number} - ${student.full_name}?\n\nAfter submission, Faculty cannot edit it unless the Program Head returns it.`,
+      `Submit the grade for ${student.student_number} - ${student.full_name}?\n\nPrelim: ${form.prelimGrade}\nMidterm: ${form.midtermGrade}\nFinal: ${form.finalGrade}\nAverage: ${
+        calculation.rawAverage !== null
+          ? calculation.rawAverage.toFixed(2)
+          : "—"
+      }\nFinal Rating: ${calculation.finalRatingText || "—"}\nResult: ${
+        calculation.remarks || "—"
+      }\n\nAfter submission, Faculty cannot edit it unless the Program Head returns it.`,
     );
 
     if (!confirmed) {
@@ -1148,15 +1156,7 @@ export default function EnterGrades() {
         return next;
       });
 
-      // ---------------------------------------------
-      // SAVE CURRENT VALUES BEFORE SUBMITTING
-      // ---------------------------------------------
-
       await saveDraftRequest(student, false);
-
-      // ---------------------------------------------
-      // DRAFT / RETURNED -> SUBMITTED
-      // ---------------------------------------------
 
       const response = await authService.authFetch(
         `${API_BASE_URL}/${selectedOfferingId}/grades/${id}/submit`,
@@ -1221,17 +1221,9 @@ export default function EnterGrades() {
     }
   };
 
-  // ===================================================
-  // REFRESH
-  // ===================================================
-
   const refreshGradebook = () => {
     setGradebookRefreshKey((current) => current + 1);
   };
-
-  // ===================================================
-  // NAVIGATION
-  // ===================================================
 
   const backToClasses = () => {
     navigate("/faculty/classes");
@@ -1245,25 +1237,13 @@ export default function EnterGrades() {
     navigate(`/faculty/classes/students?offering_id=${selectedOfferingId}`);
   };
 
-  // ===================================================
-  // AUTH RENDER GUARD
-  // ===================================================
-
   if (!authenticated || userRole !== "Faculty") {
     return null;
   }
 
-  // ===================================================
-  // UI
-  // ===================================================
-
   return (
     <DashboardLayout>
       <main className="faculty-enter-grades-page">
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <section className="faculty-grade-header">
           <div>
             <button
@@ -1281,8 +1261,9 @@ export default function EnterGrades() {
             <h1>Enter Grades</h1>
 
             <p>
-              Encode grades only for students with official Approved enrollment
-              in your assigned classes.
+              Enter the Prelim, Midterm, and Final grades. The system
+              automatically calculates the student's Final Rating and academic
+              result.
             </p>
           </div>
 
@@ -1305,10 +1286,6 @@ export default function EnterGrades() {
             </button>
           </div>
         </section>
-
-        {/* =================================================
-            FACULTY / CLASS SELECTOR
-        ================================================= */}
 
         <section className="faculty-grade-toolbar">
           <div className="faculty-grade-faculty">
@@ -1343,10 +1320,6 @@ export default function EnterGrades() {
           </div>
         </section>
 
-        {/* =================================================
-            CLASS LIST ERROR
-        ================================================= */}
-
         {classesError && (
           <section className="faculty-grade-error">
             <div>
@@ -1356,10 +1329,6 @@ export default function EnterGrades() {
             </div>
           </section>
         )}
-
-        {/* =================================================
-            CLASS DETAILS
-        ================================================= */}
 
         {selectedClass && (
           <section className="faculty-grade-class-card">
@@ -1426,10 +1395,6 @@ export default function EnterGrades() {
           </section>
         )}
 
-        {/* =================================================
-            SUMMARY
-        ================================================= */}
-
         <section className="faculty-grade-summary">
           <div>
             <span>Official Students</span>
@@ -1468,10 +1433,6 @@ export default function EnterGrades() {
           </div>
         </section>
 
-        {/* =================================================
-            GRADEBOOK ERROR
-        ================================================= */}
-
         {gradebookError && (
           <section className="faculty-grade-error">
             <div>
@@ -1486,10 +1447,6 @@ export default function EnterGrades() {
           </section>
         )}
 
-        {/* =================================================
-            LOADING
-        ================================================= */}
-
         {(classesLoading || gradebookLoading) && (
           <section className="faculty-grade-loading">
             <div className="faculty-grade-spinner" />
@@ -1501,26 +1458,20 @@ export default function EnterGrades() {
             </div>
           </section>
         )}
-        {/* =================================================
-            GRADEBOOK
-        ================================================= */}
 
         {!classesLoading &&
           !gradebookLoading &&
           !gradebookError &&
           gradebookClass && (
             <section className="faculty-gradebook">
-              {/* =========================================
-                  HEADER / FILTERS
-              ========================================= */}
-
               <div className="faculty-gradebook-header">
                 <div>
                   <h2>Class Gradebook</h2>
 
                   <p>
-                    Draft and Returned grades are editable. Submitted and
-                    Approved grades are locked.
+                    Enter Prelim, Midterm, and Final. Final Rating and Remarks
+                    are calculated automatically. Draft and Returned grades are
+                    editable. Submitted and Approved grades are locked.
                   </p>
                 </div>
 
@@ -1551,10 +1502,6 @@ export default function EnterGrades() {
                 </div>
               </div>
 
-              {/* =========================================
-                  EMPTY STATES
-              ========================================= */}
-
               {students.length === 0 ? (
                 <div className="faculty-grade-empty">
                   <strong>No official students</strong>
@@ -1584,21 +1531,13 @@ export default function EnterGrades() {
                     <thead>
                       <tr>
                         <th>Student</th>
-
                         <th>Prelim</th>
-
                         <th>Midterm</th>
-
                         <th>Final</th>
-
                         <th>Final Rating</th>
-
                         <th>Remarks</th>
-
                         <th>Status</th>
-
                         <th>Program Head Review</th>
-
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -1622,8 +1561,10 @@ export default function EnterGrades() {
 
                         const feedback = rowFeedback[id];
 
-                        const suggestedRemark = getSuggestedRemark(
-                          form.finalRating,
+                        const calculation = calculateGrade(
+                          form.prelimGrade,
+                          form.midtermGrade,
+                          form.finalGrade,
                         );
 
                         return (
@@ -1635,10 +1576,6 @@ export default function EnterGrades() {
                                 : ""
                             }
                           >
-                            {/* ======================
-                                  STUDENT
-                              ====================== */}
-
                             <td>
                               <div className="faculty-grade-student">
                                 <strong>{student.full_name}</strong>
@@ -1651,14 +1588,12 @@ export default function EnterGrades() {
                               </div>
                             </td>
 
-                            {/* ======================
-                                  PRELIM
-                              ====================== */}
-
                             <td>
                               <input
                                 className="faculty-grade-input"
                                 type="number"
+                                min="1"
+                                max="5"
                                 step="0.01"
                                 value={form.prelimGrade}
                                 onChange={(event) =>
@@ -1673,14 +1608,12 @@ export default function EnterGrades() {
                               />
                             </td>
 
-                            {/* ======================
-                                  MIDTERM
-                              ====================== */}
-
                             <td>
                               <input
                                 className="faculty-grade-input"
                                 type="number"
+                                min="1"
+                                max="5"
                                 step="0.01"
                                 value={form.midtermGrade}
                                 onChange={(event) =>
@@ -1695,14 +1628,12 @@ export default function EnterGrades() {
                               />
                             </td>
 
-                            {/* ======================
-                                  FINAL
-                              ====================== */}
-
                             <td>
                               <input
                                 className="faculty-grade-input"
                                 type="number"
+                                min="1"
+                                max="5"
                                 step="0.01"
                                 value={form.finalGrade}
                                 onChange={(event) =>
@@ -1717,48 +1648,39 @@ export default function EnterGrades() {
                               />
                             </td>
 
-                            {/* ======================
-                                  FINAL RATING
-                              ====================== */}
-
                             <td>
                               <div className="faculty-grade-rating-field">
                                 <input
                                   className="faculty-grade-input"
-                                  type="number"
-                                  step="0.01"
+                                  type="text"
                                   value={form.finalRating}
-                                  onChange={(event) =>
-                                    updateForm(
-                                      id,
-                                      "finalRating",
-                                      event.target.value,
-                                    )
-                                  }
-                                  disabled={!editable || busy}
-                                  placeholder="—"
+                                  readOnly
+                                  disabled
+                                  placeholder="Auto"
                                 />
 
-                                {suggestedRemark && (
-                                  <small>Suggested: {suggestedRemark}</small>
+                                {editable &&
+                                  calculation.complete &&
+                                  calculation.rawAverage !== null && (
+                                    <small>
+                                      Average:{" "}
+                                      {calculation.rawAverage.toFixed(2)}
+                                    </small>
+                                  )}
+
+                                {editable && !calculation.complete && (
+                                  <small>Auto-calculated</small>
                                 )}
                               </div>
                             </td>
-
-                            {/* ======================
-                                  REMARKS
-                              ====================== */}
 
                             <td>
                               <select
                                 className="faculty-grade-remarks"
                                 value={form.remarks}
-                                onChange={(event) =>
-                                  updateForm(id, "remarks", event.target.value)
-                                }
-                                disabled={!editable || busy}
+                                disabled
                               >
-                                <option value="">Select</option>
+                                <option value="">Pending</option>
 
                                 <option value="Passed">Passed</option>
 
@@ -1767,10 +1689,6 @@ export default function EnterGrades() {
                                 <option value="Failed">Failed</option>
                               </select>
                             </td>
-
-                            {/* ======================
-                                  STATUS
-                              ====================== */}
 
                             <td>
                               <div className="faculty-grade-status-cell">
@@ -1790,10 +1708,6 @@ export default function EnterGrades() {
                                 )}
                               </div>
                             </td>
-
-                            {/* ======================
-                                  PROGRAM HEAD REVIEW
-                              ====================== */}
 
                             <td>
                               {student.grade?.review?.review_remarks ? (
@@ -1827,10 +1741,6 @@ export default function EnterGrades() {
                                 </span>
                               )}
                             </td>
-
-                            {/* ======================
-                                  ACTIONS
-                              ====================== */}
 
                             <td>
                               <div className="faculty-grade-actions">
@@ -1895,10 +1805,6 @@ export default function EnterGrades() {
             </section>
           )}
 
-        {/* =================================================
-            WORKFLOW
-        ================================================= */}
-
         {!classesLoading && classes.length > 0 && (
           <section className="faculty-grade-workflow">
             <div>
@@ -1907,12 +1813,24 @@ export default function EnterGrades() {
               <div>
                 <strong>Encode</strong>
 
-                <p>Enter grading components and final rating.</p>
+                <p>Enter Prelim, Midterm, and Final grades.</p>
               </div>
             </div>
 
             <div>
               <span>2</span>
+
+              <div>
+                <strong>Calculate</strong>
+
+                <p>
+                  Final Rating and academic result are calculated automatically.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <span>3</span>
 
               <div>
                 <strong>Save Draft</strong>
@@ -1922,7 +1840,7 @@ export default function EnterGrades() {
             </div>
 
             <div>
-              <span>3</span>
+              <span>4</span>
 
               <div>
                 <strong>Submit</strong>
@@ -1930,18 +1848,6 @@ export default function EnterGrades() {
                 <p>
                   Submitted grades are locked while awaiting Program Head
                   review.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <span>4</span>
-
-              <div>
-                <strong>Review</strong>
-
-                <p>
-                  Program Head approves or returns the grade for correction.
                 </p>
               </div>
             </div>
