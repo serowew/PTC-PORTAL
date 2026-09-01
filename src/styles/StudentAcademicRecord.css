@@ -1,133 +1,272 @@
 /* =========================================================
-   STUDENT OFFICIAL ACADEMIC RECORD
+   PTC PORTAL
+   STUDENT GRADES / OFFICIAL ACADEMIC RECORD
+   Signature Theme: PTC Green
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE / DESIGN TOKENS
    ========================================================= */
 
 .student-academic-record-page {
+  --ptc-green: #15803d;
+  --ptc-green-dark: #14532d;
+  --ptc-green-deep: #0f3d24;
+  --ptc-green-medium: #16a34a;
+  --ptc-green-bright: #22c55e;
+
+  --ptc-green-light: #dcfce7;
+  --ptc-green-soft: #f0fdf4;
+  --ptc-green-soft-2: #f7fcf8;
+  --ptc-green-border: #bbf7d0;
+
+  --text-primary: #17201b;
+  --text-secondary: #5f6e64;
+  --text-muted: #7d8b82;
+
+  --surface: #ffffff;
+  --surface-soft: #f8fbf9;
+
+  --border: #dfe7e1;
+  --border-soft: #edf2ee;
+
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
+
+  --warning: #d97706;
+  --warning-dark: #92400e;
+  --warning-soft: #fffbeb;
+  --warning-border: #fde68a;
+
+  --gray: #64748b;
+  --gray-soft: #f1f5f9;
+
   width: 100%;
   min-height: 100%;
-  padding: 24px;
+
+  padding: 34px 38px 60px;
+
   box-sizing: border-box;
-  background: #f8fafc;
-  color: #0f172a;
+
+  background: #ffffff;
+
+  color: var(--text-primary);
 }
+
 
 /* =========================================================
    HEADER
    ========================================================= */
 
 .student-record-header {
+  position: relative;
+
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+
   gap: 24px;
 
-  margin-bottom: 16px;
-  padding: 24px;
+  margin-bottom: 18px;
+  padding: 27px 30px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  overflow: hidden;
 
-  background: #ffffff;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 17px;
+
+  background:
+    radial-gradient(
+      circle at 92% 16%,
+      rgba(34, 197, 94, 0.15),
+      transparent 28%
+    ),
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f6fcf8 55%,
+      #eafbf0 100%
+    );
 
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 28px rgba(15, 23, 42, 0.04);
+    0 8px 24px rgba(15, 61, 36, 0.06),
+    0 2px 5px rgba(0, 0, 0, 0.025);
 }
+
+
+.student-record-header::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 6px;
+
+  background: linear-gradient(
+    180deg,
+    var(--ptc-green-bright),
+    var(--ptc-green-dark)
+  );
+}
+
+
+.student-record-header::after {
+  content: "";
+
+  position: absolute;
+
+  width: 160px;
+  height: 160px;
+
+  right: -70px;
+  top: -90px;
+
+  border-radius: 50%;
+
+  background: rgba(21, 128, 61, 0.055);
+}
+
+
+.student-record-header > * {
+  position: relative;
+  z-index: 1;
+}
+
 
 .student-record-eyebrow {
   display: block;
 
   margin-bottom: 6px;
 
-  color: #2563eb;
+  color: var(--ptc-green);
 
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 850;
 
-  letter-spacing: 0.08em;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
+
 
 .student-record-header h1 {
   margin: 0;
 
-  color: #0f172a;
+  color: var(--ptc-green-deep);
 
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 32px;
+  font-weight: 850;
   line-height: 1.2;
+
+  letter-spacing: -0.5px;
 }
 
+
 .student-record-header p {
-  max-width: 720px;
+  max-width: 760px;
 
   margin: 8px 0 0;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
+
+/* =========================================================
+   REFRESH BUTTON
+   ========================================================= */
+
 .student-record-refresh {
-  min-height: 40px;
+  min-height: 42px;
+
   flex-shrink: 0;
 
-  padding: 8px 15px;
+  padding: 0 17px;
 
-  border: 1px solid #2563eb;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 9px;
 
-  background: #2563eb;
+  background: linear-gradient(
+    135deg,
+    var(--ptc-green-medium),
+    var(--ptc-green),
+    var(--ptc-green-dark)
+  );
+
   color: #ffffff;
 
-  font-size: 11px;
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 800;
 
   cursor: pointer;
 
+  box-shadow:
+    0 6px 14px rgba(21, 128, 61, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+
   transition:
     background 0.18s ease,
-    border-color 0.18s ease,
     transform 0.18s ease,
-    box-shadow 0.18s ease;
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
 }
+
 
 .student-record-refresh:hover:not(:disabled) {
-  border-color: #1d4ed8;
-  background: #1d4ed8;
+  transform: translateY(-2px);
 
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+  filter: brightness(1.03);
 
-  transform: translateY(-1px);
+  box-shadow:
+    0 9px 19px rgba(21, 128, 61, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
+
+
+.student-record-refresh:focus-visible {
+  outline: 3px solid rgba(34, 197, 94, 0.28);
+  outline-offset: 3px;
+}
+
 
 .student-record-refresh:disabled {
   opacity: 0.55;
+
   cursor: not-allowed;
 }
 
+
 /* =========================================================
-   OFFICIAL NOTICE
+   OFFICIAL RECORD NOTICE
    ========================================================= */
 
 .student-record-official-notice {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
 
-  margin-bottom: 16px;
-  padding: 14px 16px;
+  gap: 13px;
 
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
+  margin-bottom: 18px;
+  padding: 15px 17px;
 
-  background: #eff6ff;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 11px;
+
+  background: var(--ptc-green-soft);
 }
 
+
 .student-record-official-icon {
-  width: 30px;
-  height: 30px;
+  width: 31px;
+  height: 31px;
 
   display: flex;
   align-items: center;
@@ -137,32 +276,36 @@
 
   border-radius: 50%;
 
-  background: #2563eb;
+  background: var(--ptc-green-medium);
+
   color: #ffffff;
 
   font-size: 14px;
   font-weight: 900;
 }
 
+
 .student-record-official-notice strong {
   display: block;
 
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 
-  color: #1e3a8a;
+  color: var(--ptc-green-dark);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
 }
+
 
 .student-record-official-notice p {
   margin: 0;
 
-  color: #475569;
+  color: var(--text-secondary);
 
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.55;
 }
+
 
 /* =========================================================
    STUDENT PROFILE
@@ -175,71 +318,99 @@
     1.4fr
     repeat(4, minmax(0, 1fr));
 
-  gap: 10px;
+  gap: 12px;
 
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
+
 
 .student-record-profile > div {
+  position: relative;
+
   min-width: 0;
 
-  padding: 14px 16px;
+  padding: 17px 18px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 
   background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(20, 83, 45, 0.035);
+
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.student-record-profile-primary {
-  border-left: 3px solid #2563eb !important;
+
+.student-record-profile > div:hover {
+  transform: translateY(-2px);
+
+  border-color: var(--ptc-green-border);
+
+  box-shadow:
+    0 7px 18px rgba(20, 83, 45, 0.07);
 }
+
+
+.student-record-profile-primary {
+  border-left: 4px solid var(--ptc-green-medium) !important;
+}
+
 
 .student-record-profile span {
   display: block;
 
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 
-  color: #64748b;
+  color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
 
-  letter-spacing: 0.04em;
+  letter-spacing: 0.65px;
   text-transform: uppercase;
 }
+
 
 .student-record-profile strong {
   display: block;
 
   overflow: hidden;
 
-  color: #0f172a;
+  color: var(--text-primary);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
+
+  line-height: 1.4;
 
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 
 .student-record-profile small {
   display: block;
 
-  margin-top: 3px;
+  margin-top: 4px;
 
   overflow: hidden;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 9px;
+  font-size: 12px;
 
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+
 /* =========================================================
-   SUMMARY
+   SUMMARY CARDS
    ========================================================= */
 
 .student-record-summary {
@@ -247,24 +418,45 @@
 
   grid-template-columns: repeat(6, minmax(0, 1fr));
 
-  gap: 10px;
+  gap: 12px;
 
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
+
 
 .student-record-summary > div {
   position: relative;
 
   min-width: 0;
+
   overflow: hidden;
 
-  padding: 15px;
+  padding: 17px 17px 17px 19px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 
   background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(20, 83, 45, 0.035);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
+
+
+.student-record-summary > div:hover {
+  transform: translateY(-2px);
+
+  border-color: var(--ptc-green-border);
+
+  box-shadow:
+    0 7px 17px rgba(20, 83, 45, 0.07);
+}
+
 
 .student-record-summary > div::before {
   position: absolute;
@@ -272,31 +464,39 @@
   top: 0;
   left: 0;
 
-  width: 3px;
+  width: 4px;
   height: 100%;
 
-  background: #2563eb;
+  background: var(--ptc-green-medium);
 
   content: "";
 }
 
+
 .student-record-summary span {
   display: block;
 
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 750;
+
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
+
 
 .student-record-summary strong {
-  color: #0f172a;
+  color: var(--ptc-green-deep);
 
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 850;
+
+  line-height: 1.1;
 }
+
 
 /* =========================================================
    FILTERS
@@ -312,191 +512,240 @@
 
   align-items: end;
 
-  gap: 10px;
+  gap: 12px;
 
-  margin-bottom: 18px;
-  padding: 15px;
+  margin-bottom: 20px;
+  padding: 17px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 
   background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(20, 83, 45, 0.03);
 }
+
 
 .student-record-filters > div {
   min-width: 0;
 }
 
+
 .student-record-filters label {
   display: block;
 
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 
-  color: #475569;
+  color: var(--text-secondary);
 
-  font-size: 9px;
+  font-size: 11.5px;
   font-weight: 800;
 }
+
 
 .student-record-filters input,
 .student-record-filters select {
   width: 100%;
-  min-height: 38px;
+  min-height: 42px;
 
   box-sizing: border-box;
 
-  padding: 8px 10px;
+  padding: 9px 11px;
 
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
+  border: 1px solid #cdd8d0;
+  border-radius: 8px;
 
   outline: none;
 
   background: #ffffff;
-  color: #0f172a;
+
+  color: var(--text-primary);
 
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
 
   transition:
     border-color 0.18s ease,
-    box-shadow 0.18s ease;
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
+
+
+.student-record-filters input:hover,
+.student-record-filters select:hover {
+  border-color: #a9c9b3;
+}
+
 
 .student-record-filters input:focus,
 .student-record-filters select:focus {
-  border-color: #3b82f6;
+  border-color: var(--ptc-green-medium);
 
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.11);
 }
+
 
 .student-record-filters input::placeholder {
-  color: #94a3b8;
+  color: #9aa7a0;
 }
 
+
 .student-record-clear-filter {
-  min-height: 38px;
+  min-height: 42px;
 
-  padding: 8px 13px;
+  padding: 8px 14px;
 
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
+  border: 1px solid #cad5cd;
+  border-radius: 8px;
 
-  background: #f8fafc;
-  color: #475569;
+  background: #f7faf8;
 
-  font-size: 10px;
+  color: var(--text-secondary);
+
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
+
 
 .student-record-clear-filter:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  border-color: var(--ptc-green-border);
+
+  background: var(--ptc-green-soft);
+
+  color: var(--ptc-green-dark);
 }
 
+
 /* =========================================================
-   ERROR / LOADING / EMPTY
+   ERROR
    ========================================================= */
 
 .student-record-error {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 16px;
 
   margin-bottom: 18px;
-  padding: 15px;
+  padding: 16px;
 
-  border: 1px solid #fecaca;
-  border-radius: 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: 11px;
 
-  background: #fef2f2;
+  background: var(--danger-soft);
 }
+
 
 .student-record-error strong {
   display: block;
 
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 
   color: #991b1b;
 
-  font-size: 12px;
+  font-size: 14px;
 }
+
 
 .student-record-error p {
   margin: 0;
 
-  color: #b91c1c;
+  color: var(--danger-dark);
 
-  font-size: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
+
 
 .student-record-error button,
 .student-record-empty button {
-  min-height: 34px;
+  min-height: 38px;
 
-  padding: 7px 11px;
+  padding: 7px 13px;
 
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
+  border: 1px solid #cad5cd;
+  border-radius: 8px;
 
   background: #ffffff;
-  color: #334155;
 
-  font-size: 10px;
+  color: var(--text-primary);
+
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
 }
 
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
 .student-record-loading {
-  min-height: 220px;
+  min-height: 240px;
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 13px;
+
+  gap: 14px;
 
   margin-bottom: 18px;
 
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 12px;
 
   background: #ffffff;
 }
 
+
 .student-record-loading > div:last-child {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+
+  gap: 4px;
 }
+
 
 .student-record-loading strong {
-  color: #334155;
+  color: var(--text-primary);
 
-  font-size: 13px;
+  font-size: 14px;
 }
+
 
 .student-record-loading span {
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 10px;
+  font-size: 12px;
 }
 
+
 .student-record-spinner {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
 
   box-sizing: border-box;
 
-  border: 3px solid #e2e8f0;
-  border-top-color: #2563eb;
+  border: 3px solid var(--ptc-green-light);
+  border-top-color: var(--ptc-green-medium);
   border-radius: 50%;
 
   animation: student-record-spin 700ms linear infinite;
 }
+
 
 @keyframes student-record-spin {
   to {
@@ -504,8 +753,13 @@
   }
 }
 
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
 .student-record-empty {
-  min-height: 200px;
+  min-height: 220px;
 
   display: flex;
   flex-direction: column;
@@ -513,12 +767,12 @@
   align-items: center;
   justify-content: center;
 
-  gap: 7px;
+  gap: 8px;
 
   margin-bottom: 18px;
-  padding: 28px;
+  padding: 30px;
 
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed #cbd8ce;
   border-radius: 12px;
 
   background: #ffffff;
@@ -526,116 +780,145 @@
   text-align: center;
 }
 
+
 .student-record-empty-icon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
+  border: 1px solid var(--ptc-green-border);
   border-radius: 50%;
 
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--ptc-green-soft);
+
+  color: var(--ptc-green);
 
   font-weight: 900;
 }
 
-.student-record-empty strong {
-  color: #334155;
 
-  font-size: 14px;
+.student-record-empty strong {
+  color: var(--text-primary);
+
+  font-size: 15px;
 }
 
+
 .student-record-empty p {
-  max-width: 430px;
+  max-width: 450px;
 
   margin: 0;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.55;
 }
+
 
 /* =========================================================
    HISTORY CONTAINER
    ========================================================= */
 
 .student-record-history {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
 
   background: #ffffff;
+
+  box-shadow:
+    0 4px 16px rgba(20, 83, 45, 0.035);
 }
+
 
 .student-record-history-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 18px;
 
-  padding: 18px 20px;
+  padding: 20px 21px;
 
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-soft);
+
+  background: linear-gradient(
+    90deg,
+    #ffffff,
+    #f8fcf9
+  );
 }
+
 
 .student-record-history-header h2 {
   margin: 0;
 
-  color: #0f172a;
+  color: var(--ptc-green-deep);
 
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 850;
 }
+
 
 .student-record-history-header p {
   margin: 5px 0 0;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 10px;
+  font-size: 13px;
+  line-height: 1.5;
 }
+
 
 .student-record-history-header > span {
   flex-shrink: 0;
 
-  padding: 5px 9px;
+  padding: 6px 10px;
 
+  border: 1px solid var(--ptc-green-border);
   border-radius: 999px;
 
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--ptc-green-soft);
 
-  font-size: 9px;
+  color: var(--ptc-green-dark);
+
+  font-size: 11px;
   font-weight: 800;
 }
 
+
 /* =========================================================
-   ACADEMIC YEAR
+   ACADEMIC YEARS
    ========================================================= */
 
 .student-record-years {
-  padding: 16px;
+  padding: 17px;
 }
+
 
 .student-record-year {
   overflow: hidden;
 
   margin-bottom: 16px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
 
   background: #ffffff;
 }
 
+
 .student-record-year:last-child {
   margin-bottom: 0;
 }
+
 
 .student-record-year-header {
   display: flex;
@@ -644,103 +927,132 @@
 
   gap: 14px;
 
-  padding: 13px 16px;
+  padding: 15px 17px;
 
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--ptc-green-border);
 
-  background: #f8fafc;
+  background: linear-gradient(
+    90deg,
+    var(--ptc-green-soft),
+    #f9fdfa
+  );
 }
+
 
 .student-record-year-header span {
   display: block;
 
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 
-  color: #64748b;
+  color: var(--ptc-green);
 
-  font-size: 8px;
-  font-weight: 800;
+  font-size: 10.5px;
+  font-weight: 850;
 
   text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
+
 
 .student-record-year-header h3 {
   margin: 0;
 
-  color: #0f172a;
+  color: var(--ptc-green-deep);
 
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 850;
 }
+
 
 .student-record-year-header > strong {
-  color: #475569;
+  color: var(--text-secondary);
 
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 750;
 }
+
 
 /* =========================================================
    SEMESTER
    ========================================================= */
 
 .student-record-semester {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-soft);
 }
+
 
 .student-record-semester:last-child {
   border-bottom: none;
 }
 
+
 .student-record-semester-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 16px;
 
-  padding: 12px 15px;
+  padding: 14px 16px;
 
   background: #ffffff;
 }
 
+
 .student-record-semester-header h4 {
   margin: 0;
 
-  color: #1e293b;
+  color: var(--text-primary);
 
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 850;
 }
 
-.student-record-semester-header > div:first-child > span {
-  color: #64748b;
 
-  font-size: 9px;
+.student-record-semester-header
+  > div:first-child
+  > span {
+  color: var(--text-secondary);
+
+  font-size: 11.5px;
 }
+
 
 .student-record-semester-stats {
   display: flex;
   align-items: center;
-  gap: 14px;
 
-  color: #64748b;
+  gap: 16px;
 
-  font-size: 9px;
+  color: var(--text-secondary);
+
+  font-size: 11.5px;
 }
+
 
 .student-record-semester-stats strong {
-  color: #0f172a;
+  color: var(--ptc-green-deep);
+
+  font-weight: 850;
 }
 
+
 /* =========================================================
-   TABLE
+   TABLE WRAPPER
    ========================================================= */
 
 .student-record-table-wrapper {
   width: 100%;
+
   overflow-x: auto;
 
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-soft);
 }
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
 
 .student-record-table {
   width: 100%;
@@ -749,98 +1061,127 @@
   border-collapse: collapse;
 }
 
+
 .student-record-table th {
-  padding: 10px 12px;
+  padding: 12px 13px;
 
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 
-  background: #f8fafc;
-  color: #475569;
+  background: #f4faf6;
+
+  color: var(--ptc-green-dark);
 
   text-align: left;
 
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11.5px;
+  font-weight: 850;
 
   white-space: nowrap;
+
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
 }
 
-.student-record-table td {
-  padding: 12px;
 
-  border-bottom: 1px solid #f1f5f9;
+.student-record-table td {
+  padding: 14px 13px;
+
+  border-bottom: 1px solid var(--border-soft);
 
   vertical-align: top;
 
-  color: #334155;
+  color: var(--text-secondary);
 
-  font-size: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
 }
+
 
 .student-record-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.student-record-table tbody tr:hover {
-  background: #fafcff;
+
+.student-record-table tbody tr {
+  transition: background 0.15s ease;
 }
+
+
+.student-record-table tbody tr:hover {
+  background: var(--ptc-green-soft-2);
+}
+
 
 /* =========================================================
    SUBJECT
    ========================================================= */
 
 .student-record-subject {
-  min-width: 190px;
+  min-width: 200px;
 
   display: flex;
   flex-direction: column;
-  gap: 2px;
+
+  gap: 3px;
 }
+
 
 .student-record-subject strong {
-  color: #0f172a;
+  color: var(--text-primary);
 
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 850;
 }
+
 
 .student-record-subject span {
-  color: #475569;
+  color: var(--ptc-green);
 
-  font-size: 9px;
+  font-size: 11.5px;
+  font-weight: 750;
 }
+
 
 .student-record-subject small {
-  color: #94a3b8;
-
-  font-size: 8px;
-}
-
-.student-record-units {
-  color: #334155;
+  color: var(--text-muted);
 
   font-size: 11px;
 }
+
+
+.student-record-units {
+  color: var(--text-primary);
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   FINAL RATING
+   ========================================================= */
 
 .student-record-final-rating {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  min-width: 48px;
-  min-height: 28px;
+  min-width: 54px;
+  min-height: 30px;
 
-  padding: 3px 7px;
+  padding: 4px 9px;
 
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 7px;
 
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--ptc-green-soft);
 
-  font-size: 11px;
+  color: var(--ptc-green-dark);
+
+  font-size: 13px;
   font-weight: 900;
 }
+
 
 /* =========================================================
    RESULT BADGES
@@ -851,46 +1192,73 @@
   align-items: center;
   justify-content: center;
 
-  min-height: 23px;
+  min-height: 27px;
 
-  padding: 3px 8px;
+  padding: 4px 10px;
 
+  border: 1px solid transparent;
   border-radius: 999px;
 
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 850;
 }
+
+
+/* PASSED */
 
 .student-record-result.passed {
-  background: #dcfce7;
-  color: #166534;
+  border-color: var(--ptc-green-border);
+
+  background: var(--ptc-green-light);
+
+  color: var(--ptc-green-dark);
 }
+
+
+/* INCOMPLETE */
 
 .student-record-result.incomplete {
-  background: #fef3c7;
-  color: #92400e;
+  border-color: var(--warning-border);
+
+  background: var(--warning-soft);
+
+  color: var(--warning-dark);
 }
 
+
+/* FAILED */
+
 .student-record-result.failed {
+  border-color: var(--danger-border);
+
   background: #fee2e2;
+
   color: #991b1b;
 }
 
+
+/* UNKNOWN */
+
 .student-record-result.unknown {
-  background: #f1f5f9;
-  color: #64748b;
+  border-color: #e2e8f0;
+
+  background: var(--gray-soft);
+
+  color: var(--gray);
 }
+
 
 .student-record-retake {
   display: block;
 
-  margin-top: 4px;
+  margin-top: 5px;
 
-  color: #b45309;
+  color: var(--warning-dark);
 
-  font-size: 8px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 750;
 }
+
 
 /* =========================================================
    SUBJECT ACADEMIC STATUS
@@ -898,65 +1266,96 @@
 
 .student-record-subject-status {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  padding: 3px 8px;
+  min-height: 26px;
 
+  padding: 4px 9px;
+
+  border: 1px solid #e2e8f0;
   border-radius: 999px;
 
-  background: #f1f5f9;
+  background: var(--gray-soft);
+
   color: #475569;
 
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 850;
 }
+
 
 .student-record-subject-status.completed {
-  background: #dcfce7;
-  color: #166534;
+  border-color: var(--ptc-green-border);
+
+  background: var(--ptc-green-light);
+
+  color: var(--ptc-green-dark);
 }
 
+
 .student-record-subject-status.failed {
+  border-color: var(--danger-border);
+
   background: #fee2e2;
+
   color: #991b1b;
 }
 
+
 .student-record-subject-status.incomplete {
-  background: #fef3c7;
-  color: #92400e;
+  border-color: var(--warning-border);
+
+  background: var(--warning-soft);
+
+  color: var(--warning-dark);
 }
+
 
 /* =========================================================
    APPROVAL
    ========================================================= */
 
 .student-record-approval {
-  min-width: 130px;
+  min-width: 140px;
 
   display: flex;
   flex-direction: column;
+
   align-items: flex-start;
-  gap: 3px;
+
+  gap: 4px;
 }
+
 
 .student-record-approved-badge {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  padding: 3px 8px;
+  min-height: 25px;
 
+  padding: 4px 9px;
+
+  border: 1px solid var(--ptc-green-border);
   border-radius: 999px;
 
-  background: #dcfce7;
-  color: #166534;
+  background: var(--ptc-green-light);
 
-  font-size: 8px;
-  font-weight: 800;
+  color: var(--ptc-green-dark);
+
+  font-size: 10.5px;
+  font-weight: 850;
 }
+
 
 .student-record-approval small {
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 8px;
+  font-size: 11px;
+  line-height: 1.4;
 }
+
 
 /* =========================================================
    RESULT GUIDE
@@ -965,103 +1364,134 @@
 .student-record-legend {
   display: grid;
 
-  grid-template-columns: 220px 1fr;
+  grid-template-columns:
+    230px
+    1fr;
 
-  gap: 16px;
+  gap: 18px;
 
-  margin-bottom: 18px;
-  padding: 16px;
+  margin-bottom: 20px;
+  padding: 18px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 
   background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(20, 83, 45, 0.03);
 }
+
 
 .student-record-legend-header span {
   display: block;
 
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 
-  color: #64748b;
+  color: var(--ptc-green);
 
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 850;
 
   text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
+
 
 .student-record-legend-header strong {
-  color: #0f172a;
+  color: var(--ptc-green-deep);
 
-  font-size: 13px;
+  font-size: 15px;
 }
+
 
 .student-record-legend-items {
   display: grid;
 
   grid-template-columns: repeat(3, minmax(0, 1fr));
 
-  gap: 10px;
+  gap: 11px;
 }
+
 
 .student-record-legend-items > div {
   display: flex;
   align-items: flex-start;
-  gap: 9px;
+
+  gap: 10px;
 
   min-width: 0;
 
-  padding: 10px;
+  padding: 12px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: #fcfefd;
 }
+
 
 .student-record-legend-rating {
   flex-shrink: 0;
 
-  padding: 4px 7px;
+  padding: 5px 8px;
 
+  border: 1px solid transparent;
   border-radius: 6px;
 
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
 }
 
+
 .student-record-legend-rating.passed {
-  background: #dcfce7;
-  color: #166534;
+  border-color: var(--ptc-green-border);
+
+  background: var(--ptc-green-light);
+
+  color: var(--ptc-green-dark);
 }
+
 
 .student-record-legend-rating.incomplete {
-  background: #fef3c7;
-  color: #92400e;
+  border-color: var(--warning-border);
+
+  background: var(--warning-soft);
+
+  color: var(--warning-dark);
 }
 
+
 .student-record-legend-rating.failed {
+  border-color: var(--danger-border);
+
   background: #fee2e2;
+
   color: #991b1b;
 }
+
 
 .student-record-legend-items strong {
   display: block;
 
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 
-  color: #1e293b;
+  color: var(--text-primary);
 
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 800;
 }
+
 
 .student-record-legend-items p {
   margin: 0;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 9px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  line-height: 1.45;
 }
+
 
 /* =========================================================
    FOOTER
@@ -1071,192 +1501,302 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 20px;
 
-  padding: 16px 18px;
+  padding: 18px 20px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 
-  background: #ffffff;
+  background: linear-gradient(
+    90deg,
+    #ffffff,
+    #f8fcf9
+  );
+
+  box-shadow:
+    0 3px 12px rgba(20, 83, 45, 0.03);
 }
+
 
 .student-record-footer > div:first-child {
-  max-width: 720px;
+  max-width: 760px;
 }
+
 
 .student-record-footer strong {
-  color: #0f172a;
+  color: var(--text-primary);
 
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 800;
 }
+
 
 .student-record-footer p {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 9px;
-  line-height: 1.45;
+  font-size: 11.5px;
+  line-height: 1.5;
 }
+
 
 .student-record-footer-stat {
   flex-shrink: 0;
 
-  min-width: 130px;
+  min-width: 140px;
 
-  padding: 10px 13px;
+  padding: 12px 14px;
 
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 9px;
 
-  background: #eff6ff;
+  background: var(--ptc-green-soft);
 
   text-align: center;
 }
 
+
 .student-record-footer-stat span {
   display: block;
 
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 
-  color: #64748b;
+  color: var(--text-secondary);
 
-  font-size: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
 }
+
 
 .student-record-footer-stat strong {
-  color: #1d4ed8;
+  color: var(--ptc-green-dark);
 
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 900;
 }
 
+
 /* =========================================================
-   SCROLLBAR
+   TABLE SCROLLBAR
    ========================================================= */
 
 .student-record-table-wrapper::-webkit-scrollbar {
   height: 8px;
 }
 
+
 .student-record-table-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #eef3ef;
 }
+
 
 .student-record-table-wrapper::-webkit-scrollbar-thumb {
-  border: 2px solid #f1f5f9;
+  border: 2px solid #eef3ef;
   border-radius: 999px;
 
-  background: #cbd5e1;
+  background: #a5cbb0;
 }
 
+
+.student-record-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--ptc-green-medium);
+}
+
+
 /* =========================================================
-   RESPONSIVE
+   RESPONSIVE - LARGE
    ========================================================= */
 
 @media (max-width: 1300px) {
   .student-record-profile {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
   }
+
 
   .student-record-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
   }
 
+
   .student-record-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
+
 
   .student-record-search {
     grid-column: span 2;
   }
 
+
   .student-record-clear-filter {
     grid-column: span 2;
+
     width: 100%;
   }
+
 
   .student-record-legend {
     grid-template-columns: 1fr;
   }
 }
 
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
 @media (max-width: 850px) {
   .student-academic-record-page {
-    padding: 16px;
+    padding: 22px 18px 45px;
   }
+
 
   .student-record-header {
     flex-direction: column;
+    align-items: flex-start;
+
+    padding: 23px 21px;
   }
+
 
   .student-record-refresh {
     width: 100%;
   }
 
+
   .student-record-profile {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
+
 
   .student-record-legend-items {
     grid-template-columns: 1fr;
   }
 
+
   .student-record-footer {
     flex-direction: column;
+
     align-items: stretch;
   }
+
 
   .student-record-footer-stat {
     width: auto;
   }
 }
 
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
 @media (max-width: 600px) {
   .student-academic-record-page {
-    padding: 12px;
+    padding: 16px 13px 40px;
   }
+
 
   .student-record-header {
-    padding: 17px;
+    padding: 20px 18px;
   }
 
+
   .student-record-header h1 {
-    font-size: 23px;
+    font-size: 25px;
   }
+
+
+  .student-record-header p {
+    font-size: 13px;
+  }
+
 
   .student-record-profile {
     grid-template-columns: 1fr;
   }
 
+
   .student-record-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
+
 
   .student-record-filters {
     grid-template-columns: 1fr;
   }
+
 
   .student-record-search,
   .student-record-clear-filter {
     grid-column: auto;
   }
 
+
   .student-record-history-header,
   .student-record-year-header,
   .student-record-semester-header {
     flex-direction: column;
+
     align-items: flex-start;
   }
 
+
   .student-record-semester-stats {
     width: 100%;
-    justify-content: space-between;
+
+    flex-wrap: wrap;
+
+    justify-content: flex-start;
+  }
+
+
+  .student-record-years {
+    padding: 12px;
+  }
+
+
+  .student-record-history-header {
+    padding: 17px;
+  }
+
+
+  .student-record-legend {
+    padding: 15px;
   }
 }
 
+
+/* =========================================================
+   RESPONSIVE - SMALL PHONE
+   ========================================================= */
+
 @media (max-width: 420px) {
+  .student-academic-record-page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+
   .student-record-summary {
     grid-template-columns: 1fr;
+  }
+
+
+  .student-record-header {
+    padding: 18px 15px;
+  }
+
+
+  .student-record-header h1 {
+    font-size: 23px;
   }
 }
