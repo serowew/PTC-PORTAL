@@ -6,6 +6,7 @@ import db from "../../db.js";
 import {
   ELIGIBILITY_TYPE,
   evaluateSubjectEligibility,
+  getCarryOverCandidates,
 } from "../../services/academicEvaluation.service.js";
 
 const router = express.Router();
@@ -63,744 +64,218 @@ function getRegistrarActor(req, res) {
     username: req.user.username || null,
   };
 }
-// =====================================================
-// ACADEMIC ELIGIBILITY HELPERS
-// =====================================================
-//
-// AUTHORITATIVE PTC RULES:
-//
-// 1. Only APPROVED final grades are academic truth.
-//
-// 2. Final grade classification:
-//      1.00 - 3.00 = Passed
-//      4.00        = Incomplete / Retake
-//      5.00        = Failed / Retake
-//
-// 3. remarks DO NOT override final_grade.
-//
-// 4. If the student has EVER passed the target
-//    subject, the subject cannot be taken again.
-//
-// 5. REGULAR / NEW subject:
-//      prerequisites MUST already be passed.
-//
-// 6. VALID RETAKE:
-//      previous Approved grade = 4.00 or 5.00.
-//
-//    A legitimate retake is NOT blocked by missing
-//    prerequisite history because the student has
-//    already previously taken the target subject.
-//
-// 7. Invalid / unsupported Approved final grades
-//    block eligibility.
-//
-// =====================================================
 
 // =====================================================
-// CLASSIFY OFFICIAL FINAL GRADE
-// =====================================================
-
-function classifyFinalGrade(value) {
-  if (value === null || value === undefined || value === "") {
-    return {
-      code: "NO_FINAL_GRADE",
-
-      classification: "Unknown",
-
-      passed: false,
-
-      retake: false,
-
-      valid: false,
-
-      final_grade: null,
-    };
-  }
-
-  const grade = Number(value);
-
-  if (!Number.isFinite(grade)) {
-    return {
-      code: "INVALID_FINAL_GRADE",
-
-      classification: "Unknown",
-
-      passed: false,
-
-      retake: false,
-
-      valid: false,
-
-      final_grade: null,
-    };
-  }
-
-  // ===============================================
-  // PASSED
-  // ===============================================
-
-  if (grade >= 1.0 && grade <= 3.0) {
-    return {
-      code: "PASSED",
-
-      classification: "Passed",
-
-      passed: true,
-
-      retake: false,
-
-      valid: true,
-
-      final_grade: grade,
-    };
-  }
-
-  // ===============================================
-  // INCOMPLETE
-  //
-  // Official retake grade.
-  // ===============================================
-
-  if (grade === 4.0) {
-    return {
-      code: "INCOMPLETE",
-
-      classification: "Incomplete",
-
-      passed: false,
-
-      retake: true,
-
-      valid: true,
-
-      final_grade: grade,
-    };
-  }
-
-  // ===============================================
-  // FAILED
-  //
-  // Official retake grade.
-  // ===============================================
-
-  if (grade === 5.0) {
-    return {
-      code: "FAILED",
-
-      classification: "Failed",
-
-      passed: false,
-
-      retake: true,
-
-      valid: true,
-
-      final_grade: grade,
-    };
-  }
-
-  // ===============================================
-  // UNSUPPORTED OFFICIAL GRADE
-  // ===============================================
-
-  return {
-    code: "INVALID_FINAL_GRADE",
-
-    classification: "Unknown",
-
-    passed: false,
-
-    retake: false,
-
-    valid: false,
-
-    final_grade: grade,
-  };
-}
-
-// =====================================================
-// GET APPROVED GRADES FOR SUBJECTS
+// STUDENT SCHEDULE CONFLICT HELPERS
 // =====================================================
 //
-// IMPORTANT:
+// These helpers intentionally follow the same schedule
+// parsing rules used by Registrar Class Offerings.
 //
-// Enrollment eligibility must NEVER use:
-// - Draft grade
-// - Submitted grade
-// - Returned grade
+// Adjacent schedules are allowed:
 //
-// Only:
-// grade_status = Approved
+// 8:00 AM - 10:00 AM
+// 10:00 AM - 12:00 PM
 //
+// These are NOT overlapping.
 // =====================================================
 
-async function getApprovedGradesForSubjects(connection, studentId, subjectIds) {
-  const cleanStudentId = toPositiveInt(studentId);
+const ENROLLMENT_DAY_ALIASES = {
+  monday: "Monday",
+  mon: "Monday",
 
-  if (!cleanStudentId) {
-    throw new Error("Invalid student ID supplied to approved-grade lookup.");
-  }
+  tuesday: "Tuesday",
+  tue: "Tuesday",
+  tues: "Tuesday",
 
-  const uniqueSubjectIds = [
-    ...new Set(
-      (subjectIds || []).map((value) => toPositiveInt(value)).filter(Boolean),
-    ),
-  ];
+  wednesday: "Wednesday",
+  wed: "Wednesday",
 
-  if (uniqueSubjectIds.length === 0) {
+  thursday: "Thursday",
+  thu: "Thursday",
+  thur: "Thursday",
+  thurs: "Thursday",
+
+  friday: "Friday",
+  fri: "Friday",
+
+  saturday: "Saturday",
+  sat: "Saturday",
+
+  sunday: "Sunday",
+  sun: "Sunday",
+};
+
+function parseEnrollmentScheduleDays(value) {
+  if (!value || typeof value !== "string") {
     return [];
   }
 
-  const placeholders = uniqueSubjectIds.map(() => "?").join(",");
+  const rawParts = value
+    .split(/[,/;&]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 
-  const [rows] = await connection.execute(
-    `
-        SELECT
-            g.grade_id,
+  const days = [];
 
-            g.student_id,
+  for (const raw of rawParts) {
+    const normalized = raw.toLowerCase().replace(/\./g, "");
 
-            g.subject_id,
+    const day = ENROLLMENT_DAY_ALIASES[normalized];
 
-            g.enrollment_id,
+    if (day && !days.includes(day)) {
+      days.push(day);
+    }
+  }
 
-            g.final_grade,
-
-            g.remarks,
-
-            g.grade_status,
-
-            g.approved_by,
-
-            g.approved_at,
-
-            g.created_at,
-
-            g.updated_at,
-
-            e.academic_year_id,
-
-            e.semester_id,
-
-            e.enrollment_status
-
-        FROM grades g
-
-        LEFT JOIN enrollments e
-            ON e.enrollment_id =
-               g.enrollment_id
-
-        WHERE g.student_id = ?
-
-          AND g.subject_id IN (
-            ${placeholders}
-          )
-
-          AND g.grade_status =
-              'Approved'
-
-          AND g.final_grade
-              IS NOT NULL
-
-        ORDER BY
-            COALESCE(
-              g.approved_at,
-              g.updated_at,
-              g.created_at
-            ) DESC,
-
-            g.grade_id DESC
-      `,
-    [cleanStudentId, ...uniqueSubjectIds],
-  );
-
-  return rows.map((row) => {
-    const result = classifyFinalGrade(row.final_grade);
-
-    return {
-      grade_id: Number(row.grade_id),
-
-      student_id: Number(row.student_id),
-
-      subject_id: Number(row.subject_id),
-
-      enrollment_id:
-        row.enrollment_id !== null && row.enrollment_id !== undefined
-          ? Number(row.enrollment_id)
-          : null,
-
-      final_grade:
-        row.final_grade !== null && row.final_grade !== undefined
-          ? Number(row.final_grade)
-          : null,
-
-      remarks: row.remarks || null,
-
-      grade_status: row.grade_status,
-
-      approved_by:
-        row.approved_by !== null && row.approved_by !== undefined
-          ? Number(row.approved_by)
-          : null,
-
-      approved_at: row.approved_at || null,
-
-      academic_year_id:
-        row.academic_year_id !== null && row.academic_year_id !== undefined
-          ? Number(row.academic_year_id)
-          : null,
-
-      semester_id:
-        row.semester_id !== null && row.semester_id !== undefined
-          ? Number(row.semester_id)
-          : null,
-
-      enrollment_status: row.enrollment_status || null,
-
-      result,
-    };
-  });
+  return days;
 }
 
-// =====================================================
-// EVALUATE ONE SUBJECT FOR ONE STUDENT
-// =====================================================
-//
-// RETURNS:
-//
-// {
-//   eligible,
-//   attempt_type,
-//   is_retake,
-//   subject,
-//   previous_grade,
-//   prerequisites,
-//   errors
-// }
-//
-// =====================================================
-
-async function evaluateStudentSubjectEligibility(
-  connection,
-  { studentId, subjectId },
-) {
-  const cleanStudentId = toPositiveInt(studentId);
-
-  const cleanSubjectId = toPositiveInt(subjectId);
-
-  if (!cleanStudentId || !cleanSubjectId) {
-    throw new Error(
-      "Invalid student/subject ID supplied to academic eligibility validator.",
-    );
+function parseEnrollmentClockTime(value) {
+  if (!value || typeof value !== "string") {
+    return null;
   }
 
-  // ===============================================
-  // GET TARGET SUBJECT
-  // ===============================================
+  const text = value.trim().toUpperCase().replace(/\s+/g, " ");
 
-  const [subjectRows] = await connection.execute(
-    `
-        SELECT
-            subject_id,
+  // =================================================
+  // 12-HOUR
+  //
+  // 8 AM
+  // 8:00 AM
+  // 10:30 PM
+  // =================================================
 
-            subject_code,
+  let match = text.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
 
-            subject_name,
+  if (match) {
+    let hour = Number(match[1]);
 
-            units
+    const minute = Number(match[2] || 0);
 
-        FROM subjects
+    const meridiem = match[3];
 
-        WHERE subject_id = ?
+    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) {
+      return null;
+    }
 
-        LIMIT 1
-      `,
-    [cleanSubjectId],
-  );
+    if (meridiem === "AM") {
+      if (hour === 12) {
+        hour = 0;
+      }
+    } else if (hour !== 12) {
+      hour += 12;
+    }
 
-  if (subjectRows.length === 0) {
+    return hour * 60 + minute;
+  }
+
+  // =================================================
+  // 24-HOUR
+  //
+  // 08:00
+  // 13:30
+  // =================================================
+
+  match = text.match(/^(\d{1,2}):(\d{2})$/);
+
+  if (match) {
+    const hour = Number(match[1]);
+
+    const minute = Number(match[2]);
+
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return null;
+    }
+
+    return hour * 60 + minute;
+  }
+
+  // =================================================
+  // LEGACY SIMPLE HOUR
+  //
+  // 8-10
+  // =================================================
+
+  match = text.match(/^(\d{1,2})$/);
+
+  if (match) {
+    const hour = Number(match[1]);
+
+    if (hour < 0 || hour > 23) {
+      return null;
+    }
+
+    return hour * 60;
+  }
+
+  return null;
+}
+
+function parseEnrollmentScheduleTimeRange(value) {
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().replace(/[–—]/g, "-");
+
+  const parts = normalized.split(/\s*-\s*/);
+
+  if (parts.length !== 2) {
+    return null;
+  }
+
+  const start = parseEnrollmentClockTime(parts[0]);
+
+  const end = parseEnrollmentClockTime(parts[1]);
+
+  if (start === null || end === null || end <= start) {
+    return null;
+  }
+
+  return {
+    start,
+    end,
+  };
+}
+
+function enrollmentSchedulesOverlap(daysA, timeA, daysB, timeB) {
+  const parsedDaysA = parseEnrollmentScheduleDays(daysA);
+
+  const parsedDaysB = parseEnrollmentScheduleDays(daysB);
+
+  const parsedTimeA = parseEnrollmentScheduleTimeRange(timeA);
+
+  const parsedTimeB = parseEnrollmentScheduleTimeRange(timeB);
+
+  if (
+    parsedDaysA.length === 0 ||
+    parsedDaysB.length === 0 ||
+    !parsedTimeA ||
+    !parsedTimeB
+  ) {
     return {
-      eligible: false,
-
-      attempt_type: null,
-
-      is_retake: false,
-
-      subject: null,
-
-      previous_grade: null,
-
-      prerequisites: [],
-
-      errors: [
-        {
-          code: "SUBJECT_NOT_FOUND",
-
-          message: "Subject does not exist.",
-        },
-      ],
+      overlap: false,
+      common_days: [],
     };
   }
 
-  const targetSubject = subjectRows[0];
+  const commonDays = parsedDaysA.filter((day) => parsedDaysB.includes(day));
 
-  // ===============================================
-  // GET PREREQUISITES
-  // ===============================================
-
-  const [prerequisiteRows] = await connection.execute(
-    `
-        SELECT
-            sp.prerequisite_id,
-
-            sp.subject_id,
-
-            sp.prerequisite_subject_id,
-
-            prerequisite.subject_code
-                AS prerequisite_subject_code,
-
-            prerequisite.subject_name
-                AS prerequisite_subject_name,
-
-            prerequisite.units
-                AS prerequisite_units
-
-        FROM subject_prerequisites sp
-
-        INNER JOIN subjects prerequisite
-            ON prerequisite.subject_id =
-               sp.prerequisite_subject_id
-
-        WHERE sp.subject_id = ?
-
-        ORDER BY
-            prerequisite.subject_code ASC
-      `,
-    [cleanSubjectId],
-  );
-
-  const prerequisiteIds = prerequisiteRows.map((row) =>
-    Number(row.prerequisite_subject_id),
-  );
-
-  // ===============================================
-  // GET APPROVED GRADE HISTORY
-  //
-  // We need:
-  // - target subject history
-  // - prerequisite subject history
-  // ===============================================
-
-  const approvedGrades = await getApprovedGradesForSubjects(
-    connection,
-    cleanStudentId,
-    [cleanSubjectId, ...prerequisiteIds],
-  );
-
-  // ===============================================
-  // GROUP GRADES BY SUBJECT
-  // ===============================================
-
-  const gradesBySubject = new Map();
-
-  for (const grade of approvedGrades) {
-    const key = Number(grade.subject_id);
-
-    if (!gradesBySubject.has(key)) {
-      gradesBySubject.set(key, []);
-    }
-
-    gradesBySubject.get(key).push(grade);
+  if (commonDays.length === 0) {
+    return {
+      overlap: false,
+      common_days: [],
+    };
   }
 
-  // ===============================================
-  // TARGET SUBJECT HISTORY
-  // ===============================================
-
-  const targetGradeHistory = gradesBySubject.get(cleanSubjectId) || [];
-
-  // Query is newest first.
-  const latestTargetGrade =
-    targetGradeHistory.length > 0 ? targetGradeHistory[0] : null;
-
-  // ===============================================
-  // HAS EVER PASSED?
-  //
-  // Once officially passed, the subject cannot
-  // be taken again.
-  // ===============================================
-
-  const passedTargetGrade =
-    targetGradeHistory.find((grade) => grade.result.passed) || null;
-
-  const errors = [];
-
-  // ===============================================
-  // BLOCK SUBJECT ALREADY PASSED
-  // ===============================================
-
-  if (passedTargetGrade) {
-    errors.push({
-      code: "SUBJECT_ALREADY_PASSED",
-
-      message: `${targetSubject.subject_code} has already been passed and cannot be enrolled again.`,
-
-      grade_id: passedTargetGrade.grade_id,
-
-      final_grade: passedTargetGrade.final_grade,
-    });
-  }
-
-  // ===============================================
-  // INVALID APPROVED FINAL GRADE
-  //
-  // Example:
-  // Approved final_grade = 3.50
-  //
-  // Our official rule only recognizes:
-  // 1.00 - 3.00
-  // 4.00
-  // 5.00
-  // ===============================================
-
-  if (
-    !passedTargetGrade &&
-    latestTargetGrade &&
-    !latestTargetGrade.result.valid
-  ) {
-    errors.push({
-      code: "INVALID_APPROVED_FINAL_GRADE",
-
-      message: `The latest approved final grade for ${targetSubject.subject_code} is outside the supported grading scale.`,
-
-      grade_id: latestTargetGrade.grade_id,
-
-      final_grade: latestTargetGrade.final_grade,
-    });
-  }
-
-  // ===============================================
-  // DETERMINE RETAKE
-  //
-  // RETAKE ONLY when latest Approved result is:
-  //
-  // 4.00 = Incomplete
-  // 5.00 = Failed
-  //
-  // ===============================================
-
-  const isRetake = Boolean(
-    !passedTargetGrade &&
-    latestTargetGrade &&
-    latestTargetGrade.result.valid &&
-    latestTargetGrade.result.retake,
-  );
-
-  const attemptType = isRetake ? "Retake" : "Regular";
-
-  // ===============================================
-  // PREREQUISITE EVALUATION
-  //
-  // IMPORTANT:
-  //
-  // REGULAR:
-  // prerequisite MUST be passed.
-  //
-  // RETAKE:
-  // prerequisite does NOT block enrollment.
-  //
-  // Reason:
-  // Student already previously took the target
-  // subject and has an official 4.00 / 5.00.
-  //
-  // We still return prerequisite information for
-  // Registrar visibility, but we do not add a
-  // blocking prerequisite error for a retake.
-  // ===============================================
-
-  const prerequisites = [];
-
-  for (const prerequisite of prerequisiteRows) {
-    const prerequisiteSubjectId = Number(prerequisite.prerequisite_subject_id);
-
-    // =============================================
-    // SELF-PREREQUISITE DATABASE ERROR
-    // =============================================
-
-    if (prerequisiteSubjectId === cleanSubjectId) {
-      const prerequisiteResult = {
-        prerequisite_id: Number(prerequisite.prerequisite_id),
-
-        subject_id: prerequisiteSubjectId,
-
-        subject_code: prerequisite.prerequisite_subject_code,
-
-        subject_name: prerequisite.prerequisite_subject_name,
-
-        required_for_attempt: !isRetake,
-
-        satisfied: false,
-
-        passed_grade: null,
-
-        bypassed_for_retake: isRetake,
-
-        error: "INVALID_SELF_PREREQUISITE",
-      };
-
-      prerequisites.push(prerequisiteResult);
-
-      // -------------------------------------------
-      // Regular enrollment:
-      // Invalid curriculum prerequisite must block.
-      //
-      // Retake:
-      // We do not let broken legacy prerequisite
-      // history stop an otherwise valid retake.
-      // -------------------------------------------
-
-      if (!isRetake) {
-        errors.push({
-          code: "INVALID_SELF_PREREQUISITE",
-
-          message: `${targetSubject.subject_code} cannot be its own prerequisite.`,
-
-          prerequisite_id: Number(prerequisite.prerequisite_id),
-
-          prerequisite_subject_id: prerequisiteSubjectId,
-        });
-      }
-
-      continue;
-    }
-
-    // =============================================
-    // PREREQUISITE GRADE HISTORY
-    // =============================================
-
-    const prerequisiteHistory =
-      gradesBySubject.get(prerequisiteSubjectId) || [];
-
-    // =============================================
-    // PREREQUISITE SATISFIED IF ANY APPROVED
-    // FINAL GRADE IS 1.00 - 3.00
-    // =============================================
-
-    const passedGrade =
-      prerequisiteHistory.find((grade) => grade.result.passed) || null;
-
-    const satisfied = Boolean(passedGrade);
-
-    // =============================================
-    // BUILD PREREQUISITE RESULT
-    // =============================================
-
-    prerequisites.push({
-      prerequisite_id: Number(prerequisite.prerequisite_id),
-
-      subject_id: prerequisiteSubjectId,
-
-      subject_code: prerequisite.prerequisite_subject_code,
-
-      subject_name: prerequisite.prerequisite_subject_name,
-
-      required_for_attempt: !isRetake,
-
-      satisfied,
-
-      passed_grade: passedGrade
-        ? {
-            grade_id: passedGrade.grade_id,
-
-            final_grade: passedGrade.final_grade,
-
-            enrollment_id: passedGrade.enrollment_id,
-
-            approved_by: passedGrade.approved_by,
-
-            approved_at: passedGrade.approved_at,
-          }
-        : null,
-
-      bypassed_for_retake: isRetake && !satisfied,
-
-      error: satisfied ? null : isRetake ? null : "PREREQUISITE_NOT_PASSED",
-    });
-
-    // =============================================
-    // REGULAR SUBJECT:
-    // missing prerequisite BLOCKS.
-    //
-    // RETAKE:
-    // missing prerequisite does NOT block.
-    // =============================================
-
-    if (!isRetake && !satisfied) {
-      errors.push({
-        code: "PREREQUISITE_NOT_PASSED",
-
-        message: `${prerequisite.prerequisite_subject_code} must be passed before taking ${targetSubject.subject_code}.`,
-
-        prerequisite_id: Number(prerequisite.prerequisite_id),
-
-        prerequisite_subject_id: prerequisiteSubjectId,
-
-        prerequisite_subject_code: prerequisite.prerequisite_subject_code,
-      });
-    }
-  }
-
-  // ===============================================
-  // PREVIOUS GRADE RESPONSE
-  // ===============================================
-
-  const previousGrade = latestTargetGrade
-    ? {
-        grade_id: latestTargetGrade.grade_id,
-
-        final_grade: latestTargetGrade.final_grade,
-
-        classification: latestTargetGrade.result.classification,
-
-        result_code: latestTargetGrade.result.code,
-
-        enrollment_id: latestTargetGrade.enrollment_id,
-
-        approved_by: latestTargetGrade.approved_by,
-
-        approved_at: latestTargetGrade.approved_at,
-      }
-    : null;
-
-  // ===============================================
-  // FINAL RESULT
-  // ===============================================
+  const timeOverlap =
+    parsedTimeA.start < parsedTimeB.end && parsedTimeB.start < parsedTimeA.end;
 
   return {
-    eligible: errors.length === 0,
+    overlap: timeOverlap,
 
-    attempt_type: attemptType,
-
-    is_retake: isRetake,
-
-    subject: {
-      subject_id: Number(targetSubject.subject_id),
-
-      subject_code: targetSubject.subject_code,
-
-      subject_name: targetSubject.subject_name,
-
-      units: Number(targetSubject.units || 0),
-    },
-
-    previous_grade: previousGrade,
-
-    prerequisite_policy: isRetake ? "BYPASSED_FOR_VALID_RETAKE" : "REQUIRED",
-
-    prerequisites,
-
-    errors,
+    common_days: timeOverlap ? commonDays : [],
   };
 }
 // =====================================================
@@ -3116,12 +2591,13 @@ router.get("/:id", async (req, res) => {
               -- =========================================
 
               es.enrollment_subject_id,
-              es.enrollment_id,
+es.enrollment_id,
 
-              es.subject_id,
+es.subject_id,
+es.enrollment_type,
 
-              es.status
-                  AS enrollment_subject_status,
+es.status
+    AS enrollment_subject_status,
 
               -- =========================================
               -- SUBJECT
@@ -3260,6 +2736,36 @@ router.get("/:id", async (req, res) => {
     // =================================================
 
     const subjects = subjectRows.map((subject) => {
+      const enrollmentType = String(subject.enrollment_type || "Regular");
+
+      const studentHomeSectionId =
+        row.student_section_id !== null && row.student_section_id !== undefined
+          ? Number(row.student_section_id)
+          : null;
+
+      const assignedSectionId =
+        subject.section_id !== null && subject.section_id !== undefined
+          ? Number(subject.section_id)
+          : null;
+
+      let isIrregular = false;
+      let irregularReason = null;
+
+      if (enrollmentType === "Retake") {
+        isIrregular = true;
+        irregularReason = "RETAKE";
+      } else if (enrollmentType === "Carry Over") {
+        isIrregular = true;
+        irregularReason = "CARRY_OVER";
+      } else if (
+        enrollmentType === "Regular" &&
+        studentHomeSectionId !== null &&
+        assignedSectionId !== null &&
+        assignedSectionId !== studentHomeSectionId
+      ) {
+        isIrregular = true;
+        irregularReason = "CROSS_SECTION_PLACEMENT";
+      }
       const maxStudents =
         subject.offering_max_students !== null &&
         subject.offering_max_students !== undefined
@@ -3274,6 +2780,12 @@ router.get("/:id", async (req, res) => {
         enrollment_id: Number(subject.enrollment_id),
 
         subject_id: Number(subject.subject_id),
+
+        enrollment_type: enrollmentType,
+
+        is_irregular: isIrregular,
+
+        irregular_reason: irregularReason,
 
         subject_code: subject.subject_code,
 
@@ -3399,7 +2911,21 @@ router.get("/:id", async (req, res) => {
     const unassignedSubjects = activeSubjects.filter(
       (subject) => !subject.assignment_complete,
     );
+    const regularSubjects = activeSubjects.filter(
+      (subject) => subject.enrollment_type === "Regular",
+    );
 
+    const retakeSubjects = activeSubjects.filter(
+      (subject) => subject.enrollment_type === "Retake",
+    );
+
+    const carryOverSubjects = activeSubjects.filter(
+      (subject) => subject.enrollment_type === "Carry Over",
+    );
+
+    const irregularSubjects = activeSubjects.filter(
+      (subject) => subject.is_irregular === true,
+    );
     // =================================================
     // FORMAT ENROLLMENT
     // =================================================
@@ -3502,6 +3028,16 @@ router.get("/:id", async (req, res) => {
         total_subjects: activeSubjects.length,
 
         total_units: totalUnits,
+
+        regular_subjects: regularSubjects.length,
+
+        retake_subjects: retakeSubjects.length,
+
+        carry_over_subjects: carryOverSubjects.length,
+
+        irregular_subjects: irregularSubjects.length,
+
+        is_irregular_enrollment: irregularSubjects.length > 0,
 
         assigned_subjects: assignedSubjects.length,
 
@@ -3625,9 +3161,10 @@ router.get("/:id/available-offerings", async (req, res) => {
             s.last_name,
 
             s.course_id,
+s.year_level,
 
-            s.section_id
-                AS student_section_id,
+s.section_id
+    AS student_section_id,
 
             c.course_code,
             c.course_name,
@@ -3720,6 +3257,8 @@ router.get("/:id/available-offerings", async (req, res) => {
 
     const courseId = toPositiveInt(enrollment.course_id);
 
+    const yearLevel = toPositiveInt(enrollment.year_level);
+
     if (!courseId) {
       return res.status(409).json({
         success: false,
@@ -3727,7 +3266,12 @@ router.get("/:id/available-offerings", async (req, res) => {
         message: "Student does not have a valid course assignment.",
       });
     }
-
+    if (!yearLevel) {
+      return res.status(409).json({
+        success: false,
+        message: "Student does not have a valid year level.",
+      });
+    }
     // =================================================
     // SUBJECT FILTER EXISTS
     //
@@ -3799,10 +3343,13 @@ router.get("/:id/available-offerings", async (req, res) => {
     // =================================================
 
     const queryParams = [
+      enrollmentId,
+
       enrollment.academic_year_id,
       enrollment.semester_id,
+
       courseId,
-      enrollmentId,
+      yearLevel,
     ];
 
     if (subjectId) {
@@ -3828,6 +3375,9 @@ router.get("/:id/available-offerings", async (req, res) => {
 
               so.offering_id,
               so.subject_id,
+
+              current_es.enrollment_subject_id,
+current_es.enrollment_type,
 
               so.section_id,
               so.section_subject_id,
@@ -3938,6 +3488,15 @@ router.get("/:id/available-offerings", async (req, res) => {
 
           FROM subject_offerings so
 
+          INNER JOIN enrollment_subjects current_es
+    ON current_es.enrollment_id = ?
+
+   AND current_es.subject_id =
+       so.subject_id
+
+   AND current_es.status =
+       'Enrolled'
+
           INNER JOIN section_subjects ss
               ON ss.section_subject_id =
                  so.section_subject_id
@@ -3966,30 +3525,41 @@ router.get("/:id/available-offerings", async (req, res) => {
 
             AND so.semester_id = ?
 
-            -- =========================================
-            -- SAME STUDENT COURSE
-            -- =========================================
+            AND (
+  -- =========================================
+  -- REGULAR
+  --
+  -- Normal placement stays inside the
+  -- Student's course and current year level.
+  -- =========================================
 
-            AND sec.course_id = ?
+  (
+    current_es.enrollment_type = 'Regular'
 
-            -- =========================================
-            -- SUBJECT MUST ALREADY EXIST
-            -- AS AN ACTIVE ENROLLED SUBJECT
-            -- =========================================
+    AND sec.course_id = ?
 
-            AND EXISTS (
-              SELECT 1
+    AND sec.year_level = ?
+  )
 
-              FROM enrollment_subjects current_es
+  OR
 
-              WHERE current_es.enrollment_id = ?
+  -- =========================================
+  -- IRREGULAR
+  --
+  -- Retake / Carry Over may use another
+  -- section or another course.
+  --
+  -- Exact subject_id is still guaranteed by:
+  --
+  -- current_es.subject_id = so.subject_id
+  -- =========================================
 
-                AND current_es.subject_id =
-                    so.subject_id
+  current_es.enrollment_type IN (
+    'Retake',
+    'Carry Over'
+  )
+)
 
-                AND current_es.status =
-                    'Enrolled'
-            )
 
             -- =========================================
             -- SECTION SUBJECT MUST MATCH OFFERING
@@ -4047,7 +3617,65 @@ router.get("/:id/available-offerings", async (req, res) => {
         `,
       queryParams,
     );
+    // =================================================
+    // CURRENT STUDENT SCHEDULE
+    //
+    // Used only to remove offerings that would create
+    // a schedule conflict for this student.
+    // =================================================
 
+    const [assignedScheduleRows] = await connection.execute(
+      `
+      SELECT
+          es.enrollment_subject_id,
+          es.subject_id,
+          es.enrollment_type,
+
+          es.offering_id,
+          es.section_id,
+
+          sub.subject_code,
+          sub.subject_name,
+
+          sec.section_name,
+
+          so.schedule_days,
+          so.schedule_time
+
+      FROM enrollment_subjects es
+
+      INNER JOIN subjects sub
+          ON sub.subject_id =
+             es.subject_id
+
+      INNER JOIN subject_offerings so
+          ON so.offering_id =
+             es.offering_id
+
+      INNER JOIN section_subjects ss
+          ON ss.section_subject_id =
+             es.section_subject_id
+
+      INNER JOIN sections sec
+          ON sec.section_id =
+             es.section_id
+
+      WHERE es.enrollment_id = ?
+
+        AND es.status = 'Enrolled'
+
+        AND es.offering_id IS NOT NULL
+
+        AND so.status <> 'Cancelled'
+
+        AND ss.status <> 'Cancelled'
+
+      ORDER BY
+          sub.subject_code ASC,
+          es.enrollment_subject_id ASC
+    `,
+      [enrollmentId],
+    );
     // =================================================
     // FORMAT AVAILABLE OFFERINGS
     // =================================================
@@ -4060,6 +3688,93 @@ router.get("/:id/available-offerings", async (req, res) => {
 
         const availableSlots = Math.max(maxStudents - enrolledCount, 0);
 
+        const enrollmentType = String(row.enrollment_type || "").trim();
+
+        const offeringSectionId = Number(row.section_id);
+
+        const offeringCourseId =
+          row.section_course_id !== null && row.section_course_id !== undefined
+            ? Number(row.section_course_id)
+            : null;
+
+        const studentHomeSectionId =
+          enrollment.student_section_id !== null &&
+          enrollment.student_section_id !== undefined
+            ? Number(enrollment.student_section_id)
+            : null;
+
+        const isCrossSection =
+          studentHomeSectionId !== null &&
+          offeringSectionId !== studentHomeSectionId;
+
+        const isCrossCourse =
+          offeringCourseId !== null && offeringCourseId !== courseId;
+
+        const isIrregularPlacement =
+          enrollmentType === "Retake" ||
+          enrollmentType === "Carry Over" ||
+          isCrossSection ||
+          isCrossCourse;
+
+        const studentScheduleConflicts = [];
+
+        for (const existingSubject of assignedScheduleRows) {
+          // Do not compare the enrollment subject
+          // against its own current offering.
+          if (
+            Number(existingSubject.enrollment_subject_id) ===
+            Number(row.enrollment_subject_id)
+          ) {
+            continue;
+          }
+
+          const overlap = enrollmentSchedulesOverlap(
+            row.schedule_days,
+            row.schedule_time,
+            existingSubject.schedule_days,
+            existingSubject.schedule_time,
+          );
+
+          if (!overlap.overlap) {
+            continue;
+          }
+
+          studentScheduleConflicts.push({
+            enrollment_subject_id: Number(
+              existingSubject.enrollment_subject_id,
+            ),
+
+            subject_id: Number(existingSubject.subject_id),
+
+            subject_code: existingSubject.subject_code,
+
+            subject_name: existingSubject.subject_name,
+
+            enrollment_type: existingSubject.enrollment_type,
+
+            offering_id:
+              existingSubject.offering_id !== null
+                ? Number(existingSubject.offering_id)
+                : null,
+
+            section_id:
+              existingSubject.section_id !== null
+                ? Number(existingSubject.section_id)
+                : null,
+
+            section_name: existingSubject.section_name || null,
+
+            schedule: {
+              days: existingSubject.schedule_days,
+
+              time: existingSubject.schedule_time,
+            },
+
+            common_days: overlap.common_days,
+          });
+        }
+
+        const hasStudentScheduleConflict = studentScheduleConflicts.length > 0;
         return {
           // =============================================
           // OFFERING
@@ -4068,6 +3783,22 @@ router.get("/:id/available-offerings", async (req, res) => {
           offering_id: Number(row.offering_id),
 
           offering_status: row.offering_status,
+
+          enrollment_subject_id: Number(row.enrollment_subject_id),
+
+          enrollment_type: enrollmentType,
+
+          is_irregular_placement: isIrregularPlacement,
+
+          placement_flags: {
+            cross_section: isCrossSection,
+
+            cross_course: isCrossCourse,
+          },
+
+          has_student_schedule_conflict: hasStudentScheduleConflict,
+
+          student_schedule_conflicts: studentScheduleConflicts,
 
           academic_year_id: Number(row.academic_year_id),
 
@@ -4183,7 +3914,11 @@ router.get("/:id/available-offerings", async (req, res) => {
       // REMOVE FULL OFFERINGS
       // =================================================
 
-      .filter((offering) => offering.capacity.available_slots > 0);
+      .filter(
+        (offering) =>
+          offering.capacity.available_slots > 0 &&
+          !offering.has_student_schedule_conflict,
+      );
 
     // =================================================
     // SUCCESS RESPONSE
@@ -4225,6 +3960,9 @@ router.get("/:id/available-offerings", async (req, res) => {
       },
 
       subject_filter: subjectId,
+
+      subject_enrollment_type:
+        offerings.length > 0 ? offerings[0].enrollment_type : null,
 
       count: offerings.length,
 
@@ -4644,6 +4382,7 @@ router.post("/:id/assign-section", async (req, res) => {
               es.enrollment_subject_id,
               es.enrollment_id,
               es.subject_id,
+                es.enrollment_type,
 
               es.offering_id,
               es.section_id,
@@ -4745,55 +4484,6 @@ router.post("/:id/assign-section", async (req, res) => {
     }
 
     // =================================================
-    // GET SUBJECTS WITH PREVIOUS APPROVED ATTEMPTS
-    //
-    // We do NOT run evaluateSubjectEligibility() here.
-    //
-    // We only need a lightweight distinction:
-    //
-    // no previous Approved grade
-    //     -> may be Regular
-    //
-    // previous Approved grade
-    //     -> Retake / previous attempt / duplicate
-    //        and must stay in individual placement.
-    //
-    // Final /validate remains academically authoritative.
-    // =================================================
-
-    const [previousApprovedRows] = await connection.execute(
-      `
-          SELECT DISTINCT
-              old_es.subject_id
-
-          FROM enrollment_subjects old_es
-
-          INNER JOIN enrollments old_e
-              ON old_e.enrollment_id =
-                 old_es.enrollment_id
-
-          INNER JOIN grades g
-              ON g.enrollment_subject_id =
-                 old_es.enrollment_subject_id
-
-          WHERE old_e.student_id = ?
-
-            AND old_e.enrollment_id <> ?
-
-            AND old_e.enrollment_status =
-                'Approved'
-
-            AND g.grade_status =
-                'Approved'
-        `,
-      [enrollment.student_id, enrollmentId],
-    );
-
-    const previouslyAttemptedSubjectIds = new Set(
-      previousApprovedRows.map((row) => Number(row.subject_id)),
-    );
-
-    // =================================================
     // CLASSIFY ACTIVE ENROLLMENT SUBJECTS
     //
     // REGULAR:
@@ -4821,14 +4511,46 @@ router.post("/:id/assign-section", async (req, res) => {
     for (const subject of subjectRows) {
       const subjectId = Number(subject.subject_id);
 
+      const enrollmentType = String(subject.enrollment_type || "").trim();
+
       const curriculumSubject = currentCurriculumMap.get(subjectId);
 
-      const hasPreviousApprovedAttempt =
-        previouslyAttemptedSubjectIds.has(subjectId);
+      // =================================================
+      // REGULAR
+      //
+      // Bulk placement is STRICTLY for subjects whose
+      // persisted enrollment type is Regular.
+      // =================================================
 
-      if (curriculumSubject && !hasPreviousApprovedAttempt) {
+      if (enrollmentType === "Regular") {
+        if (!curriculumSubject) {
+          manualSubjects.push({
+            enrollment_subject_id: Number(subject.enrollment_subject_id),
+
+            subject_id: subjectId,
+
+            subject_code: subject.subject_code,
+
+            subject_name: subject.subject_name,
+
+            enrollment_type: enrollmentType,
+
+            current_offering_id:
+              subject.offering_id !== null ? Number(subject.offering_id) : null,
+
+            current_section_id:
+              subject.section_id !== null ? Number(subject.section_id) : null,
+
+            classification: "REGULAR_OUTSIDE_CURRENT_CURRICULUM_TERM",
+          });
+
+          continue;
+        }
+
         regularSubjects.push({
           ...subject,
+
+          enrollment_type: enrollmentType,
 
           curriculum_subject_id: Number(
             curriculumSubject.curriculum_subject_id,
@@ -4840,6 +4562,43 @@ router.post("/:id/assign-section", async (req, res) => {
         continue;
       }
 
+      // =================================================
+      // RETAKE / CARRY OVER
+      //
+      // Irregular subjects are intentionally excluded
+      // from normal bulk section placement.
+      //
+      // They will use individual Registrar placement.
+      // =================================================
+
+      if (enrollmentType === "Retake" || enrollmentType === "Carry Over") {
+        manualSubjects.push({
+          enrollment_subject_id: Number(subject.enrollment_subject_id),
+
+          subject_id: subjectId,
+
+          subject_code: subject.subject_code,
+
+          subject_name: subject.subject_name,
+
+          enrollment_type: enrollmentType,
+
+          current_offering_id:
+            subject.offering_id !== null ? Number(subject.offering_id) : null,
+
+          current_section_id:
+            subject.section_id !== null ? Number(subject.section_id) : null,
+
+          classification: enrollmentType === "Retake" ? "RETAKE" : "CARRY_OVER",
+        });
+
+        continue;
+      }
+
+      // =================================================
+      // INVALID STORED TYPE
+      // =================================================
+
       manualSubjects.push({
         enrollment_subject_id: Number(subject.enrollment_subject_id),
 
@@ -4849,15 +4608,15 @@ router.post("/:id/assign-section", async (req, res) => {
 
         subject_name: subject.subject_name,
 
+        enrollment_type: enrollmentType || null,
+
         current_offering_id:
           subject.offering_id !== null ? Number(subject.offering_id) : null,
 
         current_section_id:
           subject.section_id !== null ? Number(subject.section_id) : null,
 
-        classification: hasPreviousApprovedAttempt
-          ? "PREVIOUS_APPROVED_ATTEMPT"
-          : "RETAKE_OR_SPECIAL",
+        classification: "INVALID_ENROLLMENT_TYPE",
       });
     }
 
@@ -6080,10 +5839,12 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
                 es.enrollment_subject_id,
                 es.enrollment_id,
                 es.subject_id,
+                es.enrollment_type,
 
                 es.offering_id,
                 es.section_id,
                 es.section_subject_id,
+                
 
                 es.status,
 
@@ -6130,6 +5891,29 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
     const currentSubject = subjectRows[0];
 
     const subjectId = Number(currentSubject.subject_id);
+
+    const enrollmentType = String(currentSubject.enrollment_type || "").trim();
+
+    const allowedEnrollmentTypes = ["Regular", "Retake", "Carry Over"];
+
+    if (!allowedEnrollmentTypes.includes(enrollmentType)) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "INVALID_ENROLLMENT_TYPE",
+
+        message: "The enrollment subject has an invalid enrollment type.",
+
+        enrollment_subject_id: enrollmentSubjectId,
+
+        enrollment_type: enrollmentType || null,
+
+        allowed_enrollment_types: allowedEnrollmentTypes,
+      });
+    }
 
     // =================================================
     // 8. SUBJECT STATUS
@@ -6427,14 +6211,107 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
         academic_eligibility: academicEligibility,
       });
     }
+    // =================================================
+    // STORED ENROLLMENT TYPE CONTRACT
+    //
+    // enrollment_subjects.enrollment_type is the
+    // permanent classification of this enrollment
+    // attempt.
+    //
+    // We revalidate it against current academic truth.
+    // =================================================
 
+    let enrollmentTypeMatchesAcademicTruth = false;
+
+    let evaluatedEnrollmentType = academicEligibility.eligibility_type || null;
+
+    let carryOverEligibility = null;
+
+    // =================================================
+    // REGULAR
+    // =================================================
+
+    if (enrollmentType === "Regular") {
+      enrollmentTypeMatchesAcademicTruth =
+        academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR;
+    }
+
+    // =================================================
+    // RETAKE
+    // =================================================
+    else if (enrollmentType === "Retake") {
+      enrollmentTypeMatchesAcademicTruth =
+        academicEligibility.eligibility_type === ELIGIBILITY_TYPE.RETAKE;
+    }
+
+    // =================================================
+    // CARRY OVER
+    //
+    // Generic subject eligibility may classify a
+    // never-taken earlier subject as Regular.
+    //
+    // Therefore Carry Over must use the dedicated
+    // carry-over evaluator.
+    // =================================================
+    else if (enrollmentType === "Carry Over") {
+      const carryOverEvaluation = await getCarryOverCandidates(
+        studentId,
+        curriculumId,
+        yearLevel,
+        semesterId,
+        connection,
+      );
+
+      carryOverEligibility =
+        carryOverEvaluation.eligible.find(
+          (item) => Number(item.subject_id) === subjectId,
+        ) || null;
+
+      enrollmentTypeMatchesAcademicTruth = Boolean(carryOverEligibility);
+
+      evaluatedEnrollmentType = carryOverEligibility
+        ? ELIGIBILITY_TYPE.CARRY_OVER
+        : academicEligibility.eligibility_type || null;
+    }
+
+    // =================================================
+    // REJECT STORED TYPE / ACADEMIC TYPE MISMATCH
+    // =================================================
+
+    if (!enrollmentTypeMatchesAcademicTruth) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "ENROLLMENT_TYPE_ACADEMIC_MISMATCH",
+
+        message:
+          "The stored enrollment type no longer matches the Student's current academic eligibility.",
+
+        enrollment_subject_id: enrollmentSubjectId,
+
+        subject_id: subjectId,
+
+        subject_code: currentSubject.subject_code,
+
+        stored_enrollment_type: enrollmentType,
+
+        evaluated_enrollment_type: evaluatedEnrollmentType,
+
+        academic_eligibility: academicEligibility,
+
+        carry_over_eligibility: carryOverEligibility,
+      });
+    }
     // =================================================
     // 16. REGULAR TERM VALIDATION
     //
     // Retake may originate from an earlier term.
     // =================================================
 
-    if (academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR) {
+    if (enrollmentType === "Regular") {
       if (
         Number(curriculumSubject.year_level) !== yearLevel ||
         Number(curriculumSubject.semester_id) !== semesterId
@@ -6608,7 +6485,10 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
     // 21. COURSE
     // =================================================
 
-    if (Number(offering.section_course_id) !== courseId) {
+    if (
+      enrollmentType === "Regular" &&
+      Number(offering.section_course_id) !== courseId
+    ) {
       await connection.rollback();
       transactionActive = false;
 
@@ -6617,7 +6497,12 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
 
         code: "OFFERING_COURSE_MISMATCH",
 
-        message: "The selected offering belongs to a different course.",
+        message:
+          "A Regular subject must be assigned to an offering within the Student's course.",
+
+        student_course_id: courseId,
+
+        offering_course_id: Number(offering.section_course_id),
       });
     }
 
@@ -6701,7 +6586,7 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
     // =================================================
 
     if (
-      academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR &&
+      enrollmentType === "Regular" &&
       Number(offering.section_year_level) !== yearLevel
     ) {
       await connection.rollback();
@@ -6761,7 +6646,177 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
         missing_configuration: missingConfiguration,
       });
     }
+    // =================================================
+    // STUDENT'S OTHER ASSIGNED CLASSES
+    //
+    // Used for student schedule-conflict validation.
+    //
+    // IMPORTANT:
+    // - Same enrollment only.
+    // - Exclude the subject currently being assigned.
+    // - Only active Enrolled memberships.
+    // - Only classes with an actual offering.
+    // - Cancelled offerings / section-subjects do not
+    //   participate.
+    // =================================================
 
+    const [otherAssignedSubjectRows] = await connection.execute(
+      `
+      SELECT
+          es.enrollment_subject_id,
+          es.subject_id,
+          es.enrollment_type,
+
+          es.offering_id,
+          es.section_id,
+          es.section_subject_id,
+
+          sub.subject_code,
+          sub.subject_name,
+
+          so.schedule_days,
+          so.schedule_time,
+
+          so.status
+              AS offering_status,
+
+          ss.status
+              AS section_subject_status,
+
+          sec.section_name
+
+      FROM enrollment_subjects es
+
+      INNER JOIN subjects sub
+          ON sub.subject_id =
+             es.subject_id
+
+      INNER JOIN subject_offerings so
+          ON so.offering_id =
+             es.offering_id
+
+      INNER JOIN section_subjects ss
+          ON ss.section_subject_id =
+             es.section_subject_id
+
+      INNER JOIN sections sec
+          ON sec.section_id =
+             es.section_id
+
+      WHERE es.enrollment_id = ?
+
+        AND es.enrollment_subject_id <> ?
+
+        AND es.status = 'Enrolled'
+
+        AND es.offering_id IS NOT NULL
+
+        AND so.status <> 'Cancelled'
+
+        AND ss.status <> 'Cancelled'
+
+      ORDER BY
+          sub.subject_code ASC,
+          es.enrollment_subject_id ASC
+    `,
+      [enrollmentId, enrollmentSubjectId],
+    );
+
+    // =================================================
+    // STUDENT SCHEDULE CONFLICT VALIDATION
+    //
+    // Candidate offering must not overlap any other
+    // active assigned subject in this enrollment.
+    // =================================================
+
+    const studentScheduleConflicts = [];
+
+    for (const existingSubject of otherAssignedSubjectRows) {
+      const overlap = enrollmentSchedulesOverlap(
+        offering.schedule_days,
+        offering.schedule_time,
+        existingSubject.schedule_days,
+        existingSubject.schedule_time,
+      );
+
+      if (!overlap.overlap) {
+        continue;
+      }
+
+      studentScheduleConflicts.push({
+        enrollment_subject_id: Number(existingSubject.enrollment_subject_id),
+
+        subject_id: Number(existingSubject.subject_id),
+
+        subject_code: existingSubject.subject_code,
+
+        subject_name: existingSubject.subject_name,
+
+        enrollment_type: existingSubject.enrollment_type,
+
+        offering_id:
+          existingSubject.offering_id !== null
+            ? Number(existingSubject.offering_id)
+            : null,
+
+        section_id:
+          existingSubject.section_id !== null
+            ? Number(existingSubject.section_id)
+            : null,
+
+        section_name: existingSubject.section_name || null,
+
+        schedule: {
+          days: existingSubject.schedule_days,
+
+          time: existingSubject.schedule_time,
+        },
+
+        common_days: overlap.common_days,
+      });
+    }
+
+    if (studentScheduleConflicts.length > 0) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "STUDENT_SCHEDULE_CONFLICT",
+
+        message:
+          "The selected offering conflicts with one or more of the Student's currently assigned classes.",
+
+        enrollment_subject: {
+          enrollment_subject_id: enrollmentSubjectId,
+
+          subject_id: subjectId,
+
+          subject_code: currentSubject.subject_code,
+
+          enrollment_type: enrollmentType,
+        },
+
+        selected_offering: {
+          offering_id: Number(offering.offering_id),
+
+          section_id: Number(offering.section_id),
+
+          section_name: offering.section_name || null,
+
+          schedule: {
+            days: offering.schedule_days,
+
+            time: offering.schedule_time,
+          },
+        },
+
+        conflict_count: studentScheduleConflicts.length,
+
+        conflicts: studentScheduleConflicts,
+      });
+    }
     // =================================================
     // 27. ROOM CAPACITY
     //
@@ -7495,6 +7550,17 @@ router.get("/:id/corrections", async (req, res) => {
 // - Latest official Approved rating must be 4.00 or 5.00
 // - Must still satisfy prerequisites
 //
+// CARRY OVER:
+// - Must belong to Student's active curriculum
+// - Must come from an earlier required curriculum term
+// - Must never have a resolved official attempt
+// - Must still satisfy prerequisites
+//
+// IRREGULAR PLACEMENT:
+// - Retake / Carry Over may use another section/year/course
+// - The offering must still use the exact same subject_id
+// - Same academic year and semester remain mandatory
+//
 // IMPORTANT:
 //
 // - Registrar chooses the offering.
@@ -7612,6 +7678,7 @@ router.post("/:id/subjects", async (req, res) => {
               s.middle_name,
               s.last_name,
               s.course_id,
+              s.section_id AS student_section_id,
               s.year_level,
 
               c.course_code,
@@ -7638,6 +7705,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (enrollmentRows.length === 0) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(404).json({
@@ -7651,6 +7719,11 @@ router.post("/:id/subjects", async (req, res) => {
     const studentId = Number(enrollment.student_id);
 
     const studentCourseId = Number(enrollment.course_id);
+
+    const studentHomeSectionId =
+      enrollment.student_section_id !== null
+        ? Number(enrollment.student_section_id)
+        : null;
 
     const studentYearLevel = Number(enrollment.year_level);
 
@@ -7668,6 +7741,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (!["Pending", "Approved"].includes(enrollmentStatus)) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -7717,6 +7791,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (curriculumRows.length === 0) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -7831,6 +7906,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (offeringRows.length === 0) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(404).json({
@@ -7853,6 +7929,7 @@ router.post("/:id/subjects", async (req, res) => {
         Number(offering.section_id)
     ) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -7871,33 +7948,25 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (Number(offering.subject_is_active) !== 1) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
         success: false,
+
         message: "The subject connected to this offering is inactive.",
       });
     }
 
     // =================================================
-    // 11. COURSE
+    // 11. COURSE PLACEMENT POLICY IS VALIDATED LATER
     //
-    // Registrar cannot place BSIT Student into a
-    // different Course's section.
+    // The enrollment type must be resolved first.
+    // Regular subjects remain same-course/same-year.
+    // Retake / Carry Over may use another valid
+    // section/course when the offering uses the exact
+    // same subject_id.
     // =================================================
-
-    if (Number(offering.section_course_id) !== studentCourseId) {
-      await connection.rollback();
-      transactionActive = false;
-
-      return res.status(409).json({
-        success: false,
-
-        code: "OFFERING_COURSE_MISMATCH",
-
-        message: "The selected offering belongs to a different course.",
-      });
-    }
 
     // =================================================
     // 12. ACADEMIC YEAR
@@ -7910,6 +7979,7 @@ router.post("/:id/subjects", async (req, res) => {
         Number(enrollment.academic_year_id)
     ) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -7932,6 +8002,7 @@ router.post("/:id/subjects", async (req, res) => {
         Number(enrollment.semester_id)
     ) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -7950,6 +8021,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (offering.offering_status !== "Open") {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -7963,6 +8035,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (offering.section_subject_status !== "Open") {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -8003,6 +8076,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (configurationMissing.length > 0) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -8015,6 +8089,7 @@ router.post("/:id/subjects", async (req, res) => {
         missing_configuration: configurationMissing,
       });
     }
+
     // =================================================
     // 16. ROOM CAPACITY
     // =================================================
@@ -8025,6 +8100,7 @@ router.post("/:id/subjects", async (req, res) => {
       maxStudents > Number(offering.room_capacity)
     ) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -8035,6 +8111,7 @@ router.post("/:id/subjects", async (req, res) => {
         message: "The offering capacity exceeds the assigned room capacity.",
       });
     }
+
     // =================================================
     // 17. SUBJECT MUST BELONG TO ACTIVE CURRICULUM
     //
@@ -8068,6 +8145,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (curriculumSubjectRows.length === 0) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -8103,6 +8181,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (!academicEligibility.eligible) {
       await connection.rollback();
+
       transactionActive = false;
 
       let code = "SUBJECT_NOT_ACADEMICALLY_ELIGIBLE";
@@ -8136,54 +8215,128 @@ router.post("/:id/subjects", async (req, res) => {
     }
 
     // =================================================
-    // 19. REGULAR SUBJECT TERM PROTECTION
+    // 19. AUTHORITATIVE ENROLLMENT TYPE
     //
-    // A subject with no previous attempt may be
-    // "Regular" academically, but Registrar must not
-    // add a future/past regular subject outside the
-    // Student's current curriculum term.
+    // Retake:
+    //   Approved failed/incomplete prior result.
     //
-    // Retakes are different:
-    // they may originate from an older term.
+    // Regular:
+    //   Current curriculum year + semester.
+    //
+    // Carry Over:
+    //   Earlier required subject never officially taken
+    //   and still academically eligible.
     // =================================================
 
-    if (academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR) {
-      if (
-        Number(curriculumSubject.year_level) !== studentYearLevel ||
-        Number(curriculumSubject.semester_id) !== Number(enrollment.semester_id)
-      ) {
+    let resolvedEnrollmentType = null;
+
+    if (academicEligibility.eligibility_type === ELIGIBILITY_TYPE.RETAKE) {
+      resolvedEnrollmentType = "Retake";
+    } else if (
+      academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR
+    ) {
+      const isCurrentCurriculumTerm =
+        Number(curriculumSubject.year_level) === studentYearLevel &&
+        Number(curriculumSubject.semester_id) ===
+          Number(enrollment.semester_id);
+
+      if (isCurrentCurriculumTerm) {
+        resolvedEnrollmentType = "Regular";
+      } else {
+        const carryOverEvaluation = await getCarryOverCandidates(
+          studentId,
+          curriculumId,
+          studentYearLevel,
+          Number(enrollment.semester_id),
+          connection,
+        );
+
+        const carryOverSubject = carryOverEvaluation.eligible.find(
+          (item) => Number(item.subject_id) === subjectId,
+        );
+
+        if (carryOverSubject) {
+          resolvedEnrollmentType = "Carry Over";
+        }
+      }
+    }
+
+    if (!resolvedEnrollmentType) {
+      await connection.rollback();
+
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "ENROLLMENT_TYPE_COULD_NOT_BE_RESOLVED",
+
+        message:
+          "The subject is academically eligible but could not be classified as Regular, Retake, or Carry Over.",
+
+        subject: {
+          subject_id: subjectId,
+
+          subject_code: offering.subject_code || null,
+        },
+
+        academic_eligibility_type: academicEligibility.eligibility_type || null,
+      });
+    }
+
+    // =================================================
+    // TYPE-AWARE OFFERING PLACEMENT
+    //
+    // Regular:
+    // - current curriculum term
+    // - same course
+    // - same year-level section
+    //
+    // Retake / Carry Over:
+    // - exact subject_id is already authoritative
+    // - same AY / semester is already enforced above
+    // - cross-course / cross-year placement is allowed
+    // =================================================
+
+    if (resolvedEnrollmentType === "Regular") {
+      if (Number(offering.section_course_id) !== studentCourseId) {
         await connection.rollback();
+
         transactionActive = false;
 
         return res.status(409).json({
           success: false,
 
-          code: "REGULAR_SUBJECT_OUTSIDE_CURRENT_TERM",
+          code: "OFFERING_COURSE_MISMATCH",
 
           message:
-            "A Regular subject can only be added from the Student's current curriculum year and semester.",
+            "A Regular subject must be assigned to an offering within the Student's course.",
 
-          curriculum_subject: {
-            curriculum_subject_id: Number(
-              curriculumSubject.curriculum_subject_id,
-            ),
+          student_course_id: studentCourseId,
 
-            subject_id: subjectId,
+          offering_course_id: Number(offering.section_course_id),
+        });
+      }
 
-            year_level: Number(curriculumSubject.year_level),
+      if (Number(offering.section_year_level) !== studentYearLevel) {
+        await connection.rollback();
 
-            semester_id: Number(curriculumSubject.semester_id),
-          },
+        transactionActive = false;
 
-          student_current_term: {
-            year_level: studentYearLevel,
+        return res.status(409).json({
+          success: false,
 
-            semester_id: Number(enrollment.semester_id),
-          },
+          code: "REGULAR_SECTION_YEAR_LEVEL_MISMATCH",
+
+          message:
+            "A Regular subject must use a section matching the Student's current year level.",
+
+          student_year_level: studentYearLevel,
+
+          section_year_level: Number(offering.section_year_level),
         });
       }
     }
-
     // =================================================
     // 20. DUPLICATE / PREVIOUS MEMBERSHIP
     // =================================================
@@ -8193,6 +8346,7 @@ router.post("/:id/subjects", async (req, res) => {
           SELECT
               enrollment_subject_id,
               subject_id,
+              enrollment_type,
               offering_id,
               section_id,
               section_subject_id,
@@ -8218,6 +8372,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (activeExisting) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -8234,7 +8389,147 @@ router.post("/:id/subjects", async (req, res) => {
     }
 
     // =================================================
-    // 21. CAPACITY
+    // 21. STUDENT SCHEDULE CONFLICT
+    //
+    // The new offering must not overlap another active
+    // assigned subject in this enrollment.
+    // =================================================
+
+    const [assignedScheduleRows] = await connection.execute(
+      `
+          SELECT
+              es.enrollment_subject_id,
+              es.subject_id,
+              es.enrollment_type,
+              es.offering_id,
+              es.section_id,
+
+              sub.subject_code,
+              sub.subject_name,
+
+              sec.section_name,
+
+              so.schedule_days,
+              so.schedule_time
+
+          FROM enrollment_subjects es
+
+          INNER JOIN subjects sub
+              ON sub.subject_id =
+                 es.subject_id
+
+          INNER JOIN subject_offerings so
+              ON so.offering_id =
+                 es.offering_id
+
+          INNER JOIN section_subjects ss
+              ON ss.section_subject_id =
+                 es.section_subject_id
+
+          INNER JOIN sections sec
+              ON sec.section_id =
+                 es.section_id
+
+          WHERE es.enrollment_id = ?
+
+            AND es.status = 'Enrolled'
+
+            AND es.offering_id IS NOT NULL
+
+            AND so.status <> 'Cancelled'
+
+            AND ss.status <> 'Cancelled'
+
+          ORDER BY
+              es.enrollment_subject_id ASC
+        `,
+      [enrollmentId],
+    );
+
+    const studentScheduleConflicts = [];
+
+    for (const existingSubject of assignedScheduleRows) {
+      const overlap = enrollmentSchedulesOverlap(
+        offering.schedule_days,
+        offering.schedule_time,
+        existingSubject.schedule_days,
+        existingSubject.schedule_time,
+      );
+
+      if (!overlap.overlap) {
+        continue;
+      }
+
+      studentScheduleConflicts.push({
+        enrollment_subject_id: Number(existingSubject.enrollment_subject_id),
+
+        subject_id: Number(existingSubject.subject_id),
+
+        subject_code: existingSubject.subject_code,
+
+        subject_name: existingSubject.subject_name,
+
+        enrollment_type: existingSubject.enrollment_type,
+
+        offering_id:
+          existingSubject.offering_id !== null
+            ? Number(existingSubject.offering_id)
+            : null,
+
+        section_id:
+          existingSubject.section_id !== null
+            ? Number(existingSubject.section_id)
+            : null,
+
+        section_name: existingSubject.section_name || null,
+
+        schedule: {
+          days: existingSubject.schedule_days,
+
+          time: existingSubject.schedule_time,
+        },
+
+        common_days: overlap.common_days,
+      });
+    }
+
+    if (studentScheduleConflicts.length > 0) {
+      await connection.rollback();
+
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "STUDENT_SCHEDULE_CONFLICT",
+
+        message:
+          "The selected offering conflicts with one or more of the Student's currently assigned classes.",
+
+        enrollment_type: resolvedEnrollmentType,
+
+        selected_offering: {
+          offering_id: Number(offering.offering_id),
+
+          section_id: Number(offering.section_id),
+
+          section_name: offering.section_name || null,
+
+          schedule: {
+            days: offering.schedule_days,
+
+            time: offering.schedule_time,
+          },
+        },
+
+        conflict_count: studentScheduleConflicts.length,
+
+        conflicts: studentScheduleConflicts,
+      });
+    }
+
+    // =================================================
+    // 22. CAPACITY
     //
     // Count all official/current assigned membership,
     // not only freshly Enrolled rows.
@@ -8272,6 +8567,7 @@ router.post("/:id/subjects", async (req, res) => {
 
     if (enrolledCount >= maxStudents) {
       await connection.rollback();
+
       transactionActive = false;
 
       return res.status(409).json({
@@ -8292,7 +8588,7 @@ router.post("/:id/subjects", async (req, res) => {
     }
 
     // =================================================
-    // 22. RESTORE DROPPED/WITHDRAWN ROW OR INSERT NEW
+    // 23. RESTORE DROPPED/WITHDRAWN ROW OR INSERT NEW
     // =================================================
 
     const restorable = existingRows.find((row) =>
@@ -8300,6 +8596,7 @@ router.post("/:id/subjects", async (req, res) => {
     );
 
     let enrollmentSubjectId;
+
     let restored = false;
 
     if (restorable) {
@@ -8329,6 +8626,7 @@ router.post("/:id/subjects", async (req, res) => {
 
       if (gradeRows.length > 0) {
         await connection.rollback();
+
         transactionActive = false;
 
         return res.status(409).json({
@@ -8354,6 +8652,7 @@ router.post("/:id/subjects", async (req, res) => {
             UPDATE enrollment_subjects
 
             SET
+                enrollment_type = ?,
                 offering_id = ?,
                 section_id = ?,
                 section_subject_id = ?,
@@ -8369,6 +8668,8 @@ router.post("/:id/subjects", async (req, res) => {
               )
           `,
         [
+          resolvedEnrollmentType,
+
           Number(offering.offering_id),
 
           Number(offering.section_id),
@@ -8376,12 +8677,14 @@ router.post("/:id/subjects", async (req, res) => {
           Number(offering.section_subject_id),
 
           enrollmentSubjectId,
+
           enrollmentId,
         ],
       );
 
       if (restoreResult.affectedRows !== 1) {
         await connection.rollback();
+
         transactionActive = false;
 
         return res.status(409).json({
@@ -8440,11 +8743,15 @@ router.post("/:id/subjects", async (req, res) => {
         `,
         [
           enrollmentId,
+
           enrollmentSubjectId,
+
           subjectId,
 
           restorable.offering_id,
+
           restorable.section_id,
+
           restorable.section_subject_id,
 
           Number(offering.offering_id),
@@ -8454,6 +8761,7 @@ router.post("/:id/subjects", async (req, res) => {
           Number(offering.section_subject_id),
 
           reason,
+
           changedBy,
         ],
       );
@@ -8467,6 +8775,7 @@ router.post("/:id/subjects", async (req, res) => {
             INSERT INTO enrollment_subjects (
                 enrollment_id,
                 subject_id,
+                enrollment_type,
                 offering_id,
                 section_id,
                 section_subject_id,
@@ -8479,12 +8788,16 @@ router.post("/:id/subjects", async (req, res) => {
                 ?,
                 ?,
                 ?,
+                ?,
                 'Enrolled'
             )
           `,
         [
           enrollmentId,
+
           subjectId,
+
+          resolvedEnrollmentType,
 
           Number(offering.offering_id),
 
@@ -8496,10 +8809,12 @@ router.post("/:id/subjects", async (req, res) => {
 
       if (insertResult.affectedRows !== 1) {
         await connection.rollback();
+
         transactionActive = false;
 
         return res.status(500).json({
           success: false,
+
           message: "Subject could not be added to the enrollment.",
         });
       }
@@ -8554,7 +8869,9 @@ router.post("/:id/subjects", async (req, res) => {
         `,
         [
           enrollmentId,
+
           enrollmentSubjectId,
+
           subjectId,
 
           Number(offering.offering_id),
@@ -8564,13 +8881,14 @@ router.post("/:id/subjects", async (req, res) => {
           Number(offering.section_subject_id),
 
           reason,
+
           changedBy,
         ],
       );
     }
 
     // =================================================
-    // 23. COMMIT
+    // 24. COMMIT
     // =================================================
 
     await connection.commit();
@@ -8578,7 +8896,7 @@ router.post("/:id/subjects", async (req, res) => {
     transactionActive = false;
 
     // =================================================
-    // 24. RESPONSE
+    // 25. RESPONSE
     // =================================================
 
     return res.status(restored ? 200 : 201).json({
@@ -8611,6 +8929,28 @@ router.post("/:id/subjects", async (req, res) => {
 
         subject_name: offering.subject_name,
 
+        enrollment_type: resolvedEnrollmentType,
+
+        is_irregular:
+          resolvedEnrollmentType === "Retake" ||
+          resolvedEnrollmentType === "Carry Over" ||
+          (studentHomeSectionId !== null &&
+            Number(offering.section_id) !== studentHomeSectionId) ||
+          Number(offering.section_course_id) !== studentCourseId ||
+          Number(offering.section_year_level) !== studentYearLevel,
+
+        home_section_id: studentHomeSectionId,
+
+        placement_flags: {
+          cross_section:
+            studentHomeSectionId !== null &&
+            Number(offering.section_id) !== studentHomeSectionId,
+
+          cross_course: Number(offering.section_course_id) !== studentCourseId,
+
+          cross_year: Number(offering.section_year_level) !== studentYearLevel,
+        },
+
         units: Number(offering.units || 0),
 
         offering_id: Number(offering.offering_id),
@@ -8636,6 +8976,8 @@ router.post("/:id/subjects", async (req, res) => {
         eligible: academicEligibility.eligible,
 
         eligibility_type: academicEligibility.eligibility_type,
+
+        resolved_enrollment_type: resolvedEnrollmentType,
 
         reason: academicEligibility.reason,
 
@@ -8676,6 +9018,7 @@ router.post("/:id/subjects", async (req, res) => {
     }
   }
 });
+
 // =====================================================
 // GET SUBJECTS AVAILABLE FOR ADDITION
 //
@@ -10138,6 +10481,7 @@ router.patch("/:id/subjects/:enrollmentSubjectId/drop", async (req, res) => {
     }
   }
 });
+
 // =====================================================
 // VALIDATE ENROLLMENT BEFORE APPROVAL
 //
@@ -10303,16 +10647,33 @@ router.get("/:id/validate", async (req, res) => {
 
     const errors = [];
     const warnings = [];
-
     // =================================================
     // 6. ENROLLMENT STATUS
+    //
+    // Pending:
+    // - Validation determines whether Registrar may approve.
+    //
+    // Approved:
+    // - Enrollment is already official.
+    // - Do NOT treat Approved as a validation error.
+    // - can_approve will remain false because no second
+    //   approval is allowed.
+    //
+    // Rejected / Cancelled / Draft / other:
+    // - Not eligible for approval.
     // =================================================
 
-    if (enrollment.enrollment_status !== "Pending") {
-      errors.push({
-        code: "ENROLLMENT_NOT_PENDING",
+    const enrollmentStatus = String(enrollment.enrollment_status || "").trim();
 
-        message: `Enrollment must be Pending before approval. Current status is "${enrollment.enrollment_status}".`,
+    const isPending = enrollmentStatus === "Pending";
+
+    const isApproved = enrollmentStatus === "Approved";
+
+    if (!isPending && !isApproved) {
+      errors.push({
+        code: "ENROLLMENT_STATUS_NOT_APPROVABLE",
+
+        message: `Enrollment cannot be approved while its current status is "${enrollmentStatus}".`,
       });
     }
 
@@ -10380,6 +10741,7 @@ router.get("/:id/validate", async (req, res) => {
               es.enrollment_subject_id,
               es.enrollment_id,
               es.subject_id,
+              es.enrollment_type,
 
               es.offering_id,
               es.section_id,
@@ -10425,6 +10787,88 @@ router.get("/:id/validate", async (req, res) => {
     }
 
     // =================================================
+    // CARRY OVER VALIDATION MAP
+    //
+    // Carry Over cannot be validated only through
+    // evaluateSubjectEligibility(), because a valid
+    // never-taken earlier subject may appear there as
+    // academically Regular.
+    //
+    // Evaluate Carry Over once for the whole enrollment.
+    // =================================================
+
+    const carryOverValidationMap = new Map();
+
+    const hasCarryOverSubjects = activeSubjects.some(
+      (subject) =>
+        String(subject.enrollment_type || "").trim() === "Carry Over",
+    );
+
+    if (hasCarryOverSubjects && curriculumId !== null) {
+      const carryOverEvaluation = await getCarryOverCandidates(
+        studentId,
+        curriculumId,
+        yearLevel,
+        semesterId,
+        connection,
+      );
+
+      for (const item of carryOverEvaluation.eligible) {
+        carryOverValidationMap.set(Number(item.subject_id), item);
+      }
+    }
+
+    const [assignedScheduleRows] = await connection.execute(
+      `
+      SELECT
+          es.enrollment_subject_id,
+          es.subject_id,
+          es.enrollment_type,
+          es.offering_id,
+
+          sub.subject_code,
+          sub.subject_name,
+
+          sec.section_id,
+          sec.section_name,
+
+          so.schedule_days,
+          so.schedule_time
+
+      FROM enrollment_subjects es
+
+      INNER JOIN subjects sub
+          ON sub.subject_id =
+             es.subject_id
+
+      INNER JOIN subject_offerings so
+          ON so.offering_id =
+             es.offering_id
+
+      INNER JOIN section_subjects ss
+          ON ss.section_subject_id =
+             es.section_subject_id
+
+      INNER JOIN sections sec
+          ON sec.section_id =
+             es.section_id
+
+      WHERE es.enrollment_id = ?
+
+        AND es.status = 'Enrolled'
+
+        AND es.offering_id IS NOT NULL
+
+        AND so.status <> 'Cancelled'
+
+        AND ss.status <> 'Cancelled'
+
+      ORDER BY
+          es.enrollment_subject_id ASC
+    `,
+      [enrollmentId],
+    );
+    // =================================================
     // 10. DUPLICATE ACTIVE SUBJECTS
     // =================================================
 
@@ -10468,8 +10912,23 @@ router.get("/:id/validate", async (req, res) => {
 
       const subjectId = Number(subject.subject_id);
 
+      const enrollmentType = String(subject.enrollment_type || "").trim();
+
+      const allowedEnrollmentTypes = ["Regular", "Retake", "Carry Over"];
+
       const subjectErrors = [];
       const subjectWarnings = [];
+
+      if (!allowedEnrollmentTypes.includes(enrollmentType)) {
+        subjectErrors.push({
+          code: "INVALID_ENROLLMENT_TYPE",
+
+          message:
+            "Enrollment subject has an invalid persisted enrollment type.",
+
+          enrollment_type: enrollmentType || null,
+        });
+      }
 
       let curriculumSubject = null;
       let academicEligibility = null;
@@ -10576,15 +11035,70 @@ router.get("/:id/validate", async (req, res) => {
               "Subject is not academically eligible.",
           });
         }
+        // =================================================
+        // PERSISTED ENROLLMENT TYPE VS ACADEMIC TRUTH
+        // =================================================
 
+        if (
+          curriculumSubject !== null &&
+          academicEligibility !== null &&
+          allowedEnrollmentTypes.includes(enrollmentType)
+        ) {
+          let typeMatches = false;
+
+          let evaluatedEnrollmentType =
+            academicEligibility.eligibility_type || null;
+
+          // ===============================================
+          // REGULAR
+          // ===============================================
+
+          if (enrollmentType === "Regular") {
+            typeMatches =
+              academicEligibility.eligible &&
+              academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR;
+          }
+
+          // ===============================================
+          // RETAKE
+          // ===============================================
+          else if (enrollmentType === "Retake") {
+            typeMatches =
+              academicEligibility.eligible &&
+              academicEligibility.eligibility_type === ELIGIBILITY_TYPE.RETAKE;
+          }
+
+          // ===============================================
+          // CARRY OVER
+          // ===============================================
+          else if (enrollmentType === "Carry Over") {
+            const carryOverSubject = carryOverValidationMap.get(subjectId);
+
+            typeMatches = Boolean(carryOverSubject);
+
+            if (carryOverSubject) {
+              evaluatedEnrollmentType = ELIGIBILITY_TYPE.CARRY_OVER;
+            }
+          }
+
+          if (!typeMatches) {
+            subjectErrors.push({
+              code: "ENROLLMENT_TYPE_ACADEMIC_MISMATCH",
+
+              message:
+                "The persisted enrollment type no longer matches the Student's current academic eligibility.",
+
+              stored_enrollment_type: enrollmentType,
+
+              evaluated_enrollment_type: evaluatedEnrollmentType,
+            });
+          }
+        }
         // =============================================
         // REGULAR CURRENT-TERM RULE
         // =============================================
 
-        if (
-          academicEligibility?.eligible &&
-          academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR
-        ) {
+        if (academicEligibility?.eligible && enrollmentType === "Regular") {
           if (
             Number(curriculumSubject.year_level) !== yearLevel ||
             Number(curriculumSubject.semester_id) !== semesterId
@@ -10753,11 +11267,19 @@ router.get("/:id/validate", async (req, res) => {
           // COURSE
           // ===========================================
 
-          if (Number(offering.section_course_id) !== courseId) {
+          if (
+            enrollmentType === "Regular" &&
+            Number(offering.section_course_id) !== courseId
+          ) {
             subjectErrors.push({
               code: "OFFERING_COURSE_MISMATCH",
 
-              message: "The assigned offering belongs to a different course.",
+              message:
+                "A Regular subject must be assigned to an offering within the Student's course.",
+
+              student_course_id: courseId,
+
+              offering_course_id: Number(offering.section_course_id),
             });
           }
 
@@ -10818,8 +11340,7 @@ router.get("/:id/validate", async (req, res) => {
           // ===========================================
 
           if (
-            academicEligibility?.eligible &&
-            academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR &&
+            enrollmentType === "Regular" &&
             Number(offering.section_year_level) !== yearLevel
           ) {
             subjectErrors.push({
@@ -10969,7 +11490,7 @@ router.get("/:id/validate", async (req, res) => {
 
         valid: subjectValid,
 
-        enrollment_type: academicEligibility?.eligibility_type || null,
+        enrollment_type: enrollmentType,
 
         placement: {
           offering_id: offeringId,
@@ -11002,6 +11523,7 @@ router.get("/:id/validate", async (req, res) => {
         });
       }
 
+      // End per-subject validation
       for (const subjectWarning of subjectWarnings) {
         warnings.push({
           ...subjectWarning,
@@ -11013,6 +11535,113 @@ router.get("/:id/validate", async (req, res) => {
           subject_code: subject.subject_code,
         });
       }
+
+      // closes activeSubjects loop
+    }
+
+    // =================================================
+    // STUDENT SCHEDULE CONFLICT VALIDATION
+    // =================================================
+
+    const scheduleConflictKeys = new Set();
+
+    const studentScheduleConflicts = [];
+
+    for (let i = 0; i < assignedScheduleRows.length; i += 1) {
+      const first = assignedScheduleRows[i];
+
+      for (let j = i + 1; j < assignedScheduleRows.length; j += 1) {
+        const second = assignedScheduleRows[j];
+
+        const overlap = enrollmentSchedulesOverlap(
+          first.schedule_days,
+          first.schedule_time,
+          second.schedule_days,
+          second.schedule_time,
+        );
+
+        if (!overlap.overlap) {
+          continue;
+        }
+
+        const firstId = Number(first.enrollment_subject_id);
+
+        const secondId = Number(second.enrollment_subject_id);
+
+        const conflictKey =
+          `${Math.min(firstId, secondId)}:` + `${Math.max(firstId, secondId)}`;
+
+        if (scheduleConflictKeys.has(conflictKey)) {
+          continue;
+        }
+
+        scheduleConflictKeys.add(conflictKey);
+
+        studentScheduleConflicts.push({
+          common_days: overlap.common_days,
+
+          first_subject: {
+            enrollment_subject_id: firstId,
+
+            subject_id: Number(first.subject_id),
+
+            subject_code: first.subject_code,
+
+            subject_name: first.subject_name,
+
+            enrollment_type: first.enrollment_type,
+
+            offering_id: Number(first.offering_id),
+
+            section_id: Number(first.section_id),
+
+            section_name: first.section_name,
+
+            schedule: {
+              days: first.schedule_days,
+
+              time: first.schedule_time,
+            },
+          },
+
+          second_subject: {
+            enrollment_subject_id: secondId,
+
+            subject_id: Number(second.subject_id),
+
+            subject_code: second.subject_code,
+
+            subject_name: second.subject_name,
+
+            enrollment_type: second.enrollment_type,
+
+            offering_id: Number(second.offering_id),
+
+            section_id: Number(second.section_id),
+
+            section_name: second.section_name,
+
+            schedule: {
+              days: second.schedule_days,
+
+              time: second.schedule_time,
+            },
+          },
+        });
+      }
+    }
+
+    if (studentScheduleConflicts.length > 0) {
+      errors.push({
+        code: "STUDENT_SCHEDULE_CONFLICT",
+
+        message:
+          "One or more assigned classes overlap in the Student's schedule.",
+
+        conflict_count: studentScheduleConflicts.length,
+
+        conflicts: studentScheduleConflicts,
+      });
     }
 
     // =================================================
@@ -11023,19 +11652,47 @@ router.get("/:id/validate", async (req, res) => {
       (total, subject) => total + Number(subject.units || 0),
       0,
     );
-
     // =================================================
     // 13. FINAL RESULT
     // =================================================
 
     const valid = errors.length === 0;
 
+    const alreadyApproved = enrollmentStatus === "Approved";
+
+    const canApprove = valid && enrollmentStatus === "Pending";
+
+    let validationState = "NOT_READY";
+
+    let validationMessage =
+      "Enrollment has validation errors that must be resolved.";
+
+    if (alreadyApproved) {
+      validationState = "ALREADY_APPROVED";
+
+      validationMessage =
+        "Enrollment is already approved. No additional approval action is required.";
+    } else if (canApprove) {
+      validationState = "READY_FOR_APPROVAL";
+
+      validationMessage =
+        "Enrollment passed validation and is ready for approval.";
+    } else if (enrollmentStatus !== "Pending") {
+      validationState = "NOT_APPROVABLE";
+    }
+
     return res.status(200).json({
       success: true,
 
       valid,
 
-      can_approve: valid && enrollment.enrollment_status === "Pending",
+      can_approve: canApprove,
+
+      already_approved: alreadyApproved,
+
+      validation_state: validationState,
+
+      message: validationMessage,
 
       enrollment: {
         enrollment_id: enrollmentId,
@@ -11086,6 +11743,12 @@ router.get("/:id/validate", async (req, res) => {
 
         total_units: totalUnits,
 
+        valid_subjects: validatedSubjects.filter((subject) => subject.valid)
+          .length,
+
+        invalid_subjects: validatedSubjects.filter((subject) => !subject.valid)
+          .length,
+
         validation_errors: errors.length,
 
         validation_warnings: warnings.length,
@@ -11094,6 +11757,7 @@ router.get("/:id/validate", async (req, res) => {
       subjects: validatedSubjects,
 
       errors,
+
       warnings,
     });
   } catch (error) {
@@ -11384,6 +12048,7 @@ router.post("/:id/approve", async (req, res) => {
               es.enrollment_id,
 
               es.subject_id,
+               es.enrollment_type,
 
               es.offering_id,
               es.section_id,
@@ -11440,7 +12105,83 @@ router.post("/:id/approve", async (req, res) => {
     // =================================================
 
     const validationErrors = [];
+    const approvalScheduleRows = [];
+    // =================================================
+    // CARRY OVER VALIDATION MAP
+    // =================================================
 
+    const carryOverValidationMap = new Map();
+
+    const hasCarryOverSubjects = subjectRows.some(
+      (subject) =>
+        String(subject.enrollment_type || "").trim() === "Carry Over",
+    );
+
+    if (hasCarryOverSubjects) {
+      const carryOverEvaluation = await getCarryOverCandidates(
+        studentId,
+        curriculumId,
+        yearLevel,
+        semesterId,
+        connection,
+      );
+
+      for (const item of carryOverEvaluation.eligible) {
+        carryOverValidationMap.set(Number(item.subject_id), item);
+      }
+    }
+
+    // =================================================
+    // ASSIGNED STUDENT SCHEDULES
+    // =================================================
+
+    const [assignedScheduleRows] = await connection.execute(
+      `
+      SELECT
+          es.enrollment_subject_id,
+          es.subject_id,
+          es.enrollment_type,
+          es.offering_id,
+
+          sub.subject_code,
+          sub.subject_name,
+
+          sec.section_id,
+          sec.section_name,
+
+          so.schedule_days,
+          so.schedule_time
+
+      FROM enrollment_subjects es
+
+      INNER JOIN subjects sub
+          ON sub.subject_id = es.subject_id
+
+      INNER JOIN subject_offerings so
+          ON so.offering_id = es.offering_id
+
+      INNER JOIN section_subjects ss
+          ON ss.section_subject_id =
+             es.section_subject_id
+
+      INNER JOIN sections sec
+          ON sec.section_id = es.section_id
+
+      WHERE es.enrollment_id = ?
+
+        AND es.status = 'Enrolled'
+
+        AND es.offering_id IS NOT NULL
+
+        AND so.status <> 'Cancelled'
+
+        AND ss.status <> 'Cancelled'
+
+      ORDER BY
+          es.enrollment_subject_id ASC
+    `,
+      [enrollmentId],
+    );
     // =================================================
     // 11. DUPLICATE ACTIVE SUBJECTS
     // =================================================
@@ -11470,7 +12211,6 @@ router.post("/:id/approve", async (req, res) => {
         });
       }
     }
-
     // =================================================
     // 12. VALIDATE EACH SUBJECT
     // =================================================
@@ -11479,6 +12219,10 @@ router.post("/:id/approve", async (req, res) => {
       const enrollmentSubjectId = Number(subject.enrollment_subject_id);
 
       const subjectId = Number(subject.subject_id);
+
+      const enrollmentType = String(subject.enrollment_type || "").trim();
+
+      const allowedEnrollmentTypes = ["Regular", "Retake", "Carry Over"];
 
       const addError = (code, message, extra = {}) => {
         validationErrors.push({
@@ -11494,7 +12238,17 @@ router.post("/:id/approve", async (req, res) => {
           ...extra,
         });
       };
+      if (!allowedEnrollmentTypes.includes(enrollmentType)) {
+        addError(
+          "INVALID_ENROLLMENT_TYPE",
+          "Enrollment subject has an invalid persisted enrollment type.",
+          {
+            enrollment_type: enrollmentType || null,
 
+            allowed_enrollment_types: allowedEnrollmentTypes,
+          },
+        );
+      }
       // ===============================================
       // SUBJECT MUST STILL BE ENROLLED
       // ===============================================
@@ -11563,6 +12317,46 @@ router.post("/:id/approve", async (req, res) => {
 
       if (!academicEligibility.eligible) {
         let code = "SUBJECT_NOT_ACADEMICALLY_ELIGIBLE";
+        // ===============================================
+        // PERSISTED ENROLLMENT TYPE VS ACADEMIC TRUTH
+        // ===============================================
+
+        if (allowedEnrollmentTypes.includes(enrollmentType)) {
+          let typeMatches = false;
+
+          let evaluatedEnrollmentType =
+            academicEligibility.eligibility_type || null;
+
+          if (enrollmentType === "Regular") {
+            typeMatches =
+              academicEligibility.eligible &&
+              academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR;
+          } else if (enrollmentType === "Retake") {
+            typeMatches =
+              academicEligibility.eligible &&
+              academicEligibility.eligibility_type === ELIGIBILITY_TYPE.RETAKE;
+          } else if (enrollmentType === "Carry Over") {
+            const carryOverSubject = carryOverValidationMap.get(subjectId);
+
+            typeMatches = Boolean(carryOverSubject);
+
+            if (carryOverSubject) {
+              evaluatedEnrollmentType = ELIGIBILITY_TYPE.CARRY_OVER;
+            }
+          }
+
+          if (!typeMatches) {
+            addError(
+              "ENROLLMENT_TYPE_ACADEMIC_MISMATCH",
+              "The persisted enrollment type no longer matches the Student's current academic eligibility.",
+              {
+                stored_enrollment_type: enrollmentType,
+
+                evaluated_enrollment_type: evaluatedEnrollmentType,
+              },
+            );
+          }
+        }
 
         if (
           academicEligibility.eligibility_type ===
@@ -11600,10 +12394,7 @@ router.post("/:id/approve", async (req, res) => {
       // REGULAR SUBJECT CURRENT TERM
       // ===============================================
 
-      if (
-        academicEligibility.eligible &&
-        academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR
-      ) {
+      if (academicEligibility.eligible && enrollmentType === "Regular") {
         if (
           Number(curriculumSubject.year_level) !== yearLevel ||
           Number(curriculumSubject.semester_id) !== semesterId
@@ -11738,6 +12529,27 @@ router.post("/:id/approve", async (req, res) => {
 
       const offering = offeringRows[0];
 
+      approvalScheduleRows.push({
+        enrollment_subject_id: enrollmentSubjectId,
+
+        subject_id: subjectId,
+
+        enrollment_type: enrollmentType,
+
+        subject_code: subject.subject_code,
+
+        subject_name: subject.subject_name,
+
+        offering_id: Number(offering.offering_id),
+
+        section_id: Number(offering.section_id),
+
+        section_name: offering.section_name || null,
+
+        schedule_days: offering.schedule_days,
+
+        schedule_time: offering.schedule_time,
+      });
       // ===============================================
       // STORED PLACEMENT MUST MATCH OFFERING
       // ===============================================
@@ -11789,10 +12601,17 @@ router.post("/:id/approve", async (req, res) => {
       // COURSE
       // ===============================================
 
-      if (Number(offering.section_course_id) !== courseId) {
+      if (
+        enrollmentType === "Regular" &&
+        Number(offering.section_course_id) !== courseId
+      ) {
         addError(
           "SECTION_COURSE_MISMATCH",
-          "Assigned section does not belong to the Student's course.",
+          "A Regular subject must be assigned to a section within the Student's course.",
+          {
+            student_course_id: courseId,
+            offering_course_id: Number(offering.section_course_id),
+          },
         );
       }
 
@@ -11963,7 +12782,215 @@ router.post("/:id/approve", async (req, res) => {
         }
       }
     }
+    // =================================================
+    // STUDENT SCHEDULE CONFLICT VALIDATION
+    // =================================================
 
+    const approvalScheduleConflictKeys = new Set();
+
+    const approvalScheduleConflicts = [];
+
+    for (let i = 0; i < approvalScheduleRows.length; i += 1) {
+      const first = approvalScheduleRows[i];
+
+      for (let j = i + 1; j < approvalScheduleRows.length; j += 1) {
+        const second = approvalScheduleRows[j];
+
+        const overlap = enrollmentSchedulesOverlap(
+          first.schedule_days,
+          first.schedule_time,
+          second.schedule_days,
+          second.schedule_time,
+        );
+
+        if (!overlap.overlap) {
+          continue;
+        }
+
+        const firstId = Number(first.enrollment_subject_id);
+
+        const secondId = Number(second.enrollment_subject_id);
+
+        const conflictKey =
+          `${Math.min(firstId, secondId)}:` + `${Math.max(firstId, secondId)}`;
+
+        if (approvalScheduleConflictKeys.has(conflictKey)) {
+          continue;
+        }
+
+        approvalScheduleConflictKeys.add(conflictKey);
+
+        approvalScheduleConflicts.push({
+          common_days: overlap.common_days,
+
+          first_subject: {
+            enrollment_subject_id: firstId,
+
+            subject_id: Number(first.subject_id),
+
+            subject_code: first.subject_code,
+
+            subject_name: first.subject_name,
+
+            enrollment_type: first.enrollment_type,
+
+            offering_id: Number(first.offering_id),
+
+            section_id: Number(first.section_id),
+
+            section_name: first.section_name,
+
+            schedule: {
+              days: first.schedule_days,
+
+              time: first.schedule_time,
+            },
+          },
+
+          second_subject: {
+            enrollment_subject_id: secondId,
+
+            subject_id: Number(second.subject_id),
+
+            subject_code: second.subject_code,
+
+            subject_name: second.subject_name,
+
+            enrollment_type: second.enrollment_type,
+
+            offering_id: Number(second.offering_id),
+
+            section_id: Number(second.section_id),
+
+            section_name: second.section_name,
+
+            schedule: {
+              days: second.schedule_days,
+
+              time: second.schedule_time,
+            },
+          },
+        });
+      }
+    }
+
+    if (approvalScheduleConflicts.length > 0) {
+      validationErrors.push({
+        code: "STUDENT_SCHEDULE_CONFLICT",
+
+        message:
+          "One or more assigned classes overlap in the Student's schedule.",
+
+        conflict_count: approvalScheduleConflicts.length,
+
+        conflicts: approvalScheduleConflicts,
+      });
+    }
+
+    // =================================================
+    // STUDENT SCHEDULE CONFLICT VALIDATION
+    // =================================================
+
+    const scheduleConflictKeys = new Set();
+
+    const studentScheduleConflicts = [];
+
+    for (let i = 0; i < assignedScheduleRows.length; i += 1) {
+      const first = assignedScheduleRows[i];
+
+      for (let j = i + 1; j < assignedScheduleRows.length; j += 1) {
+        const second = assignedScheduleRows[j];
+
+        const overlap = enrollmentSchedulesOverlap(
+          first.schedule_days,
+          first.schedule_time,
+          second.schedule_days,
+          second.schedule_time,
+        );
+
+        if (!overlap.overlap) {
+          continue;
+        }
+
+        const firstId = Number(first.enrollment_subject_id);
+
+        const secondId = Number(second.enrollment_subject_id);
+
+        const conflictKey =
+          `${Math.min(firstId, secondId)}:` + `${Math.max(firstId, secondId)}`;
+
+        if (scheduleConflictKeys.has(conflictKey)) {
+          continue;
+        }
+
+        scheduleConflictKeys.add(conflictKey);
+
+        studentScheduleConflicts.push({
+          common_days: overlap.common_days,
+
+          first_subject: {
+            enrollment_subject_id: firstId,
+
+            subject_id: Number(first.subject_id),
+
+            subject_code: first.subject_code,
+
+            subject_name: first.subject_name,
+
+            enrollment_type: first.enrollment_type,
+
+            offering_id: Number(first.offering_id),
+
+            section_id: Number(first.section_id),
+
+            section_name: first.section_name,
+
+            schedule: {
+              days: first.schedule_days,
+
+              time: first.schedule_time,
+            },
+          },
+
+          second_subject: {
+            enrollment_subject_id: secondId,
+
+            subject_id: Number(second.subject_id),
+
+            subject_code: second.subject_code,
+
+            subject_name: second.subject_name,
+
+            enrollment_type: second.enrollment_type,
+
+            offering_id: Number(second.offering_id),
+
+            section_id: Number(second.section_id),
+
+            section_name: second.section_name,
+
+            schedule: {
+              days: second.schedule_days,
+
+              time: second.schedule_time,
+            },
+          },
+        });
+      }
+    }
+
+    if (studentScheduleConflicts.length > 0) {
+      validationErrors.push({
+        code: "STUDENT_SCHEDULE_CONFLICT",
+
+        message:
+          "One or more assigned classes overlap in the Student's schedule.",
+
+        conflict_count: studentScheduleConflicts.length,
+
+        conflicts: studentScheduleConflicts,
+      });
+    }
     // =================================================
     // 13. BLOCK IF ANY FINAL VALIDATION FAILED
     // =================================================
@@ -13435,6 +14462,7 @@ router.get("/:id/history", async (req, res) => {
     }
   }
 });
+
 // =====================================================
 // ROUTE 17
 // ATOMICALLY REPLACE AN ENROLLMENT SUBJECT
@@ -14060,38 +15088,6 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
     }
 
     // =================================================
-    // 15. SAME COURSE
-    // =================================================
-
-    if (Number(newOffering.section_course_id) !== studentCourseId) {
-      await connection.rollback();
-      transactionActive = false;
-
-      return res.status(409).json({
-        success: false,
-
-        code: "OFFERING_COURSE_MISMATCH",
-
-        message: "Replacement section does not belong to the Student's course.",
-
-        student_course: {
-          course_id: studentCourseId,
-
-          course_code: enrollment.course_code,
-        },
-
-        replacement_course: {
-          course_id:
-            newOffering.section_course_id !== null
-              ? Number(newOffering.section_course_id)
-              : null,
-
-          course_code: newOffering.section_course_code || null,
-        },
-      });
-    }
-
-    // =================================================
     // 16. SECTION-SUBJECT RELATIONSHIP
     // =================================================
 
@@ -14271,13 +15267,15 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
 
     const curriculumSubject = curriculumSubjectRows[0];
 
+    const replacementSubjectId = Number(newOffering.subject_id);
+
     // =================================================
     // 21. SHARED GRADE V2 ACADEMIC ELIGIBILITY
     // =================================================
 
     const academicEligibility = await evaluateSubjectEligibility(
       studentId,
-      Number(newOffering.subject_id),
+      replacementSubjectId,
       connection,
     );
 
@@ -14316,57 +15314,144 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
     }
 
     // =================================================
-    // 22. REGULAR SUBJECT CURRENT-TERM RULE
-    //
-    // Regular:
-    // curriculum year + semester must match student.
+    // 22. AUTHORITATIVE REPLACEMENT ENROLLMENT TYPE
     //
     // Retake:
-    // may originate from an earlier curriculum term.
+    //   Approved failed/incomplete prior result.
+    //
+    // Regular:
+    //   Current curriculum year + semester.
+    //
+    // Carry Over:
+    //   Earlier required subject never officially taken
+    //   and still academically eligible.
     // =================================================
 
-    if (academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR) {
-      if (
-        Number(curriculumSubject.year_level) !== studentYearLevel ||
-        Number(curriculumSubject.semester_id) !== semesterId
-      ) {
+    let resolvedEnrollmentType = null;
+
+    // ===============================================
+    // RETAKE
+    // ===============================================
+
+    if (academicEligibility.eligibility_type === ELIGIBILITY_TYPE.RETAKE) {
+      resolvedEnrollmentType = "Retake";
+    }
+
+    // ===============================================
+    // REGULAR OR CARRY OVER
+    // ===============================================
+    else if (
+      academicEligibility.eligibility_type === ELIGIBILITY_TYPE.REGULAR
+    ) {
+      const isCurrentCurriculumTerm =
+        Number(curriculumSubject.year_level) === studentYearLevel &&
+        Number(curriculumSubject.semester_id) === semesterId;
+
+      if (isCurrentCurriculumTerm) {
+        resolvedEnrollmentType = "Regular";
+      } else {
+        const carryOverEvaluation = await getCarryOverCandidates(
+          studentId,
+          curriculumId,
+          studentYearLevel,
+          semesterId,
+          connection,
+        );
+
+        const carryOverSubject = carryOverEvaluation.eligible.find(
+          (item) => Number(item.subject_id) === replacementSubjectId,
+        );
+
+        if (carryOverSubject) {
+          resolvedEnrollmentType = "Carry Over";
+        }
+      }
+    }
+
+    // ===============================================
+    // TYPE MUST BE RESOLVED
+    // ===============================================
+
+    if (!resolvedEnrollmentType) {
+      await connection.rollback();
+
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "ENROLLMENT_TYPE_COULD_NOT_BE_RESOLVED",
+
+        message:
+          "The replacement subject is academically eligible but could not be classified as Regular, Retake, or Carry Over.",
+
+        subject: {
+          subject_id: replacementSubjectId,
+
+          subject_code: newOffering.subject_code || null,
+        },
+
+        academic_eligibility_type: academicEligibility.eligibility_type || null,
+      });
+    }
+
+    // =================================================
+    // TYPE-AWARE REPLACEMENT PLACEMENT
+    //
+    // Regular:
+    //   same course
+    //   same year level
+    //
+    // Retake / Carry Over:
+    //   cross-section allowed
+    //   cross-year allowed
+    //   cross-course allowed
+    //
+    // Same AY / semester were already validated.
+    // =================================================
+
+    if (resolvedEnrollmentType === "Regular") {
+      // ===============================================
+      // REGULAR -> SAME COURSE
+      // ===============================================
+
+      if (Number(newOffering.section_course_id) !== studentCourseId) {
         await connection.rollback();
+
         transactionActive = false;
 
         return res.status(409).json({
           success: false,
 
-          code: "REGULAR_SUBJECT_OUTSIDE_CURRENT_TERM",
+          code: "OFFERING_COURSE_MISMATCH",
 
           message:
-            "A Regular replacement subject can only come from the Student's current curriculum year and semester.",
+            "A Regular replacement subject must use an offering within the Student's course.",
 
-          curriculum_subject: {
-            curriculum_subject_id: Number(
-              curriculumSubject.curriculum_subject_id,
-            ),
+          student_course: {
+            course_id: studentCourseId,
 
-            subject_id: Number(curriculumSubject.subject_id),
-
-            year_level: Number(curriculumSubject.year_level),
-
-            semester_id: Number(curriculumSubject.semester_id),
+            course_code: enrollment.course_code,
           },
 
-          student_current_term: {
-            year_level: studentYearLevel,
+          replacement_course: {
+            course_id:
+              newOffering.section_course_id !== null
+                ? Number(newOffering.section_course_id)
+                : null,
 
-            semester_id: semesterId,
+            course_code: newOffering.section_course_code || null,
           },
         });
       }
 
       // ===============================================
-      // REGULAR SUBJECT MUST USE SAME YEAR SECTION
+      // REGULAR -> SAME YEAR LEVEL
       // ===============================================
 
       if (Number(newOffering.year_level) !== studentYearLevel) {
         await connection.rollback();
+
         transactionActive = false;
 
         return res.status(409).json({
@@ -14375,7 +15460,7 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
           code: "REGULAR_SECTION_YEAR_LEVEL_MISMATCH",
 
           message:
-            "Regular replacement subject must use a section matching the Student's current year level.",
+            "A Regular replacement subject must use a section matching the Student's current year level.",
 
           student_year_level: studentYearLevel,
 
@@ -14383,7 +15468,6 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
         });
       }
     }
-
     // =================================================
     // 23. DUPLICATE TARGET SUBJECT
     //
@@ -14435,6 +15519,155 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
 
           status: duplicateRows[0].status,
         },
+      });
+    }
+
+    // =================================================
+    // REPLACEMENT STUDENT SCHEDULE CONFLICT
+    //
+    // The old enrollment subject being replaced is
+    // excluded because it will become Dropped.
+    // =================================================
+
+    const [otherAssignedSubjectRows] = await connection.execute(
+      `
+      SELECT
+          es.enrollment_subject_id,
+          es.subject_id,
+          es.enrollment_type,
+
+          es.offering_id,
+          es.section_id,
+
+          sub.subject_code,
+          sub.subject_name,
+
+          sec.section_name,
+
+          so.schedule_days,
+          so.schedule_time
+
+      FROM enrollment_subjects es
+
+      INNER JOIN subjects sub
+          ON sub.subject_id =
+             es.subject_id
+
+      INNER JOIN subject_offerings so
+          ON so.offering_id =
+             es.offering_id
+
+      INNER JOIN section_subjects ss
+          ON ss.section_subject_id =
+             es.section_subject_id
+
+      INNER JOIN sections sec
+          ON sec.section_id =
+             es.section_id
+
+      WHERE es.enrollment_id = ?
+
+        AND es.enrollment_subject_id <> ?
+
+        AND es.status = 'Enrolled'
+
+        AND es.offering_id IS NOT NULL
+
+        AND so.status <> 'Cancelled'
+
+        AND ss.status <> 'Cancelled'
+
+      ORDER BY
+          es.enrollment_subject_id ASC
+    `,
+      [enrollmentId, enrollmentSubjectId],
+    );
+
+    const replacementScheduleConflicts = [];
+
+    for (const existingSubject of otherAssignedSubjectRows) {
+      const overlap = enrollmentSchedulesOverlap(
+        newOffering.schedule_days,
+        newOffering.schedule_time,
+        existingSubject.schedule_days,
+        existingSubject.schedule_time,
+      );
+
+      if (!overlap.overlap) {
+        continue;
+      }
+
+      replacementScheduleConflicts.push({
+        enrollment_subject_id: Number(existingSubject.enrollment_subject_id),
+
+        subject_id: Number(existingSubject.subject_id),
+
+        subject_code: existingSubject.subject_code,
+
+        subject_name: existingSubject.subject_name,
+
+        enrollment_type: existingSubject.enrollment_type,
+
+        offering_id:
+          existingSubject.offering_id !== null
+            ? Number(existingSubject.offering_id)
+            : null,
+
+        section_id:
+          existingSubject.section_id !== null
+            ? Number(existingSubject.section_id)
+            : null,
+
+        section_name: existingSubject.section_name || null,
+
+        schedule: {
+          days: existingSubject.schedule_days,
+
+          time: existingSubject.schedule_time,
+        },
+
+        common_days: overlap.common_days,
+      });
+    }
+
+    if (replacementScheduleConflicts.length > 0) {
+      await connection.rollback();
+
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+
+        code: "STUDENT_SCHEDULE_CONFLICT",
+
+        message:
+          "The replacement offering conflicts with one or more of the Student's currently assigned classes.",
+
+        replacement_subject: {
+          subject_id: replacementSubjectId,
+
+          subject_code: newOffering.subject_code,
+
+          enrollment_type: resolvedEnrollmentType,
+        },
+
+        selected_offering: {
+          offering_id: Number(newOffering.offering_id),
+
+          section_id: Number(newOffering.section_id),
+
+          section_name: newOffering.section_name || null,
+
+          schedule: {
+            days: newOffering.schedule_days,
+
+            time: newOffering.schedule_time,
+          },
+        },
+
+        conflict_count: replacementScheduleConflicts.length,
+
+        conflicts: replacementScheduleConflicts,
       });
     }
 
@@ -14556,38 +15789,38 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
       });
     }
 
-    // =================================================
-    // 27. INSERT NEW SUBJECT
-    // =================================================
-
     const [insertResult] = await connection.execute(
       `
-            INSERT INTO enrollment_subjects (
-                enrollment_id,
-                subject_id,
+    INSERT INTO enrollment_subjects (
+        enrollment_id,
+        subject_id,
+        enrollment_type,
 
-                offering_id,
-                section_id,
-                section_subject_id,
+        offering_id,
+        section_id,
+        section_subject_id,
 
-                status
-            )
+        status
+    )
 
-            VALUES (
-                ?,
-                ?,
+    VALUES (
+        ?,
+        ?,
+        ?,
 
-                ?,
-                ?,
-                ?,
+        ?,
+        ?,
+        ?,
 
-                'Enrolled'
-            )
-          `,
+        'Enrolled'
+    )
+  `,
       [
         enrollmentId,
 
-        Number(newOffering.subject_id),
+        replacementSubjectId,
+
+        resolvedEnrollmentType,
 
         Number(newOffering.offering_id),
 
@@ -14765,13 +15998,14 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
     // =================================================
     // 31. AUDIT NEW SUBJECT
     // =================================================
-
     const newValues = {
       enrollment_id: enrollmentId,
 
       enrollment_subject_id: newEnrollmentSubjectId,
 
-      subject_id: Number(newOffering.subject_id),
+      subject_id: replacementSubjectId,
+
+      enrollment_type: resolvedEnrollmentType,
 
       offering_id: Number(newOffering.offering_id),
 
@@ -14785,6 +16019,8 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
         eligible: true,
 
         eligibility_type: academicEligibility.eligibility_type,
+
+        resolved_enrollment_type: resolvedEnrollmentType,
 
         reason: academicEligibility.reason,
 
@@ -14911,7 +16147,7 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
       new_subject: {
         enrollment_subject_id: newEnrollmentSubjectId,
 
-        subject_id: Number(newOffering.subject_id),
+        subject_id: replacementSubjectId,
 
         subject_code: newOffering.subject_code,
 
@@ -14919,7 +16155,11 @@ router.put("/:id/subjects/:enrollmentSubjectId/replace", async (req, res) => {
 
         units: Number(newOffering.units || 0),
 
-        enrollment_type: academicEligibility.eligibility_type,
+        enrollment_type: resolvedEnrollmentType,
+
+        is_irregular:
+          resolvedEnrollmentType === "Retake" ||
+          resolvedEnrollmentType === "Carry Over",
 
         academic_eligibility: academicEligibility,
 

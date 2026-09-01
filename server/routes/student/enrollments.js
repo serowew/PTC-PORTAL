@@ -7,6 +7,7 @@ import {
   ELIGIBILITY_TYPE,
   evaluateCurriculumTerm,
   getApprovedAcademicHistory,
+  getCarryOverCandidates,
   getRetakeCandidates,
 } from "../../services/academicEvaluation.service.js";
 
@@ -1029,25 +1030,15 @@ router.get("/current", async (req, res) => {
     const enrollmentStatus = String(enrollment.enrollment_status);
 
     // =================================================
-    // 10. GET OFFICIAL ENROLLMENT SUBJECTS
-    //
-    // IMPORTANT:
+    // 10. GET CURRENT / OFFICIAL ENROLLMENT SUBJECTS
     //
     // enrollment_subjects is authoritative.
     //
-    // Do NOT use students.section_id here.
-    //
-    // Placement:
-    //
-    // enrollment_subjects
-    //   ↓
-    // section
-    //   ↓
-    // subject_offering
-    //   ↓
-    // faculty / room / schedule
-    //
-    // Room is OPTIONAL.
+    // IMPORTANT:
+    // - enrollment_type is persisted here.
+    // - Student does not determine placement.
+    // - students.section_id is profile/home section only.
+    // - Room is optional.
     // =================================================
 
     const [subjectRows] = await db.execute(
@@ -1060,6 +1051,8 @@ router.get("/current", async (req, res) => {
               es.enrollment_subject_id,
               es.enrollment_id,
               es.subject_id,
+
+              es.enrollment_type,
 
               es.status
                   AS subject_status,
@@ -1076,14 +1069,24 @@ router.get("/current", async (req, res) => {
               sub.laboratory_hours,
 
               -- =======================================
-              -- AUTHORITATIVE SECTION PLACEMENT
+              -- AUTHORITATIVE PLACEMENT
               -- =======================================
 
               es.section_id,
+
               sec.section_name,
 
               sec.year_level
                   AS section_year_level,
+
+              sec.course_id
+                  AS section_course_id,
+
+              placement_course.course_code
+                  AS section_course_code,
+
+              placement_course.course_name
+                  AS section_course_name,
 
               -- =======================================
               -- SECTION SUBJECT
@@ -1131,6 +1134,7 @@ router.get("/current", async (req, res) => {
               -- =======================================
 
               so.room_id,
+
               r.room_name
 
           FROM enrollment_subjects es
@@ -1142,6 +1146,10 @@ router.get("/current", async (req, res) => {
           LEFT JOIN sections sec
               ON sec.section_id =
                  es.section_id
+
+          LEFT JOIN courses placement_course
+              ON placement_course.course_id =
+                 sec.course_id
 
           LEFT JOIN section_subjects ss
               ON ss.section_subject_id =
@@ -1174,84 +1182,209 @@ router.get("/current", async (req, res) => {
     );
 
     // =================================================
-    // 11. NORMALIZE SUBJECT RESPONSE
+    // 11. CURRENT ENROLLED COUNT PER OFFERING
+    //
+    // Approved enrollment_subjects are official class
+    // membership.
     // =================================================
 
-    const subjects = subjectRows.map((row) => ({
-      enrollment_subject_id: Number(row.enrollment_subject_id),
+    const offeringIds = [
+      ...new Set(
+        subjectRows
+          .map((row) =>
+            row.offering_id !== null ? Number(row.offering_id) : null,
+          )
+          .filter((value) => Number.isInteger(value) && value > 0),
+      ),
+    ];
 
-      enrollment_id: Number(row.enrollment_id),
+    const offeringEnrollmentCountMap = new Map();
 
-      subject_id: Number(row.subject_id),
+    if (offeringIds.length > 0) {
+      const placeholders = offeringIds.map(() => "?").join(", ");
 
-      subject_code: row.subject_code,
+      const [countRows] = await db.execute(
+        `
+            SELECT
+                es.offering_id,
 
-      subject_name: row.subject_name,
+                COUNT(*) AS
+                    enrolled_count
 
-      units: Number(row.units || 0),
+            FROM enrollment_subjects es
 
-      lecture_hours: Number(row.lecture_hours || 0),
+            INNER JOIN enrollments e
+                ON e.enrollment_id =
+                   es.enrollment_id
 
-      laboratory_hours: Number(row.laboratory_hours || 0),
+            WHERE es.offering_id
+                  IN (${placeholders})
 
-      subject_status: row.subject_status,
+              AND es.status =
+                  'Enrolled'
 
-      // ===========================================
-      // PLACEMENT
-      // ===========================================
+              AND e.enrollment_status =
+                  'Approved'
 
-      section_id: row.section_id !== null ? Number(row.section_id) : null,
+            GROUP BY
+                es.offering_id
+          `,
+        offeringIds,
+      );
 
-      section_name: row.section_name || null,
-
-      section_year_level:
-        row.section_year_level !== null ? Number(row.section_year_level) : null,
-
-      section_subject_id:
-        row.section_subject_id !== null ? Number(row.section_subject_id) : null,
-
-      section_subject_status: row.section_subject_status || null,
-
-      offering_id: row.offering_id !== null ? Number(row.offering_id) : null,
-
-      offering_status: row.offering_status || null,
-
-      // ===========================================
-      // FACULTY
-      // ===========================================
-
-      faculty_id: row.faculty_id !== null ? Number(row.faculty_id) : null,
-
-      faculty_name: row.faculty_name || null,
-
-      // ===========================================
-      // ROOM
-      //
-      // Room may legitimately be NULL.
-      // ===========================================
-
-      room_id: row.room_id !== null ? Number(row.room_id) : null,
-
-      room_name: row.room_name || null,
-
-      // ===========================================
-      // SCHEDULE
-      // ===========================================
-
-      schedule_days: row.schedule_days || null,
-
-      schedule_time: row.schedule_time || null,
-
-      max_students: row.max_students !== null ? Number(row.max_students) : null,
-
-      placement_complete:
-        row.section_id !== null &&
-        row.section_subject_id !== null &&
-        row.offering_id !== null,
-    }));
+      for (const row of countRows) {
+        offeringEnrollmentCountMap.set(
+          Number(row.offering_id),
+          Number(row.enrolled_count || 0),
+        );
+      }
+    }
 
     // =================================================
-    // 12. OFFICIAL SUMMARY
+    // 12. NORMALIZE SUBJECT RESPONSE
+    //
+    // FIX:
+    //
+    // Use row.enrollment_type.
+    //
+    // Do NOT use:
+    //
+    // subject.enrollment_type
+    //
+    // because there is no "subject" variable in this
+    // map callback.
+    // =================================================
+
+    const subjects = subjectRows.map((row) => {
+      const offeringId =
+        row.offering_id !== null ? Number(row.offering_id) : null;
+
+      const maxStudents =
+        row.max_students !== null ? Number(row.max_students) : null;
+
+      const enrolledCount =
+        offeringId !== null
+          ? Number(offeringEnrollmentCountMap.get(offeringId) || 0)
+          : 0;
+
+      const availableSlots =
+        maxStudents !== null ? Math.max(maxStudents - enrolledCount, 0) : null;
+
+      const enrollmentType = ["Regular", "Retake", "Carry Over"].includes(
+        String(row.enrollment_type || "").trim(),
+      )
+        ? String(row.enrollment_type).trim()
+        : "Regular";
+
+      const isIrregular =
+        enrollmentType === "Retake" || enrollmentType === "Carry Over";
+
+      return {
+        enrollment_subject_id: Number(row.enrollment_subject_id),
+
+        enrollment_id: Number(row.enrollment_id),
+
+        subject_id: Number(row.subject_id),
+
+        subject_code: row.subject_code,
+
+        subject_name: row.subject_name,
+
+        units: Number(row.units || 0),
+
+        lecture_hours:
+          row.lecture_hours !== null ? Number(row.lecture_hours) : null,
+
+        laboratory_hours:
+          row.laboratory_hours !== null ? Number(row.laboratory_hours) : null,
+
+        status: row.subject_status,
+
+        // =========================================
+        // PERSISTED ENROLLMENT TYPE
+        // =========================================
+
+        enrollment_type: enrollmentType,
+
+        is_irregular: isIrregular,
+
+        irregular_reason:
+          enrollmentType === "Retake"
+            ? "RETAKE"
+            : enrollmentType === "Carry Over"
+              ? "CARRY_OVER"
+              : null,
+
+        // =========================================
+        // ACTUAL ENROLLMENT PLACEMENT
+        // =========================================
+
+        section: {
+          section_id: row.section_id !== null ? Number(row.section_id) : null,
+
+          section_name: row.section_name || null,
+
+          year_level:
+            row.section_year_level !== null
+              ? Number(row.section_year_level)
+              : null,
+
+          course_id:
+            row.section_course_id !== null
+              ? Number(row.section_course_id)
+              : null,
+
+          course_code: row.section_course_code || null,
+
+          course_name: row.section_course_name || null,
+        },
+
+        section_subject: {
+          section_subject_id:
+            row.section_subject_id !== null
+              ? Number(row.section_subject_id)
+              : null,
+
+          status: row.section_subject_status || null,
+        },
+
+        offering: {
+          offering_id: offeringId,
+
+          status: row.offering_status || null,
+
+          schedule_days: row.schedule_days || null,
+
+          schedule_time: row.schedule_time || null,
+
+          max_students: maxStudents,
+
+          enrolled_count: enrolledCount,
+
+          available_slots: availableSlots,
+        },
+
+        faculty: {
+          faculty_id: row.faculty_id !== null ? Number(row.faculty_id) : null,
+
+          faculty_name: row.faculty_name || null,
+        },
+
+        room: {
+          room_id: row.room_id !== null ? Number(row.room_id) : null,
+
+          room_name: row.room_name || null,
+        },
+
+        assignment_complete:
+          row.section_id !== null &&
+          row.section_subject_id !== null &&
+          row.offering_id !== null,
+      };
+    });
+
+    // =================================================
+    // 13. SUMMARY
     // =================================================
 
     const totalUnits = subjects.reduce(
@@ -1260,15 +1393,31 @@ router.get("/current", async (req, res) => {
     );
 
     const placedSubjects = subjects.filter(
-      (subject) => subject.placement_complete,
+      (subject) => subject.assignment_complete,
     ).length;
 
     const unplacedSubjects = subjects.length - placedSubjects;
 
+    const regularSubjects = subjects.filter(
+      (subject) => subject.enrollment_type === "Regular",
+    ).length;
+
+    const retakeSubjects = subjects.filter(
+      (subject) => subject.enrollment_type === "Retake",
+    ).length;
+
+    const carryOverSubjects = subjects.filter(
+      (subject) => subject.enrollment_type === "Carry Over",
+    ).length;
+
+    const irregularSubjects = subjects.filter(
+      (subject) => subject.is_irregular,
+    ).length;
+
     const placementComplete = subjects.length > 0 && unplacedSubjects === 0;
 
     // =================================================
-    // 13. RESPONSE
+    // 14. RESPONSE
     // =================================================
 
     return res.status(200).json({
@@ -1326,6 +1475,16 @@ router.get("/current", async (req, res) => {
         unplaced_subjects: unplacedSubjects,
 
         placement_complete: placementComplete,
+
+        regular_subjects: regularSubjects,
+
+        retake_subjects: retakeSubjects,
+
+        carry_over_subjects: carryOverSubjects,
+
+        irregular_subjects: irregularSubjects,
+
+        is_irregular_enrollment: irregularSubjects > 0,
       },
 
       can_prepare:
@@ -1344,6 +1503,7 @@ router.get("/current", async (req, res) => {
     });
   }
 });
+
 // =====================================================
 // GET STUDENT ENROLLMENT ELIGIBLE SUBJECTS
 //
@@ -1622,14 +1782,15 @@ ORDER BY
 
         enrollment_period: null,
         enrollment: null,
-
         regular_subjects: [],
+        carry_over_subjects: [],
         retake_candidates: [],
         blocked_subjects: [],
         completed_subjects: [],
 
         summary: {
           regular_subjects: 0,
+          carry_over_subjects: 0,
           retake_candidates: 0,
           blocked_subjects: 0,
           completed_subjects: 0,
@@ -1818,25 +1979,19 @@ ORDER BY
         progression,
 
         regular_subjects: [],
-
+        carry_over_subjects: [],
         retake_candidates: [],
-
         blocked_subjects: [],
-
         completed_subjects: [],
 
         summary: {
           regular_subjects: 0,
-
+          carry_over_subjects: 0,
           retake_candidates: 0,
-
           blocked_subjects: 0,
-
           completed_subjects: 0,
-
           eligible_units: 0,
         },
-
         can_prepare: false,
 
         can_modify_draft: false,
@@ -1966,6 +2121,56 @@ ORDER BY
     }
 
     // =================================================
+    // CARRY-OVER / BACKLOG SUBJECTS
+    //
+    // Carry Over:
+    // - required subject from an earlier curriculum term
+    // - never successfully completed
+    // - not a 4.00 / 5.00 Retake
+    // - prerequisites are currently satisfied
+    //
+    // This endpoint only DISPLAYS the subjects.
+    // /prepare will be wired separately later.
+    // =================================================
+
+    const carryOverEvaluation = await getCarryOverCandidates(
+      studentId,
+      curriculumId,
+      effectiveYearLevel,
+      semesterId,
+      db,
+    );
+
+    const carryOverSubjects = carryOverEvaluation.eligible.map((subject) => ({
+      subject_id: Number(subject.subject_id),
+
+      subject_code: subject.subject_code,
+
+      subject_name: subject.subject_name,
+
+      units: Number(subject.units || 0),
+
+      lecture_hours: Number(subject.lecture_hours || 0),
+
+      laboratory_hours: Number(subject.laboratory_hours || 0),
+
+      original_year_level: Number(subject.original_year_level),
+
+      original_semester_id: Number(subject.original_semester_id),
+
+      curriculum_subject_id: Number(subject.curriculum_subject_id),
+
+      enrollment_type: "Carry Over",
+
+      academic_status: "NOT_TAKEN",
+
+      eligible: true,
+
+      carry_over_reason: subject.carry_over_reason,
+
+      prerequisites: formatPrerequisites(subject.prerequisites),
+    }));
+    // =================================================
     // 11. COMPLETED / PASSED SUBJECTS
     // =================================================
 
@@ -2082,7 +2287,46 @@ ORDER BY
         missing_prerequisites: missingPrerequisites,
       });
     }
+    // =================================================
+    // BLOCKED CARRY-OVER SUBJECTS
+    //
+    // These remain visible so the Student can understand
+    // which earlier requirements are still unresolved.
+    // =================================================
 
+    for (const subject of carryOverEvaluation.blocked) {
+      const prerequisites = formatPrerequisites(subject.prerequisites);
+
+      const missingPrerequisites = prerequisites.filter((item) => !item.passed);
+
+      blockedSubjects.push({
+        subject_id: Number(subject.subject_id),
+
+        subject_code: subject.subject_code,
+
+        subject_name: subject.subject_name,
+
+        units: Number(subject.units || 0),
+
+        year_level: Number(subject.original_year_level),
+
+        semester_id: Number(subject.original_semester_id),
+
+        original_year_level: Number(subject.original_year_level),
+
+        original_semester_id: Number(subject.original_semester_id),
+
+        curriculum_subject_id: Number(subject.curriculum_subject_id),
+
+        reason: subject.carry_over_reason || "CARRY_OVER_BLOCKED",
+
+        source: "Carry Over",
+
+        prerequisites,
+
+        missing_prerequisites: missingPrerequisites,
+      });
+    }
     // =================================================
     // 14. VALID RETAKE CANDIDATES
     //
@@ -2165,12 +2409,12 @@ ORDER BY
     ) {
       const [draftRows] = await db.execute(
         `
-            SELECT
-                enrollment_subject_id,
-                subject_id,
-                status
-
-            FROM enrollment_subjects
+          SELECT
+    enrollment_subject_id,
+    subject_id,
+    enrollment_type,
+    status
+FROM enrollment_subjects  
 
             WHERE enrollment_id = ?
 
@@ -2189,6 +2433,8 @@ ORDER BY
         draftSubjectMap.set(Number(row.subject_id), {
           enrollment_subject_id: Number(row.enrollment_subject_id),
 
+          enrollment_type: row.enrollment_type,
+
           status: row.status,
         });
       }
@@ -2201,31 +2447,55 @@ ORDER BY
     const finalRegularSubjects = regularSubjects.map((subject) => {
       const draft = draftSubjectMap.get(subject.subject_id);
 
+      const matchingDraft = draft?.enrollment_type === "Regular" ? draft : null;
+
       return {
         ...subject,
 
-        selected_in_draft: Boolean(draft),
+        selected_in_draft: Boolean(matchingDraft),
 
-        enrollment_subject_id: draft?.enrollment_subject_id ?? null,
+        enrollment_subject_id: matchingDraft?.enrollment_subject_id ?? null,
 
-        enrollment_subject_status: draft?.status ?? null,
+        enrollment_subject_status: matchingDraft?.status ?? null,
+
+        persisted_enrollment_type: matchingDraft?.enrollment_type ?? null,
       };
     });
-
     const finalRetakeCandidates = retakeCandidates.map((subject) => {
       const draft = draftSubjectMap.get(subject.subject_id);
 
+      const matchingDraft = draft?.enrollment_type === "Retake" ? draft : null;
+
       return {
         ...subject,
 
-        selected_in_draft: Boolean(draft),
+        selected_in_draft: Boolean(matchingDraft),
 
-        enrollment_subject_id: draft?.enrollment_subject_id ?? null,
+        enrollment_subject_id: matchingDraft?.enrollment_subject_id ?? null,
 
-        enrollment_subject_status: draft?.status ?? null,
+        enrollment_subject_status: matchingDraft?.status ?? null,
+
+        persisted_enrollment_type: matchingDraft?.enrollment_type ?? null,
       };
     });
+    const finalCarryOverSubjects = carryOverSubjects.map((subject) => {
+      const draft = draftSubjectMap.get(subject.subject_id);
 
+      const matchingDraft =
+        draft?.enrollment_type === "Carry Over" ? draft : null;
+
+      return {
+        ...subject,
+
+        selected_in_draft: Boolean(matchingDraft),
+
+        enrollment_subject_id: matchingDraft?.enrollment_subject_id ?? null,
+
+        enrollment_subject_status: matchingDraft?.status ?? null,
+
+        persisted_enrollment_type: matchingDraft?.enrollment_type ?? null,
+      };
+    });
     // =================================================
     // 17. SORT
     // =================================================
@@ -2238,7 +2508,23 @@ ORDER BY
     finalRetakeCandidates.sort((a, b) =>
       String(a.subject_code).localeCompare(String(b.subject_code)),
     );
+    finalCarryOverSubjects.sort((a, b) => {
+      const yearDifference =
+        Number(a.original_year_level) - Number(b.original_year_level);
 
+      if (yearDifference !== 0) {
+        return yearDifference;
+      }
+
+      const semesterDifference =
+        Number(a.original_semester_id) - Number(b.original_semester_id);
+
+      if (semesterDifference !== 0) {
+        return semesterDifference;
+      }
+
+      return String(a.subject_code).localeCompare(String(b.subject_code));
+    });
     // =================================================
     // 18. SUMMARY
     // =================================================
@@ -2341,7 +2627,10 @@ ORDER BY
           }
         : null,
       progression,
+
       regular_subjects: finalRegularSubjects,
+
+      carry_over_subjects: finalCarryOverSubjects,
 
       retake_candidates: finalRetakeCandidates,
 
@@ -2351,6 +2640,8 @@ ORDER BY
 
       summary: {
         regular_subjects: finalRegularSubjects.length,
+
+        carry_over_subjects: finalCarryOverSubjects.length,
 
         retake_candidates: finalRetakeCandidates.length,
 
@@ -2380,38 +2671,52 @@ ORDER BY
   }
 });
 // =====================================================
-// PREPARE STUDENT ENROLLMENT
+// PREPARE / UPDATE STUDENT DRAFT ENROLLMENT
 //
 // POST /api/student/enrollments/prepare
 //
-// AUTH:
-// Student JWT required.
-//
 // BODY:
-//
 // {
-//   "selected_retake_subject_ids": [37]
+//   "selected_retake_subject_ids": [subject_id, ...]
 // }
 //
 // RULES:
 //
-// - Student identity comes ONLY from req.user.
-// - Open enrollment period is required.
-// - Valid active curriculum is required.
-// - Eligible Regular subjects are automatically added.
-// - Student may select only valid Retake candidates.
-// - Passed subjects are excluded.
-// - Subjects with unmet prerequisites are excluded.
-// - Student NEVER selects section/offering.
-// - Draft placement remains NULL.
+// NO ENROLLMENT
+//   -> Create Draft
+//
+// DRAFT
+//   -> Synchronize existing Draft
+//
+// PENDING / APPROVED
+//   -> Locked
+//
+// Regular
+//   -> Automatically included
+//
+// Carry Over
+//   -> Automatically included
+//
+// Retake
+//   -> Student selects from backend-approved candidates
+//
+// Student NEVER selects:
+// - section
+// - offering
+// - faculty
+// - room
+// - schedule
+//
+// Draft placement always remains NULL.
 // =====================================================
 
 router.post("/prepare", async (req, res) => {
   let connection;
+  let transactionActive = false;
 
   try {
     // =================================================
-    // 1. AUTHENTICATED STUDENT
+    // 1. AUTHENTICATION
     // =================================================
 
     if (!req.user) {
@@ -2439,10 +2744,6 @@ router.post("/prepare", async (req, res) => {
 
     // =================================================
     // 2. SELECTED RETAKES
-    //
-    // Retakes are optional.
-    //
-    // Regular eligible subjects are automatic.
     // =================================================
 
     const rawRetakeIds = req.body?.selected_retake_subject_ids ?? [];
@@ -2462,7 +2763,6 @@ router.post("/prepare", async (req, res) => {
       if (!Number.isInteger(subjectId) || subjectId <= 0) {
         return res.status(400).json({
           success: false,
-
           message:
             "Every selected retake subject ID must be a positive integer.",
         });
@@ -2470,15 +2770,17 @@ router.post("/prepare", async (req, res) => {
     }
 
     // =================================================
-    // 3. CONNECTION + TRANSACTION
+    // 3. TRANSACTION
     // =================================================
 
     connection = await db.getConnection();
 
     await connection.beginTransaction();
 
+    transactionActive = true;
+
     // =================================================
-    // 4. AUTHENTICATED STUDENT PROFILE
+    // 4. AUTHENTICATED STUDENT
     // =================================================
 
     const [studentRows] = await connection.execute(
@@ -2493,18 +2795,19 @@ router.post("/prepare", async (req, res) => {
               s.last_name,
 
               s.course_id,
+
               c.course_code,
               c.course_name,
 
-          s.year_level,
+              s.year_level,
 
-s.academic_year_id
-    AS profile_academic_year_id,
+              s.academic_year_id
+                  AS profile_academic_year_id,
 
-s.semester_id
-    AS profile_semester_id
+              s.semester_id
+                  AS profile_semester_id
 
-FROM students s
+          FROM students s
 
           INNER JOIN courses c
               ON c.course_id =
@@ -2521,6 +2824,8 @@ FROM students s
 
     if (studentRows.length === 0) {
       await connection.rollback();
+
+      transactionActive = false;
 
       return res.status(404).json({
         success: false,
@@ -2547,7 +2852,7 @@ FROM students s
         : null;
 
     // =================================================
-    // 5. ACTIVE ASSIGNED CURRICULUM
+    // 5. ACTIVE CURRICULUM
     // =================================================
 
     const [curriculumRows] = await connection.execute(
@@ -2556,7 +2861,9 @@ FROM students s
               sc.student_curriculum_id,
               sc.curriculum_id,
               sc.assigned_date,
-              sc.status AS assignment_status,
+
+              sc.status
+                  AS assignment_status,
 
               cur.curriculum_name,
               cur.effective_year,
@@ -2591,6 +2898,8 @@ FROM students s
     if (curriculumRows.length === 0) {
       await connection.rollback();
 
+      transactionActive = false;
+
       return res.status(409).json({
         success: false,
 
@@ -2607,6 +2916,8 @@ FROM students s
 
     // =================================================
     // 6. OPEN ENROLLMENT PERIOD
+    //
+    // Summer excluded.
     // =================================================
 
     const [periodRows] = await connection.execute(
@@ -2634,12 +2945,13 @@ FROM students s
               ON sem.semester_id =
                  ep.semester_id
 
-         WHERE ep.status = 'Open'
+          WHERE ep.status = 'Open'
 
-  AND ep.semester_id IN (1, 2)
+            AND ep.semester_id
+                IN (1, 2)
 
-ORDER BY
-    ep.enrollment_period_id DESC
+          ORDER BY
+              ep.enrollment_period_id DESC
 
           LIMIT 1
 
@@ -2649,6 +2961,8 @@ ORDER BY
 
     if (periodRows.length === 0) {
       await connection.rollback();
+
+      transactionActive = false;
 
       return res.status(409).json({
         success: false,
@@ -2661,6 +2975,10 @@ ORDER BY
     const academicYearId = Number(period.academic_year_id);
 
     const semesterId = Number(period.semester_id);
+
+    // =================================================
+    // 7. YEAR PROGRESSION
+    // =================================================
 
     const progression = await resolveStudentProgression({
       executor: connection,
@@ -2681,6 +2999,8 @@ ORDER BY
     if (!progression.can_enroll) {
       await connection.rollback();
 
+      transactionActive = false;
+
       return res.status(409).json({
         success: false,
 
@@ -2695,15 +3015,16 @@ ORDER BY
     const effectiveYearLevel = Number(progression.effective_year_level);
 
     // =================================================
-    // 7. PREVENT DUPLICATE CURRENT ENROLLMENT
+    // 8. CURRENT ENROLLMENT
     //
-    // Do not create another:
+    // Draft:
+    //   editable
     //
-    // Draft
-    // Pending
-    // Approved
+    // Pending / Approved:
+    //   locked
     //
-    // Rejected / Cancelled may start again.
+    // Rejected / Cancelled:
+    //   may create a new Draft
     // =================================================
 
     const [existingRows] = await connection.execute(
@@ -2733,18 +3054,28 @@ ORDER BY
       [studentId, academicYearId, semesterId],
     );
 
+    let existingDraft = null;
+
     if (existingRows.length > 0) {
       const existing = existingRows[0];
 
       const existingStatus = String(existing.enrollment_status);
 
-      if (["Draft", "Pending", "Approved"].includes(existingStatus)) {
+      // ===============================================
+      // LOCKED STATES
+      // ===============================================
+
+      if (["Pending", "Approved"].includes(existingStatus)) {
         await connection.rollback();
+
+        transactionActive = false;
 
         return res.status(409).json({
           success: false,
 
-          message: `A ${existingStatus} enrollment already exists for this enrollment period.`,
+          code: "ENROLLMENT_LOCKED",
+
+          message: `A ${existingStatus} enrollment already exists for this enrollment period and can no longer be modified by the Student.`,
 
           enrollment: {
             enrollment_id: Number(existing.enrollment_id),
@@ -2757,22 +3088,18 @@ ORDER BY
           },
         });
       }
+
+      // ===============================================
+      // EDITABLE DRAFT
+      // ===============================================
+
+      if (existingStatus === "Draft") {
+        existingDraft = existing;
+      }
     }
 
     // =================================================
-    // 8. EVALUATE CURRENT TERM
-    //
-    // Shared Academic Evaluation Service is now the
-    // authoritative academic eligibility source.
-    //
-    // Uses:
-    //
-    // grades.enrollment_subject_id
-    // enrollment_subjects.enrollment_id
-    // enrollments.student_id
-    //
-    // Only Approved grades/enrollments count.
-    // final_rating is authoritative.
+    // 9. CURRENT TERM ELIGIBILITY
     // =================================================
 
     const termEvaluation = await evaluateCurriculumTerm(
@@ -2785,13 +3112,30 @@ ORDER BY
 
         semesterId,
       },
+
       connection,
     );
 
     // =================================================
-    // 9. REGULAR ELIGIBLE SUBJECTS
+    // 10. CARRY OVER
     //
     // Automatically included.
+    // =================================================
+
+    const carryOverEvaluation = await getCarryOverCandidates(
+      studentId,
+
+      curriculumId,
+
+      effectiveYearLevel,
+
+      semesterId,
+
+      connection,
+    );
+
+    // =================================================
+    // 11. REGULAR SUBJECTS
     // =================================================
 
     const regularEligible = termEvaluation.regular.map((subject) => ({
@@ -2809,10 +3153,34 @@ ORDER BY
     }));
 
     // =================================================
-    // 10. LOAD ALL ASSIGNED CURRICULUM SUBJECTS
+    // 12. CARRY OVER SUBJECTS
+    // =================================================
+
+    const carryOverEligible = carryOverEvaluation.eligible.map((subject) => ({
+      subject_id: Number(subject.subject_id),
+
+      subject_code: subject.subject_code,
+
+      subject_name: subject.subject_name,
+
+      units: Number(subject.units || 0),
+
+      curriculum_subject_id: Number(subject.curriculum_subject_id),
+
+      original_year_level: Number(subject.year_level),
+
+      original_semester_id: Number(subject.semester_id),
+
+      enrollment_type: "Carry Over",
+
+      carry_over_reason:
+        subject.carry_over_reason || "EARLIER_REQUIRED_SUBJECT_NOT_TAKEN",
+    }));
+
+    // =================================================
+    // 13. LOAD ALL CURRICULUM SUBJECTS
     //
-    // Retakes may originate from an older term, so
-    // current-term evaluation alone is not enough.
+    // Retakes may come from older terms.
     // =================================================
 
     const [curriculumSubjectRows] = await connection.execute(
@@ -2856,19 +3224,14 @@ ORDER BY
     }
 
     // =================================================
-    // 11. VALID RETAKE CANDIDATES
-    //
-    // Shared service guarantees:
-    //
-    // - belongs to assigned curriculum
-    // - Approved 4.00 or 5.00 result
-    // - not later passed
-    // - prerequisites satisfied
+    // 14. VALID RETAKE CANDIDATES
     // =================================================
 
     const validRetakeRows = await getRetakeCandidates(
       studentId,
+
       curriculumId,
+
       connection,
     );
 
@@ -2879,9 +3242,6 @@ ORDER BY
 
       const curriculumSubject = curriculumSubjectMap.get(subjectId);
 
-      // Defensive protection.
-      //
-      // Retake must still belong to assigned curriculum.
       if (!curriculumSubject) {
         continue;
       }
@@ -2901,12 +3261,11 @@ ORDER BY
 
         original_semester_id: Number(curriculumSubject.semester_id),
 
-        // Preserve old API naming.
-        //
-        // Value now correctly comes from final_rating.
         previous_final_grade: retake.previous_final_rating,
 
-        previous_status: String(retake.previous_result).toUpperCase(),
+        previous_status: retake.previous_result
+          ? String(retake.previous_result).toUpperCase()
+          : null,
 
         previous_grade_id: retake.previous_grade_id,
 
@@ -2915,9 +3274,7 @@ ORDER BY
     }
 
     // =================================================
-    // 12. VALIDATE STUDENT-SELECTED RETAKES
-    //
-    // Student cannot inject arbitrary subject IDs.
+    // 15. VALIDATE SELECTED RETAKES
     // =================================================
 
     const invalidRetakeIds = selectedRetakeIds.filter(
@@ -2926,6 +3283,8 @@ ORDER BY
 
     if (invalidRetakeIds.length > 0) {
       await connection.rollback();
+
+      transactionActive = false;
 
       return res.status(400).json({
         success: false,
@@ -2939,27 +3298,25 @@ ORDER BY
       });
     }
 
-    // =================================================
-    // 13. SELECTED RETAKES
-    // =================================================
-
     const selectedRetakes = selectedRetakeIds.map((subjectId) =>
       validRetakeMap.get(subjectId),
     );
 
     // =================================================
-    // 14. FINAL DRAFT SUBJECT LIST
+    // 16. FINAL DESIRED DRAFT
     //
-    // Regular:
-    // automatically included.
-    //
-    // Retake:
-    // optional Student selection.
+    // REGULAR
+    // + CARRY OVER
+    // + SELECTED RETAKES
     // =================================================
 
     const draftSubjectMap = new Map();
 
     for (const subject of regularEligible) {
+      draftSubjectMap.set(subject.subject_id, subject);
+    }
+
+    for (const subject of carryOverEligible) {
       draftSubjectMap.set(subject.subject_id, subject);
     }
 
@@ -2969,134 +3326,367 @@ ORDER BY
 
     const draftSubjects = Array.from(draftSubjectMap.values());
 
-    // =================================================
-    // 15. NO ELIGIBLE SUBJECTS
-    // =================================================
-
     if (draftSubjects.length === 0) {
       await connection.rollback();
+
+      transactionActive = false;
 
       return res.status(409).json({
         success: false,
 
         message:
-          "There are no eligible subjects to prepare for this enrollment period.",
+          "There are no eligible Regular, Carry Over, or selected Retake subjects to prepare for this enrollment period.",
       });
     }
+
     // =================================================
-    // SYNC STUDENT ACADEMIC PROFILE
+    // 17. SYNC STUDENT ACADEMIC PROFILE
     //
-    // This happens inside the SAME transaction.
-    //
-    // If Draft creation fails:
-    // → this UPDATE is rolled back.
-    //
-    // section_id is intentionally NOT changed here.
-    // Registrar controls official section placement.
+    // Home/profile section is NOT changed.
     // =================================================
 
     await connection.execute(
       `
-    UPDATE students
+        UPDATE students
 
-    SET
-        year_level = ?,
-        academic_year_id = ?,
-        semester_id = ?
+        SET
+            year_level = ?,
+            academic_year_id = ?,
+            semester_id = ?
 
-    WHERE student_id = ?
-  `,
+        WHERE student_id = ?
+      `,
       [effectiveYearLevel, academicYearId, semesterId, studentId],
     );
-    // =================================================
-    // 16. CREATE DRAFT ENROLLMENT
-    // =================================================
-
-    const [enrollmentResult] = await connection.execute(
-      `
-          INSERT INTO enrollments (
-              student_id,
-              academic_year_id,
-              semester_id,
-              enrollment_status,
-              remarks
-          )
-
-          VALUES (
-              ?,
-              ?,
-              ?,
-              'Draft',
-              ?
-          )
-        `,
-      [studentId, academicYearId, semesterId, "Prepared by Student."],
-    );
-
-    const enrollmentId = Number(enrollmentResult.insertId);
 
     // =================================================
-    // 17. INSERT DRAFT SUBJECTS
-    //
-    // VERY IMPORTANT:
-    //
-    // Student DOES NOT assign placement.
-    //
-    // offering_id        = NULL
-    // section_id         = NULL
-    // section_subject_id = NULL
-    //
-    // Registrar assigns these after submission.
+    // 18. CREATE OR UPDATE DRAFT
     // =================================================
 
-    for (const subject of draftSubjects) {
+    let enrollmentId;
+
+    let mode;
+
+    // =================================================
+    // UPDATE EXISTING DRAFT
+    // =================================================
+
+    if (existingDraft) {
+      enrollmentId = Number(existingDraft.enrollment_id);
+
+      mode = "updated";
+
       await connection.execute(
         `
-          INSERT INTO enrollment_subjects (
-              enrollment_id,
-              subject_id,
-              offering_id,
-              section_id,
-              section_subject_id,
-              status
-          )
+          UPDATE enrollments
 
-          VALUES (
-              ?,
-              ?,
-              NULL,
-              NULL,
-              NULL,
-              'Enrolled'
-          )
+          SET remarks =
+              'Updated by Student.'
+
+          WHERE enrollment_id = ?
+
+            AND enrollment_status =
+                'Draft'
         `,
-        [enrollmentId, subject.subject_id],
+        [enrollmentId],
       );
+
+      // ===============================================
+      // LOAD ALL EXISTING DRAFT SUBJECT ROWS
+      // ===============================================
+
+      const [draftRows] = await connection.execute(
+        `
+            SELECT
+                enrollment_subject_id,
+                subject_id,
+                enrollment_type,
+
+                offering_id,
+                section_id,
+                section_subject_id,
+
+                status
+
+            FROM enrollment_subjects
+
+            WHERE enrollment_id = ?
+
+            ORDER BY
+                enrollment_subject_id ASC
+
+            FOR UPDATE
+          `,
+        [enrollmentId],
+      );
+
+      const desiredMap = new Map(
+        draftSubjects.map((subject) => [Number(subject.subject_id), subject]),
+      );
+
+      // Subjects already preserved as active.
+      const keptSubjectIds = new Set();
+
+      // Previously dropped rows can be reused if
+      // the Student selects the same Retake again.
+      const droppedRowsBySubjectId = new Map();
+
+      // ===============================================
+      // SYNCHRONIZE EXISTING ROWS
+      // ===============================================
+
+      for (const row of draftRows) {
+        const subjectId = Number(row.subject_id);
+
+        const status = String(row.status);
+
+        if (status === "Dropped") {
+          droppedRowsBySubjectId.set(subjectId, row);
+
+          continue;
+        }
+
+        const desired = desiredMap.get(subjectId);
+
+        // =============================================
+        // KEEP SUBJECT
+        // =============================================
+
+        if (desired && !keptSubjectIds.has(subjectId)) {
+          await connection.execute(
+            `
+              UPDATE enrollment_subjects
+
+              SET
+                  enrollment_type = ?,
+
+                  offering_id = NULL,
+                  section_id = NULL,
+                  section_subject_id = NULL,
+
+                  status = 'Enrolled'
+
+              WHERE enrollment_subject_id = ?
+
+                AND enrollment_id = ?
+            `,
+            [
+              desired.enrollment_type,
+
+              Number(row.enrollment_subject_id),
+
+              enrollmentId,
+            ],
+          );
+
+          keptSubjectIds.add(subjectId);
+
+          continue;
+        }
+
+        // =============================================
+        // REMOVE FROM ACTIVE DRAFT
+        //
+        // Do not DELETE.
+        // Preserve the row and mark Dropped.
+        // =============================================
+
+        await connection.execute(
+          `
+            UPDATE enrollment_subjects
+
+            SET
+                offering_id = NULL,
+                section_id = NULL,
+                section_subject_id = NULL,
+
+                status = 'Dropped'
+
+            WHERE enrollment_subject_id = ?
+
+              AND enrollment_id = ?
+          `,
+          [Number(row.enrollment_subject_id), enrollmentId],
+        );
+      }
+
+      // ===============================================
+      // ADD NEWLY DESIRED SUBJECTS
+      // ===============================================
+
+      for (const subject of draftSubjects) {
+        const subjectId = Number(subject.subject_id);
+
+        if (keptSubjectIds.has(subjectId)) {
+          continue;
+        }
+
+        const reusable = droppedRowsBySubjectId.get(subjectId);
+
+        // =============================================
+        // REACTIVATE OLD DROPPED DRAFT ROW
+        // =============================================
+
+        if (reusable) {
+          await connection.execute(
+            `
+              UPDATE enrollment_subjects
+
+              SET
+                  enrollment_type = ?,
+
+                  offering_id = NULL,
+                  section_id = NULL,
+                  section_subject_id = NULL,
+
+                  status = 'Enrolled'
+
+              WHERE enrollment_subject_id = ?
+
+                AND enrollment_id = ?
+            `,
+            [
+              subject.enrollment_type,
+
+              Number(reusable.enrollment_subject_id),
+
+              enrollmentId,
+            ],
+          );
+        }
+
+        // =============================================
+        // INSERT NEW DRAFT SUBJECT
+        // =============================================
+        else {
+          await connection.execute(
+            `
+              INSERT INTO enrollment_subjects (
+                  enrollment_id,
+                  subject_id,
+                  enrollment_type,
+
+                  offering_id,
+                  section_id,
+                  section_subject_id,
+
+                  status
+              )
+
+              VALUES (
+                  ?,
+                  ?,
+                  ?,
+
+                  NULL,
+                  NULL,
+                  NULL,
+
+                  'Enrolled'
+              )
+            `,
+            [enrollmentId, subjectId, subject.enrollment_type],
+          );
+        }
+      }
     }
 
     // =================================================
-    // 18. TOTAL UNITS
+    // CREATE NEW DRAFT
+    // =================================================
+    else {
+      mode = "created";
+
+      const [enrollmentResult] = await connection.execute(
+        `
+            INSERT INTO enrollments (
+                student_id,
+                academic_year_id,
+                semester_id,
+                enrollment_status,
+                remarks
+            )
+
+            VALUES (
+                ?,
+                ?,
+                ?,
+                'Draft',
+                'Prepared by Student.'
+            )
+          `,
+        [studentId, academicYearId, semesterId],
+      );
+
+      enrollmentId = Number(enrollmentResult.insertId);
+
+      // ===============================================
+      // INSERT AUTHORITATIVE SUBJECT TYPES
+      // ===============================================
+
+      for (const subject of draftSubjects) {
+        await connection.execute(
+          `
+            INSERT INTO enrollment_subjects (
+                enrollment_id,
+                subject_id,
+                enrollment_type,
+
+                offering_id,
+                section_id,
+                section_subject_id,
+
+                status
+            )
+
+            VALUES (
+                ?,
+                ?,
+                ?,
+
+                NULL,
+                NULL,
+                NULL,
+
+                'Enrolled'
+            )
+          `,
+          [enrollmentId, Number(subject.subject_id), subject.enrollment_type],
+        );
+      }
+    }
+
+    // =================================================
+    // 19. TOTAL UNITS
     // =================================================
 
     const totalUnits = draftSubjects.reduce(
       (total, subject) => total + Number(subject.units || 0),
+
       0,
     );
 
     // =================================================
-    // 19. COMMIT
+    // 20. COMMIT
     // =================================================
 
     await connection.commit();
 
+    transactionActive = false;
+
     // =================================================
-    // 20. RESPONSE
+    // 21. RESPONSE
     // =================================================
 
-    return res.status(201).json({
+    return res.status(mode === "created" ? 201 : 200).json({
       success: true,
 
-      message: "Draft enrollment prepared successfully.",
+      message:
+        mode === "created"
+          ? "Draft enrollment prepared successfully."
+          : "Draft enrollment updated successfully.",
+
+      mode,
 
       student: {
         student_id: studentId,
@@ -3156,13 +3746,19 @@ ORDER BY
 
         enrollment_status: "Draft",
       },
+
       progression,
+
       summary: {
         total_subjects: draftSubjects.length,
 
         regular_subjects: regularEligible.length,
 
+        carry_over_subjects: carryOverEligible.length,
+
         selected_retakes: selectedRetakes.length,
+
+        irregular_subjects: carryOverEligible.length + selectedRetakes.length,
 
         total_units: totalUnits,
       },
@@ -3170,10 +3766,14 @@ ORDER BY
       subjects: draftSubjects,
 
       next_action:
-        "Student may review the Draft and submit it for Registrar review.",
+        "Student may continue editing the Draft or submit it for Registrar review.",
     });
   } catch (error) {
-    if (connection) {
+    // =================================================
+    // ROLLBACK
+    // =================================================
+
+    if (connection && transactionActive) {
       try {
         await connection.rollback();
       } catch (rollbackError) {
@@ -3199,6 +3799,7 @@ ORDER BY
     }
   }
 });
+
 // =====================================================
 // SUBMIT STUDENT ENROLLMENT
 //
@@ -3592,21 +4193,22 @@ router.post("/:enrollment_id/submit", async (req, res) => {
 
     const [subjectRows] = await connection.execute(
       `
-          SELECT
-              es.enrollment_subject_id,
-              es.enrollment_id,
+        SELECT
+    es.enrollment_subject_id,
+    es.enrollment_id,
 
-              es.subject_id,
+    es.subject_id,
+    es.enrollment_type,
 
-              es.offering_id,
-              es.section_id,
-              es.section_subject_id,
+    es.offering_id,
+    es.section_id,
+    es.section_subject_id,
 
-              es.status,
+    es.status,
 
-              s.subject_code,
-              s.subject_name,
-              s.units
+    s.subject_code,
+    s.subject_name,
+    s.units
 
           FROM enrollment_subjects es
 
@@ -3737,6 +4339,25 @@ router.post("/:enrollment_id/submit", async (req, res) => {
     );
 
     // =================================================
+    // 14. RE-EVALUATE CARRY-OVER SUBJECTS
+    //
+    // Carry Over is automatic, just like Regular.
+    // =================================================
+
+    const carryOverEvaluation = await getCarryOverCandidates(
+      studentId,
+      curriculumId,
+      yearLevel,
+      semesterId,
+      connection,
+    );
+
+    const eligibleCarryOverMap = new Map();
+
+    for (const subject of carryOverEvaluation.eligible) {
+      eligibleCarryOverMap.set(Number(subject.subject_id), subject);
+    }
+    // =================================================
     // 14. ELIGIBLE REGULAR SUBJECT MAP
     // =================================================
 
@@ -3789,68 +4410,173 @@ router.post("/:enrollment_id/submit", async (req, res) => {
     const invalidAcademicSubjects = [];
 
     let regularCount = 0;
+    let carryOverCount = 0;
     let retakeCount = 0;
+
+    const validEnrollmentTypes = new Set(["Regular", "Carry Over", "Retake"]);
 
     for (const subject of activeSubjects) {
       const subjectId = Number(subject.subject_id);
 
-      // -----------------------------------------------
+      const enrollmentType = String(subject.enrollment_type || "").trim();
+
+      // =================================================
+      // VALID STORED ENROLLMENT TYPE
+      // =================================================
+
+      if (!validEnrollmentTypes.has(enrollmentType)) {
+        invalidAcademicSubjects.push({
+          enrollment_subject_id: Number(subject.enrollment_subject_id),
+
+          subject_id: subjectId,
+
+          subject_code: subject.subject_code,
+
+          subject_name: subject.subject_name,
+
+          enrollment_type: enrollmentType || null,
+
+          reason: "INVALID_ENROLLMENT_TYPE",
+        });
+
+        continue;
+      }
+
+      // =================================================
       // REGULAR
-      // -----------------------------------------------
+      //
+      // Persisted as Regular
+      // → must STILL be academically Regular.
+      // =================================================
 
-      if (eligibleRegularMap.has(subjectId)) {
-        regularCount += 1;
-        continue;
-      }
-
-      // -----------------------------------------------
-      // RETAKE
-      // -----------------------------------------------
-
-      if (validRetakeMap.has(subjectId)) {
-        retakeCount += 1;
-        continue;
-      }
-
-      // -----------------------------------------------
-      // INVALID / NO LONGER ELIGIBLE
-      // -----------------------------------------------
-
-      const blockedCurrentSubject = termEvaluation.blocked.find(
-        (item) => Number(item.subject_id) === subjectId,
-      );
-
-      let reason = "SUBJECT_NO_LONGER_ELIGIBLE";
-
-      if (blockedCurrentSubject) {
-        if (
-          blockedCurrentSubject.eligibility_type ===
-          ELIGIBILITY_TYPE.ALREADY_PASSED
-        ) {
-          reason = "SUBJECT_ALREADY_PASSED";
-        } else if (
-          blockedCurrentSubject.eligibility_type ===
-          ELIGIBILITY_TYPE.BLOCKED_PREREQUISITE
-        ) {
-          reason = "PREREQUISITE_NOT_PASSED";
-        } else if (
-          blockedCurrentSubject.eligibility_type === ELIGIBILITY_TYPE.UNRESOLVED
-        ) {
-          reason = "ACADEMIC_RESULT_UNRESOLVED";
+      if (enrollmentType === "Regular") {
+        if (eligibleRegularMap.has(subjectId)) {
+          regularCount += 1;
+          continue;
         }
+
+        const blockedCurrentSubject = termEvaluation.blocked.find(
+          (item) => Number(item.subject_id) === subjectId,
+        );
+
+        let reason = "REGULAR_SUBJECT_NO_LONGER_ELIGIBLE";
+
+        if (blockedCurrentSubject) {
+          if (
+            blockedCurrentSubject.eligibility_type ===
+            ELIGIBILITY_TYPE.ALREADY_PASSED
+          ) {
+            reason = "SUBJECT_ALREADY_PASSED";
+          } else if (
+            blockedCurrentSubject.eligibility_type ===
+            ELIGIBILITY_TYPE.BLOCKED_PREREQUISITE
+          ) {
+            reason = "PREREQUISITE_NOT_PASSED";
+          } else if (
+            blockedCurrentSubject.eligibility_type ===
+            ELIGIBILITY_TYPE.UNRESOLVED
+          ) {
+            reason = "ACADEMIC_RESULT_UNRESOLVED";
+          }
+        }
+
+        invalidAcademicSubjects.push({
+          enrollment_subject_id: Number(subject.enrollment_subject_id),
+
+          subject_id: subjectId,
+
+          subject_code: subject.subject_code,
+
+          subject_name: subject.subject_name,
+
+          enrollment_type: enrollmentType,
+
+          reason,
+        });
+
+        continue;
       }
 
-      invalidAcademicSubjects.push({
-        enrollment_subject_id: Number(subject.enrollment_subject_id),
+      // =================================================
+      // CARRY OVER
+      //
+      // Persisted as Carry Over
+      // → must STILL be an eligible Carry Over.
+      // =================================================
 
-        subject_id: subjectId,
+      if (enrollmentType === "Carry Over") {
+        if (eligibleCarryOverMap.has(subjectId)) {
+          carryOverCount += 1;
+          continue;
+        }
 
-        subject_code: subject.subject_code,
+        const blockedCarryOverSubject = carryOverEvaluation.blocked.find(
+          (item) => Number(item.subject_id) === subjectId,
+        );
 
-        subject_name: subject.subject_name,
+        let reason = "CARRY_OVER_NO_LONGER_ELIGIBLE";
 
-        reason,
-      });
+        if (blockedCarryOverSubject) {
+          if (
+            blockedCarryOverSubject.eligibility_type ===
+            ELIGIBILITY_TYPE.BLOCKED_PREREQUISITE
+          ) {
+            reason = "PREREQUISITE_NOT_PASSED";
+          } else if (
+            blockedCarryOverSubject.eligibility_type ===
+            ELIGIBILITY_TYPE.UNRESOLVED
+          ) {
+            reason = "ACADEMIC_RESULT_UNRESOLVED";
+          } else if (blockedCarryOverSubject.carry_over_reason) {
+            reason = blockedCarryOverSubject.carry_over_reason;
+          }
+        }
+
+        invalidAcademicSubjects.push({
+          enrollment_subject_id: Number(subject.enrollment_subject_id),
+
+          subject_id: subjectId,
+
+          subject_code: subject.subject_code,
+
+          subject_name: subject.subject_name,
+
+          enrollment_type: enrollmentType,
+
+          reason,
+        });
+
+        continue;
+      }
+
+      // =================================================
+      // RETAKE
+      //
+      // Persisted as Retake
+      // → must STILL have a valid Approved 4.00/5.00
+      // academic result and satisfy Retake rules.
+      // =================================================
+
+      if (enrollmentType === "Retake") {
+        if (validRetakeMap.has(subjectId)) {
+          retakeCount += 1;
+          continue;
+        }
+
+        invalidAcademicSubjects.push({
+          enrollment_subject_id: Number(subject.enrollment_subject_id),
+
+          subject_id: subjectId,
+
+          subject_code: subject.subject_code,
+
+          subject_name: subject.subject_name,
+
+          enrollment_type: enrollmentType,
+
+          reason: "RETAKE_NO_LONGER_ELIGIBLE",
+        });
+      }
     }
 
     if (invalidAcademicSubjects.length > 0) {
@@ -3907,7 +4633,49 @@ router.post("/:enrollment_id/submit", async (req, res) => {
         missing_regular_subjects: missingRegularSubjects,
       });
     }
+    // =================================================
+    // VERIFY ALL ELIGIBLE CARRY-OVER SUBJECTS EXIST
+    //
+    // Carry Over subjects are automatic.
+    // Student cannot remove them from the Draft.
+    // =================================================
 
+    const missingCarryOverSubjects = [];
+
+    for (const [subjectId, subject] of eligibleCarryOverMap.entries()) {
+      if (uniqueDraftSubjectIds.has(subjectId)) {
+        continue;
+      }
+
+      missingCarryOverSubjects.push({
+        subject_id: Number(subjectId),
+
+        subject_code: subject.subject_code,
+
+        subject_name: subject.subject_name,
+
+        curriculum_subject_id: Number(subject.curriculum_subject_id),
+
+        original_year_level: Number(subject.original_year_level),
+
+        original_semester_id: Number(subject.original_semester_id),
+      });
+    }
+
+    if (missingCarryOverSubjects.length > 0) {
+      await connection.rollback();
+
+      transactionActive = false;
+
+      return res.status(400).json({
+        success: false,
+
+        message:
+          "Some required eligible Carry-Over subjects are missing from the Draft.",
+
+        missing_carry_over_subjects: missingCarryOverSubjects,
+      });
+    }
     // =================================================
     // 18. TOTAL UNITS
     // =================================================
@@ -4044,6 +4812,8 @@ router.post("/:enrollment_id/submit", async (req, res) => {
         total_subjects: activeSubjects.length,
 
         regular_subjects: regularCount,
+
+        carry_over_subjects: carryOverCount,
 
         selected_retakes: retakeCount,
 

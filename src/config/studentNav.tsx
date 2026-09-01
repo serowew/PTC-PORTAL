@@ -25,12 +25,6 @@ export const studentNavGroups = [
       { label: "Document Release", path: "/student/document/release" },
     ],
   },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: "",
-    children: [{ label: "User Management", path: "/student/setting/user" }],
-  },
 ];
 export const studentSoloLinks = [
   { label: "Dashboard", path: "/student/dashboard", icon: "" },

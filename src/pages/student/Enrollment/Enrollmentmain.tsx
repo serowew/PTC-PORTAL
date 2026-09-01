@@ -59,6 +59,8 @@ interface Enrollment {
   created_at: string;
 }
 
+type EnrollmentType = "Regular" | "Retake" | "Carry Over";
+
 interface OfficialEnrollment {
   enrollment_id: number;
   student_id: number;
@@ -91,30 +93,47 @@ interface OfficialEnrollmentSubject {
   lecture_hours: number;
   laboratory_hours: number;
 
-  subject_status: string;
+  status: string;
 
-  section_id: number | null;
-  section_name: string | null;
-  section_year_level: number | null;
+  enrollment_type: EnrollmentType;
+  is_irregular: boolean;
+  irregular_reason: "RETAKE" | "CARRY_OVER" | null;
 
-  section_subject_id: number | null;
-  section_subject_status: string | null;
+  section: {
+    section_id: number | null;
+    section_name: string | null;
+    year_level: number | null;
+    course_id: number | null;
+    course_code: string | null;
+    course_name: string | null;
+  };
 
-  offering_id: number | null;
-  offering_status: string | null;
+  section_subject: {
+    section_subject_id: number | null;
+    status: string | null;
+  };
 
-  faculty_id: number | null;
-  faculty_name: string | null;
+  offering: {
+    offering_id: number | null;
+    status: string | null;
+    schedule_days: string | null;
+    schedule_time: string | null;
+    max_students: number | null;
+    enrolled_count: number;
+    available_slots: number | null;
+  };
 
-  room_id: number | null;
-  room_name: string | null;
+  faculty: {
+    faculty_id: number | null;
+    faculty_name: string | null;
+  };
 
-  schedule_days: string | null;
-  schedule_time: string | null;
+  room: {
+    room_id: number | null;
+    room_name: string | null;
+  };
 
-  max_students: number | null;
-
-  placement_complete: boolean;
+  assignment_complete: boolean;
 }
 
 interface CurrentEnrollmentResponse {
@@ -139,6 +158,11 @@ interface CurrentEnrollmentResponse {
     placed_subjects: number;
     unplaced_subjects: number;
     placement_complete: boolean;
+    regular_subjects: number;
+    retake_subjects: number;
+    carry_over_subjects: number;
+    irregular_subjects: number;
+    is_irregular_enrollment: boolean;
   };
 
   can_prepare: boolean;
@@ -180,6 +204,37 @@ interface RegularSubject {
   academic_status: string;
 
   eligible: boolean;
+
+  prerequisites: Prerequisite[];
+
+  selected_in_draft: boolean;
+
+  enrollment_subject_id: number | null;
+  enrollment_subject_status: string | null;
+}
+
+interface CarryOverSubject {
+  subject_id: number;
+
+  subject_code: string;
+  subject_name: string;
+
+  units: number;
+
+  lecture_hours: number;
+  laboratory_hours: number;
+
+  original_year_level: number;
+  original_semester_id: number;
+
+  curriculum_subject_id: number;
+
+  enrollment_type: "Carry Over";
+
+  academic_status: string;
+  eligible: boolean;
+
+  carry_over_reason: string | null;
 
   prerequisites: Prerequisite[];
 
@@ -265,6 +320,8 @@ interface EnrollmentEligibilityResponse {
 
   regular_subjects: RegularSubject[];
 
+  carry_over_subjects: CarryOverSubject[];
+
   retake_candidates: RetakeCandidate[];
 
   blocked_subjects: BlockedSubject[];
@@ -273,6 +330,7 @@ interface EnrollmentEligibilityResponse {
 
   summary: {
     regular_subjects: number;
+    carry_over_subjects: number;
     retake_candidates: number;
     blocked_subjects: number;
     completed_subjects: number;
@@ -716,9 +774,14 @@ export default function Enrollmentmain() {
   // Student can select ONLY backend-approved retake candidates.
   // Student never selects section/offering/faculty/room/schedule.
   // ============================================================
-
   const toggleRetakeSubject = (subjectId: number) => {
-    if (!data?.can_prepare || data.enrollment) {
+    if (!data) {
+      return;
+    }
+
+    const canEditRetakes = data.can_prepare || data.can_modify_draft;
+
+    if (!canEditRetakes) {
       return;
     }
 
@@ -733,7 +796,6 @@ export default function Enrollmentmain() {
     setError("");
     setSuccessMessage("");
   };
-
   // ============================================================
   // PREPARE DRAFT
   //
@@ -779,10 +841,12 @@ export default function Enrollmentmain() {
       return;
     }
 
-    if (!data.can_prepare) {
+    const canSaveDraft = data.can_prepare || data.can_modify_draft;
+
+    if (!canSaveDraft) {
       setError(
         data.enrollment
-          ? `A ${data.enrollment.enrollment_status} enrollment already exists for this period.`
+          ? `This ${data.enrollment.enrollment_status} enrollment can no longer be modified.`
           : "This enrollment cannot currently be prepared.",
       );
 
@@ -808,11 +872,13 @@ export default function Enrollmentmain() {
     }
 
     const totalSubjectsToPrepare =
-      data.regular_subjects.length + selectedRetakeSubjectIds.length;
+      data.regular_subjects.length +
+      (data.carry_over_subjects?.length || 0) +
+      selectedRetakeSubjectIds.length;
 
     if (totalSubjectsToPrepare === 0) {
       setError(
-        "There are no eligible Regular subjects or selected Retake subjects to prepare.",
+        "There are no eligible Regular, Carry Over, or selected Retake subjects to prepare.",
       );
 
       return;
@@ -854,9 +920,13 @@ export default function Enrollmentmain() {
       }
 
       setSuccessMessage(
-        responseData.message || "Draft enrollment prepared successfully.",
+        responseData.message ||
+          (data.can_modify_draft
+            ? "Draft enrollment updated successfully."
+            : enrollmentIsRejected
+              ? "New Draft enrollment prepared successfully."
+              : "Draft enrollment prepared successfully."),
       );
-
       await reloadEnrollment();
     } catch (err) {
       console.error("PREPARE STUDENT ENROLLMENT ERROR:", err);
@@ -932,11 +1002,20 @@ export default function Enrollmentmain() {
       (subject) => subject.selected_in_draft,
     );
 
+    const preparedCarryOverSubjects = (data.carry_over_subjects || []).filter(
+      (subject) => subject.selected_in_draft,
+    );
+
     const preparedRetakeSubjects = data.retake_candidates.filter(
       (subject) => subject.selected_in_draft,
     );
 
-    if (preparedRegularSubjects.length + preparedRetakeSubjects.length === 0) {
+    if (
+      preparedRegularSubjects.length +
+        preparedCarryOverSubjects.length +
+        preparedRetakeSubjects.length ===
+      0
+    ) {
       setError("There are no prepared subjects to submit.");
 
       return;
@@ -1084,6 +1163,7 @@ export default function Enrollmentmain() {
     enrollment_period,
     enrollment,
     regular_subjects,
+    carry_over_subjects = [],
     retake_candidates,
     blocked_subjects,
     completed_subjects,
@@ -1120,17 +1200,24 @@ export default function Enrollmentmain() {
     (subject) => subject.selected_in_draft,
   );
 
+  const draftCarryOverSubjects = carry_over_subjects.filter(
+    (subject) => subject.selected_in_draft,
+  );
+
   const draftRetakeSubjects = retake_candidates.filter(
     (subject) => subject.selected_in_draft,
   );
 
   const draftSubjectsCount =
-    draftRegularSubjects.length + draftRetakeSubjects.length;
+    draftRegularSubjects.length +
+    draftCarryOverSubjects.length +
+    draftRetakeSubjects.length;
 
-  const draftUnits = [...draftRegularSubjects, ...draftRetakeSubjects].reduce(
-    (total, subject) => total + Number(subject.units || 0),
-    0,
-  );
+  const draftUnits = [
+    ...draftRegularSubjects,
+    ...draftCarryOverSubjects,
+    ...draftRetakeSubjects,
+  ].reduce((total, subject) => total + Number(subject.units || 0), 0);
 
   // ============================================================
   // PLANNED PREPARE SUMMARY
@@ -1140,15 +1227,28 @@ export default function Enrollmentmain() {
     selectedRetakeSubjectIds.includes(Number(subject.subject_id)),
   );
 
+  const regularEligibleUnits = regular_subjects.reduce(
+    (total, subject) => total + Number(subject.units || 0),
+    0,
+  );
+
+  const carryOverUnits = carry_over_subjects.reduce(
+    (total, subject) => total + Number(subject.units || 0),
+    0,
+  );
+
   const selectedRetakeUnits = selectedRetakeSubjects.reduce(
     (total, subject) => total + Number(subject.units || 0),
     0,
   );
 
   const plannedSubjectCount =
-    regular_subjects.length + selectedRetakeSubjects.length;
+    regular_subjects.length +
+    carry_over_subjects.length +
+    selectedRetakeSubjects.length;
 
-  const plannedUnits = summary.eligible_units + selectedRetakeUnits;
+  const plannedUnits =
+    regularEligibleUnits + carryOverUnits + selectedRetakeUnits;
 
   // ============================================================
   // OFFICIAL ENROLLMENT SUMMARY
@@ -1164,7 +1264,10 @@ export default function Enrollmentmain() {
 
   const officialUnits = officialSummary?.total_units ?? 0;
 
-  const displayedUnits = enrollment ? officialUnits : plannedUnits;
+  const displayedUnits =
+    enrollmentIsDraft || enrollmentIsPending || enrollmentIsApproved
+      ? officialUnits
+      : plannedUnits;
 
   const displayedUnitsLabel = enrollmentIsApproved
     ? "Official Units"
@@ -1174,16 +1277,12 @@ export default function Enrollmentmain() {
         ? "Draft Units"
         : "Planned Units";
 
-  const retakeCandidateIds = new Set(
-    retake_candidates.map((subject) => Number(subject.subject_id)),
-  );
-
   const canPrepareEnrollment =
     Boolean(enrollment_period) &&
     enrollmentPeriodIsOpen &&
     semesterIsSupported &&
-    data.can_prepare &&
-    !enrollment &&
+    (data.can_prepare || data.can_modify_draft) &&
+    (!enrollment || enrollmentIsDraft || enrollmentIsRejected) &&
     plannedSubjectCount > 0;
 
   const canSubmitEnrollment =
@@ -1203,24 +1302,30 @@ export default function Enrollmentmain() {
   // ============================================================
 
   const renderOfficialSubject = (subject: OfficialEnrollmentSubject) => {
-    const isRetake = retakeCandidateIds.has(Number(subject.subject_id));
+    const enrollmentType = subject.enrollment_type;
+
+    const isRetake = enrollmentType === "Retake";
+    const isCarryOver = enrollmentType === "Carry Over";
+    const isIrregular = isRetake || isCarryOver;
+
+    const subjectMarker = isRetake ? "R" : isCarryOver ? "C" : "✓";
 
     return (
       <div
         key={subject.enrollment_subject_id}
-        className={`subject-card ${isRetake ? "retake-subject" : ""}`}
+        className={`subject-card ${isIrregular ? "retake-subject" : ""}`}
       >
         <div className="subject-header">
-          <div className="subject-number">{isRetake ? "R" : "✓"}</div>
+          <div className="subject-number">{subjectMarker}</div>
 
           <div className="subject-main">
             <div className="subject-code-row">
               <span className="subject-code">{subject.subject_code}</span>
 
               <span
-                className={`subject-badge ${isRetake ? "retake" : "regular"}`}
+                className={`subject-badge ${isIrregular ? "retake" : "regular"}`}
               >
-                {isRetake ? "Retake" : "Regular"}
+                {enrollmentType}
               </span>
             </div>
 
@@ -1238,14 +1343,14 @@ export default function Enrollmentmain() {
           <div className="academic-status">
             <span
               className={`status-badge ${
-                subject.placement_complete ? "approved" : "pending"
+                subject.assignment_complete ? "approved" : "pending"
               }`}
             >
-              {subject.subject_status}
+              {subject.status}
             </span>
 
             <small>
-              {subject.placement_complete
+              {subject.assignment_complete
                 ? "Official placement assigned"
                 : "Awaiting Registrar placement"}
             </small>
@@ -1258,20 +1363,20 @@ export default function Enrollmentmain() {
               <strong>Official Class Placement</strong>
 
               <span>
-                {subject.placement_complete
+                {subject.assignment_complete
                   ? "Assigned by Registrar"
                   : "Placement is still pending"}
               </span>
             </div>
 
-            {subject.offering_id !== null && (
+            {subject.offering.offering_id !== null && (
               <span className="section-count">
-                Offering #{subject.offering_id}
+                Offering #{subject.offering.offering_id}
               </span>
             )}
           </div>
 
-          {subject.placement_complete ? (
+          {subject.assignment_complete ? (
             <div className="assigned-section-card">
               <div className="assigned-section-main">
                 <span className="section-radio" aria-label="Assigned section">
@@ -1279,39 +1384,51 @@ export default function Enrollmentmain() {
                 </span>
 
                 <div className="section-information">
-                  <strong>{subject.section_name || "Assigned Section"}</strong>
+                  <strong>
+                    {subject.section.section_name || "Assigned Section"}
+                  </strong>
 
                   <small>
-                    {subject.schedule_days || "Schedule day unavailable"}
-                    {" • "}
-                    {subject.schedule_time || "Schedule time unavailable"}
+                    {subject.section.course_code || "Course unavailable"}
+                    {subject.section.year_level !== null
+                      ? ` • Year ${subject.section.year_level}`
+                      : ""}
                   </small>
 
                   <small>
-                    Faculty: {subject.faculty_name || "Not assigned"}
+                    {subject.offering.schedule_days ||
+                      "Schedule day unavailable"}
+                    {" • "}
+                    {subject.offering.schedule_time ||
+                      "Schedule time unavailable"}
+                  </small>
+
+                  <small>
+                    Faculty: {subject.faculty.faculty_name || "Not assigned"}
                   </small>
 
                   <small>
                     Room:{" "}
-                    {subject.room_name || "No room assigned / not required"}
+                    {subject.room.room_name ||
+                      "No room assigned / not required"}
                   </small>
                 </div>
               </div>
 
               <div className="section-capacity">
-                <strong>{subject.max_students ?? "—"}</strong>
+                <strong>{subject.offering.max_students ?? "—"}</strong>
 
                 <small>Capacity</small>
               </div>
 
               <span
                 className={`section-status ${
-                  subject.offering_status?.toLowerCase() === "open"
+                  subject.offering.status?.toLowerCase() === "open"
                     ? "open"
                     : ""
                 }`}
               >
-                {subject.offering_status || "Assigned"}
+                {subject.offering.status || "Assigned"}
               </span>
             </div>
           ) : (
@@ -1322,8 +1439,8 @@ export default function Enrollmentmain() {
                 <strong>Awaiting Registrar placement</strong>
 
                 <p>
-                  Your subject is part of the enrollment, but its official
-                  section/offering has not been assigned yet.
+                  This {enrollmentType} subject is part of your enrollment, but
+                  its official section/offering has not been assigned yet.
                 </p>
 
                 <small>
@@ -1335,18 +1452,19 @@ export default function Enrollmentmain() {
           )}
 
           <div className="selected-section-message">
-            <span>{subject.placement_complete ? "✓" : "i"}</span>
+            <span>{subject.assignment_complete ? "✓" : "i"}</span>
 
             <p>
               <strong>
-                {subject.placement_complete
+                {subject.assignment_complete
                   ? "Registrar-controlled placement."
                   : "Placement pending."}
               </strong>
               <br />
               <small>
-                This information comes from your official enrollment record.
-                Room may be blank because room assignment is optional.
+                Enrollment type: {enrollmentType}. This value comes from the
+                persisted enrollment subject record. Room may be blank because
+                room assignment is optional.
               </small>
             </p>
           </div>
@@ -1416,6 +1534,65 @@ export default function Enrollmentmain() {
   };
 
   // ============================================================
+  // RENDER CARRY OVER SUBJECT
+  // ============================================================
+
+  const renderCarryOverSubject = (subject: CarryOverSubject) => {
+    const isPrepared = Boolean(subject.selected_in_draft);
+
+    return (
+      <div key={subject.subject_id} className="subject-card retake-subject">
+        <div className="subject-header">
+          <div className="subject-number">C</div>
+
+          <div className="subject-main">
+            <div className="subject-code-row">
+              <span className="subject-code">{subject.subject_code}</span>
+
+              <span className="subject-badge retake">Carry Over</span>
+            </div>
+
+            <h3>{subject.subject_name}</h3>
+
+            <div className="subject-details">
+              <span>{subject.units} Units</span>
+              <span>Lecture: {subject.lecture_hours}h</span>
+              <span>Laboratory: {subject.laboratory_hours}h</span>
+            </div>
+          </div>
+
+          <div className="academic-status">
+            <span className="status-badge approved">Eligible</span>
+
+            {isPrepared && (
+              <small>
+                {subject.enrollment_subject_status || "Included in Draft"}
+              </small>
+            )}
+          </div>
+        </div>
+
+        <div className="section-area">
+          <div className="selected-section-message">
+            <span>✓</span>
+
+            <p>
+              <strong>Automatically included Carry Over.</strong> This is an
+              eligible required subject from an earlier curriculum term.
+              <br />
+              <small>
+                Original curriculum term: Year {subject.original_year_level} •
+                Semester {subject.original_semester_id}. Registrar placement
+                happens after submission.
+              </small>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================
   // RENDER RETAKE CANDIDATE
   // ============================================================
 
@@ -1426,7 +1603,8 @@ export default function Enrollmentmain() {
 
     const selectedInDraft = Boolean(subject.selected_in_draft);
 
-    const selectable = data.can_prepare && !enrollment;
+    const selectable =
+      data.can_prepare || (data.can_modify_draft && enrollmentIsDraft);
 
     return (
       <div key={subject.subject_id} className="subject-card retake-subject">
@@ -1786,6 +1964,14 @@ export default function Enrollmentmain() {
             <span className="summary-label">Retake Candidates</span>
           </div>
 
+          <div className="summary-item retake">
+            <span className="summary-number">
+              {summary.carry_over_subjects ?? carry_over_subjects.length}
+            </span>
+
+            <span className="summary-label">Carry Over</span>
+          </div>
+
           <div className="summary-item">
             <span className="summary-number">{summary.blocked_subjects}</span>
 
@@ -1957,13 +2143,26 @@ export default function Enrollmentmain() {
             <div className="instruction-icon">!</div>
 
             <div>
-              <strong>Your enrollment was rejected</strong>
+              <strong>Your previous enrollment application was rejected</strong>
 
-              <p>Please review the Registrar remarks.</p>
+              <p>
+                Review the Registrar remarks below. The rejected application is
+                kept as history and will not be overwritten.
+              </p>
 
               {enrollment?.remarks && (
                 <small>Registrar remarks: {enrollment.remarks}</small>
               )}
+
+              {enrollment_period &&
+                enrollmentPeriodIsOpen &&
+                data.can_prepare && (
+                  <small>
+                    You may prepare a new enrollment application for this same
+                    enrollment period. Eligibility will be evaluated again
+                    before the new Draft is created.
+                  </small>
+                )}
             </div>
           </div>
         )}
@@ -2096,6 +2295,40 @@ export default function Enrollmentmain() {
         </div>
 
         {/* ====================================================
+            CARRY OVER SUBJECTS
+        ==================================================== */}
+
+        {carry_over_subjects.length > 0 && (
+          <div className="subjects-container">
+            <div className="subjects-header">
+              <div>
+                <span className="enrollment-eyebrow">
+                  Earlier Curriculum Term
+                </span>
+
+                <h2>Carry Over Subjects</h2>
+
+                <p>
+                  Eligible required subjects from an earlier curriculum term are
+                  included automatically. These are not Retakes because they do
+                  not have an Approved 4.00 or 5.00 result.
+                </p>
+              </div>
+
+              <div className="selection-counter">
+                {carry_over_subjects.length} eligible
+              </div>
+            </div>
+
+            <div className="subject-list">
+              {carry_over_subjects.map((subject) =>
+                renderCarryOverSubject(subject),
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ====================================================
             RETAKE CANDIDATES
         ==================================================== */}
 
@@ -2113,7 +2346,7 @@ export default function Enrollmentmain() {
             </div>
 
             <div className="selection-counter">
-              {data.can_prepare && !enrollment
+              {data.can_prepare || data.can_modify_draft
                 ? `${selectedRetakeSubjectIds.length} / ${retake_candidates.length} selected`
                 : `${retake_candidates.length} eligible`}
             </div>
@@ -2226,58 +2459,92 @@ export default function Enrollmentmain() {
             </div>
           </div>
         )}
-
         {/* ====================================================
-            PREPARE ACTION
-        ==================================================== */}
+    PREPARE / UPDATE DRAFT ACTION
+==================================================== */}
 
-        {enrollment_period && !enrollment && data.can_prepare && (
-          <div className="enrollment-submit-card">
-            <div className="enrollment-submit-content">
-              <div>
-                <span className="enrollment-eyebrow">
-                  Enrollment Preparation
-                </span>
+        {enrollment_period &&
+          (data.can_prepare || data.can_modify_draft) &&
+          (!enrollment || enrollmentIsDraft || enrollmentIsRejected) && (
+            <div className="enrollment-submit-card">
+              <div className="enrollment-submit-content">
+                <div>
+                  <span className="enrollment-eyebrow">
+                    {enrollmentIsDraft
+                      ? "Draft Enrollment"
+                      : enrollmentIsRejected
+                        ? "New Enrollment Application"
+                        : "Enrollment Preparation"}
+                  </span>
 
-                <h2>Prepare Draft Enrollment</h2>
+                  <h2>
+                    {enrollmentIsDraft
+                      ? "Update Draft Enrollment"
+                      : enrollmentIsRejected
+                        ? "Prepare New Enrollment"
+                        : "Prepare Draft Enrollment"}
+                  </h2>
 
-                <p>
-                  {regular_subjects.length} Regular subject
-                  {regular_subjects.length !== 1 ? "s" : ""} will be included
-                  automatically
-                  {selectedRetakeSubjectIds.length > 0
-                    ? `, together with ${selectedRetakeSubjectIds.length} selected Retake subject${
-                        selectedRetakeSubjectIds.length !== 1 ? "s" : ""
-                      }`
-                    : ""}
-                  .
-                </p>
+                  <p>
+                    {regular_subjects.length} Regular subject
+                    {regular_subjects.length !== 1 ? "s" : ""}{" "}
+                    {regular_subjects.length !== 1 ? "are" : "is"} included
+                    automatically
+                    {carry_over_subjects.length > 0
+                      ? `, together with ${carry_over_subjects.length} automatic Carry Over subject${
+                          carry_over_subjects.length !== 1 ? "s" : ""
+                        }`
+                      : ""}
+                    {selectedRetakeSubjectIds.length > 0
+                      ? ` and ${selectedRetakeSubjectIds.length} selected Retake subject${
+                          selectedRetakeSubjectIds.length !== 1 ? "s" : ""
+                        }`
+                      : ""}
+                    .
+                  </p>
 
-                <small>
-                  Planned total: {plannedSubjectCount} subject
-                  {plannedSubjectCount !== 1 ? "s" : ""} • {plannedUnits} units.
-                </small>
+                  <small>
+                    {enrollmentIsDraft
+                      ? "You may still change your Retake selections while this enrollment remains Draft."
+                      : enrollmentIsRejected
+                        ? "This creates a brand-new Draft. Your rejected application remains unchanged in enrollment history."
+                        : "Review your eligible subjects and choose any valid Retakes before preparing your Draft."}
+                  </small>
+
+                  <small>
+                    Planned total: {plannedSubjectCount} subject
+                    {plannedSubjectCount !== 1 ? "s" : ""} • {plannedUnits}{" "}
+                    units.
+                  </small>
+                </div>
+
+                <button
+                  type="button"
+                  className="enrollment-btn primary enrollment-submit-btn"
+                  onClick={() => void prepareEnrollment()}
+                  disabled={!canPrepareEnrollment || preparing || submitting}
+                >
+                  {preparing ? (
+                    <>
+                      <span className="button-spinner"></span>
+
+                      {enrollmentIsDraft
+                        ? "Updating..."
+                        : enrollmentIsRejected
+                          ? "Preparing New Enrollment..."
+                          : "Preparing..."}
+                    </>
+                  ) : enrollmentIsDraft ? (
+                    "Update Draft Enrollment"
+                  ) : enrollmentIsRejected ? (
+                    "Prepare New Enrollment"
+                  ) : (
+                    "Prepare Enrollment"
+                  )}
+                </button>
               </div>
-
-              <button
-                type="button"
-                className="enrollment-btn primary enrollment-submit-btn"
-                onClick={() => void prepareEnrollment()}
-                disabled={!canPrepareEnrollment || preparing || submitting}
-              >
-                {preparing ? (
-                  <>
-                    <span className="button-spinner"></span>
-                    Preparing...
-                  </>
-                ) : (
-                  "Prepare Enrollment"
-                )}
-              </button>
             </div>
-          </div>
-        )}
-
+          )}
         {/* ====================================================
             DRAFT REVIEW
         ==================================================== */}
@@ -2309,6 +2576,10 @@ export default function Enrollmentmain() {
                     Number(b.display_order || 999999),
                 )
                 .map((subject) => renderRegularSubject(subject))}
+
+              {draftCarryOverSubjects.map((subject) =>
+                renderCarryOverSubject(subject),
+              )}
 
               {draftRetakeSubjects.map((subject) =>
                 renderRetakeCandidate(subject),
