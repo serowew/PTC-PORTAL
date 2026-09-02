@@ -1,226 +1,876 @@
-/* =====================================================
-STUDENT PROFILE PAGE
-===================================================== */
+/* =========================================================
+   REGISTRAR — STUDENT DETAILS
+========================================================= */
 
-.admin-profile-students {
+.registrar-student-details-page {
+  --student-green-900: #153f2d;
+  --student-green-800: #1d563c;
+  --student-green-700: #246b49;
+  --student-green-600: #2f7d56;
+
+  --student-green-100: #e9f5ee;
+  --student-green-50: #f4faf6;
+
+  --student-text: #17211c;
+  --student-text-soft: #475467;
+
+  --student-muted: #667085;
+  --student-muted-light: #7b8794;
+
+  --student-border: #dde5e0;
+  --student-border-soft: #e9eeeb;
+
   width: 100%;
-  max-width: 1200px;
+  max-width: 1600px;
+
   margin: 0 auto;
-  padding: 32px;
+  padding: 4px 4px 28px;
+
+  color: var(--student-text);
+}
+
+.registrar-student-details-page *,
+.registrar-student-details-page *::before,
+.registrar-student-details-page *::after {
   box-sizing: border-box;
 }
 
-/* =====================================================
-PAGE HEADER
-===================================================== */
 
-.profile-page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
+/* =========================================================
+   BACK
+========================================================= */
 
-.profile-back-button,
-.profile-edit-button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.profile-back-button {
-  background: #f1f1f1;
-  color: #333;
-}
-
-.profile-back-button:hover {
-  background: #e2e2e2;
-}
-
-.profile-edit-button {
-  background: #2563eb;
-  color: white;
-}
-
-.profile-edit-button:hover {
-  background: #1d4ed8;
-}
-
-.profile-back-button:active,
-.profile-edit-button:active {
-  transform: scale(0.98);
-}
-
-/* =====================================================
-PROFILE CARDS
-===================================================== */
-
-.profile-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.profile-card h2 {
-  margin: 0 0 20px;
-  font-size: 20px;
-  color: #1f2937;
-}
-
-/* =====================================================
-PROFILE HEADER CARD
-===================================================== */
-
-.profile-header-card {
+.registrar-student-details-topbar {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 28px;
+
+  min-height: 44px;
+
+  margin-bottom: 10px;
 }
 
-.profile-header-card h1 {
-  margin: 0 0 6px;
-  font-size: 28px;
-  color: #111827;
-}
+.registrar-student-details-back {
+  display: inline-flex;
 
-.profile-header-card p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 15px;
-}
-
-/* =====================================================
-AVATAR
-===================================================== */
-
-.profile-avatar {
-  width: 76px;
-  height: 76px;
-  flex-shrink: 0;
-
-  display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 50%;
+  gap: 7px;
 
-  background: #2563eb;
-  color: #ffffff;
+  min-height: 36px;
 
-  font-size: 24px;
+  padding: 7px 10px;
+
+  border: 1px solid transparent;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: var(--student-text-soft);
+
+  font: inherit;
+
+  font-size: 0.82rem;
   font-weight: 700;
-  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
 
-/* =====================================================
-INFORMATION GRID
-===================================================== */
+.registrar-student-details-back:hover {
+  border-color:
+    var(--student-border-soft);
 
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px 28px;
+  background: #ffffff;
+
+  color:
+    var(--student-green-800);
 }
 
-.profile-field {
+
+/* =========================================================
+   LOADING / ERROR
+========================================================= */
+
+.registrar-student-details-state {
   display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  min-height: 180px;
+
+  padding: 28px;
+
+  border:
+    1px solid
+    var(--student-border);
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: var(--student-muted);
+}
+
+.registrar-student-details-state > div {
+  display: flex;
+
   flex-direction: column;
-  gap: 6px;
+
+  gap: 3px;
+}
+
+.registrar-student-details-state strong {
+  color: var(--student-text);
+
+  font-size: 0.92rem;
+}
+
+.registrar-student-details-state span {
+  font-size: 0.8rem;
+}
+
+.registrar-student-details-state.is-error {
+  border-color: #f4cccc;
+
+  background: #fffafa;
+}
+
+.registrar-student-details-state.is-error strong,
+.registrar-student-details-state.is-error span {
+  color: #b42318;
+}
+
+.registrar-student-details-spinner {
+  color:
+    var(--student-green-700);
+
+  animation:
+    registrar-student-details-spin
+    0.8s
+    linear
+    infinite;
+}
+
+@keyframes registrar-student-details-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   STUDENT IDENTITY
+========================================================= */
+
+.registrar-student-details-identity {
+  display: grid;
+
+  grid-template-columns:
+    minmax(300px, 1.2fr)
+    minmax(420px, 1fr);
+
+  align-items: center;
+
+  gap: 24px;
+
+  padding: 20px;
+
+  margin-bottom: 14px;
+
+  border:
+    1px solid
+    var(--student-border);
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 12px
+    rgba(22, 54, 38, 0.045);
+}
+
+.registrar-student-details-person {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
   min-width: 0;
 }
 
-.profile-field span {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6b7280;
+.registrar-student-details-avatar {
+  display: grid;
+
+  flex: 0 0 auto;
+
+  width: 58px;
+  height: 58px;
+
+  place-items: center;
+
+  border: 1px solid #cfe2d6;
+
+  border-radius: 14px;
+
+  background:
+    var(--student-green-100);
+
+  color:
+    var(--student-green-800);
+
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.registrar-student-details-person-copy {
+  min-width: 0;
+}
+
+.registrar-student-details-eyebrow {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color:
+    var(--student-green-700);
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.06em;
+
   text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
-.profile-field strong {
-  color: #111827;
-  font-size: 15px;
-  font-weight: 500;
-  overflow-wrap: anywhere;
+.registrar-student-details-name-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
 }
 
-.profile-full-width {
+.registrar-student-details-name-row h1 {
+  min-width: 0;
+
+  margin: 0;
+
+  color: var(--student-text);
+
+  font-size:
+    clamp(
+      1.3rem,
+      2.1vw,
+      1.8rem
+    );
+
+  font-weight: 750;
+
+  line-height: 1.2;
+}
+
+.registrar-student-details-person-copy > p {
+  margin: 5px 0 0;
+
+  color: var(--student-muted);
+
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.registrar-student-details-status {
+  display: inline-flex;
+
+  align-items: center;
+
+  flex: 0 0 auto;
+
+  min-height: 25px;
+
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  background: #f2f4f3;
+
+  color: #59675f;
+
+  font-size: 0.69rem;
+  font-weight: 800;
+
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+.registrar-student-details-status.active,
+.registrar-student-details-status.enrolled {
+  background: #e8f7ed;
+
+  color: #1f6b43;
+}
+
+.registrar-student-details-status.inactive,
+.registrar-student-details-status.dropped {
+  background: #fef2f2;
+
+  color: #b42318;
+}
+
+.registrar-student-details-status.graduated {
+  background: #f1efff;
+
+  color: #6941c6;
+}
+
+.registrar-student-details-status.leave-of-absence {
+  background: #fff8e8;
+
+  color: #9a6700;
+}
+
+
+/* =========================================================
+   ACADEMIC SUMMARY
+========================================================= */
+
+.registrar-student-details-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 8px;
+}
+
+.registrar-student-details-summary > div {
+  min-width: 0;
+
+  padding: 10px 11px;
+
+  border:
+    1px solid
+    var(--student-border-soft);
+
+  border-radius: 9px;
+
+  background: #fbfcfb;
+}
+
+.registrar-student-details-summary span,
+.registrar-student-details-summary strong {
+  display: block;
+}
+
+.registrar-student-details-summary span {
+  margin-bottom: 3px;
+
+  color:
+    var(--student-muted-light);
+
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.registrar-student-details-summary strong {
+  overflow: hidden;
+
+  color: #34443b;
+
+  font-size: 0.8rem;
+  font-weight: 750;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   RECORD ACTIONS
+========================================================= */
+
+.registrar-student-details-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 13px 15px;
+
+  margin-bottom: 14px;
+
+  border:
+    1px solid
+    var(--student-border);
+
+  border-radius: 12px;
+
+  background: #fbfcfb;
+}
+
+.registrar-student-details-actions
+> div:first-child > span {
+  display: block;
+
+  margin-bottom: 2px;
+
+  color:
+    var(--student-text-soft);
+
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.registrar-student-details-actions
+> div:first-child > p {
+  margin: 0;
+
+  color: var(--student-muted);
+
+  font-size: 0.76rem;
+
+  line-height: 1.45;
+}
+
+.registrar-student-details-action-buttons {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  flex-wrap: wrap;
+}
+
+.registrar-student-details-action {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  min-height: 34px;
+
+  padding: 7px 10px;
+
+  border: 1px solid #d4ddd7;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #435149;
+
+  font: inherit;
+
+  font-size: 0.75rem;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.registrar-student-details-action:hover {
+  border-color: #b8c9bd;
+
+  background:
+    var(--student-green-50);
+
+  color:
+    var(--student-green-800);
+}
+
+.registrar-student-details-action:active {
+  transform: translateY(1px);
+}
+
+.registrar-student-details-action.is-primary {
+  border-color:
+    var(--student-green-700);
+
+  background:
+    var(--student-green-700);
+
+  color: #ffffff;
+}
+
+.registrar-student-details-action.is-primary:hover {
+  border-color:
+    var(--student-green-800);
+
+  background:
+    var(--student-green-800);
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   INFORMATION GRID
+========================================================= */
+
+.registrar-student-details-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 14px;
+}
+
+.registrar-student-details-card {
+  min-width: 0;
+
+  padding: 17px;
+
+  border:
+    1px solid
+    var(--student-border);
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px
+    rgba(22, 54, 38, 0.035);
+}
+
+.registrar-student-details-card.is-full-width {
   grid-column: 1 / -1;
 }
 
-/* =====================================================
-ERROR MESSAGE
-===================================================== */
+.registrar-student-details-card-heading {
+  display: flex;
 
-.profile-error {
-  margin-top: 20px;
-  padding: 14px 16px;
-  border-radius: 8px;
-  background: #fee2e2;
-  color: #b91c1c;
-  font-weight: 600;
+  align-items: center;
+
+  gap: 10px;
+
+  padding-bottom: 13px;
+
+  margin-bottom: 13px;
+
+  border-bottom:
+    1px solid
+    var(--student-border-soft);
 }
 
-/* =====================================================
-RESPONSIVE
-===================================================== */
+.registrar-student-details-card-icon {
+  display: grid;
 
-@media (max-width: 768px) {
-  .admin-profile-students {
-    padding: 20px;
-  }
+  flex: 0 0 auto;
 
-  .profile-page-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
+  width: 34px;
+  height: 34px;
 
-  .profile-back-button,
-  .profile-edit-button {
-    width: 100%;
-  }
+  place-items: center;
 
-  .profile-header-card {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+  border-radius: 9px;
 
-  .profile-grid {
+  background:
+    var(--student-green-100);
+
+  color:
+    var(--student-green-700);
+}
+
+.registrar-student-details-card-heading h2 {
+  margin: 0;
+
+  color: var(--student-text);
+
+  font-size: 0.93rem;
+  font-weight: 800;
+}
+
+.registrar-student-details-card-heading p {
+  margin: 2px 0 0;
+
+  color:
+    var(--student-muted-light);
+
+  font-size: 0.72rem;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   FIELDS
+========================================================= */
+
+.registrar-student-details-fields {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+}
+
+.registrar-student-details-field {
+  min-width: 0;
+
+  padding: 10px 11px;
+
+  border:
+    1px solid
+    var(--student-border-soft);
+
+  border-radius: 9px;
+
+  background: #fbfcfb;
+}
+
+.registrar-student-details-field.is-wide {
+  grid-column: 1 / -1;
+}
+
+.registrar-student-details-field > span,
+.registrar-student-details-field > strong {
+  display: block;
+}
+
+.registrar-student-details-field > span {
+  margin-bottom: 4px;
+
+  color:
+    var(--student-muted-light);
+
+  font-size: 0.69rem;
+  font-weight: 700;
+}
+
+.registrar-student-details-field > strong {
+  overflow-wrap: anywhere;
+
+  color: #34443b;
+
+  font-size: 0.81rem;
+  font-weight: 700;
+
+  line-height: 1.4;
+}
+
+.registrar-student-details-field-label-with-icon {
+  display: flex !important;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+
+/* =========================================================
+   ADDRESS
+========================================================= */
+
+.registrar-student-details-address-summary {
+  padding: 11px 12px;
+
+  margin-bottom: 10px;
+
+  border: 1px solid #cfe2d6;
+
+  border-radius: 9px;
+
+  background:
+    var(--student-green-50);
+}
+
+.registrar-student-details-address-summary span,
+.registrar-student-details-address-summary strong {
+  display: block;
+}
+
+.registrar-student-details-address-summary span {
+  margin-bottom: 4px;
+
+  color:
+    var(--student-green-700);
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+
+  text-transform: uppercase;
+}
+
+.registrar-student-details-address-summary strong {
+  color: #34443b;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+.registrar-student-details-address-fields {
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1180px) {
+  .registrar-student-details-identity {
     grid-template-columns: 1fr;
   }
 
-  .profile-full-width {
-    grid-column: auto;
+  .registrar-student-details-summary {
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0, 1fr)
+      );
+  }
+
+  .registrar-student-details-actions {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .registrar-student-details-action-buttons {
+    width: 100%;
   }
 }
 
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 760px) {
+  .registrar-student-details-page {
+    padding: 0 0 20px;
+  }
+
+  .registrar-student-details-topbar {
+    margin-bottom: 7px;
+  }
+
+  .registrar-student-details-identity {
+    gap: 15px;
+
+    padding: 15px;
+  }
+
+  .registrar-student-details-person {
+    align-items: flex-start;
+  }
+
+  .registrar-student-details-avatar {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 12px;
+  }
+
+  .registrar-student-details-name-row {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 6px;
+  }
+
+  .registrar-student-details-summary {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .registrar-student-details-action-buttons {
+    display: grid;
+
+    grid-template-columns: 1fr;
+  }
+
+  .registrar-student-details-action {
+    width: 100%;
+  }
+
+  .registrar-student-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .registrar-student-details-card.is-full-width {
+    grid-column: auto;
+  }
+
+  .registrar-student-details-address-fields {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
 @media (max-width: 480px) {
-  .admin-profile-students {
+  .registrar-student-details-summary,
+  .registrar-student-details-fields,
+  .registrar-student-details-address-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .registrar-student-details-field.is-wide {
+    grid-column: auto;
+  }
+
+  .registrar-student-details-card {
     padding: 14px;
-  }
-
-  .profile-card {
-    padding: 18px;
-  }
-
-  .profile-header-card h1 {
-    font-size: 23px;
-  }
-
-  .profile-avatar {
-    width: 64px;
-    height: 64px;
-    font-size: 20px;
   }
 }

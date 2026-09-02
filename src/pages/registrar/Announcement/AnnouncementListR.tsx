@@ -1,48 +1,88 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Activity,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  CircleOff,
+  Eye,
+  Filter,
+  Megaphone,
+  Pencil,
+  Plus,
+  Search,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-
-import { useNavigate } from "react-router-dom";
-
 import "../../../styles/announcementRegistrar.css";
 
 const API_BASE_URL = "http://localhost:3000";
 
 interface Announcement {
   announcement_id: number;
-
   title: string;
-
   content: string;
-
   created_by: string;
-
   publish_date: string;
-
   expiry_date: string | null;
-
   is_active: number;
-
   created_at: string;
-
   recipients: string | null;
-
   attachments: string | null;
 }
 
 interface AnnouncementResponse {
   success?: boolean;
-
   data?: Announcement[];
-
   announcements?: Announcement[];
-
   message?: string;
-
   error?: string;
 }
+
+type StatusFilter = "all" | "active" | "inactive";
+
+const formatDate = (date: string | null | undefined) => {
+  if (!date) return "Not set";
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return "Not set";
+
+  return parsedDate.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const getRecipientLabels = (recipients: string | null) => {
+  if (!recipients?.trim()) return [];
+
+  const value = recipients.trim();
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((item) => String(item).trim())
+        .filter(Boolean);
+    }
+  } catch {
+    // The backend may return a normal comma-separated string.
+  }
+
+  return value
+    .split(/[,;|]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
 
 export default function AnnouncementListR() {
   const navigate = useNavigate();
@@ -52,11 +92,8 @@ export default function AnnouncementListR() {
   // =====================================================
 
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
   // =====================================================
@@ -64,10 +101,11 @@ export default function AnnouncementListR() {
   // =====================================================
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [recipientFilter, setRecipientFilter] = useState("all");
 
   // =====================================================
   // AUTHORIZATION
@@ -76,23 +114,15 @@ export default function AnnouncementListR() {
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      navigate("/login", { replace: true });
       return;
     }
 
     if (userRole !== "Registrar") {
       if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), {
-          replace: true,
-        });
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
       } else {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login", { replace: true });
       }
     }
   }, [authenticated, userRole, navigate]);
@@ -111,53 +141,22 @@ export default function AnnouncementListR() {
     const loadAnnouncements = async () => {
       try {
         setLoading(true);
-
         setError("");
 
-        // =================================================
-        // REGISTRAR MANAGEMENT ENDPOINT
-        //
-        // This page can:
-        // - View all announcements
-        // - Create announcements
-        // - Edit announcements
-        //
-        // Therefore it uses:
-        //
-        // /api/announcement-management
-        //
-        // NOT:
-        //
-        // /api/announcements
-        //
-        // The shared /api/announcements route is only for
-        // normal role-filtered announcement viewing.
-        // =================================================
-
+        // Registrar management endpoint is intentionally preserved.
         const url = `${API_BASE_URL}/api/announcement-management`;
 
         console.log("GET REGISTRAR ANNOUNCEMENT MANAGEMENT:", url);
 
-        // =================================================
-        // JWT AUTHENTICATED REQUEST
-        // =================================================
-
         const response = await authService.authFetch(url, {
           method: "GET",
-
           signal: controller.signal,
-
           headers: {
             Accept: "application/json",
           },
         });
 
-        // =================================================
-        // SAFE RESPONSE
-        // =================================================
-
         const contentType = response.headers.get("content-type") || "";
-
         let data: Announcement[] | AnnouncementResponse | null = null;
 
         if (contentType.includes("application/json")) {
@@ -173,23 +172,11 @@ export default function AnnouncementListR() {
           );
         }
 
-        // =================================================
-        // 401
-        // =================================================
-
         if (response.status === 401) {
           authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
+          navigate("/login", { replace: true });
           return;
         }
-
-        // =================================================
-        // 403
-        // =================================================
 
         if (response.status === 403) {
           const responseObject = !Array.isArray(data) ? data : null;
@@ -201,10 +188,6 @@ export default function AnnouncementListR() {
           );
         }
 
-        // =================================================
-        // HTTP ERROR
-        // =================================================
-
         if (!response.ok) {
           const responseObject = !Array.isArray(data) ? data : null;
 
@@ -214,18 +197,6 @@ export default function AnnouncementListR() {
               `Failed to load announcements (${response.status}).`,
           );
         }
-
-        // =================================================
-        // NORMALIZE RESPONSE
-        //
-        // Supports:
-        //
-        // [...]
-        //
-        // { data: [...] }
-        //
-        // { announcements: [...] }
-        // =================================================
 
         let loadedAnnouncements: Announcement[] = [];
 
@@ -238,7 +209,6 @@ export default function AnnouncementListR() {
         }
 
         console.log("REGISTRAR MANAGEMENT ANNOUNCEMENTS:", loadedAnnouncements);
-
         setAnnouncements(loadedAnnouncements);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
@@ -246,14 +216,12 @@ export default function AnnouncementListR() {
         }
 
         console.error("LOAD REGISTRAR ANNOUNCEMENTS ERROR:", err);
-
         setAnnouncements([]);
 
         if (err instanceof TypeError) {
           setError(
             "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
           );
-
           return;
         }
 
@@ -273,6 +241,74 @@ export default function AnnouncementListR() {
   }, [authenticated, userRole, navigate]);
 
   // =====================================================
+  // FRONTEND-ONLY DIRECTORY HELPERS
+  // =====================================================
+
+  const recipientOptions = useMemo(() => {
+    const recipients = new Set<string>();
+
+    announcements.forEach((announcement) => {
+      getRecipientLabels(announcement.recipients).forEach((recipient) => {
+        recipients.add(recipient);
+      });
+    });
+
+    return Array.from(recipients).sort((a, b) => a.localeCompare(b));
+  }, [announcements]);
+
+  const summary = useMemo(() => {
+    const active = announcements.filter(
+      (announcement) => Number(announcement.is_active) === 1,
+    ).length;
+
+    return {
+      total: announcements.length,
+      active,
+      inactive: announcements.length - active,
+      audiences: recipientOptions.length,
+    };
+  }, [announcements, recipientOptions.length]);
+
+  const filteredAnnouncements = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return announcements.filter((announcement) => {
+      const active = Number(announcement.is_active) === 1;
+      const recipientLabels = getRecipientLabels(announcement.recipients);
+
+      const matchesSearch =
+        !normalizedSearch ||
+        announcement.title?.toLowerCase().includes(normalizedSearch) ||
+        announcement.content?.toLowerCase().includes(normalizedSearch) ||
+        announcement.created_by?.toLowerCase().includes(normalizedSearch) ||
+        recipientLabels.some((recipient) =>
+          recipient.toLowerCase().includes(normalizedSearch),
+        );
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && active) ||
+        (statusFilter === "inactive" && !active);
+
+      const matchesRecipient =
+        recipientFilter === "all" || recipientLabels.includes(recipientFilter);
+
+      return matchesSearch && matchesStatus && matchesRecipient;
+    });
+  }, [announcements, searchTerm, statusFilter, recipientFilter]);
+
+  const hasFilters =
+    searchTerm.trim().length > 0 ||
+    statusFilter !== "all" ||
+    recipientFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setRecipientFilter("all");
+  };
+
+  // =====================================================
   // AUTH GUARD
   // =====================================================
 
@@ -286,129 +322,412 @@ export default function AnnouncementListR() {
 
   return (
     <DashboardLayout>
-      <div className="registrar-announcement-listR">
-        {/* =================================================
-            HEADER
-        ================================================= */}
+      <main className="registrar-announcements">
+        {/* HERO */}
+        <section className="registrar-announcements__hero">
+          <div className="registrar-announcements__hero-copy">
+            <div className="registrar-announcements__eyebrow">
+              <span className="registrar-announcements__eyebrow-icon">
+                <Megaphone size={16} strokeWidth={2.2} />
+              </span>
+              Registrar · Announcements
+            </div>
 
-        <div className="announcement-header">
-          <h2>Announcement Management</h2>
+            <h1>Announcement Management</h1>
+            <p>
+              Create, review, and manage official portal announcements from one
+              organized Registrar workspace.
+            </p>
+          </div>
 
-          <button
-            type="button"
-            className="announcement-btn"
-            onClick={() => navigate("/registrar/announcement/createR")}
-          >
-            + Create Announcement
-          </button>
-        </div>
+          <div className="registrar-announcements__hero-actions">
+            <div className="registrar-announcements__hero-badge">
+              <span className="registrar-announcements__hero-badge-icon">
+                <ShieldCheck size={19} strokeWidth={2.1} />
+              </span>
+              <span>
+                <small>Access</small>
+                <strong>Registrar Manager</strong>
+              </span>
+            </div>
 
-        {/* =================================================
-            LOADING
-        ================================================= */}
+            <button
+              type="button"
+              className="registrar-announcements__button registrar-announcements__button--primary"
+              onClick={() => navigate("/registrar/announcement/createR")}
+            >
+              <Plus size={17} strokeWidth={2.3} />
+              Create Announcement
+            </button>
+          </div>
+        </section>
 
-        {loading && <p>Loading announcements...</p>}
+        {/* SUMMARY */}
+        {!loading && !error && (
+          <section className="registrar-announcements__stats" aria-label="Announcement summary">
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon registrar-announcements__stat-icon--primary">
+                <Megaphone size={20} />
+              </span>
+              <div>
+                <span>Total Announcements</span>
+                <strong>{summary.total}</strong>
+                <small>All management records</small>
+              </div>
+            </article>
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon registrar-announcements__stat-icon--success">
+                <CheckCircle2 size={20} />
+              </span>
+              <div>
+                <span>Active</span>
+                <strong>{summary.active}</strong>
+                <small>Currently marked active</small>
+              </div>
+            </article>
 
-        {!loading && error && <p className="error">{error}</p>}
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon">
+                <CircleOff size={20} />
+              </span>
+              <div>
+                <span>Inactive</span>
+                <strong>{summary.inactive}</strong>
+                <small>Currently marked inactive</small>
+              </div>
+            </article>
 
-        {/* =================================================
-            EMPTY
-        ================================================= */}
-
-        {!loading && !error && announcements.length === 0 && (
-          <p>No announcements found.</p>
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon">
+                <UsersRound size={20} />
+              </span>
+              <div>
+                <span>Audience Groups</span>
+                <strong>{summary.audiences}</strong>
+                <small>Recipient labels in use</small>
+              </div>
+            </article>
+          </section>
         )}
 
-        {/* =================================================
-            ANNOUNCEMENT LIST
-        ================================================= */}
+        {/* WORKSPACE */}
+        <section className="registrar-announcements__workspace">
+          <div className="registrar-announcements__workspace-header">
+            <div>
+              <span className="registrar-announcements__section-kicker">
+                <Activity size={14} /> Announcement Directory
+              </span>
+              <h2>Manage Announcements</h2>
+              <p>
+                Search, filter, open, and edit announcements without leaving the
+                Registrar management workspace.
+              </p>
+            </div>
 
-        <div className="announcement-list">
-          {!loading &&
-            !error &&
-            announcements.map((item) => (
-              <div key={item.announcement_id} className="announcement-card">
-                {/* TITLE */}
+            {!loading && !error && (
+              <span className="registrar-announcements__record-count">
+                {filteredAnnouncements.length} of {announcements.length} records
+              </span>
+            )}
+          </div>
 
-                <h3>{item.title}</h3>
+          {!loading && !error && announcements.length > 0 && (
+            <>
+              <div className="registrar-announcements__toolbar">
+                <div className="registrar-announcements__search">
+                  <Search size={17} />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search title, content, creator, or recipient..."
+                    aria-label="Search announcements"
+                  />
 
-                {/* CONTENT PREVIEW */}
-
-                <p>
-                  {item.content && item.content.length > 150
-                    ? `${item.content.substring(0, 150)}...`
-                    : item.content}
-                </p>
-
-                {/* META */}
-
-                <div className="announcement-footer">
-                  <span>
-                    Created by:
-                    <strong> {item.created_by || "Unknown"}</strong>
-                  </span>
-
-                  <span>
-                    {item.publish_date
-                      ? new Date(item.publish_date).toLocaleDateString()
-                      : "No publish date"}
-                  </span>
-                </div>
-
-                {/* STATUS */}
-
-                <div className="announcement-footer">
-                  <span>
-                    Status:
-                    <strong>
-                      {" "}
-                      {Number(item.is_active) === 1 ? "Active" : "Inactive"}
-                    </strong>
-                  </span>
-
-                  {item.recipients && (
-                    <span>
-                      Recipients:
-                      <strong> {item.recipients}</strong>
-                    </span>
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      className="registrar-announcements__search-clear"
+                      onClick={() => setSearchTerm("")}
+                      aria-label="Clear search"
+                    >
+                      <X size={15} />
+                    </button>
                   )}
                 </div>
 
-                {/* ACTIONS */}
+                <div className="registrar-announcements__filters">
+                  <span className="registrar-announcements__filter-label">
+                    <Filter size={14} /> Filters
+                  </span>
 
-                <div className="announcement-actions">
-                  <button
-                    type="button"
-                    className="announcement-btn"
-                    onClick={() =>
-                      navigate(
-                        `/registrar/announcement/DetailR/${item.announcement_id}`,
-                      )
+                  <select
+                    value={statusFilter}
+                    onChange={(event) =>
+                      setStatusFilter(event.target.value as StatusFilter)
                     }
+                    aria-label="Filter announcements by status"
                   >
-                    View Details
-                  </button>
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
 
-                  <button
-                    type="button"
-                    className="announcement-btn"
-                    onClick={() =>
-                      navigate(
-                        `/registrar/announcement/editR/${item.announcement_id}`,
-                      )
-                    }
+                  <select
+                    value={recipientFilter}
+                    onChange={(event) => setRecipientFilter(event.target.value)}
+                    aria-label="Filter announcements by recipient"
                   >
-                    Edit
-                  </button>
+                    <option value="all">All Recipients</option>
+                    {recipientOptions.map((recipient) => (
+                      <option value={recipient} key={recipient}>
+                        {recipient}
+                      </option>
+                    ))}
+                  </select>
+
+                  {hasFilters && (
+                    <button
+                      type="button"
+                      className="registrar-announcements__clear-filters"
+                      onClick={clearFilters}
+                    >
+                      <X size={14} />
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
-        </div>
-      </div>
+
+              {hasFilters && (
+                <div className="registrar-announcements__filter-summary">
+                  <Filter size={13} />
+                  <strong>Active filters</strong>
+                  {searchTerm.trim() && <span>Search: {searchTerm.trim()}</span>}
+                  {statusFilter !== "all" && <span>Status: {statusFilter}</span>}
+                  {recipientFilter !== "all" && (
+                    <span>Recipient: {recipientFilter}</span>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* LOADING */}
+          {loading && (
+            <div className="registrar-announcements__card-grid registrar-announcements__card-grid--loading">
+              {[1, 2, 3, 4, 5, 6].map((item) => (
+                <div className="registrar-announcements__skeleton-card" key={item}>
+                  <div className="registrar-announcements__skeleton-line registrar-announcements__skeleton-line--short" />
+                  <div className="registrar-announcements__skeleton-line registrar-announcements__skeleton-line--title" />
+                  <div className="registrar-announcements__skeleton-line" />
+                  <div className="registrar-announcements__skeleton-line" />
+                  <div className="registrar-announcements__skeleton-footer" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ERROR */}
+          {!loading && error && (
+            <div className="registrar-announcements__state registrar-announcements__state--error">
+              <span className="registrar-announcements__state-icon">
+                <CircleOff size={25} />
+              </span>
+              <h3>Announcements could not be loaded</h3>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {/* EMPTY */}
+          {!loading && !error && announcements.length === 0 && (
+            <div className="registrar-announcements__state">
+              <span className="registrar-announcements__state-icon">
+                <Megaphone size={26} />
+              </span>
+              <h3>No announcements yet</h3>
+              <p>
+                Create the first Registrar announcement to start building the
+                announcement directory.
+              </p>
+              <button
+                type="button"
+                className="registrar-announcements__button registrar-announcements__button--primary"
+                onClick={() => navigate("/registrar/announcement/createR")}
+              >
+                <Plus size={17} />
+                Create Announcement
+              </button>
+            </div>
+          )}
+
+          {/* FILTERED EMPTY */}
+          {!loading &&
+            !error &&
+            announcements.length > 0 &&
+            filteredAnnouncements.length === 0 && (
+              <div className="registrar-announcements__state">
+                <span className="registrar-announcements__state-icon">
+                  <Search size={26} />
+                </span>
+                <h3>No matching announcements</h3>
+                <p>
+                  Try changing the search term or clearing one of the active
+                  filters.
+                </p>
+                <button
+                  type="button"
+                  className="registrar-announcements__button registrar-announcements__button--secondary"
+                  onClick={clearFilters}
+                >
+                  <X size={16} />
+                  Clear Filters
+                </button>
+              </div>
+            )}
+
+          {/* ANNOUNCEMENT GRID */}
+          {!loading && !error && filteredAnnouncements.length > 0 && (
+            <div className="registrar-announcements__card-grid">
+              {filteredAnnouncements.map((item) => {
+                const active = Number(item.is_active) === 1;
+                const recipientLabels = getRecipientLabels(item.recipients);
+                const visibleRecipients = recipientLabels.slice(0, 3);
+                const hiddenRecipientCount = Math.max(
+                  recipientLabels.length - visibleRecipients.length,
+                  0,
+                );
+
+                return (
+                  <article
+                    key={item.announcement_id}
+                    className="registrar-announcements__card"
+                  >
+                    <div className="registrar-announcements__card-top">
+                      <span className="registrar-announcements__card-icon">
+                        <Megaphone size={18} />
+                      </span>
+
+                      <span
+                        className={`registrar-announcements__status ${
+                          active
+                            ? "registrar-announcements__status--active"
+                            : "registrar-announcements__status--inactive"
+                        }`}
+                      >
+                        <span />
+                        {active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="registrar-announcements__card-heading">
+                      <span>Announcement #{item.announcement_id}</span>
+                      <h3>{item.title || "Untitled Announcement"}</h3>
+                    </div>
+
+                    <p className="registrar-announcements__preview">
+                      {item.content
+                        ? item.content.length > 180
+                          ? `${item.content.substring(0, 180)}...`
+                          : item.content
+                        : "No announcement content was provided."}
+                    </p>
+
+                    <div className="registrar-announcements__meta-grid">
+                      <div className="registrar-announcements__meta-item">
+                        <UserRound size={15} />
+                        <div>
+                          <span>Created By</span>
+                          <strong>{item.created_by || "Unknown"}</strong>
+                        </div>
+                      </div>
+
+                      <div className="registrar-announcements__meta-item">
+                        <CalendarDays size={15} />
+                        <div>
+                          <span>Publish Date</span>
+                          <strong>{formatDate(item.publish_date)}</strong>
+                        </div>
+                      </div>
+
+                      {item.expiry_date && (
+                        <div className="registrar-announcements__meta-item registrar-announcements__meta-item--wide">
+                          <CalendarDays size={15} />
+                          <div>
+                            <span>Expiry Date</span>
+                            <strong>{formatDate(item.expiry_date)}</strong>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="registrar-announcements__recipients">
+                      <div className="registrar-announcements__recipients-label">
+                        <UsersRound size={14} />
+                        <span>Recipients</span>
+                      </div>
+
+                      <div className="registrar-announcements__recipient-list">
+                        {visibleRecipients.length > 0 ? (
+                          <>
+                            {visibleRecipients.map((recipient) => (
+                              <span
+                                className="registrar-announcements__recipient-chip"
+                                key={`${item.announcement_id}-${recipient}`}
+                              >
+                                {recipient}
+                              </span>
+                            ))}
+                            {hiddenRecipientCount > 0 && (
+                              <span className="registrar-announcements__recipient-chip registrar-announcements__recipient-chip--more">
+                                +{hiddenRecipientCount}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="registrar-announcements__recipient-chip registrar-announcements__recipient-chip--muted">
+                            Not specified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="registrar-announcements__card-actions">
+                      <button
+                        type="button"
+                        className="registrar-announcements__action-button registrar-announcements__action-button--primary"
+                        onClick={() =>
+                          navigate(
+                            `/registrar/announcement/DetailR/${item.announcement_id}`,
+                          )
+                        }
+                      >
+                        <Eye size={15} />
+                        View Details
+                        <ChevronRight size={14} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="registrar-announcements__action-button"
+                        onClick={() =>
+                          navigate(
+                            `/registrar/announcement/editR/${item.announcement_id}`,
+                          )
+                        }
+                      >
+                        <Pencil size={15} />
+                        Edit
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </main>
     </DashboardLayout>
   );
 }

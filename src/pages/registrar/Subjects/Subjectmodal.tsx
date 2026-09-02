@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  AlertCircle,
+  BookOpen,
+  Clock3,
+  FlaskConical,
+  Loader2,
+  Save,
+  X,
+} from "lucide-react";
 
 import { authService } from "../../../services/auth.service";
-
 import "../../../styles/SubjectmodalR.css";
 
 const API_BASE_URL = "http://localhost:3000/api/registrar/subjects";
 
-interface Subject {
+export interface Subject {
   subject_id: number;
   subject_code: string;
   subject_name: string;
@@ -32,6 +40,11 @@ interface SubjectSaveResponse {
   subject?: Subject;
 }
 
+const normalizeNumber = (value: string) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : NaN;
+};
+
 export default function SubjectModal({
   isOpen,
   mode,
@@ -39,142 +52,142 @@ export default function SubjectModal({
   onClose,
   onSuccess,
 }: SubjectModalProps) {
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
-  // =====================================================
-  // FORM STATE
-  // =====================================================
-
   const [subjectCode, setSubjectCode] = useState("");
-
   const [subjectName, setSubjectName] = useState("");
-
   const [units, setUnits] = useState("");
-
   const [lectureHours, setLectureHours] = useState("3");
-
   const [laboratoryHours, setLaboratoryHours] = useState("0");
-
   const [description, setDescription] = useState("");
-
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
 
-  // =====================================================
-  // LOAD DATA
-  // =====================================================
-
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     setError("");
 
     if (mode === "edit" && subject) {
       setSubjectCode(subject.subject_code);
-
       setSubjectName(subject.subject_name);
-
       setUnits(String(subject.units));
-
       setLectureHours(String(subject.lecture_hours ?? 0));
-
       setLaboratoryHours(String(subject.laboratory_hours ?? 0));
-
       setDescription(subject.description || "");
     } else {
       setSubjectCode("");
-
       setSubjectName("");
-
       setUnits("");
-
       setLectureHours("3");
-
       setLaboratoryHours("0");
-
       setDescription("");
     }
   }, [isOpen, mode, subject]);
 
-  // =====================================================
-  // CLOSE
-  // =====================================================
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const handleClose = () => {
-    if (saving) {
-      return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !saving) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, saving, onClose]);
+
+  const parsedUnits = normalizeNumber(units);
+  const parsedLectureHours = normalizeNumber(lectureHours);
+  const parsedLaboratoryHours = normalizeNumber(laboratoryHours);
+
+  const formValid =
+    Boolean(subjectCode.trim()) &&
+    Boolean(subjectName.trim()) &&
+    units !== "" &&
+    Number.isFinite(parsedUnits) &&
+    parsedUnits >= 0 &&
+    lectureHours !== "" &&
+    Number.isFinite(parsedLectureHours) &&
+    parsedLectureHours >= 0 &&
+    laboratoryHours !== "" &&
+    Number.isFinite(parsedLaboratoryHours) &&
+    parsedLaboratoryHours >= 0;
+
+  const isDirty = useMemo(() => {
+    if (mode === "add") {
+      return Boolean(
+        subjectCode.trim() ||
+          subjectName.trim() ||
+          units ||
+          lectureHours !== "3" ||
+          laboratoryHours !== "0" ||
+          description.trim(),
+      );
     }
 
-    onClose();
+    if (!subject) return false;
+
+    return (
+      subjectCode.trim().toUpperCase() !== subject.subject_code.trim().toUpperCase() ||
+      subjectName.trim() !== subject.subject_name.trim() ||
+      Number(units) !== Number(subject.units) ||
+      Number(lectureHours) !== Number(subject.lecture_hours ?? 0) ||
+      Number(laboratoryHours) !== Number(subject.laboratory_hours ?? 0) ||
+      description.trim() !== (subject.description || "").trim()
+    );
+  }, [
+    mode,
+    subject,
+    subjectCode,
+    subjectName,
+    units,
+    lectureHours,
+    laboratoryHours,
+    description,
+  ]);
+
+  const handleClose = () => {
+    if (!saving) onClose();
   };
 
-  // =====================================================
-  // SUBMIT
-  // =====================================================
-
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-
     setError("");
-
-    // =================================================
-    // AUTH CHECK
-    // =================================================
 
     if (!authenticated || userRole !== "Registrar") {
       setError(
         "Your session has expired or you are not authorized to manage subjects.",
       );
-
       return;
     }
 
-    // =================================================
-    // CLEAN VALUES
-    // =================================================
-
-    const cleanCode = subjectCode.trim();
-
+    const cleanCode = subjectCode.trim().toUpperCase();
     const cleanName = subjectName.trim();
-
-    // =================================================
-    // VALIDATION
-    // =================================================
 
     if (!cleanCode) {
       setError("Subject code is required.");
-
       return;
     }
 
     if (!cleanName) {
       setError("Subject name is required.");
-
       return;
     }
 
-    const parsedUnits = Number(units);
-
-    const parsedLectureHours = Number(lectureHours);
-
-    const parsedLaboratoryHours = Number(laboratoryHours);
-
     if (units === "" || !Number.isFinite(parsedUnits) || parsedUnits < 0) {
       setError("Please enter valid units.");
-
       return;
     }
 
@@ -184,7 +197,6 @@ export default function SubjectModal({
       parsedLectureHours < 0
     ) {
       setError("Please enter valid lecture hours.");
-
       return;
     }
 
@@ -194,103 +206,53 @@ export default function SubjectModal({
       parsedLaboratoryHours < 0
     ) {
       setError("Please enter valid laboratory hours.");
-
       return;
     }
 
-    // =================================================
-    // EDIT MODE VALIDATION
-    // =================================================
-
     if (mode === "edit" && !subject?.subject_id) {
       setError("Invalid subject selected for editing.");
-
       return;
     }
 
     try {
       setSaving(true);
 
-      // =================================================
-      // PAYLOAD
-      // =================================================
-
       const payload = {
         subject_code: cleanCode,
-
         subject_name: cleanName,
-
         units: parsedUnits,
-
         lecture_hours: parsedLectureHours,
-
         laboratory_hours: parsedLaboratoryHours,
-
         description: description.trim() || null,
       };
-
-      // =================================================
-      // URL
-      // =================================================
 
       const url =
         mode === "add"
           ? API_BASE_URL
           : `${API_BASE_URL}/${subject!.subject_id}`;
 
-      console.log(mode === "add" ? "ADD SUBJECT:" : "UPDATE SUBJECT:", url);
-
-      // =================================================
-      // JWT AUTHENTICATED REQUEST
-      //
-      // authFetch automatically sends:
-      //
-      // Authorization: Bearer <JWT>
-      // Content-Type: application/json
-      // =================================================
-
       const response = await authService.authFetch(url, {
         method: mode === "add" ? "POST" : "PUT",
-
         body: JSON.stringify(payload),
       });
 
-      // =================================================
-      // SAFE RESPONSE READ
-      // =================================================
-
       const contentType = response.headers.get("content-type") || "";
-
       let data: SubjectSaveResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
-
         throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
+          `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
 
-      // =================================================
-      // 401
-      // =================================================
-
       if (response.status === 401) {
         authService.logout();
-
         setError("Your session has expired. Please log in again.");
-
         return;
       }
-
-      // =================================================
-      // 403
-      // =================================================
 
       if (response.status === 403) {
         throw new Error(
@@ -300,23 +262,13 @@ export default function SubjectModal({
         );
       }
 
-      // =================================================
-      // HTTP ERROR
-      // =================================================
-
       if (!response.ok) {
         throw new Error(
           data?.message ||
             data?.error ||
-            `Failed to ${
-              mode === "add" ? "add" : "update"
-            } subject (${response.status}).`,
+            `Failed to ${mode === "add" ? "add" : "update"} subject (${response.status}).`,
         );
       }
-
-      // =================================================
-      // API ERROR
-      // =================================================
 
       if (!data?.success) {
         throw new Error(
@@ -324,10 +276,6 @@ export default function SubjectModal({
             `Failed to ${mode === "add" ? "add" : "update"} subject.`,
         );
       }
-
-      // =================================================
-      // SUCCESS
-      // =================================================
 
       onSuccess();
     } catch (err) {
@@ -337,7 +285,6 @@ export default function SubjectModal({
         setError(
           "Unable to connect to the subject server. Make sure the backend is running on port 3000.",
         );
-
         return;
       }
 
@@ -347,183 +294,237 @@ export default function SubjectModal({
     }
   };
 
-  // =====================================================
-  // CLOSED
-  // =====================================================
+  if (!isOpen) return null;
 
-  if (!isOpen) {
-    return null;
-  }
-
-  // =====================================================
-  // RENDER
-  // =====================================================
+  const workloadHours =
+    (Number.isFinite(parsedLectureHours) ? parsedLectureHours : 0) +
+    (Number.isFinite(parsedLaboratoryHours) ? parsedLaboratoryHours : 0);
 
   return (
     <div
-      className="subject-modal-overlay"
+      className="registrar-subject-modal__overlay"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          handleClose();
-        }
+        if (event.target === event.currentTarget) handleClose();
       }}
     >
-      <div className="subject-modal" role="dialog" aria-modal="true">
-        {/* HEADER */}
-
-        <div className="subject-modal-header">
-          <div>
-            <h2>{mode === "add" ? "Add Subject" : "Edit Subject"}</h2>
-
-            <p>
-              {mode === "add"
-                ? "Create a new subject record."
-                : "Update this subject record."}
-            </p>
+      <section
+        className="registrar-subject-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="registrar-subject-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="registrar-subject-modal__header">
+          <div className="registrar-subject-modal__identity">
+            <span className="registrar-subject-modal__icon">
+              <BookOpen size={20} aria-hidden="true" />
+            </span>
+            <div>
+              <span className="registrar-subject-modal__eyebrow">
+                {mode === "add" ? "New Catalog Record" : "Edit Catalog Record"}
+              </span>
+              <h2 id="registrar-subject-modal-title">
+                {mode === "add" ? "Add Subject" : "Edit Subject"}
+              </h2>
+              <p>
+                {mode === "add"
+                  ? "Create a master subject that can be mapped into curricula and offerings."
+                  : `Update ${subject?.subject_code || "this subject"} without changing existing academic records.`}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
-            className="subject-modal-close"
+            className="registrar-subject-modal__close"
             onClick={handleClose}
             disabled={saving}
+            aria-label="Close subject dialog"
           >
-            ×
+            <X size={19} aria-hidden="true" />
           </button>
-        </div>
-
-        {/* FORM */}
+        </header>
 
         <form onSubmit={handleSubmit}>
-          <div className="subject-modal-body">
-            {error && <div className="subject-modal-error">{error}</div>}
+          <div className="registrar-subject-modal__body">
+            {error && (
+              <div className="registrar-subject-modal__error" role="alert">
+                <AlertCircle size={17} aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            )}
 
-            {/* CODE */}
+            <section className="registrar-subject-modal__section">
+              <div className="registrar-subject-modal__section-heading">
+                <span>Subject Identity</span>
+                <p>Use a unique code and the official subject title.</p>
+              </div>
 
-            <div className="subject-form-group">
-              <label htmlFor="subjectCode">
-                Subject Code <span>*</span>
-              </label>
-
-              <input
-                id="subjectCode"
-                type="text"
-                value={subjectCode}
-                onChange={(event) => setSubjectCode(event.target.value)}
-                placeholder="e.g. IT101"
-                maxLength={20}
-                disabled={saving}
-              />
-            </div>
-
-            {/* NAME */}
-
-            <div className="subject-form-group">
-              <label htmlFor="subjectName">
-                Subject Name <span>*</span>
-              </label>
-
-              <input
-                id="subjectName"
-                type="text"
-                value={subjectName}
-                onChange={(event) => setSubjectName(event.target.value)}
-                placeholder="e.g. Introduction to Information Technology"
-                maxLength={200}
-                disabled={saving}
-              />
-            </div>
-
-            {/* UNITS */}
-
-            <div className="subject-form-row three-columns">
-              <div className="subject-form-group">
-                <label htmlFor="units">
-                  Units <span>*</span>
+              <div className="registrar-subject-modal__grid registrar-subject-modal__grid--identity">
+                <label className="registrar-subject-modal__field">
+                  <span>
+                    Subject Code <b>*</b>
+                  </span>
+                  <input
+                    type="text"
+                    value={subjectCode}
+                    onChange={(event) =>
+                      setSubjectCode(event.target.value.toUpperCase())
+                    }
+                    placeholder="e.g. IT101"
+                    maxLength={20}
+                    disabled={saving}
+                    autoFocus
+                  />
+                  <small>{subjectCode.length}/20 characters</small>
                 </label>
 
-                <input
-                  id="units"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={units}
-                  onChange={(event) => setUnits(event.target.value)}
-                  disabled={saving}
-                />
+                <label className="registrar-subject-modal__field">
+                  <span>
+                    Subject Name <b>*</b>
+                  </span>
+                  <input
+                    type="text"
+                    value={subjectName}
+                    onChange={(event) => setSubjectName(event.target.value)}
+                    placeholder="e.g. Introduction to Information Technology"
+                    maxLength={200}
+                    disabled={saving}
+                  />
+                  <small>{subjectName.length}/200 characters</small>
+                </label>
+              </div>
+            </section>
+
+            <section className="registrar-subject-modal__section">
+              <div className="registrar-subject-modal__section-heading">
+                <span>Units & Contact Hours</span>
+                <p>Define the standard academic load for this master subject.</p>
               </div>
 
-              <div className="subject-form-group">
-                <label htmlFor="lectureHours">Lecture Hours</label>
+              <div className="registrar-subject-modal__grid registrar-subject-modal__grid--load">
+                <label className="registrar-subject-modal__field">
+                  <span>
+                    Units <b>*</b>
+                  </span>
+                  <div className="registrar-subject-modal__number-input">
+                    <BookOpen size={16} aria-hidden="true" />
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={units}
+                      onChange={(event) => setUnits(event.target.value)}
+                      disabled={saving}
+                      placeholder="0"
+                    />
+                  </div>
+                </label>
 
-                <input
-                  id="lectureHours"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={lectureHours}
-                  onChange={(event) => setLectureHours(event.target.value)}
-                  disabled={saving}
-                />
+                <label className="registrar-subject-modal__field">
+                  <span>Lecture Hours</span>
+                  <div className="registrar-subject-modal__number-input">
+                    <Clock3 size={16} aria-hidden="true" />
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={lectureHours}
+                      onChange={(event) => setLectureHours(event.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </label>
+
+                <label className="registrar-subject-modal__field">
+                  <span>Laboratory Hours</span>
+                  <div className="registrar-subject-modal__number-input">
+                    <FlaskConical size={16} aria-hidden="true" />
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={laboratoryHours}
+                      onChange={(event) => setLaboratoryHours(event.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </label>
               </div>
 
-              <div className="subject-form-group">
-                <label htmlFor="laboratoryHours">Laboratory Hours</label>
+              <div className="registrar-subject-modal__load-preview">
+                <span>
+                  <strong>{Number.isFinite(parsedUnits) ? parsedUnits : 0}</strong>
+                  Units
+                </span>
+                <span>
+                  <strong>{workloadHours}</strong>
+                  Total contact hours
+                </span>
+              </div>
+            </section>
 
-                <input
-                  id="laboratoryHours"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={laboratoryHours}
-                  onChange={(event) => setLaboratoryHours(event.target.value)}
+            <section className="registrar-subject-modal__section">
+              <div className="registrar-subject-modal__section-heading">
+                <span>Description</span>
+                <p>Optional context to help identify the subject in the catalog.</p>
+              </div>
+
+              <label className="registrar-subject-modal__field">
+                <span>Subject Description</span>
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Enter a concise subject description..."
+                  rows={4}
+                  maxLength={1000}
                   disabled={saving}
                 />
-              </div>
+                <small>{description.length}/1000 characters</small>
+              </label>
+            </section>
+          </div>
+
+          <footer className="registrar-subject-modal__footer">
+            <div className="registrar-subject-modal__footer-note">
+              Fields marked with <b>*</b> are required.
             </div>
-
-            {/* DESCRIPTION */}
-
-            <div className="subject-form-group">
-              <label htmlFor="description">Description</label>
-
-              <textarea
-                id="description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Enter subject description..."
-                rows={4}
+            <div className="registrar-subject-modal__footer-actions">
+              <button
+                type="button"
+                className="registrar-subject-modal__button registrar-subject-modal__button--secondary"
+                onClick={handleClose}
                 disabled={saving}
-              />
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="registrar-subject-modal__button registrar-subject-modal__button--primary"
+                disabled={
+                  saving ||
+                  !authenticated ||
+                  userRole !== "Registrar" ||
+                  !formValid ||
+                  (mode === "edit" && !isDirty)
+                }
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={16} className="is-spinning" aria-hidden="true" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} aria-hidden="true" />
+                    {mode === "add" ? "Add Subject" : "Save Changes"}
+                  </>
+                )}
+              </button>
             </div>
-          </div>
-
-          {/* FOOTER */}
-
-          <div className="subject-modal-footer">
-            <button
-              type="button"
-              className="subject-modal-cancel"
-              onClick={handleClose}
-              disabled={saving}
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              className="subject-modal-submit"
-              disabled={saving || !authenticated || userRole !== "Registrar"}
-            >
-              {saving
-                ? "Saving..."
-                : mode === "add"
-                  ? "Add Subject"
-                  : "Save Changes"}
-            </button>
-          </div>
+          </footer>
         </form>
-      </div>
+      </section>
     </div>
   );
 }

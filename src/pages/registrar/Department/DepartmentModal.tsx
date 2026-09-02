@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle2,
+  Hash,
+  Save,
+  X,
+} from "lucide-react";
 
 import { authService } from "../../../services/auth.service";
-
 import "../../../styles/DepartmentModal.css";
-
-// =====================================================
-// TYPES
-// =====================================================
 
 export interface Department {
   department_id: number;
@@ -29,15 +32,7 @@ interface DepartmentSaveResponse {
   department?: Department;
 }
 
-// =====================================================
-// API
-// =====================================================
-
 const API_BASE_URL = "http://localhost:3000/api/registrar/departments";
-
-// =====================================================
-// COMPONENT
-// =====================================================
 
 export default function DepartmentModal({
   isOpen,
@@ -45,213 +40,154 @@ export default function DepartmentModal({
   onClose,
   onSuccess,
 }: DepartmentModalProps) {
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
-  // =====================================================
-  // STATES
-  // =====================================================
-
   const [departmentCode, setDepartmentCode] = useState("");
-
   const [departmentName, setDepartmentName] = useState("");
-
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
-
-  // =====================================================
-  // EDIT / ADD MODE
-  // =====================================================
 
   const isEditMode = Boolean(department);
 
-  // =====================================================
-  // LOAD DEPARTMENT DATA
-  // =====================================================
-
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     setError("");
 
     if (department) {
       setDepartmentCode(department.department_code || "");
-
       setDepartmentName(department.department_name || "");
     } else {
       setDepartmentCode("");
-
       setDepartmentName("");
     }
   }, [isOpen, department]);
 
-  // =====================================================
-  // CLOSE
-  // =====================================================
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !saving) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, saving, onClose]);
+
+  const cleanCode = departmentCode.trim();
+  const cleanName = departmentName.trim();
+
+  const hasChanges = useMemo(() => {
+    if (!isEditMode || !department) return true;
+
+    return (
+      cleanCode.toUpperCase() !==
+        (department.department_code || "").trim().toUpperCase() ||
+      cleanName !== (department.department_name || "").trim()
+    );
+  }, [cleanCode, cleanName, department, isEditMode]);
+
+  const formReady =
+    cleanCode.length > 0 &&
+    cleanCode.length <= 20 &&
+    cleanName.length > 0 &&
+    cleanName.length <= 150 &&
+    (!isEditMode || hasChanges);
 
   const handleClose = () => {
-    if (saving) {
-      return;
-    }
+    if (saving) return;
 
     setDepartmentCode("");
-
     setDepartmentName("");
-
     setError("");
-
     onClose();
   };
 
-  // =====================================================
-  // SUBMIT
-  // =====================================================
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     setError("");
-
-    // =================================================
-    // AUTH CHECK
-    // =================================================
 
     if (!authenticated || userRole !== "Registrar") {
       setError(
         "Your session has expired or you are not authorized to manage departments.",
       );
-
       return;
     }
 
-    // =================================================
-    // VALIDATION
-    // =================================================
-
-    const cleanCode = departmentCode.trim();
-
-    const cleanName = departmentName.trim();
-
     if (!cleanCode) {
       setError("Department code is required.");
-
       return;
     }
 
     if (!cleanName) {
       setError("Department name is required.");
-
       return;
     }
 
     if (cleanCode.length > 20) {
       setError("Department code cannot exceed 20 characters.");
-
       return;
     }
 
     if (cleanName.length > 150) {
       setError("Department name cannot exceed 150 characters.");
-
       return;
     }
-
-    // =================================================
-    // EDIT VALIDATION
-    // =================================================
 
     if (isEditMode && !department?.department_id) {
       setError("Invalid department selected for editing.");
-
       return;
     }
+
+    if (isEditMode && !hasChanges) return;
 
     try {
       setSaving(true);
 
-      // =================================================
-      // URL / METHOD
-      // =================================================
-
       const url = isEditMode
         ? `${API_BASE_URL}/${department!.department_id}`
         : API_BASE_URL;
-
       const method = isEditMode ? "PUT" : "POST";
 
-      console.log(isEditMode ? "UPDATE DEPARTMENT:" : "ADD DEPARTMENT:", url);
-
-      // =================================================
-      // PAYLOAD
-      //
-      // No user_id / role_id is sent.
-      // Backend actor comes from req.user.
-      // =================================================
-
       const payload = {
-        department_code: cleanCode,
-
+        department_code: cleanCode.toUpperCase(),
         department_name: cleanName,
       };
 
-      // =================================================
-      // JWT AUTHENTICATED REQUEST
-      // =================================================
-
       const response = await authService.authFetch(url, {
         method,
-
         body: JSON.stringify(payload),
       });
 
-      // =================================================
-      // SAFE RESPONSE READ
-      // =================================================
-
       const contentType = response.headers.get("content-type") || "";
-
       let data: DepartmentSaveResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
-
         throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
+          `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
 
-      // =================================================
-      // 401
-      // =================================================
-
       if (response.status === 401) {
         authService.logout();
-
         setError("Your session has expired. Please log in again.");
-
         return;
       }
-
-      // =================================================
-      // 403
-      // =================================================
 
       if (response.status === 403) {
         throw new Error(
@@ -260,10 +196,6 @@ export default function DepartmentModal({
             "You are not authorized to manage departments.",
         );
       }
-
-      // =================================================
-      // HTTP ERROR
-      // =================================================
 
       if (!response.ok) {
         throw new Error(
@@ -275,10 +207,6 @@ export default function DepartmentModal({
         );
       }
 
-      // =================================================
-      // API ERROR
-      // =================================================
-
       if (!data?.success) {
         throw new Error(
           data?.message ||
@@ -288,16 +216,9 @@ export default function DepartmentModal({
         );
       }
 
-      // =================================================
-      // SUCCESS
-      // =================================================
-
       setDepartmentCode("");
-
       setDepartmentName("");
-
       setError("");
-
       onSuccess();
     } catch (err) {
       console.error("SAVE DEPARTMENT ERROR:", err);
@@ -306,7 +227,6 @@ export default function DepartmentModal({
         setError(
           "Unable to connect to the department server. Make sure the backend is running on port 3000.",
         );
-
         return;
       }
 
@@ -318,21 +238,11 @@ export default function DepartmentModal({
     }
   };
 
-  // =====================================================
-  // DO NOT RENDER
-  // =====================================================
-
-  if (!isOpen) {
-    return null;
-  }
-
-  // =====================================================
-  // RENDER
-  // =====================================================
+  if (!isOpen) return null;
 
   return (
     <div
-      className="department-modal-overlay"
+      className="registrar-department-modal__overlay"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !saving) {
           handleClose();
@@ -340,98 +250,128 @@ export default function DepartmentModal({
       }}
     >
       <div
-        className="department-modal"
+        className="registrar-department-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="department-modal-title"
+        aria-labelledby="registrar-department-modal-title"
+        aria-describedby="registrar-department-modal-description"
       >
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        <div className="registrar-department-modal__header">
+          <div className="registrar-department-modal__header-icon">
+            <Building2 size={21} aria-hidden="true" />
+          </div>
 
-        <div className="department-modal-header">
-          <div>
-            <h2 id="department-modal-title">
+          <div className="registrar-department-modal__header-copy">
+            <span>{isEditMode ? "Update record" : "New record"}</span>
+            <h2 id="registrar-department-modal-title">
               {isEditMode ? "Edit Department" : "Add Department"}
             </h2>
-
-            <p>
+            <p id="registrar-department-modal-description">
               {isEditMode
-                ? "Update the department information below."
-                : "Create a new academic department."}
+                ? "Update the official code or name for this academic department."
+                : "Create an academic department that can be referenced by courses and other portal records."}
             </p>
           </div>
 
           <button
             type="button"
-            className="department-modal-close"
+            className="registrar-department-modal__close"
             onClick={handleClose}
             disabled={saving}
-            aria-label="Close"
+            aria-label="Close department dialog"
           >
-            ×
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        {/* =================================================
-            FORM
-        ================================================= */}
+        <form className="registrar-department-modal__form" onSubmit={handleSubmit}>
+          {error && (
+            <div className="registrar-department-modal__message registrar-department-modal__message--error" role="alert">
+              <AlertCircle size={18} aria-hidden="true" />
+              <div>
+                <strong>Department could not be saved</strong>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
 
-        <form className="department-form" onSubmit={handleSubmit}>
-          {/* ERROR */}
-
-          {error && <div className="department-form-error">{error}</div>}
-
-          {/* =================================================
-              DEPARTMENT CODE
-          ================================================= */}
-
-          <div className="department-form-group">
-            <label htmlFor="department-code">Department Code</label>
-
-            <input
-              id="department-code"
-              type="text"
-              value={departmentCode}
-              onChange={(event) => setDepartmentCode(event.target.value)}
-              placeholder="e.g. CCIS"
-              maxLength={20}
-              disabled={saving}
-              autoComplete="off"
-            />
-
-            <small>Enter the official department code.</small>
+          <div className="registrar-department-modal__context">
+            <CheckCircle2 size={17} aria-hidden="true" />
+            <p>
+              Keep department information concise and official. The same record
+              may appear in Courses, user assignments, and other academic areas.
+            </p>
           </div>
 
-          {/* =================================================
-              DEPARTMENT NAME
-          ================================================= */}
+          <div className="registrar-department-modal__fields">
+            <div className="registrar-department-modal__field">
+              <div className="registrar-department-modal__label-row">
+                <label htmlFor="registrar-department-code">
+                  Department Code <span aria-hidden="true">*</span>
+                </label>
+                <small>{departmentCode.length}/20</small>
+              </div>
 
-          <div className="department-form-group">
-            <label htmlFor="department-name">Department Name</label>
+              <div className="registrar-department-modal__input-wrap registrar-department-modal__input-wrap--code">
+                <Hash size={16} aria-hidden="true" />
+                <input
+                  id="registrar-department-code"
+                  type="text"
+                  value={departmentCode}
+                  onChange={(event) =>
+                    setDepartmentCode(event.target.value.toUpperCase())
+                  }
+                  placeholder="e.g. CCIS"
+                  maxLength={20}
+                  disabled={saving}
+                  autoComplete="off"
+                  autoFocus
+                  required
+                />
+              </div>
+              <small className="registrar-department-modal__help">
+                Use the official short code. It will be saved in uppercase.
+              </small>
+            </div>
 
-            <input
-              id="department-name"
-              type="text"
-              value={departmentName}
-              onChange={(event) => setDepartmentName(event.target.value)}
-              placeholder="e.g. College of Computer Studies"
-              maxLength={150}
-              disabled={saving}
-              autoComplete="off"
-            />
+            <div className="registrar-department-modal__field">
+              <div className="registrar-department-modal__label-row">
+                <label htmlFor="registrar-department-name">
+                  Department Name <span aria-hidden="true">*</span>
+                </label>
+                <small>{departmentName.length}/150</small>
+              </div>
 
-            <small>Enter the complete department name.</small>
+              <div className="registrar-department-modal__input-wrap">
+                <Building2 size={16} aria-hidden="true" />
+                <input
+                  id="registrar-department-name"
+                  type="text"
+                  value={departmentName}
+                  onChange={(event) => setDepartmentName(event.target.value)}
+                  placeholder="e.g. College of Computer Studies"
+                  maxLength={150}
+                  disabled={saving}
+                  autoComplete="off"
+                  required
+                />
+              </div>
+              <small className="registrar-department-modal__help">
+                Enter the complete official department or college name.
+              </small>
+            </div>
           </div>
 
-          {/* =================================================
-              ACTIONS
-          ================================================= */}
+          {isEditMode && !hasChanges && (
+            <div className="registrar-department-modal__unchanged-note">
+              No changes have been made to this department yet.
+            </div>
+          )}
 
-          <div className="department-modal-actions">
+          <div className="registrar-department-modal__actions">
             <button
               type="button"
-              className="department-cancel-btn"
+              className="registrar-department-modal__button registrar-department-modal__button--secondary"
               onClick={handleClose}
               disabled={saving}
             >
@@ -440,9 +380,15 @@ export default function DepartmentModal({
 
             <button
               type="submit"
-              className="department-save-btn"
-              disabled={saving || !authenticated || userRole !== "Registrar"}
+              className="registrar-department-modal__button registrar-department-modal__button--primary"
+              disabled={
+                saving ||
+                !authenticated ||
+                userRole !== "Registrar" ||
+                !formReady
+              }
             >
+              <Save size={16} aria-hidden="true" />
               {saving
                 ? "Saving..."
                 : isEditMode
