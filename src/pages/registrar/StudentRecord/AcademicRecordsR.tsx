@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-
 import { useNavigate, useParams } from "react-router-dom";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
@@ -7,21 +6,16 @@ import { authService } from "../../../services/auth.service";
 
 import "../../../styles/RegistrarAcademicRecord.css";
 
-// =====================================================
-// API
-// =====================================================
-
 const API_BASE_URL = "http://localhost:3000/api/registrar/students";
 
-// =====================================================
-// TYPES
-// =====================================================
+type AcademicClassification =
+  | "Passed"
+  | "Incomplete"
+  | "Failed"
+  | "Credited"
+  | "Unknown";
 
-type AcademicClassification = "Passed" | "Incomplete" | "Failed" | "Unknown";
-
-// =====================================================
-// STUDENT
-// =====================================================
+type AcademicRecordType = "PTC_GRADE" | "TRANSFER_CREDIT";
 
 interface Student {
   student_id: number;
@@ -58,24 +52,84 @@ interface Student {
   zip_code?: string | null;
 }
 
-// =====================================================
-// ACADEMIC RECORD
-// =====================================================
+interface FacultyInfo {
+  faculty_id: number;
+  employee_number?: string | null;
+  faculty_name?: string | null;
+}
+
+interface ApprovalInfo {
+  reviewed_by: number | null;
+  reviewed_by_username: string | null;
+  reviewed_at: string | null;
+  review_remarks?: string | null;
+}
+
+interface TransferSource {
+  school: string;
+
+  course: string | null;
+
+  student_number: string | null;
+
+  subject_code: string | null;
+  subject_name: string;
+
+  units: number | null;
+
+  grade: string | null;
+
+  remarks: string | null;
+
+  academic_year: string | null;
+
+  year_level: number | null;
+
+  semester: string | null;
+}
+
+interface CurriculumMapping {
+  curriculum_id: number | null;
+  curriculum_name: string | null;
+
+  curriculum_subject_id: number | null;
+
+  year_level: number | null;
+
+  semester_id: number | null;
+  semester_name: string | null;
+
+  is_required: boolean | null;
+}
+
+interface TransferCompletion {
+  evaluation_status: string;
+
+  completed_by: number | null;
+  completed_by_username: string | null;
+
+  completed_at: string | null;
+
+  completion_remarks: string | null;
+}
 
 interface AcademicRecord {
-  enrollment_id: number;
+  record_type: AcademicRecordType;
 
-  academic_year_id: number;
-  academic_year: string;
+  academic_source: string;
 
-  semester_id: number;
-  semester_name: string;
+  official_record: boolean;
 
-  enrollment_status: string;
+  grade_id: number | null;
 
-  enrollment_subject_id: number;
+  enrollment_subject_id: number | null;
+  enrollment_id: number | null;
+
+  transfer_evaluation_id: number | null;
+  transfer_subject_id: number | null;
 
   subject_id: number;
+
   subject_code: string;
   subject_name: string;
 
@@ -83,6 +137,14 @@ interface AcademicRecord {
 
   lecture_hours?: number | null;
   laboratory_hours?: number | null;
+
+  academic_year_id: number | null;
+  academic_year: string | null;
+
+  semester_id: number | null;
+  semester_name: string | null;
+
+  enrollment_status: string | null;
 
   subject_status: string;
 
@@ -92,43 +154,94 @@ interface AcademicRecord {
   section_subject_id?: number | null;
   section_name?: string | null;
 
-  grade_id: number;
-
   faculty_id?: number | null;
+
+  faculty?: FacultyInfo | null;
 
   prelim_grade: number | null;
   midterm_grade: number | null;
   final_grade: number | null;
 
-  // =================================================
-  // OFFICIAL ACADEMIC VALUE
-  // =================================================
-
   final_rating: number | null;
 
-  academic_result?: "Passed" | "Incomplete" | "Failed" | null;
+  source_grade: string | null;
 
-  remarks: "Passed" | "Incomplete" | "Failed" | null;
+  academic_result?: AcademicClassification | null;
 
-  grade_status: "Draft" | "Submitted" | "Returned" | "Approved";
+  classification?: AcademicClassification | null;
+
+  result_code?: string | null;
+
+  remarks: string | null;
+
+  grade_status: "Draft" | "Submitted" | "Returned" | "Approved" | null;
+
+  passed?: boolean;
+
+  retake?: boolean;
+
+  valid_result?: boolean;
+
+  curriculum_satisfied?: boolean;
 
   submitted_at?: string | null;
+
+  approval?: ApprovalInfo | null;
 
   reviewed_by?: number | null;
   reviewed_by_username?: string | null;
   reviewed_at?: string | null;
   review_remarks?: string | null;
 
+  transfer_source?: TransferSource | null;
+
+  curriculum_mapping?: CurriculumMapping | null;
+
+  transfer_completion?: TransferCompletion | null;
+
   grade_created_at?: string | null;
   grade_updated_at?: string | null;
+
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
-// =====================================================
-// API RESPONSE
-// =====================================================
+interface AcademicSummary {
+  total_official_records?: number;
+
+  total_recorded_units?: number;
+
+  earned_units?: number;
+
+  unique_satisfied_subjects?: number;
+
+  total_approved_subjects?: number;
+
+  ptc_grade_records?: number;
+
+  ptc_recorded_units?: number;
+
+  ptc_earned_units?: number;
+
+  passed_subjects?: number;
+
+  incomplete_subjects?: number;
+
+  failed_subjects?: number;
+
+  retake_subjects?: number;
+
+  official_transfer_credit_records?: number;
+
+  unique_transfer_credit_subjects?: number;
+
+  transfer_credited_units?: number;
+}
 
 interface AcademicResponse {
   success: boolean;
+
+  code?: string;
 
   student?: Student;
 
@@ -136,31 +249,45 @@ interface AcademicResponse {
 
   records?: AcademicRecord[];
 
+  summary?: AcademicSummary;
+
+  ptc_grade_records?: AcademicRecord[];
+
+  transfer_credit_records?: AcademicRecord[];
+
+  academic_rule?: {
+    official_ptc_grade?: string;
+
+    official_transfer_credit?: string;
+
+    transfer_grade_stored_as_ptc_grade?: boolean;
+
+    earned_units_deduplicated_by_ptc_subject?: boolean;
+  };
+
   message?: string;
   error?: string;
 }
 
-// =====================================================
-// GROUP TYPES
-// =====================================================
-
 interface SemesterGroup {
-  semesterId: number;
+  key: string;
+
   semesterName: string;
+
+  sortOrder: number;
 
   records: AcademicRecord[];
 }
 
 interface AcademicYearGroup {
-  academicYearId: number;
+  key: string;
+
   academicYear: string;
+
+  sortOrder: number;
 
   semesters: SemesterGroup[];
 }
-
-// =====================================================
-// SAFE JSON
-// =====================================================
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
@@ -179,27 +306,27 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// =====================================================
-// FORMAT GRADE
-// =====================================================
+function isTransferCredit(record: AcademicRecord): boolean {
+  return record.record_type === "TRANSFER_CREDIT";
+}
 
-function formatGrade(value: number | null | undefined): string {
-  if (value === null || value === undefined) {
+function isPtcGrade(record: AcademicRecord): boolean {
+  return record.record_type === "PTC_GRADE";
+}
+
+function formatGrade(value: number | string | null | undefined): string {
+  if (value === null || value === undefined || value === "") {
     return "—";
   }
 
   const numeric = Number(value);
 
   if (!Number.isFinite(numeric)) {
-    return "—";
+    return String(value);
   }
 
   return numeric.toFixed(2);
 }
-
-// =====================================================
-// FORMAT DATE
-// =====================================================
 
 function formatDateTime(value: string | null | undefined): string {
   if (!value) {
@@ -220,18 +347,6 @@ function formatDateTime(value: string | null | undefined): string {
     minute: "2-digit",
   });
 }
-
-// =====================================================
-// CLASSIFY FINAL RATING
-// =====================================================
-//
-// Official result:
-// 1.00 - 3.00 = Passed
-// 4.00        = Incomplete / Retake
-// 5.00        = Failed / Retake
-//
-// remarks does NOT replace final_rating.
-// =====================================================
 
 function classifyFinalRating(
   finalRating: number | null | undefined,
@@ -261,49 +376,65 @@ function classifyFinalRating(
   return "Unknown";
 }
 
-// =====================================================
-// OFFICIAL RESULT
-// =====================================================
-//
-// Prefer backend academic_result.
-//
-// final_rating remains the fallback truth so the
-// frontend stays safe if academic_result is missing.
-// =====================================================
-
 function getClassification(record: AcademicRecord): AcademicClassification {
+  if (isTransferCredit(record)) {
+    return "Credited";
+  }
+
   if (
     record.academic_result === "Passed" ||
     record.academic_result === "Incomplete" ||
-    record.academic_result === "Failed"
+    record.academic_result === "Failed" ||
+    record.academic_result === "Credited"
   ) {
     return record.academic_result;
+  }
+
+  if (
+    record.classification === "Passed" ||
+    record.classification === "Incomplete" ||
+    record.classification === "Failed" ||
+    record.classification === "Credited"
+  ) {
+    return record.classification;
   }
 
   return classifyFinalRating(record.final_rating);
 }
 
-// =====================================================
-// RETAKE
-// =====================================================
-
 function requiresRetake(record: AcademicRecord): boolean {
+  if (isTransferCredit(record)) {
+    return false;
+  }
+
+  if (typeof record.retake === "boolean") {
+    return record.retake;
+  }
+
   const classification = getClassification(record);
 
   return classification === "Incomplete" || classification === "Failed";
 }
 
-// =====================================================
-// STATUS CSS
-// =====================================================
-
 function getStatusClass(value: string | null | undefined): string {
   return value?.trim().toLowerCase().replace(/\s+/g, "-") || "unknown";
 }
 
-// =====================================================
-// STUDENT NAME
-// =====================================================
+function getSubjectStatusClass(value: string | null | undefined): string {
+  if (value?.trim().toLowerCase() === "credited") {
+    return "completed";
+  }
+
+  return getStatusClass(value);
+}
+
+function getResultClass(classification: AcademicClassification): string {
+  if (classification === "Credited") {
+    return "passed";
+  }
+
+  return classification.toLowerCase();
+}
 
 function getStudentName(student: Student): string {
   return [student.first_name, student.middle_name, student.last_name]
@@ -311,9 +442,101 @@ function getStudentName(student: Student): string {
     .join(" ");
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+function getAcademicYearLabel(record: AcademicRecord): string {
+  if (record.academic_year) {
+    return record.academic_year;
+  }
+
+  if (record.transfer_source?.academic_year) {
+    return record.transfer_source.academic_year;
+  }
+
+  return "Transfer Credit";
+}
+
+function getSemesterLabel(record: AcademicRecord): string {
+  if (record.semester_name) {
+    return record.semester_name;
+  }
+
+  if (record.transfer_source?.semester) {
+    return record.transfer_source.semester;
+  }
+
+  return "Transfer Credit";
+}
+
+function getAcademicYearSortOrder(value: string): number {
+  const match = value.match(/^(\d{4})/);
+
+  if (!match) {
+    return 0;
+  }
+
+  const year = Number(match[1]);
+
+  return Number.isFinite(year) ? year : 0;
+}
+
+function getSemesterSortOrder(value: string): number {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized.includes("first")) {
+    return 1;
+  }
+
+  if (normalized.includes("second")) {
+    return 2;
+  }
+
+  if (normalized.includes("summer")) {
+    return 3;
+  }
+
+  return 99;
+}
+
+function getRecordKey(record: AcademicRecord): string {
+  if (isTransferCredit(record) && record.transfer_subject_id !== null) {
+    return `transfer-${record.transfer_subject_id}`;
+  }
+
+  if (record.grade_id !== null) {
+    return `grade-${record.grade_id}`;
+  }
+
+  if (record.enrollment_subject_id !== null) {
+    return `enrollment-subject-${record.enrollment_subject_id}`;
+  }
+
+  return `${record.record_type}-${record.subject_id}`;
+}
+
+function getReviewedByUsername(record: AcademicRecord): string | null {
+  return (
+    record.approval?.reviewed_by_username || record.reviewed_by_username || null
+  );
+}
+
+function getReviewedAt(record: AcademicRecord): string | null {
+  return record.approval?.reviewed_at || record.reviewed_at || null;
+}
+
+function getReviewRemarks(record: AcademicRecord): string | null {
+  return record.approval?.review_remarks || record.review_remarks || null;
+}
+
+function getFacultyLabel(record: AcademicRecord): string | null {
+  if (record.faculty?.faculty_name) {
+    return record.faculty.faculty_name;
+  }
+
+  if (record.faculty_id !== null && record.faculty_id !== undefined) {
+    return `Faculty #${record.faculty_id}`;
+  }
+
+  return null;
+}
 
 export default function AcademicRecordsR() {
   const navigate = useNavigate();
@@ -322,35 +545,24 @@ export default function AcademicRecordsR() {
     id: string;
   }>();
 
-  // ===================================================
-  // AUTHENTICATION
-  // ===================================================
-
   const user = authService.getSession();
-
   const token = authService.getToken();
 
   const userRole = user?.role;
 
   const authenticated = Boolean(user && token);
 
-  // ===================================================
-  // DATA STATE
-  // ===================================================
-
   const [student, setStudent] = useState<Student | null>(null);
 
   const [records, setRecords] = useState<AcademicRecord[]>([]);
+
+  const [apiSummary, setApiSummary] = useState<AcademicSummary | null>(null);
 
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
 
   const [refreshKey, setRefreshKey] = useState(0);
-
-  // ===================================================
-  // FILTERS
-  // ===================================================
 
   const [search, setSearch] = useState("");
 
@@ -359,10 +571,6 @@ export default function AcademicRecordsR() {
   const [semesterFilter, setSemesterFilter] = useState("All");
 
   const [resultFilter, setResultFilter] = useState("All");
-
-  // ===================================================
-  // AUTHORIZATION
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated) {
@@ -388,10 +596,6 @@ export default function AcademicRecordsR() {
     }
   }, [authenticated, userRole, user, navigate]);
 
-  // ===================================================
-  // LOAD OFFICIAL ACADEMIC RECORD
-  // ===================================================
-
   useEffect(() => {
     if (!authenticated || userRole !== "Registrar") {
       return;
@@ -399,9 +603,7 @@ export default function AcademicRecordsR() {
 
     if (!id) {
       setError("Invalid student ID.");
-
       setLoading(false);
-
       return;
     }
 
@@ -409,9 +611,7 @@ export default function AcademicRecordsR() {
 
     if (!Number.isInteger(studentId) || studentId <= 0) {
       setError("Invalid student ID.");
-
       setLoading(false);
-
       return;
     }
 
@@ -423,8 +623,6 @@ export default function AcademicRecordsR() {
         setError("");
 
         const requestUrl = `${API_BASE_URL}/${studentId}/academic-records`;
-
-        console.log("GET REGISTRAR OFFICIAL ACADEMIC RECORD:", requestUrl);
 
         const response = await authService.authFetch(requestUrl, {
           method: "GET",
@@ -438,10 +636,6 @@ export default function AcademicRecordsR() {
 
         const data = await readJsonResponse<AcademicResponse>(response);
 
-        // =============================================
-        // 401
-        // =============================================
-
         if (response.status === 401) {
           authService.logout();
 
@@ -452,17 +646,9 @@ export default function AcademicRecordsR() {
           return;
         }
 
-        // =============================================
-        // 403
-        // =============================================
-
         if (response.status === 403) {
           throw new Error(data.message || "Registrar access is required.");
         }
-
-        // =============================================
-        // HTTP / API ERROR
-        // =============================================
 
         if (!response.ok || !data.success) {
           throw new Error(
@@ -476,29 +662,32 @@ export default function AcademicRecordsR() {
           );
         }
 
-        // =============================================
-        // DEFENSIVE OFFICIAL FILTER
-        //
-        // Only:
-        //
-        // Approved Enrollment
-        // Approved Grade
-        // final_rating present
-        // First / Second Semester
-        //
-        // =============================================
-
         const officialRecords = Array.isArray(data.records)
-          ? data.records.filter(
-              (record) =>
+          ? data.records.filter((record) => {
+              if (record.official_record !== true) {
+                return false;
+              }
+
+              if (isTransferCredit(record)) {
+                return (
+                  record.subject_status === "Credited" &&
+                  record.transfer_evaluation_id !== null &&
+                  record.transfer_subject_id !== null
+                );
+              }
+
+              return (
                 record.enrollment_status === "Approved" &&
                 record.grade_status === "Approved" &&
                 record.final_rating !== null &&
-                [1, 2].includes(Number(record.semester_id)),
-            )
+                [1, 2].includes(Number(record.semester_id))
+              );
+            })
           : [];
 
         setStudent(data.student);
+
+        setApiSummary(data.summary || null);
 
         setRecords(officialRecords);
       } catch (requestError) {
@@ -512,6 +701,8 @@ export default function AcademicRecordsR() {
         console.error("GET REGISTRAR ACADEMIC RECORD ERROR:", requestError);
 
         setStudent(null);
+
+        setApiSummary(null);
 
         setRecords([]);
 
@@ -542,41 +733,29 @@ export default function AcademicRecordsR() {
     };
   }, [id, authenticated, userRole, navigate, refreshKey]);
 
-  // ===================================================
-  // ACADEMIC YEAR OPTIONS
-  // ===================================================
-
   const academicYears = useMemo(() => {
-    const values = new Map<number, string>();
+    const values = new Set<string>();
 
     records.forEach((record) => {
-      values.set(record.academic_year_id, record.academic_year);
+      values.add(getAcademicYearLabel(record));
     });
 
-    return Array.from(values.entries()).sort((a, b) => b[0] - a[0]);
+    return Array.from(values).sort(
+      (a, b) => getAcademicYearSortOrder(b) - getAcademicYearSortOrder(a),
+    );
   }, [records]);
-
-  // ===================================================
-  // SEMESTER OPTIONS
-  // ===================================================
 
   const semesters = useMemo(() => {
-    const values = new Map<number, string>();
+    const values = new Set<string>();
 
     records.forEach((record) => {
-      if (record.semester_id !== 1 && record.semester_id !== 2) {
-        return;
-      }
-
-      values.set(record.semester_id, record.semester_name);
+      values.add(getSemesterLabel(record));
     });
 
-    return Array.from(values.entries()).sort((a, b) => a[0] - b[0]);
+    return Array.from(values).sort(
+      (a, b) => getSemesterSortOrder(a) - getSemesterSortOrder(b),
+    );
   }, [records]);
-
-  // ===================================================
-  // FILTER RECORDS
-  // ===================================================
 
   const filteredRecords = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -584,22 +763,25 @@ export default function AcademicRecordsR() {
     return records.filter((record) => {
       const classification = getClassification(record);
 
+      const transferSource = record.transfer_source;
+
       const matchesSearch =
         !query ||
         record.subject_code.toLowerCase().includes(query) ||
         record.subject_name.toLowerCase().includes(query) ||
+        record.academic_source.toLowerCase().includes(query) ||
         (record.section_name || "").toLowerCase().includes(query) ||
-        (record.faculty_id !== null &&
-          record.faculty_id !== undefined &&
-          `faculty ${record.faculty_id}`.toLowerCase().includes(query));
+        (getFacultyLabel(record) || "").toLowerCase().includes(query) ||
+        (transferSource?.school || "").toLowerCase().includes(query) ||
+        (transferSource?.subject_code || "").toLowerCase().includes(query) ||
+        (transferSource?.subject_name || "").toLowerCase().includes(query);
 
       const matchesAY =
         academicYearFilter === "All" ||
-        String(record.academic_year_id) === academicYearFilter;
+        getAcademicYearLabel(record) === academicYearFilter;
 
       const matchesSemester =
-        semesterFilter === "All" ||
-        String(record.semester_id) === semesterFilter;
+        semesterFilter === "All" || getSemesterLabel(record) === semesterFilter;
 
       const matchesResult =
         resultFilter === "All" || classification === resultFilter;
@@ -608,83 +790,115 @@ export default function AcademicRecordsR() {
     });
   }, [records, search, academicYearFilter, semesterFilter, resultFilter]);
 
-  // ===================================================
-  // OFFICIAL SUMMARY
-  // ===================================================
-
   const summary = useMemo(() => {
-    const passed = records.filter(
+    const ptcRecords = records.filter(isPtcGrade);
+
+    const transferRecords = records.filter(isTransferCredit);
+
+    const passed = ptcRecords.filter(
       (record) => getClassification(record) === "Passed",
     );
 
-    const incomplete = records.filter(
+    const incomplete = ptcRecords.filter(
       (record) => getClassification(record) === "Incomplete",
     );
 
-    const failed = records.filter(
+    const failed = ptcRecords.filter(
       (record) => getClassification(record) === "Failed",
     );
 
-    const retakes = records.filter(requiresRetake);
+    const retakes = ptcRecords.filter(requiresRetake);
 
-    const totalRecordedUnits = records.reduce(
+    const satisfiedSubjects = new Map<number, number>();
+
+    passed.forEach((record) => {
+      if (!satisfiedSubjects.has(record.subject_id)) {
+        satisfiedSubjects.set(record.subject_id, Number(record.units || 0));
+      }
+    });
+
+    transferRecords.forEach((record) => {
+      if (!satisfiedSubjects.has(record.subject_id)) {
+        satisfiedSubjects.set(record.subject_id, Number(record.units || 0));
+      }
+    });
+
+    const fallbackEarnedUnits = Array.from(satisfiedSubjects.values()).reduce(
+      (total, units) => total + units,
+      0,
+    );
+
+    const fallbackRecordedUnits = records.reduce(
       (total, record) => total + Number(record.units || 0),
       0,
     );
 
-    const earnedUnits = passed.reduce(
+    const fallbackTransferUnits = transferRecords.reduce(
       (total, record) => total + Number(record.units || 0),
       0,
     );
 
     return {
-      total: records.length,
+      total: apiSummary?.total_official_records ?? records.length,
 
-      passed: passed.length,
+      earnedUnits: apiSummary?.earned_units ?? fallbackEarnedUnits,
 
-      incomplete: incomplete.length,
+      passed: apiSummary?.passed_subjects ?? passed.length,
 
-      failed: failed.length,
+      transferCredits:
+        apiSummary?.official_transfer_credit_records ?? transferRecords.length,
 
-      retakes: retakes.length,
+      incomplete: apiSummary?.incomplete_subjects ?? incomplete.length,
 
-      totalRecordedUnits,
+      failed: apiSummary?.failed_subjects ?? failed.length,
 
-      earnedUnits,
+      retakes: apiSummary?.retake_subjects ?? retakes.length,
+
+      totalRecordedUnits:
+        apiSummary?.total_recorded_units ?? fallbackRecordedUnits,
+
+      transferCreditedUnits:
+        apiSummary?.transfer_credited_units ?? fallbackTransferUnits,
     };
-  }, [records]);
-
-  // ===================================================
-  // GROUP RECORDS BY AY / SEMESTER
-  // ===================================================
+  }, [records, apiSummary]);
 
   const groupedRecords = useMemo<AcademicYearGroup[]>(() => {
-    const yearMap = new Map<number, AcademicYearGroup>();
+    const yearMap = new Map<string, AcademicYearGroup>();
 
     filteredRecords.forEach((record) => {
-      let yearGroup = yearMap.get(record.academic_year_id);
+      const academicYear = getAcademicYearLabel(record);
+
+      let yearGroup = yearMap.get(academicYear);
 
       if (!yearGroup) {
         yearGroup = {
-          academicYearId: record.academic_year_id,
+          key: academicYear,
 
-          academicYear: record.academic_year,
+          academicYear,
+
+          sortOrder: getAcademicYearSortOrder(academicYear),
 
           semesters: [],
         };
 
-        yearMap.set(record.academic_year_id, yearGroup);
+        yearMap.set(academicYear, yearGroup);
       }
 
+      const semesterName = getSemesterLabel(record);
+
+      const semesterKey = `${academicYear}-${semesterName}`;
+
       let semesterGroup = yearGroup.semesters.find(
-        (semester) => semester.semesterId === record.semester_id,
+        (semester) => semester.key === semesterKey,
       );
 
       if (!semesterGroup) {
         semesterGroup = {
-          semesterId: record.semester_id,
+          key: semesterKey,
 
-          semesterName: record.semester_name,
+          semesterName,
+
+          sortOrder: getSemesterSortOrder(semesterName),
 
           records: [],
         };
@@ -697,19 +911,14 @@ export default function AcademicRecordsR() {
 
     const groups = Array.from(yearMap.values());
 
-    // newest AY first
-    groups.sort((a, b) => b.academicYearId - a.academicYearId);
+    groups.sort((a, b) => b.sortOrder - a.sortOrder);
 
     groups.forEach((year) => {
-      year.semesters.sort((a, b) => a.semesterId - b.semesterId);
+      year.semesters.sort((a, b) => a.sortOrder - b.sortOrder);
     });
 
     return groups;
   }, [filteredRecords]);
-
-  // ===================================================
-  // FILTER ACTIONS
-  // ===================================================
 
   const clearFilters = () => {
     setSearch("");
@@ -721,33 +930,17 @@ export default function AcademicRecordsR() {
     setResultFilter("All");
   };
 
-  // ===================================================
-  // REFRESH
-  // ===================================================
-
   const refresh = () => {
     setRefreshKey((current) => current + 1);
   };
-
-  // ===================================================
-  // AUTH RENDER GUARD
-  // ===================================================
 
   if (!authenticated || !user || userRole !== "Registrar") {
     return null;
   }
 
-  // ===================================================
-  // RENDER
-  // ===================================================
-
   return (
     <DashboardLayout>
       <main className="registrar-academic-record-page">
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <section className="registrar-record-header">
           <div>
             <span className="registrar-record-eyebrow">
@@ -757,8 +950,8 @@ export default function AcademicRecordsR() {
             <h1>Official Academic Record</h1>
 
             <p>
-              Review the student's official academic history based exclusively
-              on approved grades and approved enrollment attempts.
+              Review the student's official academic history from approved PTC
+              grades and officially credited previous-school subjects.
             </p>
           </div>
 
@@ -782,27 +975,20 @@ export default function AcademicRecordsR() {
           </div>
         </section>
 
-        {/* =================================================
-            OFFICIAL RECORD NOTICE
-        ================================================= */}
-
         <section className="registrar-record-official-notice">
           <div className="registrar-record-official-icon">✓</div>
 
           <div>
-            <strong>Official Academic History</strong>
+            <strong>Official Academic Sources</strong>
 
             <p>
-              Only Program Head-approved grades from approved enrollments appear
-              here. Draft, Submitted, and Returned grades are not official
-              academic records.
+              This record combines Program Head-approved PTC grades and
+              completed, officially credited transfer subjects. Previous-school
+              source grades remain external and are never converted into PTC
+              Final Rating values.
             </p>
           </div>
         </section>
-
-        {/* =================================================
-            ERROR
-        ================================================= */}
 
         {error && (
           <section className="registrar-record-error">
@@ -818,10 +1004,6 @@ export default function AcademicRecordsR() {
           </section>
         )}
 
-        {/* =================================================
-            LOADING
-        ================================================= */}
-
         {loading && (
           <section className="registrar-record-loading">
             <div className="registrar-record-spinner" />
@@ -829,21 +1011,15 @@ export default function AcademicRecordsR() {
             <div>
               <strong>Loading official academic record</strong>
 
-              <span>Retrieving approved grade history...</span>
+              <span>
+                Retrieving approved PTC grades and official transfer credits...
+              </span>
             </div>
           </section>
         )}
 
-        {/* =================================================
-            CONTENT
-        ================================================= */}
-
         {!loading && !error && student && (
           <>
-            {/* =============================================
-                  STUDENT PROFILE
-              ============================================= */}
-
             <section className="registrar-record-student-card">
               <div className="registrar-record-student-primary">
                 <div className="registrar-record-avatar">
@@ -860,8 +1036,6 @@ export default function AcademicRecordsR() {
               </div>
 
               <div className="registrar-record-student-data">
-                {/* PROGRAM */}
-
                 <div>
                   <span>Program</span>
 
@@ -870,15 +1044,11 @@ export default function AcademicRecordsR() {
                   {student.course_name && <small>{student.course_name}</small>}
                 </div>
 
-                {/* YEAR */}
-
                 <div>
                   <span>Current Year Level</span>
 
                   <strong>Year {student.year_level}</strong>
                 </div>
-
-                {/* STATUS */}
 
                 <div>
                   <span>Student Status</span>
@@ -892,8 +1062,6 @@ export default function AcademicRecordsR() {
                   </strong>
                 </div>
 
-                {/* SECTION */}
-
                 <div>
                   <span>Current Section</span>
 
@@ -904,13 +1072,9 @@ export default function AcademicRecordsR() {
               </div>
             </section>
 
-            {/* =============================================
-                  SUMMARY
-              ============================================= */}
-
             <section className="registrar-record-summary">
               <div>
-                <span>Official Subjects</span>
+                <span>Official Records</span>
 
                 <strong>{summary.total}</strong>
               </div>
@@ -922,9 +1086,15 @@ export default function AcademicRecordsR() {
               </div>
 
               <div>
-                <span>Passed</span>
+                <span>PTC Passed</span>
 
                 <strong>{summary.passed}</strong>
+              </div>
+
+              <div>
+                <span>Transfer Credits</span>
+
+                <strong>{summary.transferCredits}</strong>
               </div>
 
               <div>
@@ -946,10 +1116,6 @@ export default function AcademicRecordsR() {
               </div>
             </section>
 
-            {/* =============================================
-                  FILTERS
-              ============================================= */}
-
             <section className="registrar-record-filters">
               <div className="registrar-record-search">
                 <label htmlFor="registrar-academic-search">Search</label>
@@ -959,7 +1125,7 @@ export default function AcademicRecordsR() {
                   type="text"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Subject, section, or faculty ID..."
+                  placeholder="PTC subject, previous subject, school, section, faculty..."
                 />
               </div>
 
@@ -974,8 +1140,8 @@ export default function AcademicRecordsR() {
                 >
                   <option value="All">All Academic Years</option>
 
-                  {academicYears.map(([academicYearId, label]) => (
-                    <option key={academicYearId} value={academicYearId}>
+                  {academicYears.map((label) => (
+                    <option key={label} value={label}>
                       {label}
                     </option>
                   ))}
@@ -991,8 +1157,8 @@ export default function AcademicRecordsR() {
                 >
                   <option value="All">All Semesters</option>
 
-                  {semesters.map(([semesterId, label]) => (
-                    <option key={semesterId} value={semesterId}>
+                  {semesters.map((label) => (
+                    <option key={label} value={label}>
                       {label}
                     </option>
                   ))}
@@ -1010,6 +1176,8 @@ export default function AcademicRecordsR() {
 
                   <option value="Passed">Passed</option>
 
+                  <option value="Credited">Credited</option>
+
                   <option value="Incomplete">Incomplete</option>
 
                   <option value="Failed">Failed</option>
@@ -1025,42 +1193,33 @@ export default function AcademicRecordsR() {
               </button>
             </section>
 
-            {/* =============================================
-                  NO OFFICIAL RECORDS
-              ============================================= */}
-
             {records.length === 0 && (
               <section className="registrar-record-empty">
                 <div className="registrar-record-empty-icon">✓</div>
 
-                <strong>No official academic grades yet</strong>
+                <strong>No official academic records yet</strong>
 
                 <p>
-                  Approved grades will appear here after the Program Head
-                  completes grade approval.
+                  Approved PTC grades and completed transfer credits will appear
+                  here when they become official.
                 </p>
               </section>
             )}
-
-            {/* =============================================
-                  NO FILTER MATCH
-              ============================================= */}
 
             {records.length > 0 && filteredRecords.length === 0 && (
               <section className="registrar-record-empty">
                 <strong>No matching academic records</strong>
 
-                <p>No official grade records match the selected filters.</p>
+                <p>
+                  No official PTC grade or transfer-credit records match the
+                  selected filters.
+                </p>
 
                 <button type="button" onClick={clearFilters}>
                   Clear Filters
                 </button>
               </section>
             )}
-
-            {/* =============================================
-                  ACADEMIC HISTORY
-              ============================================= */}
 
             {groupedRecords.length > 0 && (
               <section className="registrar-record-history">
@@ -1069,8 +1228,8 @@ export default function AcademicRecordsR() {
                     <h2>Academic History</h2>
 
                     <p>
-                      Official subject attempts grouped by academic year and
-                      semester.
+                      Official PTC grades and credited previous-school subjects
+                      grouped by academic year and semester.
                     </p>
                   </div>
 
@@ -1082,14 +1241,7 @@ export default function AcademicRecordsR() {
 
                 <div className="registrar-record-year-list">
                   {groupedRecords.map((year) => (
-                    <article
-                      key={year.academicYearId}
-                      className="registrar-record-year"
-                    >
-                      {/* =================================
-                              ACADEMIC YEAR
-                          ================================= */}
-
+                    <article key={year.key} className="registrar-record-year">
                       <header className="registrar-record-year-header">
                         <div>
                           <span>Academic Year</span>
@@ -1103,7 +1255,7 @@ export default function AcademicRecordsR() {
                               total + semester.records.length,
                             0,
                           )}{" "}
-                          subject
+                          record
                           {year.semesters.reduce(
                             (total, semester) =>
                               total + semester.records.length,
@@ -1114,10 +1266,6 @@ export default function AcademicRecordsR() {
                         </strong>
                       </header>
 
-                      {/* =================================
-                              SEMESTERS
-                          ================================= */}
-
                       {year.semesters.map((semester) => {
                         const semesterUnits = semester.records.reduce(
                           (total, record) => total + Number(record.units || 0),
@@ -1126,7 +1274,10 @@ export default function AcademicRecordsR() {
 
                         const earnedUnits = semester.records
                           .filter(
-                            (record) => getClassification(record) === "Passed",
+                            (record) =>
+                              record.curriculum_satisfied === true ||
+                              getClassification(record) === "Passed" ||
+                              getClassification(record) === "Credited",
                           )
                           .reduce(
                             (total, record) =>
@@ -1136,17 +1287,15 @@ export default function AcademicRecordsR() {
 
                         return (
                           <section
-                            key={`${year.academicYearId}-${semester.semesterId}`}
+                            key={semester.key}
                             className="registrar-record-semester"
                           >
-                            {/* SEMESTER HEADER */}
-
                             <div className="registrar-record-semester-header">
                               <div>
                                 <h4>{semester.semesterName}</h4>
 
                                 <span>
-                                  {semester.records.length} subject
+                                  {semester.records.length} record
                                   {semester.records.length === 1 ? "" : "s"}
                                 </span>
                               </div>
@@ -1163,13 +1312,13 @@ export default function AcademicRecordsR() {
                               </div>
                             </div>
 
-                            {/* TABLE */}
-
                             <div className="registrar-record-table-wrapper">
                               <table className="registrar-record-table">
                                 <thead>
                                   <tr>
                                     <th>Subject</th>
+
+                                    <th>Academic Source</th>
 
                                     <th>Section</th>
 
@@ -1181,7 +1330,7 @@ export default function AcademicRecordsR() {
 
                                     <th>Final</th>
 
-                                    <th>Final Rating</th>
+                                    <th>Rating / Source Grade</th>
 
                                     <th>Result</th>
 
@@ -1189,7 +1338,7 @@ export default function AcademicRecordsR() {
 
                                     <th>Faculty</th>
 
-                                    <th>Approval</th>
+                                    <th>Review</th>
                                   </tr>
                                 </thead>
 
@@ -1198,10 +1347,21 @@ export default function AcademicRecordsR() {
                                     const classification =
                                       getClassification(record);
 
-                                    return (
-                                      <tr key={record.enrollment_subject_id}>
-                                        {/* SUBJECT */}
+                                    const transfer = isTransferCredit(record);
 
+                                    const reviewedByUsername =
+                                      getReviewedByUsername(record);
+
+                                    const reviewedAt = getReviewedAt(record);
+
+                                    const reviewRemarks =
+                                      getReviewRemarks(record);
+
+                                    const facultyLabel =
+                                      getFacultyLabel(record);
+
+                                    return (
+                                      <tr key={getRecordKey(record)}>
                                         <td>
                                           <div className="registrar-record-subject">
                                             <strong>
@@ -1210,23 +1370,60 @@ export default function AcademicRecordsR() {
 
                                             <span>{record.subject_name}</span>
 
-                                            <small>
-                                              ES #{record.enrollment_subject_id}
-                                              {" • "}
-                                              Grade #{record.grade_id}
-                                            </small>
+                                            {transfer ? (
+                                              <small>
+                                                PTC equivalent • TS #
+                                                {record.transfer_subject_id}
+                                              </small>
+                                            ) : (
+                                              <small>
+                                                ES #
+                                                {record.enrollment_subject_id}
+                                                {" • "}
+                                                Grade #{record.grade_id}
+                                              </small>
+                                            )}
                                           </div>
                                         </td>
 
-                                        {/* SECTION */}
+                                        <td>
+                                          {transfer ? (
+                                            <div className="registrar-record-subject">
+                                              <strong>Transfer Credit</strong>
+
+                                              <span>
+                                                {record.transfer_source
+                                                  ?.school || "Previous School"}
+                                              </span>
+
+                                              <small>
+                                                {record.transfer_source
+                                                  ?.subject_code
+                                                  ? `${record.transfer_source.subject_code} — `
+                                                  : ""}
+                                                {record.transfer_source
+                                                  ?.subject_name ||
+                                                  "Previous subject"}
+                                              </small>
+                                            </div>
+                                          ) : (
+                                            <div className="registrar-record-subject">
+                                              <strong>PTC Grade</strong>
+
+                                              <small>
+                                                Official PTC academic grade
+                                              </small>
+                                            </div>
+                                          )}
+                                        </td>
 
                                         <td>
                                           <span className="registrar-record-section">
-                                            {record.section_name || "—"}
+                                            {transfer
+                                              ? "—"
+                                              : record.section_name || "—"}
                                           </span>
                                         </td>
-
-                                        {/* UNITS */}
 
                                         <td>
                                           <strong className="registrar-record-units">
@@ -1234,38 +1431,50 @@ export default function AcademicRecordsR() {
                                           </strong>
                                         </td>
 
-                                        {/* PRELIM */}
-
                                         <td>
-                                          {formatGrade(record.prelim_grade)}
+                                          {transfer
+                                            ? "—"
+                                            : formatGrade(record.prelim_grade)}
                                         </td>
 
-                                        {/* MIDTERM */}
-
                                         <td>
-                                          {formatGrade(record.midterm_grade)}
+                                          {transfer
+                                            ? "—"
+                                            : formatGrade(record.midterm_grade)}
                                         </td>
 
-                                        {/* FINAL */}
-
                                         <td>
-                                          {formatGrade(record.final_grade)}
+                                          {transfer
+                                            ? "—"
+                                            : formatGrade(record.final_grade)}
                                         </td>
 
-                                        {/* FINAL RATING */}
-
                                         <td>
-                                          <strong className="registrar-record-final-rating">
-                                            {formatGrade(record.final_rating)}
-                                          </strong>
-                                        </td>
+                                          {transfer ? (
+                                            <div className="registrar-record-subject">
+                                              <strong className="registrar-record-final-rating">
+                                                {formatGrade(
+                                                  record.source_grade,
+                                                )}
+                                              </strong>
 
-                                        {/* RESULT */}
+                                              <small>
+                                                External source grade
+                                              </small>
+                                            </div>
+                                          ) : (
+                                            <strong className="registrar-record-final-rating">
+                                              {formatGrade(record.final_rating)}
+                                            </strong>
+                                          )}
+                                        </td>
 
                                         <td>
                                           <div className="registrar-record-result-cell">
                                             <span
-                                              className={`registrar-record-result ${classification.toLowerCase()}`}
+                                              className={`registrar-record-result ${getResultClass(
+                                                classification,
+                                              )}`}
                                             >
                                               {classification}
                                             </span>
@@ -1278,11 +1487,9 @@ export default function AcademicRecordsR() {
                                           </div>
                                         </td>
 
-                                        {/* SUBJECT STATUS */}
-
                                         <td>
                                           <span
-                                            className={`registrar-record-subject-status ${getStatusClass(
+                                            className={`registrar-record-subject-status ${getSubjectStatusClass(
                                               record.subject_status,
                                             )}`}
                                           >
@@ -1290,15 +1497,21 @@ export default function AcademicRecordsR() {
                                           </span>
                                         </td>
 
-                                        {/* FACULTY */}
-
                                         <td>
                                           <div className="registrar-record-faculty">
-                                            {record.faculty_id ? (
+                                            {transfer ? (
                                               <>
-                                                <strong>
-                                                  Faculty #{record.faculty_id}
-                                                </strong>
+                                                <strong>External Credit</strong>
+
+                                                <small>
+                                                  {record.transfer_source
+                                                    ?.school ||
+                                                    "Previous School"}
+                                                </small>
+                                              </>
+                                            ) : facultyLabel ? (
+                                              <>
+                                                <strong>{facultyLabel}</strong>
 
                                                 <small>Assigned Faculty</small>
                                               </>
@@ -1308,31 +1521,41 @@ export default function AcademicRecordsR() {
                                           </div>
                                         </td>
 
-                                        {/* APPROVAL */}
-
                                         <td>
                                           <div className="registrar-record-approval">
                                             <span className="registrar-record-approved">
-                                              Approved
+                                              {transfer
+                                                ? "Credited"
+                                                : "Approved"}
                                             </span>
 
-                                            {record.reviewed_by_username && (
+                                            {reviewedByUsername && (
                                               <small>
-                                                By {record.reviewed_by_username}
+                                                By {reviewedByUsername}
                                               </small>
                                             )}
 
-                                            {record.reviewed_at && (
+                                            {reviewedAt && (
                                               <small>
-                                                {formatDateTime(
-                                                  record.reviewed_at,
-                                                )}
+                                                {formatDateTime(reviewedAt)}
                                               </small>
                                             )}
 
-                                            {record.review_remarks && (
+                                            {transfer &&
+                                              record.transfer_completion
+                                                ?.completed_at && (
+                                                <small>
+                                                  Completed{" "}
+                                                  {formatDateTime(
+                                                    record.transfer_completion
+                                                      .completed_at,
+                                                  )}
+                                                </small>
+                                              )}
+
+                                            {reviewRemarks && (
                                               <small className="registrar-record-review-note">
-                                                {record.review_remarks}
+                                                {reviewRemarks}
                                               </small>
                                             )}
                                           </div>
@@ -1352,35 +1575,43 @@ export default function AcademicRecordsR() {
               </section>
             )}
 
-            {/* =============================================
-                  OFFICIAL RESULT GUIDE
-              ============================================= */}
-
             <section className="registrar-record-guide">
               <div className="registrar-record-guide-heading">
                 <span>Official Result Guide</span>
 
-                <strong>Final Rating</strong>
+                <strong>Academic Sources</strong>
               </div>
 
               <div className="registrar-record-guide-items">
-                {/* PASSED */}
-
                 <div>
                   <span className="registrar-record-guide-rating passed">
                     1.00–3.00
                   </span>
 
                   <div>
-                    <strong>Passed</strong>
+                    <strong>PTC Passed</strong>
 
                     <p>
-                      Subject is successfully completed and units are earned.
+                      Approved PTC Final Rating successfully completes the
+                      subject and earns its units.
                     </p>
                   </div>
                 </div>
 
-                {/* INCOMPLETE */}
+                <div>
+                  <span className="registrar-record-guide-rating passed">
+                    Credit
+                  </span>
+
+                  <div>
+                    <strong>Transfer Credit</strong>
+
+                    <p>
+                      A Completed transfer evaluation with a Credited mapped
+                      subject satisfies the PTC curriculum requirement.
+                    </p>
+                  </div>
+                </div>
 
                 <div>
                   <span className="registrar-record-guide-rating incomplete">
@@ -1393,8 +1624,6 @@ export default function AcademicRecordsR() {
                     <p>Subject remains an academic retake candidate.</p>
                   </div>
                 </div>
-
-                {/* FAILED */}
 
                 <div>
                   <span className="registrar-record-guide-rating failed">
@@ -1413,34 +1642,31 @@ export default function AcademicRecordsR() {
               </div>
             </section>
 
-            {/* =============================================
-                  FOOTER
-              ============================================= */}
-
             <section className="registrar-record-footer">
               <div>
                 <strong>Official Academic Record</strong>
 
                 <p>
-                  These approved results are the academic truth used by the PTC
-                  Portal for prerequisites, retake detection, and future
-                  enrollment eligibility.
+                  This page combines official PTC grades and official transfer
+                  credits. Previous-school grades remain external source grades
+                  and are not stored as PTC Final Ratings. Official results are
+                  used for curriculum completion, prerequisites, retake
+                  detection, and future enrollment eligibility.
                 </p>
               </div>
-
-              {/* =========================================
-                    TOTAL RECORDED UNITS
-                ========================================= */}
 
               <div className="registrar-record-footer-units">
                 <span>Recorded Units</span>
 
                 <strong>{summary.totalRecordedUnits}</strong>
-              </div>
 
-              {/* =========================================
-                    ACTIONS
-                ========================================= */}
+                {summary.transferCreditedUnits > 0 && (
+                  <small>
+                    {summary.transferCreditedUnits} transfer-credit unit
+                    {summary.transferCreditedUnits === 1 ? "" : "s"}
+                  </small>
+                )}
+              </div>
 
               <div className="registrar-record-actions">
                 <button

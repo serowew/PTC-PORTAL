@@ -3,6 +3,7 @@
 import express from "express";
 import db from "../../db.js";
 
+import { getOfficialAcademicRecordForStudent } from "../../services/academicRecord.service.js";
 const router = express.Router();
 
 // =====================================================
@@ -300,415 +301,146 @@ router.get("/:id", async (req, res) => {
 //
 // GET /api/registrar/students/:id/academic-records
 //
-// OFFICIAL ACADEMIC TRUTH:
+// OFFICIAL SOURCES:
 //
-// Approved Enrollment
-//        +
-// Enrollment Subject
-//        +
-// Approved Grade
+// 1. Approved PTC Grade
+// 2. Completed + Credited Transfer Credit
 //
-// Grade V2:
-// grades.enrollment_subject_id
-//        ↓
-// enrollment_subjects.enrollment_subject_id
-//
-// Draft / Submitted / Returned grades are NOT official.
+// This endpoint is read-only.
 // =====================================================
 
 router.get("/:id/academic-records", async (req, res) => {
   try {
-    const studentId = Number(req.params.id);
+    // =================================================
+    // STUDENT ID
+    // =================================================
 
-    // =====================================================
-    // VALIDATE STUDENT ID
-    // =====================================================
+    const studentId = Number(req.params.id);
 
     if (!Number.isInteger(studentId) || studentId <= 0) {
       return res.status(400).json({
         success: false,
+        code: "INVALID_STUDENT_ID",
         message: "Invalid student ID.",
       });
     }
 
-    // =====================================================
-    // GET STUDENT
-    // =====================================================
+    // =================================================
+    // STUDENT PROFILE
+    // =================================================
 
     const student = await getStudent(studentId);
 
     if (!student) {
       return res.status(404).json({
         success: false,
+        code: "STUDENT_NOT_FOUND",
         message: "Student not found.",
       });
     }
 
-    // =====================================================
-    // GET OFFICIAL ACADEMIC RECORDS
-    // =====================================================
+    // =================================================
+    // AUTHORITATIVE OFFICIAL ACADEMIC RECORD
+    // =================================================
 
-    const [rows] = await db.execute(
-      `
-      SELECT
-
-          -- =============================================
-          -- ENROLLMENT
-          -- =============================================
-
-          e.enrollment_id,
-
-          e.academic_year_id,
-          ay.academic_year,
-
-          sem.semester_id,
-          sem.semester_name,
-
-          e.enrollment_status,
-
-          -- =============================================
-          -- ENROLLMENT SUBJECT
-          -- =============================================
-
-          es.enrollment_subject_id,
-
-          es.subject_id,
-
-          es.offering_id,
-          es.section_id,
-          es.section_subject_id,
-
-          es.status
-              AS subject_status,
-
-          -- =============================================
-          -- SUBJECT
-          -- =============================================
-
-          sub.subject_code,
-          sub.subject_name,
-
-          sub.units,
-
-          sub.lecture_hours,
-          sub.laboratory_hours,
-
-          -- =============================================
-          -- SECTION
-          -- =============================================
-
-          sec.section_name,
-
-          -- =============================================
-          -- OFFICIAL GRADE
-          -- =============================================
-
-          g.grade_id,
-          g.faculty_id,
-
-          g.prelim_grade,
-          g.midterm_grade,
-          g.final_grade,
-          g.final_rating,
-
-          g.remarks,
-          g.grade_status,
-
-          g.submitted_at,
-
-          g.reviewed_by,
-
-          reviewer.username
-              AS reviewed_by_username,
-
-          g.reviewed_at,
-          g.review_remarks,
-
-          g.created_at
-              AS grade_created_at,
-
-          g.updated_at
-              AS grade_updated_at
-
-      FROM enrollments e
-
-      INNER JOIN academic_years ay
-          ON ay.academic_year_id =
-             e.academic_year_id
-
-      INNER JOIN semesters sem
-          ON sem.semester_id =
-             e.semester_id
-
-      INNER JOIN enrollment_subjects es
-          ON es.enrollment_id =
-             e.enrollment_id
-
-      INNER JOIN subjects sub
-          ON sub.subject_id =
-             es.subject_id
-
-      INNER JOIN grades g
-          ON g.enrollment_subject_id =
-             es.enrollment_subject_id
-
-          AND g.grade_status =
-              'Approved'
-
-      LEFT JOIN sections sec
-          ON sec.section_id =
-             es.section_id
-
-      LEFT JOIN users reviewer
-          ON reviewer.user_id =
-             g.reviewed_by
-
-      WHERE
-          e.student_id = ?
-
-          AND e.enrollment_status =
-              'Approved'
-
-      ORDER BY
-          ay.academic_year DESC,
-          sem.semester_id ASC,
-          sub.subject_code ASC
-      `,
-      [studentId],
+    const academicRecord = await getOfficialAcademicRecordForStudent(
+      studentId,
+      {
+        executor: db,
+      },
     );
 
-    // =====================================================
-    // FORMAT RECORDS
-    // =====================================================
+    // =================================================
+    // REGISTRAR RESPONSE ADAPTER
+    //
+    // Preserve old flat fields where useful while
+    // keeping the richer shared-service fields.
+    // =================================================
 
-    const records = rows.map((row) => {
-      const finalRating =
-        row.final_rating !== null ? Number(row.final_rating) : null;
+    const records = academicRecord.records.map((record) => ({
+      ...record,
 
-      // ===================================================
-      // ACADEMIC RESULT
-      //
-      // Numeric grade is authoritative:
-      //
-      // 1.00 - 3.00 = Passed
-      // 4.00        = Incomplete
-      // 5.00        = Failed
-      // ===================================================
+      // Existing Registrar-style alias.
+      academic_result: record.classification,
 
-      let academicResult = null;
+      // Existing flat faculty alias.
+      faculty_id: record.faculty?.faculty_id ?? null,
 
-      if (finalRating !== null) {
-        if (finalRating >= 1 && finalRating <= 3) {
-          academicResult = "Passed";
-        } else if (finalRating === 4) {
-          academicResult = "Incomplete";
-        } else if (finalRating === 5) {
-          academicResult = "Failed";
-        }
-      }
+      // Existing flat review aliases.
+      reviewed_by: record.approval?.reviewed_by ?? null,
 
-      return {
-        // ===============================================
-        // ENROLLMENT
-        // ===============================================
+      reviewed_by_username: record.approval?.reviewed_by_username ?? null,
 
-        enrollment_id: Number(row.enrollment_id),
+      reviewed_at: record.approval?.reviewed_at ?? null,
 
-        academic_year_id: Number(row.academic_year_id),
+      review_remarks: record.approval?.review_remarks ?? null,
 
-        academic_year: row.academic_year,
+      // Existing grade timestamp aliases.
+      // Transfer-credit rows have no PTC grade.
+      grade_created_at:
+        record.record_type === "PTC_GRADE" ? record.created_at : null,
 
-        semester_id: Number(row.semester_id),
+      grade_updated_at:
+        record.record_type === "PTC_GRADE" ? record.updated_at : null,
+    }));
 
-        semester_name: row.semester_name,
-
-        enrollment_status: row.enrollment_status,
-
-        // ===============================================
-        // SUBJECT ATTEMPT
-        // ===============================================
-
-        enrollment_subject_id: Number(row.enrollment_subject_id),
-
-        subject_id: Number(row.subject_id),
-
-        subject_code: row.subject_code,
-
-        subject_name: row.subject_name,
-
-        units: Number(row.units || 0),
-
-        lecture_hours:
-          row.lecture_hours !== null ? Number(row.lecture_hours) : null,
-
-        laboratory_hours:
-          row.laboratory_hours !== null ? Number(row.laboratory_hours) : null,
-
-        subject_status: row.subject_status,
-
-        // ===============================================
-        // PLACEMENT
-        // ===============================================
-
-        offering_id: row.offering_id !== null ? Number(row.offering_id) : null,
-
-        section_id: row.section_id !== null ? Number(row.section_id) : null,
-
-        section_subject_id:
-          row.section_subject_id !== null
-            ? Number(row.section_subject_id)
-            : null,
-
-        section_name: row.section_name || null,
-
-        // ===============================================
-        // GRADE
-        // ===============================================
-
-        grade_id: Number(row.grade_id),
-
-        faculty_id: row.faculty_id !== null ? Number(row.faculty_id) : null,
-
-        prelim_grade:
-          row.prelim_grade !== null ? Number(row.prelim_grade) : null,
-
-        midterm_grade:
-          row.midterm_grade !== null ? Number(row.midterm_grade) : null,
-
-        final_grade: row.final_grade !== null ? Number(row.final_grade) : null,
-
-        final_rating: finalRating,
-
-        academic_result: academicResult,
-
-        remarks: row.remarks,
-
-        grade_status: row.grade_status,
-
-        submitted_at: row.submitted_at,
-
-        reviewed_by: row.reviewed_by !== null ? Number(row.reviewed_by) : null,
-
-        reviewed_by_username: row.reviewed_by_username || null,
-
-        reviewed_at: row.reviewed_at,
-
-        review_remarks: row.review_remarks,
-
-        grade_created_at: row.grade_created_at,
-
-        grade_updated_at: row.grade_updated_at,
-      };
-    });
-
-    // =====================================================
+    // =================================================
     // RESPONSE
-    // =====================================================
+    // =================================================
 
     return res.status(200).json({
       success: true,
 
+      code: "REGISTRAR_OFFICIAL_ACADEMIC_RECORD_RETRIEVED",
+
+      message: "Official academic record retrieved successfully.",
+
       student,
 
+      // Keep old response field for compatibility.
       totalSubjects: records.length,
 
+      // Combined official academic history.
       records,
+
+      // Combined summary.
+      summary: academicRecord.summary,
+
+      // Explicit source collections.
+      ptc_grade_records: academicRecord.ptc_grade_records,
+
+      transfer_credit_records: academicRecord.transfer_credit_records,
+
+      academic_rule: academicRecord.academic_rule,
+
+      academic_effect: {
+        read_only: true,
+
+        combines_official_ptc_grades: true,
+
+        combines_official_transfer_credits: true,
+
+        changes_ptc_grades: false,
+
+        changes_transfer_evaluations: false,
+
+        changes_current_enrollment: false,
+
+        reason:
+          "Registrar academic records combine official PTC grades and official transfer credits without converting external grades into PTC grades.",
+      },
     });
   } catch (error) {
-    console.error("GET ACADEMIC RECORDS ERROR:", error);
+    console.error("GET REGISTRAR ACADEMIC RECORDS ERROR:", error);
 
     return res.status(500).json({
       success: false,
+
+      code: "REGISTRAR_ACADEMIC_RECORD_RETRIEVAL_FAILED",
+
       message: "Failed to fetch academic records.",
 
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-});
-// =====================================================
-// GET STUDENT DOCUMENTS
-//
-// GET /api/registrar/students/:id/documents
-// =====================================================
-
-router.get("/:id/documents", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // =====================================================
-    // GET STUDENT
-    // =====================================================
-
-    const student = await getStudent(id);
-
-    if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found.",
-      });
-    }
-
-    // =====================================================
-    // GET DOCUMENTS
-    // =====================================================
-
-    const [documents] = await db.execute(
-      `
-      SELECT
-
-          sd.document_id,
-          sd.student_id,
-
-          sd.document_type,
-
-          sd.file_name,
-          sd.file_path,
-
-          sd.verification_status,
-
-          sd.remarks,
-
-          sd.verified_by,
-          u.username AS verified_by_username,
-
-          sd.verified_at,
-          sd.uploaded_at
-
-      FROM student_documents sd
-
-      LEFT JOIN users u
-          ON u.user_id = sd.verified_by
-
-      WHERE sd.student_id = ?
-
-      ORDER BY sd.uploaded_at DESC
-      `,
-      [student.student_id],
-    );
-
-    // =====================================================
-    // FORMAT FILE URL
-    // =====================================================
-
-    const formattedDocuments = documents.map((doc) => ({
-      ...doc,
-      document_url: doc.file_path
-        ? `${req.protocol}://${req.get("host")}/${doc.file_path.replace(/^\/+/, "")}`
-        : null,
-    }));
-
-    res.json({
-      success: true,
-      student,
-      totalDocuments: formattedDocuments.length,
-      documents: formattedDocuments,
-    });
-  } catch (error) {
-    console.error("GET STUDENT DOCUMENTS ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch student documents.",
     });
   }
 });

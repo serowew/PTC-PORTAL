@@ -53,20 +53,11 @@ import FacultyProfile from "../pages/faculty/Profile";
 import MyClasses from "../pages/faculty/Classes/MyClasses";
 import ClassSchedule from "../pages/faculty/Classes/ClassSchedule";
 import FacultyStudentList from "../pages/faculty/Classes/StudentList";
-import FacultyLectureNotes from "../pages/faculty/Materials/LectureNotes";
-import FacultySyllabus from "../pages/faculty/Materials/Syllabus";
 
 // Faculty Grades
 import EnterGrades from "../pages/faculty/Grades/EnterGrades";
 import GradeSummary from "../pages/faculty/Grades/GradeSummary";
 import GradeHistory from "../pages/faculty/Grades/GradeHistory";
-import TakeAttendance from "../pages/faculty/Attendance/Takeattendance";
-import AttendanceRecords from "../pages/faculty/Attendance/AttendanceRecord";
-import AttendanceReports from "../pages/faculty/Attendance/AttendanceReport";
-
-import FacultyMessages from "../pages/faculty/Communication/Message";
-import FacultyAnnouncements from "../pages/faculty/Communication/Announcement";
-import SendNotice from "../pages/faculty/Communication/SendNotice";
 // Faculty Announcement
 import FacultyAnnouncementsF from "../pages/faculty/Announcement/AnnouncementF";
 import FacultyAnnouncementsDF from "../pages/faculty/Announcement/AnnouncementDetailsF";
@@ -152,6 +143,8 @@ import CoursemanagementR from "../pages/registrar/Courses/CourseManagementR";
 import DepartmentManagementR from "../pages/registrar/Department/DepartmentManagementR";
 import EnrollmentPeriodMR from "../pages/registrar/Enrollment/EnrollmentPeriodMR";
 import ClassOfferingManagementR from "../pages/registrar/ClassOffering.tsx/ClassOfferingManagementR";
+import ClassPROG from "../pages/programhead/Classmanagement/ClassPROG";
+import TransferEvaluationR from "../pages/registrar/StudentRecord/TransferEvaluationR";
 
 // ─── Role guard ───────────────────────────────────────────────
 function ProtectedRoute({
@@ -375,16 +368,6 @@ export default function AppRoutes() {
           element={<FacultyRoute element={<FacultyStudentList />} />}
         />
 
-        {/* ── Faculty: Upload Materials ── */}
-        <Route
-          path="/faculty/materials/notes"
-          element={<FacultyRoute element={<FacultyLectureNotes />} />}
-        />
-        <Route
-          path="/faculty/materials/syllabus"
-          element={<FacultyRoute element={<FacultySyllabus />} />}
-        />
-
         {/* ── Faculty: Post Grades ── */}
         <Route
           path="/faculty/grades/enter"
@@ -397,34 +380,6 @@ export default function AppRoutes() {
         <Route
           path="/faculty/grades/history"
           element={<FacultyRoute element={<GradeHistory />} />}
-        />
-
-        {/* ── Faculty: Attendance ── */}
-        <Route
-          path="/faculty/attendance/take"
-          element={<FacultyRoute element={<TakeAttendance />} />}
-        />
-        <Route
-          path="/faculty/attendance/records"
-          element={<FacultyRoute element={<AttendanceRecords />} />}
-        />
-        <Route
-          path="/faculty/attendance/reports"
-          element={<FacultyRoute element={<AttendanceReports />} />}
-        />
-
-        {/* ── Faculty: Communication ── */}
-        <Route
-          path="/faculty/communication/messages"
-          element={<FacultyRoute element={<FacultyMessages />} />}
-        />
-        <Route
-          path="/faculty/communication/announcements"
-          element={<FacultyRoute element={<FacultyAnnouncements />} />}
-        />
-        <Route
-          path="/faculty/communication/send"
-          element={<FacultyRoute element={<SendNotice />} />}
         />
 
         {/* ── Admin ── */}
@@ -588,6 +543,11 @@ export default function AppRoutes() {
           element={<ProgramHeadRoute element={<PendingGrades />} />}
         />
 
+        <Route
+          path="/programhead/class/management"
+          element={<ProgramHeadRoute element={<ClassPROG />} />}
+        />
+
         {/* ── Registrar ── */}
         <Route
           path="/registrar/dashboard"
@@ -614,6 +574,11 @@ export default function AppRoutes() {
         <Route
           path="/registrar/student/:id/DocumentsR"
           element={<RegistrarRoute element={<StudentDocumentsR />} />}
+        />
+
+        <Route
+          path="/registrar/student/:id/TransferEvaluationR"
+          element={<RegistrarRoute element={<TransferEvaluationR />} />}
         />
 
         {/* ── Registrar Enrollment ── */}

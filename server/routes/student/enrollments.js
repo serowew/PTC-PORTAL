@@ -11,6 +11,8 @@ import {
   getRetakeCandidates,
 } from "../../services/academicEvaluation.service.js";
 
+import { getOfficialTransferCreditsForStudent } from "../../services/transferCredit.service.js";
+
 const router = express.Router();
 
 // =====================================================
@@ -1883,7 +1885,14 @@ ORDER BY
     // final_rating is authoritative.
     // =================================================
 
-    const approvedHistory = await getApprovedAcademicHistory(studentId, db);
+    const [approvedHistory, officialTransferCreditResult] = await Promise.all([
+      getApprovedAcademicHistory(studentId, db),
+
+      getOfficialTransferCreditsForStudent(studentId, {
+        curriculumId,
+        executor: db,
+      }),
+    ]);
 
     // Build latest Approved academic result per subject.
     //
@@ -2171,10 +2180,25 @@ ORDER BY
       prerequisites: formatPrerequisites(subject.prerequisites),
     }));
     // =================================================
-    // 11. COMPLETED / PASSED SUBJECTS
+    // 11. COMPLETED / SATISFIED SUBJECTS
+    //
+    // A curriculum requirement can be officially
+    // satisfied by:
+    //
+    // 1. Approved passing PTC grade
+    // 2. Completed + Credited transfer credit
+    //
+    // IMPORTANT:
+    //
+    // Transfer source grades are NEVER converted into
+    // PTC final_grade / final_rating values.
     // =================================================
 
     const completedSubjectMap = new Map();
+
+    // =================================================
+    // 11-A. APPROVED PTC PASSES
+    // =================================================
 
     for (const record of approvedHistory) {
       if (record.result !== "Passed") {
@@ -2182,6 +2206,10 @@ ORDER BY
       }
 
       const subjectId = Number(record.subject_id);
+
+      if (!Number.isInteger(subjectId) || subjectId <= 0) {
+        continue;
+      }
 
       if (completedSubjectMap.has(subjectId)) {
         continue;
@@ -2200,8 +2228,81 @@ ORDER BY
         final_grade: record.final_rating,
 
         academic_status: "PASSED",
+
+        academic_source: "PTC Grade",
+
+        curriculum_satisfied: true,
+
+        source_grade: null,
+
+        transfer_evaluation_id: null,
+
+        transfer_subject_id: null,
       });
     }
+
+    // =================================================
+    // 11-B. OFFICIAL TRANSFER CREDITS
+    //
+    // Authoritative rule:
+    //
+    // evaluation_status = Completed
+    // credit_status     = Credited
+    // =================================================
+
+    for (const credit of officialTransferCreditResult.official_transfer_credits ||
+      []) {
+      const subjectId = Number(credit.ptc_subject?.subject_id);
+
+      if (!Number.isInteger(subjectId) || subjectId <= 0) {
+        continue;
+      }
+
+      // Prevent duplicate satisfaction if legacy data
+      // somehow contains both a PTC pass and transfer
+      // credit for the same PTC subject.
+      if (completedSubjectMap.has(subjectId)) {
+        continue;
+      }
+
+      completedSubjectMap.set(subjectId, {
+        subject_id: subjectId,
+
+        subject_code: credit.ptc_subject?.subject_code || null,
+
+        subject_name: credit.ptc_subject?.subject_name || null,
+
+        units: Number(credit.credit?.credited_units || 0),
+
+        // IMPORTANT:
+        // This is NOT a PTC grade.
+        final_grade: null,
+
+        academic_status: "CREDITED",
+
+        academic_source: "Transfer Credit",
+
+        curriculum_satisfied: true,
+
+        source_grade: credit.source?.grade ?? null,
+
+        transfer_evaluation_id: Number(credit.transfer_evaluation_id),
+
+        transfer_subject_id: Number(credit.transfer_subject_id),
+
+        transfer_source: {
+          school: credit.source?.school || null,
+
+          subject_code: credit.source?.subject_code || null,
+
+          subject_name: credit.source?.subject_name || null,
+        },
+      });
+    }
+
+    // =================================================
+    // FINAL SATISFIED SUBJECT COLLECTION
+    // =================================================
 
     const completedSubjects = Array.from(completedSubjectMap.values());
 

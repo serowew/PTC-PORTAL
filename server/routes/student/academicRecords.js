@@ -1,108 +1,11 @@
+// server/routes/student/academicRecords.js
+
 import express from "express";
 import db from "../../db.js";
 
+import { getOfficialAcademicRecordForStudent } from "../../services/academicRecord.service.js";
+
 const router = express.Router();
-
-// =====================================================
-// OFFICIAL GRADE CLASSIFIER
-// =====================================================
-//
-// IMPORTANT:
-//
-// Academic result is determined by final_rating.
-//
-// 1.00 - 3.00 = Passed
-// 4.00        = Incomplete / Retake
-// 5.00        = Failed / Retake
-//
-// remarks is supporting information only.
-// It does NOT override the numeric final_rating.
-//
-// =====================================================
-
-function classifyFinalRating(value) {
-  if (value === null || value === undefined || value === "") {
-    return {
-      code: "NO_FINAL_RATING",
-      classification: "Unknown",
-      passed: false,
-      retake: false,
-      valid: false,
-      final_rating: null,
-    };
-  }
-
-  const rating = Number(value);
-
-  if (!Number.isFinite(rating)) {
-    return {
-      code: "INVALID_FINAL_RATING",
-      classification: "Unknown",
-      passed: false,
-      retake: false,
-      valid: false,
-      final_rating: null,
-    };
-  }
-
-  // ===================================================
-  // PASSED
-  // ===================================================
-
-  if (rating >= 1.0 && rating <= 3.0) {
-    return {
-      code: "PASSED",
-      classification: "Passed",
-      passed: true,
-      retake: false,
-      valid: true,
-      final_rating: rating,
-    };
-  }
-
-  // ===================================================
-  // INCOMPLETE
-  // ===================================================
-
-  if (rating === 4.0) {
-    return {
-      code: "INCOMPLETE",
-      classification: "Incomplete",
-      passed: false,
-      retake: true,
-      valid: true,
-      final_rating: rating,
-    };
-  }
-
-  // ===================================================
-  // FAILED
-  // ===================================================
-
-  if (rating === 5.0) {
-    return {
-      code: "FAILED",
-      classification: "Failed",
-      passed: false,
-      retake: true,
-      valid: true,
-      final_rating: rating,
-    };
-  }
-
-  // ===================================================
-  // UNSUPPORTED OFFICIAL RATING
-  // ===================================================
-
-  return {
-    code: "INVALID_FINAL_RATING",
-    classification: "Unknown",
-    passed: false,
-    retake: false,
-    valid: false,
-    final_rating: rating,
-  };
-}
 
 // =====================================================
 // GET STUDENT OFFICIAL ACADEMIC RECORD
@@ -118,24 +21,22 @@ function classifyFinalRating(value) {
 // - No student_id request body.
 // - Student can only retrieve their own record.
 //
-// ACADEMIC TRUTH:
+// OFFICIAL ACADEMIC SOURCES:
 //
-// grades
-//   ↓ enrollment_subject_id
-// enrollment_subjects
-//   ↓ enrollment_id
-// enrollments
-//   ↓ student_id
-// authenticated Student
+// 1. PTC Grade
 //
-// Only:
+//    Approved enrollment
+//    + Approved grade
 //
-// grade_status = 'Approved'
-// enrollment_status = 'Approved'
+// 2. Transfer Credit
 //
-// Normal semesters only:
+//    Completed transfer evaluation
+//    + Credited transfer subject
 //
-// semester_id IN (1, 2)
+// IMPORTANT:
+//
+// Previous-school grades remain external source grades.
+// They are NEVER converted into PTC final_rating values.
 //
 // =====================================================
 
@@ -148,6 +49,7 @@ router.get("/", async (req, res) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
+        code: "AUTHENTICATION_REQUIRED",
         message: "Authentication is required.",
       });
     }
@@ -157,6 +59,7 @@ router.get("/", async (req, res) => {
     if (!Number.isInteger(userId) || userId <= 0) {
       return res.status(401).json({
         success: false,
+        code: "INVALID_AUTHENTICATED_USER",
         message: "Authenticated user ID is invalid.",
       });
     }
@@ -168,16 +71,16 @@ router.get("/", async (req, res) => {
     if (req.user.role_name !== "Student") {
       return res.status(403).json({
         success: false,
+        code: "STUDENT_ACCESS_REQUIRED",
         message: "Student access is required.",
       });
     }
 
     // =================================================
     // 3. AUTHENTICATED STUDENT PROFILE
-    // =================================================
     //
-    // Do not trust a Student ID from the frontend.
-    //
+    // Student identity comes from JWT.
+    // Never accept student_id from the frontend.
     // =================================================
 
     const [studentRows] = await db.execute(
@@ -194,12 +97,14 @@ router.get("/", async (req, res) => {
             u.email,
 
             s.course_id,
+
             c.course_code,
             c.course_name,
 
             s.year_level,
 
             s.status_id,
+
             student_status.status_name
                 AS student_status
 
@@ -217,16 +122,18 @@ router.get("/", async (req, res) => {
             ON student_status.status_id =
                s.status_id
 
-        WHERE s.user_id = ?
+        WHERE
+            s.user_id = ?
 
         LIMIT 1
-        `,
+      `,
       [userId],
     );
 
     if (studentRows.length === 0) {
       return res.status(404).json({
         success: false,
+        code: "STUDENT_PROFILE_NOT_FOUND",
         message: "No Student profile is connected to this account.",
       });
     }
@@ -239,11 +146,13 @@ router.get("/", async (req, res) => {
 
     // =================================================
     // 4. ACTIVE CURRICULUM
-    // =================================================
     //
-    // Academic history can still exist without an active
-    // curriculum, so curriculum is nullable in response.
+    // Curriculum is current profile/context information.
     //
+    // IMPORTANT:
+    //
+    // It is NOT used to erase/filter historical official
+    // academic records.
     // =================================================
 
     const [curriculumRows] = await db.execute(
@@ -252,6 +161,7 @@ router.get("/", async (req, res) => {
             sc.student_curriculum_id,
             sc.curriculum_id,
             sc.assigned_date,
+
             sc.status
                 AS assignment_status,
 
@@ -266,20 +176,21 @@ router.get("/", async (req, res) => {
             ON cur.curriculum_id =
                sc.curriculum_id
 
-        WHERE sc.student_id = ?
+        WHERE
+            sc.student_id = ?
 
-          AND sc.status =
-              'Active'
+            AND sc.status =
+                'Active'
 
-          AND cur.is_active = 1
+            AND cur.is_active = 1
 
-          AND cur.course_id = ?
+            AND cur.course_id = ?
 
         ORDER BY
             sc.student_curriculum_id DESC
 
         LIMIT 1
-        `,
+      `,
       [studentId, courseId],
     );
 
@@ -289,6 +200,8 @@ router.get("/", async (req, res) => {
       const row = curriculumRows[0];
 
       curriculum = {
+        student_curriculum_id: Number(row.student_curriculum_id),
+
         curriculum_id: Number(row.curriculum_id),
 
         curriculum_name: row.curriculum_name,
@@ -305,315 +218,30 @@ router.get("/", async (req, res) => {
 
         status: row.assignment_status,
 
-        assigned_date: row.assigned_date,
+        assigned_date: row.assigned_date || null,
       };
     }
 
     // =================================================
-    // 5. OFFICIAL APPROVED ACADEMIC HISTORY
-    // =================================================
+    // 5. AUTHORITATIVE OFFICIAL ACADEMIC RECORD
     //
-    // CURRENT GRADE SCHEMA:
+    // This service combines:
     //
-    // grades.enrollment_subject_id
+    // - Approved PTC grades
+    // - Completed + Credited transfer credits
     //
-    // DO NOT use the old legacy assumption:
-    //
-    // grades.student_id
-    // grades.subject_id
-    // grades.enrollment_id
-    //
-    // The exact academic attempt is:
-    //
-    // grades
-    //  -> enrollment_subjects
-    //  -> enrollments
-    //  -> student
-    //
+    // It keeps the two academic sources separate.
     // =================================================
 
-    const [recordRows] = await db.execute(
-      `
-        SELECT
-            -- =========================================
-            -- GRADE
-            -- =========================================
-
-            g.grade_id,
-            g.enrollment_subject_id,
-            g.faculty_id,
-
-            g.prelim_grade,
-            g.midterm_grade,
-            g.final_grade,
-            g.final_rating,
-
-            g.remarks,
-            g.grade_status,
-
-            g.submitted_at,
-
-            g.reviewed_by,
-            reviewer.username
-                AS reviewed_by_username,
-
-            g.reviewed_at,
-            g.review_remarks,
-
-            g.created_at
-                AS grade_created_at,
-
-            g.updated_at
-                AS grade_updated_at,
-
-            -- =========================================
-            -- EXACT ENROLLMENT SUBJECT ATTEMPT
-            -- =========================================
-
-            es.enrollment_id,
-            es.subject_id,
-            es.status
-                AS subject_status,
-
-            es.offering_id,
-            es.section_id,
-            es.section_subject_id,
-
-            -- =========================================
-            -- SUBJECT
-            -- =========================================
-
-            sub.subject_code,
-            sub.subject_name,
-            sub.units,
-
-            -- =========================================
-            -- OFFICIAL ENROLLMENT
-            -- =========================================
-
-            e.student_id,
-
-            e.academic_year_id,
-            ay.academic_year,
-
-            e.semester_id,
-            sem.semester_name,
-
-            e.enrollment_status,
-
-            -- =========================================
-            -- FACULTY
-            -- =========================================
-
-            faculty.employee_number
-                AS faculty_employee_number,
-
-            faculty.first_name
-                AS faculty_first_name,
-
-            faculty.middle_name
-                AS faculty_middle_name,
-
-            faculty.last_name
-                AS faculty_last_name
-
-        FROM grades g
-
-        INNER JOIN enrollment_subjects es
-            ON es.enrollment_subject_id =
-               g.enrollment_subject_id
-
-        INNER JOIN enrollments e
-            ON e.enrollment_id =
-               es.enrollment_id
-
-        INNER JOIN subjects sub
-            ON sub.subject_id =
-               es.subject_id
-
-        INNER JOIN academic_years ay
-            ON ay.academic_year_id =
-               e.academic_year_id
-
-        INNER JOIN semesters sem
-            ON sem.semester_id =
-               e.semester_id
-
-        LEFT JOIN faculty
-            ON faculty.faculty_id =
-               g.faculty_id
-
-        LEFT JOIN users reviewer
-            ON reviewer.user_id =
-               g.reviewed_by
-
-        WHERE e.student_id = ?
-
-          AND e.enrollment_status =
-              'Approved'
-
-          AND g.grade_status =
-              'Approved'
-
-          AND g.final_rating
-              IS NOT NULL
-
-          AND e.semester_id
-              IN (1, 2)
-
-        ORDER BY
-            e.academic_year_id ASC,
-            e.semester_id ASC,
-            es.enrollment_subject_id ASC,
-            g.grade_id ASC
-        `,
-      [studentId],
+    const academicRecord = await getOfficialAcademicRecordForStudent(
+      studentId,
+      {
+        executor: db,
+      },
     );
 
     // =================================================
-    // 6. FORMAT OFFICIAL RECORDS
-    // =================================================
-
-    const records = recordRows.map((row) => {
-      const finalRating =
-        row.final_rating !== null && row.final_rating !== undefined
-          ? Number(row.final_rating)
-          : null;
-
-      const result = classifyFinalRating(finalRating);
-
-      const facultyName = [
-        row.faculty_first_name,
-        row.faculty_middle_name,
-        row.faculty_last_name,
-      ]
-        .filter(Boolean)
-        .join(" ");
-
-      return {
-        grade_id: Number(row.grade_id),
-
-        enrollment_subject_id: Number(row.enrollment_subject_id),
-
-        enrollment_id: Number(row.enrollment_id),
-
-        subject_id: Number(row.subject_id),
-
-        subject_code: row.subject_code,
-
-        subject_name: row.subject_name,
-
-        units: Number(row.units || 0),
-
-        academic_year_id: Number(row.academic_year_id),
-
-        academic_year: row.academic_year,
-
-        semester_id: Number(row.semester_id),
-
-        semester_name: row.semester_name,
-
-        enrollment_status: row.enrollment_status,
-
-        subject_status: row.subject_status,
-
-        prelim_grade:
-          row.prelim_grade !== null && row.prelim_grade !== undefined
-            ? Number(row.prelim_grade)
-            : null,
-
-        midterm_grade:
-          row.midterm_grade !== null && row.midterm_grade !== undefined
-            ? Number(row.midterm_grade)
-            : null,
-
-        final_grade:
-          row.final_grade !== null && row.final_grade !== undefined
-            ? Number(row.final_grade)
-            : null,
-
-        // =========================================
-        // OFFICIAL ACADEMIC RESULT VALUE
-        // =========================================
-
-        final_rating: finalRating,
-
-        remarks: row.remarks || null,
-
-        grade_status: row.grade_status,
-
-        classification: result.classification,
-
-        result_code: result.code,
-
-        passed: result.passed,
-
-        retake: result.retake,
-
-        valid_result: result.valid,
-
-        faculty:
-          row.faculty_id !== null && row.faculty_id !== undefined
-            ? {
-                faculty_id: Number(row.faculty_id),
-
-                employee_number: row.faculty_employee_number || null,
-
-                faculty_name: facultyName || "Assigned Faculty",
-              }
-            : null,
-
-        approval: {
-          reviewed_by:
-            row.reviewed_by !== null && row.reviewed_by !== undefined
-              ? Number(row.reviewed_by)
-              : null,
-
-          reviewed_by_username: row.reviewed_by_username || null,
-
-          reviewed_at: row.reviewed_at || null,
-
-          review_remarks: row.review_remarks || null,
-        },
-
-        submitted_at: row.submitted_at || null,
-
-        created_at: row.grade_created_at || null,
-
-        updated_at: row.grade_updated_at || null,
-      };
-    });
-
-    // =================================================
-    // 7. SUMMARY
-    // =================================================
-
-    const passedRecords = records.filter(
-      (record) => record.classification === "Passed",
-    );
-
-    const incompleteRecords = records.filter(
-      (record) => record.classification === "Incomplete",
-    );
-
-    const failedRecords = records.filter(
-      (record) => record.classification === "Failed",
-    );
-
-    const retakeRecords = records.filter((record) => record.retake);
-
-    const totalRecordedUnits = records.reduce(
-      (total, record) => total + Number(record.units || 0),
-      0,
-    );
-
-    const earnedUnits = passedRecords.reduce(
-      (total, record) => total + Number(record.units || 0),
-      0,
-    );
-
-    // =================================================
-    // 8. STUDENT RESPONSE
+    // 6. STUDENT RESPONSE
     // =================================================
 
     const studentResponse = {
@@ -652,37 +280,77 @@ router.get("/", async (req, res) => {
     };
 
     // =================================================
-    // 9. SUCCESS RESPONSE
+    // 7. SUCCESS RESPONSE
     // =================================================
 
     return res.status(200).json({
       success: true,
 
+      code: "OFFICIAL_ACADEMIC_RECORD_RETRIEVED",
+
+      message: "Official academic record retrieved successfully.",
+
       student: studentResponse,
 
-      summary: {
-        total_approved_subjects: records.length,
+      // ===============================================
+      // COMBINED SUMMARY
+      // ===============================================
 
-        total_recorded_units: totalRecordedUnits,
+      summary: academicRecord.summary,
 
-        earned_units: earnedUnits,
+      // ===============================================
+      // COMBINED OFFICIAL RECORDS
+      //
+      // Contains both:
+      //
+      // PTC_GRADE
+      // TRANSFER_CREDIT
+      // ===============================================
 
-        passed_subjects: passedRecords.length,
+      records: academicRecord.records,
 
-        incomplete_subjects: incompleteRecords.length,
+      // ===============================================
+      // SOURCE-SPECIFIC RECORDS
+      // ===============================================
 
-        failed_subjects: failedRecords.length,
+      ptc_grade_records: academicRecord.ptc_grade_records,
 
-        retake_subjects: retakeRecords.length,
+      transfer_credit_records: academicRecord.transfer_credit_records,
+
+      // ===============================================
+      // AUTHORITATIVE RULE
+      // ===============================================
+
+      academic_rule: academicRecord.academic_rule,
+
+      // ===============================================
+      // READ-ONLY ACADEMIC EFFECT
+      // ===============================================
+
+      academic_effect: {
+        read_only: true,
+
+        combines_official_ptc_grades: true,
+
+        combines_official_transfer_credits: true,
+
+        changes_ptc_grades: false,
+
+        changes_transfer_evaluations: false,
+
+        changes_current_enrollment: false,
+
+        reason:
+          "This endpoint reads official PTC grades and official transfer credits as separate academic sources in one combined academic record.",
       },
-
-      records,
     });
   } catch (error) {
     console.error("GET /api/student/academic-records ERROR:", error);
 
     return res.status(500).json({
       success: false,
+
+      code: "ACADEMIC_RECORD_RETRIEVAL_FAILED",
 
       message: "Failed to retrieve Student academic record.",
 

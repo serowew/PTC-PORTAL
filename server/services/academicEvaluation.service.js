@@ -1,7 +1,7 @@
 // server/services/academicEvaluation.service.js
 
 import db from "../db.js";
-
+import { getOfficialTransferCreditsForStudent } from "./transferCredit.service.js";
 // =====================================================
 // CONSTANTS
 // =====================================================
@@ -466,15 +466,27 @@ export async function getSubjectPrerequisites(subjectId, executor = db) {
     prerequisite_units: Number(row.prerequisite_units),
   }));
 }
-
 // =====================================================
 // CHECK PREREQUISITES
 // =====================================================
 //
-// Every prerequisite must have an APPROVED passing grade.
+// A prerequisite is academically satisfied by EITHER:
 //
-// No approved history is NORMAL for freshmen when
-// the subject has no prerequisites.
+// 1. Official PTC passing grade
+//
+//    enrollment_status = Approved
+//    grade_status      = Approved
+//    final_rating      = 1.00 - 3.00
+//
+// OR
+//
+// 2. Official transfer credit
+//
+//    transfer evaluation = Completed
+//    transfer subject     = Credited
+//
+// Draft / Submitted / Returned transfer evaluations
+// must never satisfy prerequisites.
 //
 // =====================================================
 
@@ -485,95 +497,188 @@ export async function checkPrerequisites(studentId, subjectId, executor = db) {
 
   const database = getExecutor(executor);
 
+  // ===================================================
+  // 1. LOAD AUTHORITATIVE OFFICIAL TRANSFER CREDITS
+  //
+  // Reuse transferCredit.service.js so the official
+  // Completed + Credited rule remains centralized.
+  // ===================================================
+
+  const transferCreditResult = await getOfficialTransferCreditsForStudent(
+    safeStudentId,
+    {
+      executor: database,
+    },
+  );
+
+  const officialTransferSubjectIds = new Set(
+    (transferCreditResult.satisfied_ptc_subject_ids || []).map(Number),
+  );
+
+  // ===================================================
+  // 2. LOAD SUBJECT PREREQUISITES
+  //
+  // The SQL below determines only whether the
+  // prerequisite has an official PTC passing grade.
+  //
+  // Transfer-credit satisfaction is merged afterward.
+  // ===================================================
+
   const [rows] = await database.execute(
     `
-      SELECT
-          sp.prerequisite_id,
+        SELECT
+            sp.prerequisite_id,
 
-          sp.subject_id,
+            sp.subject_id,
 
-          sp.prerequisite_subject_id,
+            sp.prerequisite_subject_id,
 
-          prereq.subject_code
-              AS prerequisite_subject_code,
+            prereq.subject_code
+                AS prerequisite_subject_code,
 
-          prereq.subject_name
-              AS prerequisite_subject_name,
+            prereq.subject_name
+                AS prerequisite_subject_name,
 
-          CASE
-              WHEN EXISTS (
-                  SELECT 1
+            prereq.units
+                AS prerequisite_units,
 
-                  FROM grades g
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
 
-                  INNER JOIN enrollment_subjects es
-                      ON es.enrollment_subject_id =
-                         g.enrollment_subject_id
+                    FROM grades g
 
-                  INNER JOIN enrollments e
-                      ON e.enrollment_id =
-                         es.enrollment_id
+                    INNER JOIN enrollment_subjects es
+                        ON es.enrollment_subject_id =
+                           g.enrollment_subject_id
 
-                  WHERE
-                      e.student_id = ?
+                    INNER JOIN enrollments e
+                        ON e.enrollment_id =
+                           es.enrollment_id
 
-                      AND es.subject_id =
-                          sp.prerequisite_subject_id
+                    WHERE
+                        e.student_id = ?
 
-                      AND e.enrollment_status =
-                          'Approved'
+                        AND es.subject_id =
+                            sp.prerequisite_subject_id
 
-                      AND g.grade_status =
-                          'Approved'
+                        AND e.enrollment_status =
+                            'Approved'
 
-                      AND g.final_rating >= 1.00
+                        AND g.grade_status =
+                            'Approved'
 
-                      AND g.final_rating <= 3.00
-              )
-              THEN 1
-              ELSE 0
-          END AS is_satisfied
+                        AND g.final_rating >= 1.00
 
-      FROM subject_prerequisites sp
+                        AND g.final_rating <= 3.00
+                )
 
-      INNER JOIN subjects prereq
-          ON prereq.subject_id =
-             sp.prerequisite_subject_id
+                THEN 1
+                ELSE 0
 
-      WHERE
-          sp.subject_id = ?
+            END AS has_ptc_approved_pass
 
-      ORDER BY
-          prereq.subject_code,
-          sp.prerequisite_id
-    `,
+        FROM subject_prerequisites sp
+
+        INNER JOIN subjects prereq
+            ON prereq.subject_id =
+               sp.prerequisite_subject_id
+
+        WHERE
+            sp.subject_id = ?
+
+        ORDER BY
+            prereq.subject_code,
+            sp.prerequisite_id
+      `,
     [safeStudentId, safeSubjectId],
   );
 
-  const prerequisites = rows.map((row) => ({
-    prerequisite_id: Number(row.prerequisite_id),
+  // ===================================================
+  // 3. MERGE BOTH OFFICIAL ACADEMIC SOURCES
+  // ===================================================
 
-    prerequisite_subject_id: Number(row.prerequisite_subject_id),
+  const prerequisites = rows.map((row) => {
+    const prerequisiteSubjectId = Number(row.prerequisite_subject_id);
 
-    prerequisite_subject_code: row.prerequisite_subject_code,
+    const ptcApprovedGradePass = Number(row.has_ptc_approved_pass) === 1;
 
-    prerequisite_subject_name: row.prerequisite_subject_name,
+    const officialTransferCredit = officialTransferSubjectIds.has(
+      prerequisiteSubjectId,
+    );
 
-    is_satisfied: Number(row.is_satisfied) === 1,
-  }));
+    const isSatisfied = ptcApprovedGradePass || officialTransferCredit;
 
-  const missing = prerequisites.filter((item) => !item.is_satisfied);
+    let satisfactionSource = null;
+
+    if (ptcApprovedGradePass) {
+      satisfactionSource = "PTC_APPROVED_GRADE";
+    } else if (officialTransferCredit) {
+      satisfactionSource = "TRANSFER_CREDIT";
+    }
+
+    return {
+      prerequisite_id: Number(row.prerequisite_id),
+
+      prerequisite_subject_id: prerequisiteSubjectId,
+
+      prerequisite_subject_code: row.prerequisite_subject_code,
+
+      prerequisite_subject_name: row.prerequisite_subject_name,
+
+      prerequisite_units:
+        row.prerequisite_units !== null ? Number(row.prerequisite_units) : null,
+
+      // -----------------------------------------------
+      // AUTHORITATIVE FINAL SATISFACTION
+      // -----------------------------------------------
+
+      is_satisfied: isSatisfied,
+
+      satisfaction_source: satisfactionSource,
+
+      // -----------------------------------------------
+      // SOURCE DETAIL
+      // -----------------------------------------------
+
+      ptc_approved_grade_pass: ptcApprovedGradePass,
+
+      official_transfer_credit: officialTransferCredit,
+    };
+  });
+
+  // ===================================================
+  // 4. MISSING PREREQUISITES
+  // ===================================================
+
+  const missingPrerequisites = prerequisites.filter(
+    (prerequisite) => !prerequisite.is_satisfied,
+  );
+
+  // ===================================================
+  // 5. FINAL RESULT
+  // ===================================================
 
   return {
+    student_id: safeStudentId,
+
     subject_id: safeSubjectId,
 
     has_prerequisites: prerequisites.length > 0,
 
     prerequisites,
 
-    missing_prerequisites: missing,
+    missing_prerequisites: missingPrerequisites,
 
-    satisfied: missing.length === 0,
+    satisfied: missingPrerequisites.length === 0,
+
+    academic_rule: {
+      ptc_approved_grade_pass: true,
+
+      official_transfer_credit: true,
+
+      transfer_credit_requirement: "Completed + Credited",
+    },
   };
 }
 // =====================================================
@@ -647,11 +752,38 @@ export async function evaluateSubjectEligibility(
   // Only Approved history matters.
   // ---------------------------------------------------
 
+  // ---------------------------------------------------
+  // LOAD OFFICIAL PTC GRADE HISTORY
+  // ---------------------------------------------------
+
   const latestApprovedGrade = await getLatestApprovedGrade(
     safeStudentId,
     safeSubjectId,
     database,
   );
+
+  // ---------------------------------------------------
+  // LOAD OFFICIAL TRANSFER-CREDIT SATISFACTION
+  //
+  // Only Completed + Credited rows can be returned by
+  // transferCredit.service.js.
+  // ---------------------------------------------------
+
+  const transferCreditResult = await getOfficialTransferCreditsForStudent(
+    safeStudentId,
+    {
+      executor: database,
+    },
+  );
+
+  const officialTransferCredit =
+    (transferCreditResult.official_transfer_credits || []).find(
+      (credit) => Number(credit.ptc_subject?.subject_id) === safeSubjectId,
+    ) || null;
+
+  // ---------------------------------------------------
+  // PREREQUISITES
+  // ---------------------------------------------------
 
   const prerequisiteCheck = await checkPrerequisites(
     safeStudentId,
@@ -668,9 +800,10 @@ export async function evaluateSubjectEligibility(
 
     units: Number(subject.units),
   };
-
   // ---------------------------------------------------
-  // Already passed = never enroll again normally.
+  // ALREADY SATISFIED BY APPROVED PTC PASS
+  //
+  // Never enroll again normally.
   // ---------------------------------------------------
 
   if (latestApprovedGrade?.result === ACADEMIC_RESULT.PASSED) {
@@ -679,13 +812,91 @@ export async function evaluateSubjectEligibility(
 
       eligibility_type: ELIGIBILITY_TYPE.ALREADY_PASSED,
 
-      reason: "Subject already has an approved passing grade.",
+      reason: "Subject already has an approved passing PTC grade.",
 
       subject: subjectData,
 
       latest_approved_grade: latestApprovedGrade,
 
       prerequisites: prerequisiteCheck,
+
+      academic_satisfaction: {
+        satisfied: true,
+
+        source: "PTC_APPROVED_GRADE",
+
+        official_transfer_credit: false,
+
+        ptc_approved_grade_pass: true,
+      },
+    };
+  }
+
+  // ---------------------------------------------------
+  // ALREADY SATISFIED BY OFFICIAL TRANSFER CREDIT
+  //
+  // Completed + Credited is academically authoritative.
+  //
+  // It satisfies the curriculum requirement without
+  // creating or pretending that a PTC grade exists.
+  //
+  // It must therefore suppress:
+  //
+  // - Regular enrollment
+  // - Carry Over
+  // - Retake
+  //
+  // ---------------------------------------------------
+
+  if (officialTransferCredit) {
+    return {
+      eligible: false,
+
+      // Reuse the existing "already academically satisfied"
+      // exclusion bucket so all current enrollment callers
+      // continue to block this subject correctly.
+      eligibility_type: ELIGIBILITY_TYPE.ALREADY_PASSED,
+
+      reason:
+        "Subject requirement is already satisfied by official transfer credit.",
+
+      subject: subjectData,
+
+      // Preserve actual PTC grade history separately.
+      // This may be null, failed, incomplete, etc.
+      latest_approved_grade: latestApprovedGrade,
+
+      prerequisites: prerequisiteCheck,
+
+      academic_satisfaction: {
+        satisfied: true,
+
+        source: "TRANSFER_CREDIT",
+
+        ptc_approved_grade_pass: false,
+
+        official_transfer_credit: true,
+
+        transfer_evaluation_id: Number(
+          officialTransferCredit.transfer_evaluation_id,
+        ),
+
+        transfer_subject_id: Number(officialTransferCredit.transfer_subject_id),
+
+        credited_units: Number(
+          officialTransferCredit.credit?.credited_units || 0,
+        ),
+
+        source_school: officialTransferCredit.source?.school || null,
+
+        source_subject_code:
+          officialTransferCredit.source?.subject_code || null,
+
+        source_subject_name:
+          officialTransferCredit.source?.subject_name || null,
+
+        source_grade: officialTransferCredit.source?.grade ?? null,
+      },
     };
   }
 
