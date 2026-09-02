@@ -1,175 +1,959 @@
-/* ===================================
-   Activity Logs
-=================================== */
+/* =========================================================
+   ADMIN ACTIVITY LOGGER
+   FINAL / CLEAN VERSION
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
 
 .admin-activity {
-  padding: 30px;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-.admin-activity-header {
-  margin-bottom: 25px;
-}
-
-.admin-activity-header h1 {
-  margin: 0;
-  font-size: 30px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-/* Search */
-
-.activity-search {
   width: 100%;
-  max-width: 420px;
-  padding: 12px 16px;
-  margin-bottom: 25px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 15px;
-  outline: none;
-  transition: 0.2s;
-}
+  max-width: none;
+  min-width: 0;
 
-.activity-search:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-}
+  padding: 28px;
 
-/* Table */
+  box-sizing: border-box;
 
-.activity-table {
-  width: 100%;
-  min-width: 1200px;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    #66c44f 0%,
+    #f4f5f1 100%
+  );
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
+  color: #1f2937;
+
   overflow: hidden;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
 }
 
-.activity-table thead {
-  background: #1e3a8a;
-  color: white;
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.admin-activity .admin-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 20px;
+
+  flex-wrap: wrap;
 }
 
-.activity-table th {
-  padding: 18px 22px;
-  font-size: 15px;
+.admin-activity .admin-activity-header h1 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 24px;
   font-weight: 700;
+
+  letter-spacing: -0.01em;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.admin-activity .admin-manage-students__error,
+.admin-activity .activity-error {
+  display: block;
+
+  width: 100%;
+
+  margin: 0 0 16px;
+
+  padding: 11px 14px;
+
+  box-sizing: border-box;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.admin-activity .activity-search {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 20px;
+
+  padding: 11px 14px 11px 40px;
+
+  box-sizing: border-box;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+
+  outline: none;
+
+  background:
+    #f9fafb
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'><path d='M11.742 10.344a6.5 6.5 0 1 0-1.398 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/></svg>")
+    no-repeat 13px center;
+
+  background-size: 15px 15px;
+
+  color: #1f2937;
+
+  font: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.admin-activity .activity-search::placeholder {
+  color: #9ca3af;
+}
+
+.admin-activity .activity-search:hover {
+  border-color: #94a3b8;
+}
+
+.admin-activity .activity-search:focus {
+  border-color: #2563eb;
+
+  background-color: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+   ========================================================= */
+
+.admin-activity .activity-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+
+  overflow-x: auto;
+
+  background: #ffffff;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 5px 14px rgba(15, 23, 42, 0.03);
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.admin-activity .activity-table {
+  width: 100%;
+
+  min-width: 1000px;
+
+  border-collapse: collapse;
+
+  background: #ffffff;
+
+  table-layout: auto;
+}
+
+.admin-activity .activity-table thead {
+  background: #f9fafb;
+}
+
+.admin-activity .activity-table th {
+  padding: 13px 16px;
+
+  color: #6b7280;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-align: left;
+  text-transform: uppercase;
+
+  letter-spacing: 0.05em;
+
+  white-space: nowrap;
+
+  border-bottom: 1.5px solid #cbd5e1;
+  border-right: 1px solid #d7dde4;
+}
+
+.admin-activity .activity-table th:last-child {
+  border-right: none;
+}
+
+.admin-activity .activity-table td {
+  padding: 13px 16px;
+
+  color: #1f2937;
+
+  font-size: 13px;
+
+  vertical-align: middle;
+
+  line-height: 1.45;
+
+  border-bottom: 1px solid #d7dde4;
+  border-right: 1px solid #e2e7ec;
+}
+
+.admin-activity .activity-table td:last-child {
+  border-right: none;
+}
+
+.admin-activity .activity-table tbody tr {
+  background: #ffffff;
+
+  transition: background-color 0.15s ease;
+}
+
+.admin-activity .activity-table tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+.admin-activity .activity-table tbody tr:hover {
+  background: #f5f7f9;
+}
+
+.admin-activity .activity-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+   ========================================================= */
+
+.admin-activity .activity-table th:nth-child(1),
+.admin-activity .activity-table td:nth-child(1) {
+  min-width: 170px;
+
   white-space: nowrap;
 }
 
-.activity-table td {
-  padding: 18px 22px;
-  font-size: 12px;
-  color: #0d0d0e;
-  border-bottom: 1px solid #e5e7eb;
-  vertical-align: middle;
+.admin-activity .activity-table th:nth-child(2),
+.admin-activity .activity-table td:nth-child(2) {
+  min-width: 135px;
 }
 
-.activity-table tbody tr:hover {
+.admin-activity .activity-table th:nth-child(3),
+.admin-activity .activity-table td:nth-child(3) {
+  min-width: 115px;
+}
+
+.admin-activity .activity-table th:nth-child(4),
+.admin-activity .activity-table td:nth-child(4) {
+  min-width: 145px;
+}
+
+.admin-activity .activity-table th:nth-child(5),
+.admin-activity .activity-table td:nth-child(5) {
+  min-width: 155px;
+}
+
+.admin-activity .activity-table th:nth-child(6),
+.admin-activity .activity-table td:nth-child(6) {
+  min-width: 280px;
+}
+
+.admin-activity .activity-table td:nth-child(6) {
+  white-space: normal;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   BADGE BASE
+   ========================================================= */
+
+.admin-activity .activity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 96px;
+
+  padding: 6px 11px;
+
+  box-sizing: border-box;
+
+  background: #f3f4f6;
+
+  color: #374151;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  letter-spacing: 0.01em;
+}
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+.admin-activity .activity-badge.login,
+.admin-activity .activity-badge.logged-in,
+.admin-activity .activity-badge.sign-in,
+.admin-activity .activity-badge.signin {
+  background: #dcfce7;
+
+  color: #15803d;
+
+  border-color: #86efac;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.admin-activity .activity-badge.logout,
+.admin-activity .activity-badge.logged-out,
+.admin-activity .activity-badge.sign-out,
+.admin-activity .activity-badge.signout {
+  background: #f3f4f6;
+
+  color: #4b5563;
+
+  border-color: #cbd5e1;
+}
+
+
+/* =========================================================
+   CREATE / ADD
+   CYAN
+   ========================================================= */
+
+.admin-activity .activity-badge.create,
+.admin-activity .activity-badge.created,
+.admin-activity .activity-badge.add,
+.admin-activity .activity-badge.added {
+  background: #ecfeff;
+
+  color: #0e7490;
+
+  border-color: #67e8f9;
+}
+
+
+/* =========================================================
+   EDIT / UPDATE
+   BLUE
+   ========================================================= */
+
+.admin-activity .activity-badge.edit,
+.admin-activity .activity-badge.edited,
+.admin-activity .activity-badge.update,
+.admin-activity .activity-badge.updated,
+.admin-activity .activity-badge.modify,
+.admin-activity .activity-badge.modified {
+  background: #eff6ff;
+
+  color: #1d4ed8;
+
+  border-color: #93c5fd;
+}
+
+
+/* =========================================================
+   DELETE / REMOVE
+   RED
+   ========================================================= */
+
+.admin-activity .activity-badge.delete,
+.admin-activity .activity-badge.deleted,
+.admin-activity .activity-badge.remove,
+.admin-activity .activity-badge.removed {
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border-color: #fca5a5;
+}
+
+
+/* =========================================================
+   APPROVED
+   ========================================================= */
+
+.admin-activity .activity-badge.approve,
+.admin-activity .activity-badge.approved,
+.admin-activity .activity-badge.approval {
+  background: #ecfdf5;
+
+  color: #047857;
+
+  border-color: #6ee7b7;
+}
+
+
+/* =========================================================
+   REJECTED
+   ========================================================= */
+
+.admin-activity .activity-badge.reject,
+.admin-activity .activity-badge.rejected,
+.admin-activity .activity-badge.decline,
+.admin-activity .activity-badge.declined {
+  background: #fff1f2;
+
+  color: #be123c;
+
+  border-color: #fda4af;
+}
+
+
+/* =========================================================
+   VIEW
+   ========================================================= */
+
+.admin-activity .activity-badge.view,
+.admin-activity .activity-badge.viewed,
+.admin-activity .activity-badge.open,
+.admin-activity .activity-badge.opened {
+  background: #eef2ff;
+
+  color: #4338ca;
+
+  border-color: #c7d2fe;
+}
+
+
+/* =========================================================
+   EXPORT / DOWNLOAD
+   ========================================================= */
+
+.admin-activity .activity-badge.export,
+.admin-activity .activity-badge.exported,
+.admin-activity .activity-badge.download,
+.admin-activity .activity-badge.downloaded {
+  background: #faf5ff;
+
+  color: #7e22ce;
+
+  border-color: #d8b4fe;
+}
+
+
+/* =========================================================
+   PASSWORD / SECURITY
+   ========================================================= */
+
+.admin-activity .activity-badge.password-reset,
+.admin-activity .activity-badge.reset-password,
+.admin-activity .activity-badge.password-change,
+.admin-activity .activity-badge.changed-password,
+.admin-activity .activity-badge.change-password,
+.admin-activity .activity-badge.security {
+  background: #fffbeb;
+
+  color: #b45309;
+
+  border-color: #fcd34d;
+}
+
+
+/* =========================================================
+   ENROLLMENT
+   ========================================================= */
+
+.admin-activity .activity-badge.enrollment,
+.admin-activity .activity-badge.enrolled,
+.admin-activity .activity-badge.enroll,
+.admin-activity .activity-badge.enrollment-update {
+  background: #f0fdfa;
+
+  color: #0f766e;
+
+  border-color: #5eead4;
+}
+
+
+/* =========================================================
+   GRADES
+   ========================================================= */
+
+.admin-activity .activity-badge.grade,
+.admin-activity .activity-badge.grades,
+.admin-activity .activity-badge.grade-entry,
+.admin-activity .activity-badge.grade-update,
+.admin-activity .activity-badge.grade-submission {
+  background: #f5f3ff;
+
+  color: #6d28d9;
+
+  border-color: #c4b5fd;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT
+   ========================================================= */
+
+.admin-activity .activity-badge.announcement,
+.admin-activity .activity-badge.publish,
+.admin-activity .activity-badge.published,
+.admin-activity .activity-badge.post,
+.admin-activity .activity-badge.posted {
+  background: #fff7ed;
+
+  color: #c2410c;
+
+  border-color: #fdba74;
+}
+
+
+/* =========================================================
+   USER MANAGEMENT
+   ========================================================= */
+
+.admin-activity .activity-badge.user,
+.admin-activity .activity-badge.user-management,
+.admin-activity .activity-badge.account,
+.admin-activity .activity-badge.account-update {
+  background: #f0f9ff;
+
+  color: #0369a1;
+
+  border-color: #7dd3fc;
+}
+
+
+/* =========================================================
+   ARCHIVE
+   ========================================================= */
+
+.admin-activity .activity-badge.archive,
+.admin-activity .activity-badge.archived {
   background: #f8fafc;
+
+  color: #475569;
+
+  border-color: #94a3b8;
 }
 
-/* Column Widths */
 
-.activity-table th:nth-child(1),
-.activity-table td:nth-child(1) {
-  width: 220px;
+/* =========================================================
+   RESTORE
+   ========================================================= */
+
+.admin-activity .activity-badge.restore,
+.admin-activity .activity-badge.restored,
+.admin-activity .activity-badge.reactivate,
+.admin-activity .activity-badge.reactivated,
+.admin-activity .activity-badge.activate,
+.admin-activity .activity-badge.activated {
+  background: #f0fdf4;
+
+  color: #166534;
+
+  border-color: #86efac;
 }
 
-.activity-table th:nth-child(2),
-.activity-table td:nth-child(2) {
-  width: 170px;
+
+/* =========================================================
+   DEACTIVATE
+   ========================================================= */
+
+.admin-activity .activity-badge.deactivate,
+.admin-activity .activity-badge.deactivated,
+.admin-activity .activity-badge.disable,
+.admin-activity .activity-badge.disabled {
+  background: #fef2f2;
+
+  color: #991b1b;
+
+  border-color: #fca5a5;
 }
 
-.activity-table th:nth-child(3),
-.activity-table td:nth-child(3) {
-  width: 130px;
+
+/* =========================================================
+   STATUS CHANGE
+   ========================================================= */
+
+.admin-activity .activity-badge.status-change,
+.admin-activity .activity-badge.change-status,
+.admin-activity .activity-badge.status-update {
+  background: #fefce8;
+
+  color: #a16207;
+
+  border-color: #fde047;
 }
 
-.activity-table th:nth-child(4),
-.activity-table td:nth-child(4) {
-  width: 140px;
+
+/* =========================================================
+   ROLE
+   ========================================================= */
+
+.admin-activity .activity-badge.role-change,
+.admin-activity .activity-badge.role-update,
+.admin-activity .activity-badge.change-role {
+  background: #faf5ff;
+
+  color: #7e22ce;
+
+  border-color: #d8b4fe;
 }
 
-.activity-table th:nth-child(5),
-.activity-table td:nth-child(5) {
-  width: 180px;
+
+/* =========================================================
+   IMPORT / UPLOAD
+   ========================================================= */
+
+.admin-activity .activity-badge.import,
+.admin-activity .activity-badge.imported,
+.admin-activity .activity-badge.upload,
+.admin-activity .activity-badge.uploaded {
+  background: #fdf2f8;
+
+  color: #be185d;
+
+  border-color: #f9a8d4;
 }
 
-.activity-table th:nth-child(6),
-.activity-table td:nth-child(6) {
-  min-width: 450px;
-  line-height: 1.6;
+
+/* =========================================================
+   EMAIL / SEND
+   ========================================================= */
+
+.admin-activity .activity-badge.email,
+.admin-activity .activity-badge.email-sent,
+.admin-activity .activity-badge.send,
+.admin-activity .activity-badge.sent,
+.admin-activity .activity-badge.notification {
+  background: #ecfeff;
+
+  color: #155e75;
+
+  border-color: #67e8f9;
 }
 
-/* Activity Badge */
 
-.activity-badge {
-  display: inline-block;
-  padding: 10px 16px;
-  border-radius: 40px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-  text-transform: capitalize;
+/* =========================================================
+   ASSIGN
+   ========================================================= */
+
+.admin-activity .activity-badge.assign,
+.admin-activity .activity-badge.assigned {
+  background: #eef2ff;
+
+  color: #4f46e5;
+
+  border-color: #c7d2fe;
 }
 
-/* Badge Colors */
 
-.activity-badge.login {
-  background: #2ecc71;
+/* =========================================================
+   UNASSIGN
+   ========================================================= */
+
+.admin-activity .activity-badge.unassign,
+.admin-activity .activity-badge.unassigned {
+  background: #f8fafc;
+
+  color: #475569;
+
+  border-color: #cbd5e1;
 }
 
-.activity-badge.logout {
-  background: #7f8c8d;
+
+/* =========================================================
+   SUBMIT
+   ========================================================= */
+
+.admin-activity .activity-badge.submit,
+.admin-activity .activity-badge.submitted {
+  background: #eff6ff;
+
+  color: #1d4ed8;
+
+  border-color: #93c5fd;
 }
 
-.activity-badge.create {
-  background: #3498db;
+
+/* =========================================================
+   SCHEDULE
+   ========================================================= */
+
+.admin-activity .activity-badge.schedule,
+.admin-activity .activity-badge.scheduled {
+  background: #fffbeb;
+
+  color: #b45309;
+
+  border-color: #fde68a;
 }
 
-.activity-badge.update {
-  background: #f39c12;
+
+/* =========================================================
+   COMPLETE
+   ========================================================= */
+
+.admin-activity .activity-badge.complete,
+.admin-activity .activity-badge.completed {
+  background: #ecfdf5;
+
+  color: #047857;
+
+  border-color: #6ee7b7;
 }
 
-.activity-badge.delete {
-  background: #e74c3c;
+
+/* =========================================================
+   CANCEL
+   ========================================================= */
+
+.admin-activity .activity-badge.cancel,
+.admin-activity .activity-badge.cancelled,
+.admin-activity .activity-badge.canceled {
+  background: #fff7ed;
+
+  color: #c2410c;
+
+  border-color: #fdba74;
 }
 
-.activity-badge.approve {
-  background: #16a085;
+
+/* =========================================================
+   VALIDATE
+   ========================================================= */
+
+.admin-activity .activity-badge.verify,
+.admin-activity .activity-badge.verified,
+.admin-activity .activity-badge.validate,
+.admin-activity .activity-badge.validated {
+  background: #ecfdf5;
+
+  color: #047857;
+
+  border-color: #6ee7b7;
 }
 
-.activity-badge.reject {
-  background: #c0392b;
+
+/* =========================================================
+   EMPTY / LOADING
+   ========================================================= */
+
+.admin-activity .activity-table td[colspan] {
+  padding: 42px 20px !important;
+
+  color: #6b7280;
+
+  text-align: center;
+
+  font-size: 14px;
+
+  background: #ffffff;
+
+  border-right: none;
 }
 
-.activity-badge.reset-password {
-  background: #8e44ad;
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.admin-activity .activity-table-wrapper::-webkit-scrollbar {
+  height: 8px;
 }
 
-.activity-badge.failed-login {
-  background: #e74c3c;
+.admin-activity .activity-table-wrapper::-webkit-scrollbar-track {
+  background: #f9fafb;
 }
 
-/* Responsive */
+.admin-activity .activity-table-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
 
-@media (max-width: 1200px) {
+  border-radius: 999px;
+}
+
+.admin-activity .activity-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   CRITICAL FAILURE OVERRIDE
+
+   MUST REMAIN AT THE VERY BOTTOM OF ALL BADGE COLORS.
+
+   This catches:
+   failed-login
+   login-failed
+   login_failed
+   user_login_failed
+   failed-login-attempt
+   authentication-error
+   invalid-login
+   login-denied
+   unsuccessful-login
+
+   regardless of how the backend formats activity_type.
+   ========================================================= */
+
+.admin-activity .activity-badge.failed-login,
+.admin-activity .activity-badge.login-failed,
+.admin-activity .activity-badge.failed,
+.admin-activity .activity-badge.error,
+
+.admin-activity .activity-badge[class*="fail"],
+.admin-activity .activity-badge[class*="error"],
+.admin-activity .activity-badge[class*="invalid"],
+.admin-activity .activity-badge[class*="denied"],
+.admin-activity .activity-badge[class*="unsuccessful"] {
+  background: #fee2e2 !important;
+
+  color: #b91c1c !important;
+
+  border-color: #ef4444 !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(185, 28, 28, 0.05) !important;
+}
+
+
+/* =========================================================
+   DEV LOGIN
+   PURPLE — development / special access
+   ========================================================= */
+
+.admin-activity .activity-badge.dev-login,
+.admin-activity .activity-badge.development-login {
+  background: #f5f3ff;
+
+  color: #6d28d9;
+
+  border-color: #c4b5fd;
+}
+
+
+/* =========================================================
+   LOGIN BLOCKED
+   DARK RED — access denied by account state
+   ========================================================= */
+
+.admin-activity .activity-badge.login-blocked {
+  background: #fee2e2;
+
+  color: #991b1b;
+
+  border-color: #ef4444;
+}
+
+
+/* =========================================================
+   DOCUMENT VERIFICATION
+   TEAL — Registrar verification workflow
+   ========================================================= */
+
+.admin-activity .activity-badge.document-verification {
+  background: #f0fdfa;
+
+  color: #0f766e;
+
+  border-color: #5eead4;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 992px) {
+  .admin-activity .activity-table {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 768px) {
   .admin-activity {
-    overflow-x: auto;
+    padding: 18px;
+
+    border-radius: 12px;
   }
 
-  .activity-table {
-    min-width: 1200px;
+  .admin-activity .admin-activity-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .admin-activity .activity-search {
+    font-size: 16px;
   }
 }
-.activity-table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  border-radius: 12px;
+
+@media (max-width: 480px) {
+  .admin-activity {
+    padding: 14px;
+  }
+
+  .admin-activity .admin-activity-header h1 {
+    font-size: 22px;
+  }
+
+  .admin-activity .activity-table th,
+  .admin-activity .activity-table td {
+    padding: 11px 13px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-activity,
+  .admin-activity * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

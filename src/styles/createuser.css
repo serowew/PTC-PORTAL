@@ -1,140 +1,538 @@
-/* =====================================
-   Create User
-===================================== */
+/* =========================================================
+   ADMIN CREATE USER / EDIT USER
+   PTC Portal Admin Theme
+
+   Used by:
+   - CreateUser.tsx
+   - EditUser.tsx
+
+   Goals:
+   - Full-width Admin green shell
+   - Consistent visible borders
+   - Clean centered form card
+   - Proper Create/Edit responsiveness
+   - Scoped selectors only
+   - Compatible with admin-theme.css animations
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE CONTAINER
+   ========================================================= */
 
 .create-user {
-  max-width: 800px;
-  margin: 30px auto;
-  background: linear-gradient(180deg, #66c44f 0%, #f4f5f1 100%);
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-}
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 
-.create-user h1 {
-  margin: 0 0 25px;
+  margin: 0;
+
+  padding: 28px;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    #66c44f 0%,
+    #f4f5f1 100%
+  );
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
   color: #1f2937;
-  font-size: 28px;
-  font-weight: 700;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 12px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  overflow: hidden;
 }
 
-/* =====================================
-   Form
-===================================== */
+
+/* =========================================================
+   PAGE TITLE
+   ========================================================= */
+
+.create-user > h1,
+.create-user > h2 {
+  width: min(100%, 820px);
+
+  margin:
+    0 auto
+    20px;
+
+  color: #111827;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.01em;
+}
+
+
+/* =========================================================
+   FORM CARD
+   ========================================================= */
 
 .create-user form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 18px 20px;
+
+  width: min(100%, 820px);
+
+  margin: 0 auto;
+
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 18px rgba(15, 23, 42, 0.04);
 }
 
-.form-group {
+
+/* =========================================================
+   FORM GROUP
+   ========================================================= */
+
+.create-user .form-group {
   display: flex;
+
+  min-width: 0;
+
   flex-direction: column;
+
+  gap: 7px;
 }
 
-.form-group label {
-  font-weight: 600;
+
+/* =========================================================
+   LABELS
+   ========================================================= */
+
+.create-user .form-group label {
   color: #374151;
-  margin-bottom: 8px;
-}
 
-.form-group input,
-.form-group select {
-  padding: 12px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 15px;
-  outline: none;
-  transition: all 0.2s ease;
-  background: #fff;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-/* =====================================
-   Buttons
-===================================== */
-
-.button-group {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 15px;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
+
+  line-height: 1.35;
 }
 
-.btn:hover {
+
+/* =========================================================
+   INPUTS / SELECTS
+   ========================================================= */
+
+.create-user .form-group input,
+.create-user .form-group select {
+  width: 100%;
+  min-width: 0;
+
+  height: 42px;
+
+  padding: 10px 13px;
+
+  box-sizing: border-box;
+
+  background: #f9fafb;
+
+  color: #1f2937;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+
+  outline: none;
+
+  font: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+.create-user .form-group input::placeholder {
+  color: #9ca3af;
+}
+
+
+/* =========================================================
+   INPUT HOVER
+   ========================================================= */
+
+.create-user .form-group input:hover:not(:disabled),
+.create-user .form-group select:hover:not(:disabled) {
+  border-color: #94a3b8;
+}
+
+
+/* =========================================================
+   INPUT FOCUS
+   ========================================================= */
+
+.create-user .form-group input:focus,
+.create-user .form-group select:focus {
+  background: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* =========================================================
+   DISABLED INPUT
+   ========================================================= */
+
+.create-user .form-group input:disabled,
+.create-user .form-group select:disabled {
+  background: #f3f4f6;
+
+  color: #9ca3af;
+
+  border-color: #d1d5db;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+}
+
+
+/* =========================================================
+   DISABLED EMPLOYEE NUMBER
+   ========================================================= */
+
+.create-user .form-group input:disabled[value]:not([value=""]) {
+  color: #4b5563;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SELECT
+   ========================================================= */
+
+.create-user .form-group select {
+  cursor: pointer;
+}
+
+.create-user .form-group select:disabled {
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   FORM HINT
+   ========================================================= */
+
+.create-user .form-hint {
+  grid-column: 1 / -1;
+
+  display: block;
+
+  margin: -2px 0 0;
+
+  padding: 10px 12px;
+
+  background: #eff6ff;
+
+  color: #1d4ed8;
+
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   ERROR MESSAGE
+   Works for:
+   <p className="error-message">
+   <div className="error-message">
+   ========================================================= */
+
+.create-user .error-message {
+  grid-column: 1 / -1;
+
+  width: min(100%, 820px);
+
+  margin: 0 auto 16px;
+
+  padding: 11px 14px;
+
+  box-sizing: border-box;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.5;
+}
+
+
+/* Error shown INSIDE Create User form */
+
+.create-user form .error-message {
+  width: 100%;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   BUTTON GROUP
+   ========================================================= */
+
+.create-user .button-group {
+  grid-column: 1 / -1;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 4px;
+
+  padding-top: 16px;
+
+  border-top: 1px solid #d7dde4;
+}
+
+
+/* =========================================================
+   BUTTON BASE
+   Fully scoped to Create/Edit User.
+   ========================================================= */
+
+.create-user .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 38px;
+
+  padding: 8px 15px;
+
+  border: 1.5px solid transparent;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+/* =========================================================
+   BUTTON ACTIVE
+   ========================================================= */
+
+.create-user .btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.create-user .btn-primary {
+  background: #2563eb;
+
+  color: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 2px 5px rgba(37, 99, 235, 0.12);
+}
+
+.create-user .btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+
+  border-color: #1d4ed8;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(37, 99, 235, 0.18);
+}
+
+
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
+
+.create-user .btn-secondary {
+  background: #f3f4f6;
+
+  color: #374151;
+
+  border-color: #cbd5e1;
+}
+
+.create-user .btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+
+  border-color: #94a3b8;
+
   transform: translateY(-1px);
 }
 
-.btn-primary {
-  background: #2563eb;
-  color: #fff;
+
+/* =========================================================
+   DISABLED BUTTON
+   ========================================================= */
+
+.create-user .btn:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
 }
 
-.btn-primary:hover {
-  background: #1d4ed8;
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.create-user .btn:focus-visible,
+.create-user input:focus-visible,
+.create-user select:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.16);
+
+  outline-offset: 2px;
 }
 
-.btn-secondary {
-  background: #6b7280;
-  color: #fff;
-}
 
-.btn-secondary:hover {
-  background: #4b5563;
-}
-
-/* =====================================
-   Error
-===================================== */
-
-.error-message {
-  color: #dc2626;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* =====================================
-   Responsive
-===================================== */
+/* =========================================================
+   TABLET
+   ========================================================= */
 
 @media (max-width: 768px) {
   .create-user {
-    margin: 15px;
-    padding: 20px;
+    padding: 18px;
+
+    border-radius: 12px;
   }
 
-  .button-group {
-    flex-direction: column;
+  .create-user > h1,
+  .create-user > h2 {
+    font-size: 22px;
   }
 
-  .button-group .btn {
+  .create-user form {
+    grid-template-columns: 1fr;
+
+    padding: 18px;
+
+    gap: 16px;
+  }
+
+  .create-user .form-hint,
+  .create-user .error-message,
+  .create-user .button-group {
+    grid-column: auto;
+  }
+
+  .create-user .button-group {
+    flex-direction: column-reverse;
+
+    align-items: stretch;
+  }
+
+  .create-user .button-group .btn {
     width: 100%;
   }
+
+  .create-user .form-group input,
+  .create-user .form-group select {
+    font-size: 16px;
+  }
 }
-.form-hint {
-  margin-top: 6px;
-  font-size: 12px;
-  color: #6b7280;
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .create-user {
+    padding: 14px;
+  }
+
+  .create-user form {
+    padding: 15px;
+  }
+
+  .create-user > h1,
+  .create-user > h2 {
+    font-size: 21px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .create-user,
+  .create-user * {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
 }

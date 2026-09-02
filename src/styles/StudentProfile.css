@@ -1,226 +1,759 @@
-/* =====================================================
-STUDENT PROFILE PAGE
-===================================================== */
+/* =========================================================
+   ADMIN STUDENT PROFILE
+   PTC Portal Admin Theme
+
+   - Full-width Admin shell
+   - Centered readable profile content
+   - Strong visible borders
+   - Consistent Admin palette
+   - Responsive profile layout
+   - Scoped only to .admin-profile-students
+   - Uses shared admin-theme.css animations
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE CONTAINER
+   ========================================================= */
 
 .admin-profile-students {
+  position: relative;
+
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px;
+  max-width: none;
+  min-width: 0;
+
+  margin: 0;
+
+  padding: 28px;
+
   box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    #66c44f 0%,
+    #f4f5f1 100%
+  );
+
+  color: #1f2937;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
+  overflow: hidden;
 }
 
-/* =====================================================
-PAGE HEADER
-===================================================== */
 
-.profile-page-header {
+/* =========================================================
+   CONTENT WIDTH
+   ========================================================= */
+
+.admin-profile-students .profile-page-header,
+.admin-profile-students .profile-card,
+.admin-profile-students .profile-error {
+  width: min(100%, 1100px);
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.admin-profile-students .profile-page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 20px;
+
+  flex-wrap: wrap;
 }
 
-.profile-back-button,
-.profile-edit-button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
+
+/* =========================================================
+   HEADER BUTTON BASE
+   ========================================================= */
+
+.admin-profile-students .profile-back-button,
+.admin-profile-students .profile-edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 39px;
+
+  padding: 8px 14px;
+
+  box-sizing: border-box;
+
+  border: 1.5px solid transparent;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 13px;
   font-weight: 600;
+
+  line-height: 1.2;
+
   cursor: pointer;
+
   transition:
     background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+   ========================================================= */
+
+.admin-profile-students .profile-back-button {
+  background: #f3f4f6;
+
+  color: #374151;
+
+  border-color: #cbd5e1;
+}
+
+.admin-profile-students
+.profile-back-button:hover:not(:disabled) {
+  background: #e5e7eb;
+
+  border-color: #94a3b8;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+
+/* =========================================================
+   EDIT BUTTON
+   ========================================================= */
+
+.admin-profile-students .profile-edit-button {
+  background: #2563eb;
+
+  color: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 2px 5px rgba(37, 99, 235, 0.12);
+}
+
+.admin-profile-students
+.profile-edit-button:hover:not(:disabled) {
+  background: #1d4ed8;
+
+  border-color: #1d4ed8;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(37, 99, 235, 0.18);
+}
+
+
+/* =========================================================
+   BUTTON ACTIVE
+   ========================================================= */
+
+.admin-profile-students
+.profile-back-button:active:not(:disabled),
+
+.admin-profile-students
+.profile-edit-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   BUTTON DISABLED
+   ========================================================= */
+
+.admin-profile-students
+.profile-back-button:disabled,
+
+.admin-profile-students
+.profile-edit-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   PROFILE CARD
+   ========================================================= */
+
+.admin-profile-students .profile-card {
+  width: min(100%, 1100px);
+
+  margin:
+    0 auto
+    18px;
+
+  padding: 22px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 18px rgba(15, 23, 42, 0.04);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
     transform 0.2s ease;
 }
 
-.profile-back-button {
-  background: #f1f1f1;
-  color: #333;
+
+/* =========================================================
+   PROFILE CARD HOVER
+   ========================================================= */
+
+.admin-profile-students .profile-card:hover {
+  border-color: #b8c3cf;
+
+  box-shadow:
+    0 3px 8px rgba(15, 23, 42, 0.05),
+    0 9px 22px rgba(15, 23, 42, 0.05);
 }
 
-.profile-back-button:hover {
-  background: #e2e2e2;
+
+/* =========================================================
+   CARD SECTION TITLE
+   ========================================================= */
+
+.admin-profile-students .profile-card h2 {
+  margin:
+    0
+    0
+    18px;
+
+  padding-bottom: 12px;
+
+  color: #111827;
+
+  border-bottom: 1.5px solid #d7dde4;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  letter-spacing: -0.01em;
 }
 
-.profile-edit-button {
-  background: #2563eb;
-  color: white;
-}
 
-.profile-edit-button:hover {
-  background: #1d4ed8;
-}
+/* =========================================================
+   PROFILE HEADER CARD
+   ========================================================= */
 
-.profile-back-button:active,
-.profile-edit-button:active {
-  transform: scale(0.98);
-}
-
-/* =====================================================
-PROFILE CARDS
-===================================================== */
-
-.profile-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.profile-card h2 {
-  margin: 0 0 20px;
-  font-size: 20px;
-  color: #1f2937;
-}
-
-/* =====================================================
-PROFILE HEADER CARD
-===================================================== */
-
-.profile-header-card {
+.admin-profile-students .profile-header-card {
   display: flex;
   align-items: center;
+
   gap: 20px;
-  padding: 28px;
+
+  padding: 24px;
+
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f7fbf5 100%
+  );
 }
 
+
+/* =========================================================
+   PROFILE HEADER CONTENT
+   ========================================================= */
+
+.admin-profile-students
+.profile-header-card > div:not(.profile-avatar) {
+  min-width: 0;
+
+  flex: 1;
+}
+
+
+/* =========================================================
+   STUDENT NAME
+   ========================================================= */
+
+.admin-profile-students
 .profile-header-card h1 {
-  margin: 0 0 6px;
-  font-size: 28px;
+  margin:
+    0
+    0
+    6px;
+
   color: #111827;
+
+  font-size: 26px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.015em;
+
+  overflow-wrap: anywhere;
 }
 
+
+/* =========================================================
+   STUDENT SUBTITLE
+   ========================================================= */
+
+.admin-profile-students
 .profile-header-card p {
   margin: 0;
+
   color: #6b7280;
-  font-size: 15px;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
 }
 
-/* =====================================================
-AVATAR
-===================================================== */
 
-.profile-avatar {
-  width: 76px;
-  height: 76px;
-  flex-shrink: 0;
+/* =========================================================
+   PROFILE AVATAR
+   ========================================================= */
 
+.admin-profile-students .profile-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
 
+  width: 78px;
+  height: 78px;
+
+  flex: 0 0 78px;
+
+  box-sizing: border-box;
+
+  background: #dcfce7;
+
+  color: #15803d;
+
+  border: 1.5px solid #86efac;
   border-radius: 50%;
 
-  background: #2563eb;
-  color: #ffffff;
+  box-shadow:
+    0 4px 12px rgba(22, 163, 74, 0.1);
 
   font-size: 24px;
   font-weight: 700;
+
+  line-height: 1;
+
   text-transform: uppercase;
+
+  user-select: none;
 }
 
-/* =====================================================
-INFORMATION GRID
-===================================================== */
 
-.profile-grid {
+/* =========================================================
+   PROFILE GRID
+   ========================================================= */
+
+.admin-profile-students .profile-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px 28px;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 14px;
 }
 
-.profile-field {
+
+/* =========================================================
+   PROFILE FIELD
+   ========================================================= */
+
+.admin-profile-students .profile-field {
   display: flex;
   flex-direction: column;
+
   gap: 6px;
+
   min-width: 0;
+
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  background: #f9fafb;
+
+  border: 1.5px solid #d7dde4;
+  border-radius: 8px;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
+
+/* =========================================================
+   PROFILE FIELD HOVER
+   ========================================================= */
+
+.admin-profile-students .profile-field:hover {
+  background: #ffffff;
+
+  border-color: #b8c3cf;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 3px 8px rgba(15, 23, 42, 0.04);
+}
+
+
+/* =========================================================
+   FIELD LABEL
+   ========================================================= */
+
+.admin-profile-students
 .profile-field span {
-  font-size: 12px;
-  font-weight: 600;
   color: #6b7280;
+
+  font-size: 10.5px;
+  font-weight: 700;
+
+  line-height: 1.3;
+
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+
+  letter-spacing: 0.055em;
 }
 
+
+/* =========================================================
+   FIELD VALUE
+   ========================================================= */
+
+.admin-profile-students
 .profile-field strong {
-  color: #111827;
-  font-size: 15px;
-  font-weight: 500;
+  color: #1f2937;
+
+  font-size: 13.5px;
+  font-weight: 600;
+
+  line-height: 1.45;
+
   overflow-wrap: anywhere;
 }
 
-.profile-full-width {
+
+/* =========================================================
+   EMPTY FIELD VALUE
+   ========================================================= */
+
+.admin-profile-students
+.profile-field strong:empty::after {
+  content: "—";
+
+  color: #9ca3af;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   FULL WIDTH FIELD
+   ========================================================= */
+
+.admin-profile-students .profile-full-width {
   grid-column: 1 / -1;
 }
 
-/* =====================================================
-ERROR MESSAGE
-===================================================== */
 
-.profile-error {
-  margin-top: 20px;
-  padding: 14px 16px;
-  border-radius: 8px;
-  background: #fee2e2;
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.admin-profile-students .profile-error {
+  width: min(100%, 1100px);
+
+  margin:
+    0 auto
+    18px;
+
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  background: #fef2f2;
+
   color: #b91c1c;
+
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+
+  font-size: 13px;
   font-weight: 600;
+
+  line-height: 1.5;
 }
 
-/* =====================================================
-RESPONSIVE
-===================================================== */
+
+/* =========================================================
+   LOADING STATE
+   ========================================================= */
+
+.admin-profile-students .profile-loading {
+  width: min(100%, 1100px);
+
+  margin: 0 auto;
+
+  padding: 42px 20px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  color: #6b7280;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  text-align: center;
+
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   OPTIONAL STATUS BADGES
+   ========================================================= */
+
+.admin-profile-students .profile-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  min-width: 72px;
+
+  padding: 5px 9px;
+
+  box-sizing: border-box;
+
+  background: #f3f4f6;
+
+  color: #475569;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
+
+.admin-profile-students
+.profile-status.active {
+  background: #dcfce7;
+
+  color: #15803d;
+
+  border-color: #86efac;
+}
+
+.admin-profile-students
+.profile-status.inactive {
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border-color: #fca5a5;
+}
+
+.admin-profile-students
+.profile-status.pending {
+  background: #fffbeb;
+
+  color: #b45309;
+
+  border-color: #fcd34d;
+}
+
+.admin-profile-students
+.profile-status.graduated {
+  background: #eef2ff;
+
+  color: #4338ca;
+
+  border-color: #c7d2fe;
+}
+
+
+/* =========================================================
+   FOCUS VISIBLE
+   ========================================================= */
+
+.admin-profile-students
+.profile-back-button:focus-visible,
+
+.admin-profile-students
+.profile-edit-button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
 
 @media (max-width: 768px) {
   .admin-profile-students {
-    padding: 20px;
+    padding: 18px;
+
+    border-radius: 12px;
   }
 
+
+  .admin-profile-students
   .profile-page-header {
-    align-items: stretch;
     flex-direction: column;
+
+    align-items: stretch;
   }
 
+
+  .admin-profile-students
   .profile-back-button,
+
+  .admin-profile-students
   .profile-edit-button {
     width: 100%;
   }
 
+
+  .admin-profile-students
   .profile-header-card {
     align-items: flex-start;
+
     flex-direction: column;
+
+    padding: 20px;
   }
 
+
+  .admin-profile-students
+  .profile-header-card h1 {
+    font-size: 23px;
+  }
+
+
+  .admin-profile-students
   .profile-grid {
     grid-template-columns: 1fr;
   }
 
+
+  .admin-profile-students
   .profile-full-width {
     grid-column: auto;
   }
 }
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
 
 @media (max-width: 480px) {
   .admin-profile-students {
     padding: 14px;
   }
 
+
+  .admin-profile-students
   .profile-card {
+    padding: 16px;
+  }
+
+
+  .admin-profile-students
+  .profile-header-card {
     padding: 18px;
   }
 
-  .profile-header-card h1 {
-    font-size: 23px;
+
+  .admin-profile-students
+  .profile-avatar {
+    width: 68px;
+    height: 68px;
+
+    flex-basis: 68px;
+
+    font-size: 21px;
   }
 
-  .profile-avatar {
-    width: 64px;
-    height: 64px;
-    font-size: 20px;
+
+  .admin-profile-students
+  .profile-header-card h1 {
+    font-size: 21px;
+  }
+
+
+  .admin-profile-students
+  .profile-field {
+    padding: 11px 12px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-profile-students,
+  .admin-profile-students * {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
   }
 }

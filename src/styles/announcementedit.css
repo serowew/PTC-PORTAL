@@ -1,144 +1,856 @@
+/* =========================================================
+   ADMIN EDIT ANNOUNCEMENT
+   PTC Portal Admin Theme
+
+   Features:
+   - Full-width Admin green shell
+   - Centered edit form
+   - Strong visible borders
+   - Clear recipient selection
+   - Proper attachment management
+   - Scoped buttons and form controls
+   - Responsive layout
+   - Compatible with admin-theme.css animations
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE CONTAINER
+   ========================================================= */
+
 .admin-announcement-edit {
-  max-width: 900px;
-  margin: 40px auto;
-  background: #fff;
-  padding: 35px;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-}
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 
-.announcement-edit-header {
-  margin-bottom: 30px;
-}
-
-.announcement-edit-header h1 {
   margin: 0;
+
+  padding: 28px;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    #66c44f 0%,
+    #f4f5f1 100%
+  );
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
   color: #1f2937;
-  font-size: 30px;
+
+  overflow: hidden;
 }
 
-.announcement-edit-header p {
-  margin-top: 8px;
-  color: #6b7280;
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.admin-announcement-edit .announcement-edit-header {
+  width: min(100%, 900px);
+
+  margin:
+    0 auto
+    20px;
 }
 
-.announcement-edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
+.admin-announcement-edit .announcement-edit-header h1 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.01em;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
+.admin-announcement-edit .announcement-edit-header p {
+  margin: 6px 0 0;
 
-.form-group label {
-  margin-bottom: 8px;
-  font-weight: 600;
   color: #374151;
+
+  font-size: 14px;
+
+  line-height: 1.5;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
-  padding: 12px 14px;
 
-  border: 1px solid #d1d5db;
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
 
+.admin-announcement-edit .error-message {
+  width: min(100%, 900px);
+
+  margin:
+    0 auto
+    16px;
+
+  padding: 11px 14px;
+
+  box-sizing: border-box;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border: 1.5px solid #fca5a5;
   border-radius: 8px;
 
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 600;
 
-  transition: 0.2s;
+  line-height: 1.5;
 }
 
-.form-group textarea {
-  resize: vertical;
+
+/* =========================================================
+   EDIT FORM CARD
+   ========================================================= */
+
+.admin-announcement-edit .announcement-edit-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+
+  width: min(100%, 900px);
+
+  margin: 0 auto;
+
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 18px rgba(15, 23, 42, 0.04);
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  border-color: #2563eb;
+
+/* =========================================================
+   FORM GROUP
+   ========================================================= */
+
+.admin-announcement-edit .form-group {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   LABELS
+   ========================================================= */
+
+.admin-announcement-edit
+.form-group > label:first-child {
+  margin-bottom: 7px;
+
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.35;
+}
+
+
+/* =========================================================
+   INPUT / TEXTAREA / SELECT
+   ========================================================= */
+
+.admin-announcement-edit .form-group > input,
+.admin-announcement-edit .form-group > textarea,
+.admin-announcement-edit .form-group > select {
+  width: 100%;
+  min-width: 0;
+
+  padding: 11px 13px;
+
+  box-sizing: border-box;
+
+  background: #f9fafb;
+
+  color: #1f2937;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
 
   outline: none;
 
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  font: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
 }
 
-.form-row {
+
+/* =========================================================
+   PLACEHOLDERS
+   ========================================================= */
+
+.admin-announcement-edit
+.form-group > input::placeholder,
+
+.admin-announcement-edit
+.form-group > textarea::placeholder {
+  color: #9ca3af;
+}
+
+
+/* =========================================================
+   FIELD HOVER
+   ========================================================= */
+
+.admin-announcement-edit
+.form-group > input:hover:not(:disabled),
+
+.admin-announcement-edit
+.form-group > textarea:hover:not(:disabled),
+
+.admin-announcement-edit
+.form-group > select:hover:not(:disabled) {
+  border-color: #94a3b8;
+}
+
+
+/* =========================================================
+   FIELD FOCUS
+   ========================================================= */
+
+.admin-announcement-edit .form-group > input:focus,
+.admin-announcement-edit .form-group > textarea:focus,
+.admin-announcement-edit .form-group > select:focus {
+  background: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   TEXTAREA
+   ========================================================= */
+
+.admin-announcement-edit .form-group > textarea {
+  min-height: 160px;
+
+  resize: vertical;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   DISABLED FIELDS
+   ========================================================= */
+
+.admin-announcement-edit
+.form-group > input:disabled,
+
+.admin-announcement-edit
+.form-group > textarea:disabled,
+
+.admin-announcement-edit
+.form-group > select:disabled {
+  background: #f3f4f6;
+
+  color: #9ca3af;
+
+  border-color: #d1d5db;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+}
+
+
+/* =========================================================
+   FORM ROW
+   ========================================================= */
+
+.admin-announcement-edit .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 18px;
 }
 
-.form-actions {
+
+/* =========================================================
+   RECIPIENT LIST
+   ========================================================= */
+
+.admin-announcement-edit .recipient-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 8px 12px;
+
+  padding: 13px;
+
+  box-sizing: border-box;
+
+  background: #f9fafb;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+}
+
+
+/* =========================================================
+   RECIPIENT ITEM
+   ========================================================= */
+
+.admin-announcement-edit .recipient-item {
   display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 10px;
+  align-items: center;
+
+  gap: 8px;
+
+  min-width: 0;
+
+  margin: 0;
+
+  padding: 8px 10px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  color: #374151;
+
+  border: 1px solid #e2e7ec;
+  border-radius: 7px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  line-height: 1.35;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
 }
 
-.cancel-btn {
-  background: #6b7280;
+.admin-announcement-edit .recipient-item:hover {
+  background: #f8fafc;
 
-  color: white;
+  border-color: #cbd5e1;
 
-  border: none;
+  transform: translateY(-1px);
+}
 
-  padding: 12px 24px;
 
-  border-radius: 8px;
+/* =========================================================
+   RECIPIENT CHECKBOX
+   ========================================================= */
+
+.admin-announcement-edit
+.recipient-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+
+  flex: 0 0 16px;
+
+  margin: 0;
+
+  accent-color: #2563eb;
 
   cursor: pointer;
 }
 
-.cancel-btn:hover {
-  background: #4b5563;
+
+/* =========================================================
+   ATTACHMENT SECTION
+   ========================================================= */
+
+.admin-announcement-edit .attachment-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  background: #f9fafb;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
 }
 
-.save-btn {
+
+/* =========================================================
+   ATTACHMENT ITEM
+   ========================================================= */
+
+.admin-announcement-edit .attachment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-width: 0;
+
+  padding: 10px 12px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  color: #374151;
+
+  border: 1px solid #d7dde4;
+  border-radius: 8px;
+
+  font-size: 13px;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.admin-announcement-edit .attachment-item:hover {
+  background: #f8fafc;
+
+  border-color: #cbd5e1;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ATTACHMENT LINK
+   ========================================================= */
+
+.admin-announcement-edit .attachment-item a {
+  min-width: 0;
+
+  color: #1d4ed8;
+
+  font-weight: 500;
+
+  text-decoration: none;
+
+  overflow-wrap: anywhere;
+}
+
+.admin-announcement-edit .attachment-item a:hover {
+  color: #1e40af;
+
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   REMOVE ATTACHMENT BUTTON
+   ========================================================= */
+
+.admin-announcement-edit .remove-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 32px;
+
+  flex: 0 0 auto;
+
+  padding: 6px 10px;
+
+  box-sizing: border-box;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border: 1.5px solid #fecaca;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.admin-announcement-edit
+.remove-file-btn:hover:not(:disabled) {
+  background: #fee2e2;
+
+  border-color: #fca5a5;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(220, 38, 38, 0.1);
+}
+
+.admin-announcement-edit
+.remove-file-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   FILE INPUT
+   ========================================================= */
+
+.admin-announcement-edit input[type="file"] {
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   SELECTED NEW FILE
+   ========================================================= */
+
+.admin-announcement-edit .selected-file {
+  display: block;
+
+  margin: 8px 0 0;
+
+  padding: 9px 11px;
+
+  box-sizing: border-box;
+
+  background: #f8fafc;
+
+  color: #475569;
+
+  border: 1px solid #d7dde4;
+  border-radius: 7px;
+
+  font-size: 12px;
+
+  line-height: 1.45;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
+.admin-announcement-edit .form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 2px;
+
+  padding-top: 18px;
+
+  border-top: 1px solid #d7dde4;
+}
+
+
+/* =========================================================
+   ACTION BUTTON BASE
+   ========================================================= */
+
+.admin-announcement-edit .cancel-btn,
+.admin-announcement-edit .save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 39px;
+
+  padding: 8px 14px;
+
+  box-sizing: border-box;
+
+  border: 1.5px solid transparent;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+/* =========================================================
+   CANCEL
+   ========================================================= */
+
+.admin-announcement-edit .cancel-btn {
+  background: #f3f4f6;
+
+  color: #374151;
+
+  border-color: #cbd5e1;
+}
+
+.admin-announcement-edit
+.cancel-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+
+  border-color: #94a3b8;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+.admin-announcement-edit .save-btn {
   background: #2563eb;
 
-  color: white;
+  color: #ffffff;
 
-  border: none;
+  border-color: #2563eb;
 
-  padding: 12px 24px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
+  box-shadow:
+    0 2px 5px rgba(37, 99, 235, 0.12);
 }
 
-.save-btn:hover {
+.admin-announcement-edit
+.save-btn:hover:not(:disabled) {
   background: #1d4ed8;
+
+  border-color: #1d4ed8;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(37, 99, 235, 0.18);
 }
 
-.save-btn:disabled {
-  opacity: 0.7;
+
+/* =========================================================
+   BUTTON ACTIVE
+   ========================================================= */
+
+.admin-announcement-edit
+.cancel-btn:active:not(:disabled),
+
+.admin-announcement-edit
+.save-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   DISABLED BUTTONS
+   ========================================================= */
+
+.admin-announcement-edit .cancel-btn:disabled,
+.admin-announcement-edit .save-btn:disabled,
+.admin-announcement-edit .remove-file-btn:disabled {
+  opacity: 0.55;
+
   cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
 }
 
-.announcement-loading {
-  text-align: center;
 
-  padding: 60px;
+/* =========================================================
+   LOADING
+   ========================================================= */
 
-  font-size: 18px;
+.admin-announcement-edit .announcement-loading {
+  width: min(100%, 900px);
+
+  margin: 0 auto;
+
+  padding: 48px 20px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
 
   color: #6b7280;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  text-align: center;
+
+  font-size: 14px;
 }
 
+
+/* Keep compatibility if loading is rendered outside root */
+
+.announcement-loading {
+  color: #6b7280;
+
+  font-size: 14px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   FOCUS VISIBLE
+   ========================================================= */
+
+.admin-announcement-edit button:focus-visible,
+.admin-announcement-edit input:focus-visible,
+.admin-announcement-edit textarea:focus-visible,
+.admin-announcement-edit select:focus-visible,
+.admin-announcement-edit a:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
 @media (max-width: 768px) {
-  .form-row {
+  .admin-announcement-edit {
+    padding: 18px;
+
+    border-radius: 12px;
+  }
+
+  .admin-announcement-edit
+  .announcement-edit-header h1 {
+    font-size: 22px;
+  }
+
+  .admin-announcement-edit
+  .announcement-edit-form {
+    padding: 18px;
+  }
+
+  .admin-announcement-edit .form-row,
+  .admin-announcement-edit .recipient-list {
     grid-template-columns: 1fr;
   }
 
-  .admin-announcement-edit {
-    margin: 20px;
+  .admin-announcement-edit .attachment-item {
+    align-items: flex-start;
 
-    padding: 25px;
+    flex-direction: column;
+  }
+
+  .admin-announcement-edit .remove-file-btn {
+    width: 100%;
+  }
+
+  .admin-announcement-edit .form-actions {
+    flex-direction: column-reverse;
+
+    align-items: stretch;
+  }
+
+  .admin-announcement-edit .cancel-btn,
+  .admin-announcement-edit .save-btn {
+    width: 100%;
+  }
+
+  .admin-announcement-edit .form-group > input,
+  .admin-announcement-edit .form-group > textarea,
+  .admin-announcement-edit .form-group > select {
+    font-size: 16px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .admin-announcement-edit {
+    padding: 14px;
+  }
+
+  .admin-announcement-edit
+  .announcement-edit-form {
+    padding: 15px;
+  }
+
+  .admin-announcement-edit
+  .announcement-edit-header h1 {
+    font-size: 21px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-announcement-edit,
+  .admin-announcement-edit * {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
   }
 }

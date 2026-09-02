@@ -1,0 +1,974 @@
+/* =========================================================
+   PTC PORTAL
+   ADMIN GLOBAL THEME
+
+   IMPORTANT:
+   Student List uses .admin-manage-students.
+   It is intentionally excluded from this file.
+   ========================================================= */
+
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes ptcAdminFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ptcAdminFadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ptcAdminRowIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* =========================================================
+   ADMIN PAGE ROOTS
+   ========================================================= */
+
+:is(
+  .admin-dashboard,
+  .admin-user-list,
+  .admin-activity,
+  .create-user,
+  .user-role-container,
+
+  .admin-announcement-list,
+  .admin-announcement-create,
+  .admin-announcement-edit,
+  .announcement-details-page,
+
+  .admin-addeditdrop-students,
+  .admin-createstudents-students,
+  .admin-editstudents-students-table,
+  .admin-profile-students,
+
+  .admin-Dashboard-reports,
+  .admin-export-reports,
+  .admin-auditlog-reports,
+  .admin-analytics-reports,
+
+  .admin-payments-financial,
+  .admin-scholarship-financial,
+  .admin-billing-financial,
+  .admin-freport-financial,
+
+  .admin-approve-history,
+  .admin-class-request,
+  .admin-approve-analytics,
+  .admin-approve-enrollment,
+
+  .admin-system-Gsettings,
+  .admin-system-email,
+  .admin-system-security,
+  .admin-system-backup,
+  .admin-system-acadsetting
+) {
+  --admin-green: #66c44f;
+  --admin-background: #f4f5f1;
+
+  --admin-white: #ffffff;
+  --admin-soft-white: #f9fafb;
+
+  --admin-heading: #111827;
+  --admin-text: #1f2937;
+  --admin-muted: #6b7280;
+
+  --admin-border: #cbd5e1;
+  --admin-border-medium: #d7dde4;
+  --admin-border-light: #e2e7ec;
+
+  --admin-blue: #2563eb;
+  --admin-blue-hover: #1d4ed8;
+
+  position: relative;
+
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+
+  margin: 0;
+
+  padding: 28px;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    var(--admin-green) 0%,
+    var(--admin-background) 100%
+  );
+
+  border: 1.5px solid var(--admin-border);
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
+  color: var(--admin-text);
+
+  animation: ptcAdminFadeInUp 0.45s ease both;
+}
+
+
+/* =========================================================
+   CONTENT LAYER
+   ========================================================= */
+
+:is(
+  .admin-dashboard,
+  .admin-user-list,
+  .admin-activity,
+  .create-user,
+  .user-role-container,
+
+  .admin-announcement-list,
+  .admin-announcement-create,
+  .admin-announcement-edit,
+  .announcement-details-page,
+
+  .admin-addeditdrop-students,
+  .admin-createstudents-students,
+  .admin-editstudents-students-table,
+  .admin-profile-students,
+
+  .admin-Dashboard-reports,
+  .admin-export-reports,
+  .admin-auditlog-reports,
+  .admin-analytics-reports,
+
+  .admin-payments-financial,
+  .admin-scholarship-financial,
+  .admin-billing-financial,
+  .admin-freport-financial,
+
+  .admin-approve-history,
+  .admin-class-request,
+  .admin-approve-analytics,
+  .admin-approve-enrollment,
+
+  .admin-system-Gsettings,
+  .admin-system-email,
+  .admin-system-security,
+  .admin-system-backup,
+  .admin-system-acadsetting
+) > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+:is(
+  .admin-dashboard,
+  .admin-user-list,
+  .admin-activity,
+  .create-user,
+  .user-role-container,
+
+  .admin-announcement-list,
+  .admin-announcement-create,
+  .admin-announcement-edit,
+  .announcement-details-page,
+
+  .admin-addeditdrop-students,
+  .admin-createstudents-students,
+  .admin-editstudents-students-table,
+  .admin-profile-students,
+
+  .admin-Dashboard-reports,
+  .admin-export-reports,
+  .admin-auditlog-reports,
+  .admin-analytics-reports,
+
+  .admin-payments-financial,
+  .admin-scholarship-financial,
+  .admin-billing-financial,
+  .admin-freport-financial,
+
+  .admin-approve-history,
+  .admin-class-request,
+  .admin-approve-analytics,
+  .admin-approve-enrollment,
+
+  .admin-system-Gsettings,
+  .admin-system-email,
+  .admin-system-security,
+  .admin-system-backup,
+  .admin-system-acadsetting
+) h1 {
+  color: var(--admin-heading);
+}
+
+
+/* =========================================================
+   PLACEHOLDER / SIMPLE ADMIN PAGES
+   ========================================================= */
+
+:is(
+  .admin-Dashboard-reports,
+  .admin-export-reports,
+  .admin-auditlog-reports,
+  .admin-analytics-reports,
+
+  .admin-payments-financial,
+  .admin-scholarship-financial,
+  .admin-billing-financial,
+  .admin-freport-financial,
+
+  .admin-approve-history,
+  .admin-class-request,
+  .admin-approve-analytics,
+  .admin-approve-enrollment,
+
+  .admin-system-Gsettings,
+  .admin-system-email,
+  .admin-system-security,
+  .admin-system-backup,
+  .admin-system-acadsetting
+) {
+  min-height: 180px;
+}
+
+:is(
+  .admin-Dashboard-reports,
+  .admin-export-reports,
+  .admin-auditlog-reports,
+  .admin-analytics-reports,
+
+  .admin-payments-financial,
+  .admin-scholarship-financial,
+  .admin-billing-financial,
+  .admin-freport-financial,
+
+  .admin-approve-history,
+  .admin-class-request,
+  .admin-approve-analytics,
+  .admin-approve-enrollment,
+
+  .admin-system-Gsettings,
+  .admin-system-email,
+  .admin-system-security,
+  .admin-system-backup,
+  .admin-system-acadsetting
+) h1 {
+  margin: 0;
+
+  color: var(--admin-heading);
+
+  font-size: 24px;
+  font-weight: 700;
+
+  letter-spacing: -0.01em;
+}
+
+
+/* =========================================================
+   CONSTRAIN INNER CONTENT
+   KEEP OUTER GREEN SHELL FULL WIDTH
+   ========================================================= */
+
+.create-user > h1,
+.create-user > h2,
+.create-user > form {
+  width: min(100%, 820px);
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.admin-announcement-create > *,
+.admin-announcement-edit > * {
+  width: min(100%, 980px);
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.announcement-details-page > .back-btn,
+.announcement-details-page > .announcement-card,
+.announcement-details-page > .announcement-loading,
+.announcement-details-page > .error-message {
+  width: min(100%, 1100px);
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* =========================================================
+   STRONGER CARDS
+   ========================================================= */
+
+.admin-dashboard :is(
+  .overview-card,
+  .stat-card,
+  .dashboard-card,
+  .dashboard-section,
+  .activity-timeline
+),
+
+.user-role-container :is(
+  .role-card,
+  .permission-section
+),
+
+.create-user form,
+
+.admin-activity .activity-table-wrapper,
+
+.admin-user-list .admin-user-list__table-wrap,
+
+.admin-announcement-list .announcement-table-container,
+
+.admin-announcement-create .announcement-form,
+
+.admin-announcement-edit .announcement-edit-form,
+
+.announcement-details-page .announcement-card,
+
+.admin-createstudents-students .admin-student-form,
+
+.admin-editstudents-students-table .admin-student-form,
+
+.admin-profile-students .profile-card {
+  border: 1.5px solid var(--admin-border);
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 5px 16px rgba(15, 23, 42, 0.04);
+}
+
+
+/* =========================================================
+   CARD ANIMATION
+   ========================================================= */
+
+.admin-dashboard :is(
+  .overview-card,
+  .stat-card,
+  .dashboard-card,
+  .dashboard-section
+),
+
+.user-role-container .role-card,
+
+.create-user form,
+
+.admin-activity .activity-table-wrapper,
+
+.admin-user-list .admin-user-list__table-wrap,
+
+.admin-announcement-list .announcement-table-container,
+
+.admin-announcement-create .announcement-form,
+
+.admin-announcement-edit .announcement-edit-form,
+
+.announcement-details-page .announcement-card,
+
+.admin-createstudents-students .admin-student-form,
+
+.admin-editstudents-students-table .admin-student-form,
+
+.admin-profile-students .profile-card {
+  animation: ptcAdminFadeInScale 0.48s ease both;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+:is(
+  .admin-dashboard,
+  .admin-user-list,
+  .admin-activity,
+  .create-user,
+  .user-role-container,
+
+  .admin-announcement-list,
+  .admin-announcement-create,
+  .admin-announcement-edit,
+  .announcement-details-page,
+
+  .admin-addeditdrop-students,
+  .admin-createstudents-students,
+  .admin-editstudents-students-table,
+  .admin-profile-students
+)
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  border-width: 1.5px;
+
+  border-color: var(--admin-border);
+}
+
+:is(
+  .admin-dashboard,
+  .admin-user-list,
+  .admin-activity,
+  .create-user,
+  .user-role-container,
+
+  .admin-announcement-list,
+  .admin-announcement-create,
+  .admin-announcement-edit,
+  .announcement-details-page,
+
+  .admin-addeditdrop-students,
+  .admin-createstudents-students,
+  .admin-editstudents-students-table,
+  .admin-profile-students
+)
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+):focus {
+  border-color: var(--admin-blue);
+
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* =========================================================
+   TABLES
+
+   Student List intentionally excluded.
+   ========================================================= */
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) {
+  border: 1.5px solid var(--admin-border);
+
+  background: var(--admin-white);
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) thead {
+  background: var(--admin-soft-white);
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) th {
+  border-bottom: 1.5px solid var(--admin-border);
+
+  border-right: 1px solid var(--admin-border-medium);
+
+  color: var(--admin-muted);
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) th:last-child {
+  border-right: none;
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) td {
+  border-bottom: 1px solid var(--admin-border-medium);
+
+  border-right: 1px solid var(--admin-border-light);
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) td:last-child {
+  border-right: none;
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   TABLE ROW ANIMATION
+   ========================================================= */
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) tbody tr {
+  animation: ptcAdminRowIn 0.28s ease both;
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) tbody tr:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) tbody tr:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) tbody tr:nth-child(3) {
+  animation-delay: 0.07s;
+}
+
+:is(
+  .admin-user-list .admin-user-list__table,
+  .admin-activity .activity-table,
+  .admin-announcement-list .announcement-table,
+  .admin-addeditdrop-students .admin-manage-students__table
+) tbody tr:nth-child(n + 4) {
+  animation-delay: 0.09s;
+}
+
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+.admin-dashboard {
+  max-width: none;
+
+  margin: 0;
+}
+
+.admin-dashboard .dashboard-header {
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+.admin-dashboard :is(
+  .stat-card,
+  .overview-card,
+  .dashboard-card,
+  .dashboard-section
+) {
+  background: #ffffff;
+}
+
+.admin-dashboard :is(
+  .stat-card,
+  .overview-card
+) {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.admin-dashboard :is(
+  .stat-card,
+  .overview-card
+):hover {
+  transform: translateY(-2px);
+
+  border-color: #b9c5d3;
+
+  box-shadow:
+    0 3px 8px rgba(15, 23, 42, 0.06),
+    0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+
+/* =========================================================
+   USER MANAGEMENT
+   ========================================================= */
+
+.admin-user-list {
+  overflow-x: hidden;
+}
+
+.admin-user-list .admin-user-list__table-wrap,
+.admin-activity .activity-table-wrapper {
+  overflow-x: auto;
+
+  background: #ffffff;
+
+  border-radius: 10px;
+}
+
+.create-user form {
+  background: #ffffff;
+
+  border-radius: 10px;
+}
+
+.create-user .form-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.create-user .error-message {
+  border: 1.5px solid #f4b6b6;
+}
+
+.user-role-container {
+  min-height: 0;
+}
+
+.user-role-container .role-header {
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+.user-role-container .role-card {
+  background: #ffffff;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.user-role-container .role-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #b9c5d3;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT MANAGEMENT
+   ========================================================= */
+
+.admin-announcement-list {
+  min-height: 0;
+}
+
+.admin-announcement-list .announcement-header,
+.admin-announcement-list .announcement-toolbar {
+  animation: ptcAdminFadeInUp 0.42s ease both;
+}
+
+.admin-announcement-list
+:is(
+  .announcement-search,
+  .announcement-filter
+) {
+  border: 1.5px solid var(--admin-border);
+}
+
+.admin-announcement-list .announcement-table-container {
+  background: #ffffff;
+
+  border-radius: 10px;
+}
+
+.admin-announcement-list .announcement-table thead {
+  background: #f9fafb;
+}
+
+.admin-announcement-list .announcement-table th {
+  color: #6b7280;
+}
+
+.admin-announcement-list .status {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+
+.admin-announcement-create,
+.admin-announcement-edit,
+.announcement-details-page {
+  min-height: 0;
+}
+
+.admin-announcement-create .announcement-form,
+.admin-announcement-edit .announcement-edit-form {
+  padding: 24px;
+
+  background: #ffffff;
+
+  border-radius: 10px;
+}
+
+.admin-announcement-create .form-group,
+.admin-announcement-edit .form-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.admin-announcement-create
+:is(
+  .recipient-list,
+  .selected-file
+),
+
+.admin-announcement-edit
+:is(
+  .recipient-list,
+  .attachment-list,
+  .selected-file
+) {
+  border: 1.5px solid var(--admin-border);
+
+  border-radius: 9px;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT DETAILS
+   ========================================================= */
+
+.announcement-details-page {
+  max-width: none;
+
+  margin: 0;
+
+  padding: 28px;
+}
+
+.announcement-details-page .announcement-card {
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border-radius: 12px;
+}
+
+.announcement-details-page .announcement-banner {
+  background: linear-gradient(
+    135deg,
+    #4dad3b,
+    #66c44f
+  );
+
+  color: #ffffff;
+
+  border-bottom: 1.5px solid #3f9432;
+}
+
+.announcement-details-page
+:is(
+  .meta-box,
+  .content-box,
+  .attachment-list
+) {
+  border: 1.5px solid var(--admin-border);
+}
+
+
+/* =========================================================
+   STUDENT MANAGEMENT
+   NON-LIST ONLY
+   ========================================================= */
+
+:is(
+  .admin-addeditdrop-students,
+  .admin-createstudents-students,
+  .admin-editstudents-students-table,
+  .admin-profile-students
+) {
+  border: 1.5px solid var(--admin-border);
+}
+
+.admin-profile-students {
+  width: 100%;
+
+  max-width: none;
+
+  margin: 0;
+}
+
+.admin-profile-students .profile-field {
+  border-color: var(--admin-border-medium);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  :is(
+    .admin-dashboard,
+    .admin-user-list,
+    .admin-activity,
+    .create-user,
+    .user-role-container,
+
+    .admin-announcement-list,
+    .admin-announcement-create,
+    .admin-announcement-edit,
+    .announcement-details-page,
+
+    .admin-addeditdrop-students,
+    .admin-createstudents-students,
+    .admin-editstudents-students-table,
+    .admin-profile-students,
+
+    .admin-Dashboard-reports,
+    .admin-export-reports,
+    .admin-auditlog-reports,
+    .admin-analytics-reports,
+
+    .admin-payments-financial,
+    .admin-scholarship-financial,
+    .admin-billing-financial,
+    .admin-freport-financial,
+
+    .admin-approve-history,
+    .admin-class-request,
+    .admin-approve-analytics,
+    .admin-approve-enrollment,
+
+    .admin-system-Gsettings,
+    .admin-system-email,
+    .admin-system-security,
+    .admin-system-backup,
+    .admin-system-acadsetting
+  ) {
+    padding: 18px;
+
+    border-radius: 12px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    .admin-dashboard,
+    .admin-user-list,
+    .admin-activity,
+    .create-user,
+    .user-role-container,
+
+    .admin-announcement-list,
+    .admin-announcement-create,
+    .admin-announcement-edit,
+    .announcement-details-page,
+
+    .admin-addeditdrop-students,
+    .admin-createstudents-students,
+    .admin-editstudents-students-table,
+    .admin-profile-students,
+
+    .admin-Dashboard-reports,
+    .admin-export-reports,
+    .admin-auditlog-reports,
+    .admin-analytics-reports,
+
+    .admin-payments-financial,
+    .admin-scholarship-financial,
+    .admin-billing-financial,
+    .admin-freport-financial,
+
+    .admin-approve-history,
+    .admin-class-request,
+    .admin-approve-analytics,
+    .admin-approve-enrollment,
+
+    .admin-system-Gsettings,
+    .admin-system-email,
+    .admin-system-security,
+    .admin-system-backup,
+    .admin-system-acadsetting
+  ),
+  :is(
+    .admin-dashboard,
+    .admin-user-list,
+    .admin-activity,
+    .create-user,
+    .user-role-container,
+
+    .admin-announcement-list,
+    .admin-announcement-create,
+    .admin-announcement-edit,
+    .announcement-details-page,
+
+    .admin-addeditdrop-students,
+    .admin-createstudents-students,
+    .admin-editstudents-students-table,
+    .admin-profile-students
+  ) * {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}

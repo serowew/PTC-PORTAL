@@ -1,273 +1,890 @@
-/* ===================================
-   Announcement Management
-=================================== */
+/* =========================================================
+   ADMIN ANNOUNCEMENT LIST
+   PTC Portal Admin Theme
+
+   Features:
+   - Full-width Admin green shell
+   - Strong visible borders
+   - Clean table layout
+   - Scoped status / action colors
+   - Responsive toolbar
+   - Compatible with admin-theme.css animations
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE CONTAINER
+   ========================================================= */
 
 .admin-announcement-list {
-  padding: 30px;
-  background: #f8fafc;
-  min-height: 100vh;
-}
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 
-/* Header */
-
-.announcement-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  gap: 20px;
-}
-
-.announcement-header h1 {
   margin: 0;
-  font-size: 30px;
-  color: #1e293b;
-  font-weight: 700;
+
+  padding: 28px;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    #66c44f 0%,
+    #f4f5f1 100%
+  );
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
+  color: #1f2937;
+
+  overflow: hidden;
 }
 
-.announcement-header p {
-  margin-top: 6px;
-  color: #64748b;
-  font-size: 15px;
-}
 
-/* Create Button */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
-.create-announcement-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 12px 22px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-.create-announcement-btn:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
-}
-
-/* Toolbar */
-
-.announcement-toolbar {
+.admin-announcement-list .announcement-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
+
+  gap: 16px;
+
+  margin-bottom: 20px;
+
   flex-wrap: wrap;
 }
 
-.announcement-search {
-  flex: 1;
-  min-width: 260px;
-  max-width: 420px;
-  padding: 12px 15px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 15px;
-  outline: none;
-  transition: 0.2s;
+.admin-announcement-list .announcement-header > div {
+  min-width: 0;
 }
 
-.announcement-search:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+.admin-announcement-list .announcement-header h1 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.01em;
 }
 
-.announcement-filter {
-  width: 190px;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: white;
-  font-size: 15px;
-  cursor: pointer;
-}
+.admin-announcement-list .announcement-header p {
+  margin: 6px 0 0;
 
-/* Table */
+  color: #374151;
 
-.announcement-table-container {
-  width: 100%;
-  overflow-x: auto;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
-}
-
-.announcement-table {
-  width: 100%;
-  min-width: 1200px;
-  border-collapse: collapse;
-}
-
-.announcement-table thead {
-  background: #1e3a8a;
-}
-
-.announcement-table th {
-  color: white;
-  padding: 18px 22px;
-  text-align: left;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.announcement-table td {
-  padding: 18px 22px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #334155;
   font-size: 14px;
-  vertical-align: middle;
+
+  line-height: 1.5;
 }
 
-.announcement-table tbody tr:hover {
-  background: #f8fafc;
-}
 
-/* Column Sizes */
+/* =========================================================
+   CREATE ANNOUNCEMENT BUTTON
+   ========================================================= */
 
-.announcement-table th:nth-child(1),
-.announcement-table td:nth-child(1) {
-  min-width: 280px;
-}
+.admin-announcement-list .create-announcement-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-.announcement-table th:nth-child(2),
-.announcement-table td:nth-child(2) {
-  min-width: 140px;
-}
+  min-height: 40px;
 
-.announcement-table th:nth-child(3),
-.announcement-table td:nth-child(3) {
-  min-width: 150px;
-}
+  padding: 9px 17px;
 
-.announcement-table th:nth-child(4),
-.announcement-table td:nth-child(4) {
-  min-width: 130px;
-}
+  flex-shrink: 0;
 
-.announcement-table th:nth-child(5),
-.announcement-table td:nth-child(5) {
-  min-width: 160px;
-}
-
-.announcement-table th:nth-child(6),
-.announcement-table td:nth-child(6) {
-  min-width: 170px;
-}
-
-.announcement-table th:nth-child(7),
-.announcement-table td:nth-child(7) {
-  min-width: 220px;
-}
-
-/* Status Badge */
-
-.status {
-  display: inline-block;
-  padding: 7px 14px;
-  border-radius: 30px;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* Status Colors */
-
-.status.published {
-  background: #16a34a;
-}
-
-.status.scheduled {
   background: #2563eb;
-}
 
-.status.draft {
-  background: #f59e0b;
-}
+  color: #ffffff;
 
-.status.expired {
-  background: #dc2626;
-}
-
-/* Action Buttons */
-
-.action-btn {
-  border: none;
-  padding: 8px 14px;
+  border: 1.5px solid #2563eb;
   border-radius: 8px;
-  margin-right: 8px;
+
+  font: inherit;
+
   font-size: 13px;
   font-weight: 600;
+
   cursor: pointer;
-  transition: 0.2s;
+
+  box-shadow:
+    0 2px 5px rgba(37, 99, 235, 0.14);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
-.action-btn:last-child {
+.admin-announcement-list .create-announcement-btn:hover {
+  background: #1d4ed8;
+
+  border-color: #1d4ed8;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 14px rgba(37, 99, 235, 0.2);
+}
+
+.admin-announcement-list .create-announcement-btn:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.admin-announcement-list .error-message {
+  width: 100%;
+
+  margin: 0 0 18px;
+
+  padding: 11px 14px;
+
+  box-sizing: border-box;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+
+.admin-announcement-list .announcement-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 22px;
+
+  flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.admin-announcement-list .announcement-search {
+  flex: 1 1 280px;
+
+  width: 100%;
+  min-width: 240px;
+  max-width: 420px;
+
+  height: 42px;
+
+  padding:
+    0
+    14px
+    0
+    40px;
+
+  box-sizing: border-box;
+
+  background:
+    #f9fafb
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'><path d='M11.742 10.344a6.5 6.5 0 1 0-1.398 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/></svg>")
+    no-repeat
+    13px
+    center;
+
+  background-size: 15px 15px;
+
+  color: #1f2937;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+
+  outline: none;
+
+  font: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.admin-announcement-list .announcement-search::placeholder {
+  color: #9ca3af;
+}
+
+.admin-announcement-list .announcement-search:hover {
+  border-color: #94a3b8;
+}
+
+.admin-announcement-list .announcement-search:focus {
+  background-color: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   FILTER
+   ========================================================= */
+
+.admin-announcement-list .announcement-filter {
+  width: 180px;
+  min-width: 180px;
+
+  height: 42px;
+
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  background: #f9fafb;
+
+  color: #374151;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+
+  outline: none;
+
+  font: inherit;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.admin-announcement-list .announcement-filter:hover {
+  border-color: #94a3b8;
+}
+
+.admin-announcement-list .announcement-filter:focus {
+  background: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+   ========================================================= */
+
+.admin-announcement-list .announcement-table-container {
+  width: 100%;
+  max-width: 100%;
+
+  overflow-x: auto;
+
+  background: #ffffff;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 5px 14px rgba(15, 23, 42, 0.03);
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.admin-announcement-list .announcement-table {
+  width: 100%;
+
+  min-width: 980px;
+
+  table-layout: fixed;
+
+  border-collapse: collapse;
+
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.admin-announcement-list .announcement-table thead {
+  background: #f9fafb;
+}
+
+.admin-announcement-list .announcement-table th {
+  padding: 13px 16px;
+
+  color: #6b7280;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-align: left;
+  text-transform: uppercase;
+
+  letter-spacing: 0.05em;
+
+  white-space: nowrap;
+
+  border-bottom: 1.5px solid #cbd5e1;
+  border-right: 1px solid #d7dde4;
+}
+
+.admin-announcement-list .announcement-table th:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   TABLE BODY
+   ========================================================= */
+
+.admin-announcement-list .announcement-table td {
+  padding: 13px 16px;
+
+  color: #1f2937;
+
+  font-size: 13px;
+
+  vertical-align: middle;
+
+  line-height: 1.45;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  border-bottom: 1px solid #d7dde4;
+  border-right: 1px solid #e2e7ec;
+}
+
+.admin-announcement-list .announcement-table td:last-child {
+  border-right: none;
+}
+
+.admin-announcement-list .announcement-table tbody tr {
+  background: #ffffff;
+
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.admin-announcement-list .announcement-table tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+.admin-announcement-list .announcement-table tbody tr:hover {
+  background: #f5f7f9;
+}
+
+.admin-announcement-list .announcement-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+   ========================================================= */
+
+/* Title */
+
+.admin-announcement-list .announcement-table th:nth-child(1),
+.admin-announcement-list .announcement-table td:nth-child(1) {
+  width: 22%;
+
+  white-space: normal;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* Category */
+
+.admin-announcement-list .announcement-table th:nth-child(2),
+.admin-announcement-list .announcement-table td:nth-child(2) {
+  width: 11%;
+}
+
+
+/* Date Created */
+
+.admin-announcement-list .announcement-table th:nth-child(3),
+.admin-announcement-list .announcement-table td:nth-child(3) {
+  width: 12%;
+}
+
+
+/* Status */
+
+.admin-announcement-list .announcement-table th:nth-child(4),
+.admin-announcement-list .announcement-table td:nth-child(4) {
+  width: 10%;
+}
+
+
+/* Audience */
+
+.admin-announcement-list .announcement-table th:nth-child(5),
+.admin-announcement-list .announcement-table td:nth-child(5) {
+  width: 12%;
+}
+
+
+/* Expiry */
+
+.admin-announcement-list .announcement-table th:nth-child(6),
+.admin-announcement-list .announcement-table td:nth-child(6) {
+  width: 12%;
+}
+
+
+/* Actions */
+
+.admin-announcement-list .announcement-table th:nth-child(7),
+.admin-announcement-list .announcement-table td:nth-child(7) {
+  width: 21%;
+}
+
+
+/* =========================================================
+   STATUS BASE
+   ========================================================= */
+
+.admin-announcement-list .status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 82px;
+
+  padding: 5px 10px;
+
+  box-sizing: border-box;
+
+  border: 1px solid transparent;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   PUBLISHED
+   ========================================================= */
+
+.admin-announcement-list .status.published {
+  background: #dcfce7;
+
+  color: #15803d;
+
+  border-color: #86efac;
+}
+
+
+/* =========================================================
+   SCHEDULED
+   ========================================================= */
+
+.admin-announcement-list .status.scheduled {
+  background: #eff6ff;
+
+  color: #1d4ed8;
+
+  border-color: #93c5fd;
+}
+
+
+/* =========================================================
+   DRAFT
+   ========================================================= */
+
+.admin-announcement-list .status.draft {
+  background: #fffbeb;
+
+  color: #b45309;
+
+  border-color: #fcd34d;
+}
+
+
+/* =========================================================
+   EXPIRED
+   ========================================================= */
+
+.admin-announcement-list .status.expired {
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border-color: #fca5a5;
+}
+
+
+/* =========================================================
+   ARCHIVED
+   Future-safe if backend returns archived.
+   ========================================================= */
+
+.admin-announcement-list .status.archived {
+  background: #f8fafc;
+
+  color: #475569;
+
+  border-color: #cbd5e1;
+}
+
+
+/* =========================================================
+   ACTION CELL
+   ========================================================= */
+
+.admin-announcement-list .announcement-table td:last-child {
+  white-space: normal;
+
+  overflow: visible;
+}
+
+
+/* =========================================================
+   ACTION BUTTON BASE
+   ========================================================= */
+
+.admin-announcement-list .action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 32px;
+
+  margin: 2px 5px 2px 0;
+
+  padding: 6px 10px;
+
+  background: #f3f4f6;
+
+  color: #374151;
+
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 11.5px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.admin-announcement-list .action-btn:last-child {
   margin-right: 0;
 }
 
-.action-btn.view {
-  background: #3b82f6;
-  color: white;
+.admin-announcement-list .action-btn:active {
+  transform: scale(0.96);
 }
 
-.action-btn.view:hover {
-  background: #2563eb;
+
+/* =========================================================
+   VIEW BUTTON
+   ========================================================= */
+
+.admin-announcement-list .action-btn.view {
+  background: #eff6ff;
+
+  color: #1d4ed8;
+
+  border-color: #bfdbfe;
 }
 
-.action-btn.edit {
-  background: #f59e0b;
-  color: white;
+.admin-announcement-list .action-btn.view:hover {
+  background: #dbeafe;
+
+  border-color: #93c5fd;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(37, 99, 235, 0.12);
 }
 
-.action-btn.edit:hover {
-  background: #d97706;
+
+/* =========================================================
+   EDIT BUTTON
+   ========================================================= */
+
+.admin-announcement-list .action-btn.edit {
+  background: #fffbeb;
+
+  color: #b45309;
+
+  border-color: #fde68a;
 }
 
-.action-btn.delete {
-  background: #ef4444;
-  color: white;
+.admin-announcement-list .action-btn.edit:hover {
+  background: #fef3c7;
+
+  border-color: #fcd34d;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(245, 158, 11, 0.12);
 }
 
-.action-btn.delete:hover {
-  background: #dc2626;
+
+/* =========================================================
+   DELETE BUTTON
+   ========================================================= */
+
+.admin-announcement-list .action-btn.delete {
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  border-color: #fecaca;
 }
 
-/* Empty Row */
+.admin-announcement-list .action-btn.delete:hover {
+  background: #fee2e2;
 
-.coming-soon {
+  border-color: #fca5a5;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(220, 38, 38, 0.12);
+}
+
+
+/* =========================================================
+   DISABLED BUTTONS
+   ========================================================= */
+
+.admin-announcement-list .action-btn:disabled,
+.admin-announcement-list .create-announcement-btn:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   COMING SOON / EMPTY STATE
+   ========================================================= */
+
+.admin-announcement-list .coming-soon {
+  padding: 42px 20px;
+
+  color: #6b7280;
+
   text-align: center;
-  color: #94a3b8;
-  font-style: italic;
-  padding: 35px;
+
+  font-size: 14px;
+  font-style: normal;
+
+  background: #ffffff;
 }
 
-/* Responsive */
+
+/* =========================================================
+   TABLE EMPTY CELL
+   ========================================================= */
+
+.admin-announcement-list .announcement-table td[colspan] {
+  padding: 42px 20px;
+
+  color: #6b7280;
+
+  text-align: center;
+
+  font-size: 14px;
+
+  background: #ffffff;
+
+  border-right: none;
+}
+
+
+/* =========================================================
+   TABLE SCROLLBAR
+   ========================================================= */
+
+.admin-announcement-list
+.announcement-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.admin-announcement-list
+.announcement-table-container::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.admin-announcement-list
+.announcement-table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+
+  border-radius: 999px;
+}
+
+.admin-announcement-list
+.announcement-table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.admin-announcement-list button:focus-visible,
+.admin-announcement-list input:focus-visible,
+.admin-announcement-list select:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
 
 @media (max-width: 900px) {
-  .announcement-header {
+  .admin-announcement-list .announcement-header,
+  .admin-announcement-list .announcement-toolbar {
     flex-direction: column;
-    align-items: flex-start;
-  }
 
-  .announcement-toolbar {
-    flex-direction: column;
     align-items: stretch;
   }
 
-  .announcement-search,
-  .announcement-filter {
+  .admin-announcement-list .announcement-search,
+  .admin-announcement-list .announcement-filter,
+  .admin-announcement-list .create-announcement-btn {
     width: 100%;
+
+    min-width: 0;
     max-width: 100%;
   }
 
-  .create-announcement-btn {
-    width: 100%;
+  .admin-announcement-list .announcement-table {
+    min-width: 900px;
+
+    table-layout: auto;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .admin-announcement-list {
+    padding: 18px;
+
+    border-radius: 12px;
+  }
+
+  .admin-announcement-list .announcement-header h1 {
+    font-size: 22px;
+  }
+
+  .admin-announcement-list .announcement-search,
+  .admin-announcement-list .announcement-filter {
+    font-size: 16px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .admin-announcement-list {
+    padding: 14px;
+  }
+
+  .admin-announcement-list .announcement-table th,
+  .admin-announcement-list .announcement-table td {
+    padding: 11px 13px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-announcement-list,
+  .admin-announcement-list * {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
   }
 }

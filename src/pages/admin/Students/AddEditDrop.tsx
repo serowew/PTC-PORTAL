@@ -485,7 +485,7 @@ export default function AddEditDrop() {
 
   return (
     <DashboardLayout>
-      <div className="admin-manage-students">
+      <div className="admin-addeditdrop-students">
         {/* =================================================
             HEADER
         ================================================= */}
