@@ -1,7 +1,7 @@
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
 
 import "../../../styles/Enrollmentmain.css";
 
@@ -429,6 +429,85 @@ export default function Enrollmentmain() {
   const [error, setError] = useState("");
 
   const [successMessage, setSuccessMessage] = useState("");
+
+  // ============================================================
+  // OFFICIAL SUBJECT ACCORDION
+  //
+  // Only one official subject can be open at a time.
+  // Clicking the open subject closes it.
+  // Clicking another subject closes the previous one automatically.
+  // ============================================================
+
+  const [expandedOfficialSubjectId, setExpandedOfficialSubjectId] = useState<
+    number | null
+  >(null);
+
+  const toggleOfficialSubject = (enrollmentSubjectId: number) => {
+    setExpandedOfficialSubjectId((currentId) =>
+      currentId === enrollmentSubjectId ? null : enrollmentSubjectId,
+    );
+  };
+
+  // ============================================================
+  // MAIN ENROLLMENT SECTION ACCORDION
+  //
+  // Controls these 5 large sections only:
+  // 1. Your Official Classes / Registrar Placement
+  // 2. Regular Subjects
+  // 3. Valid Retake Subjects
+  // 4. Blocked Subjects
+  // 5. Completed Subjects
+  //
+  // Only one large section can be open at a time.
+  // ============================================================
+
+  type EnrollmentSectionKey =
+    | "official"
+    | "regular"
+    | "retake"
+    | "blocked"
+    | "completed";
+
+  const [expandedSection, setExpandedSection] =
+    useState<EnrollmentSectionKey | null>(null);
+
+  const toggleEnrollmentSection = (section: EnrollmentSectionKey) => {
+    setExpandedSection((currentSection) =>
+      currentSection === section ? null : section,
+    );
+
+    // When switching large sections, close an opened official subject detail.
+    setExpandedOfficialSubjectId(null);
+  };
+
+  const handleSectionKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+    section: EnrollmentSectionKey,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleEnrollmentSection(section);
+    }
+  };
+
+  const sectionArrowStyle = (isOpen: boolean): CSSProperties => ({
+    width: "30px",
+    height: "30px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    border: "1px solid #63c77c",
+    borderRadius: "8px",
+    background: isOpen ? "#dcfce7" : "#f0fdf4",
+    color: "#15803d",
+    fontSize: "16px",
+    fontWeight: 900,
+    lineHeight: 1,
+    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+    transition: "transform 0.2s ease, background 0.2s ease",
+    pointerEvents: "none",
+  });
 
   // ============================================================
   // AUTHORIZATION
@@ -1310,12 +1389,60 @@ export default function Enrollmentmain() {
 
     const subjectMarker = isRetake ? "R" : isCarryOver ? "C" : "✓";
 
+    // Accordion rule:
+    // null = all subjects closed.
+    // one enrollment_subject_id = only that subject is open.
+    const isExpanded =
+      expandedOfficialSubjectId === subject.enrollment_subject_id;
+
+    const handleSubjectAccordion = () => {
+      toggleOfficialSubject(subject.enrollment_subject_id);
+    };
+
     return (
       <div
         key={subject.enrollment_subject_id}
         className={`subject-card ${isIrregular ? "retake-subject" : ""}`}
+        style={{
+          borderColor: isIrregular
+            ? isExpanded
+              ? "#dc2626"
+              : undefined
+            : isExpanded
+              ? "#15803d"
+              : "#63c77c",
+          boxShadow: isExpanded
+            ? "0 7px 20px rgba(21, 128, 61, 0.10)"
+            : undefined,
+        }}
       >
-        <div className="subject-header">
+        {/* ====================================================
+            CLICKABLE SUBJECT HEADER
+
+            The subject summary is always visible.
+            Clicking anywhere on this header opens/closes the
+            placement details below it.
+        ==================================================== */}
+
+        <div
+          className="subject-header"
+          role="button"
+          tabIndex={0}
+          aria-expanded={isExpanded}
+          aria-controls={`official-subject-details-${subject.enrollment_subject_id}`}
+          onClick={handleSubjectAccordion}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleSubjectAccordion();
+            }
+          }}
+          style={{
+            cursor: "pointer",
+            userSelect: "none",
+            background: isExpanded ? "#f4fbf6" : undefined,
+          }}
+        >
           <div className="subject-number">{subjectMarker}</div>
 
           <div className="subject-main">
@@ -1341,15 +1468,53 @@ export default function Enrollmentmain() {
           </div>
 
           <div className="academic-status">
-            <span
-              className={`status-badge ${
-                subject.assignment_complete ? "approved" : "pending"
-              }`}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "9px",
+              }}
             >
-              {subject.status}
-            </span>
+              <span
+                className={`status-badge ${
+                  subject.assignment_complete ? "approved" : "pending"
+                }`}
+              >
+                {subject.status}
+              </span>
 
-            <small>
+              {/* Accordion arrow — not a separate View Details button. */}
+              <span
+                aria-hidden="true"
+                style={{
+                  width: "26px",
+                  height: "26px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  border: "1px solid #63c77c",
+                  borderRadius: "7px",
+                  background: "#f0fdf4",
+                  color: "#15803d",
+                  fontSize: "15px",
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s ease",
+                }}
+              >
+                ▾
+              </span>
+            </div>
+
+            <small
+              style={{
+                color: subject.assignment_complete ? "#15803d" : "#c2410c",
+                fontWeight: 700,
+              }}
+            >
               {subject.assignment_complete
                 ? "Official placement assigned"
                 : "Awaiting Registrar placement"}
@@ -1357,118 +1522,156 @@ export default function Enrollmentmain() {
           </div>
         </div>
 
-        <div className="section-area">
-          <div className="section-area-header">
-            <div>
-              <strong>Official Class Placement</strong>
+        {/* ====================================================
+            ACCORDION CONTENT
 
-              <span>
-                {subject.assignment_complete
-                  ? "Assigned by Registrar"
-                  : "Placement is still pending"}
-              </span>
+            Completely hidden while closed.
+            Only the subject whose ID matches
+            expandedOfficialSubjectId is rendered here.
+        ==================================================== */}
+
+        {isExpanded && (
+          <div
+            id={`official-subject-details-${subject.enrollment_subject_id}`}
+            className="section-area"
+            style={{
+              borderTop: "1px solid #4caf68",
+              background: "#fbfefc",
+            }}
+          >
+            <div
+              className="section-area-header"
+              style={{
+                paddingBottom: "12px",
+                borderBottom: "1px solid #8fd39f",
+              }}
+            >
+              <div>
+                <strong>Official Class Placement</strong>
+
+                <span>
+                  {subject.assignment_complete
+                    ? "Assigned by Registrar"
+                    : "Placement is still pending"}
+                </span>
+              </div>
+
+              {subject.offering.offering_id !== null && (
+                <span className="section-count">
+                  Offering #{subject.offering.offering_id}
+                </span>
+              )}
             </div>
 
-            {subject.offering.offering_id !== null && (
-              <span className="section-count">
-                Offering #{subject.offering.offering_id}
-              </span>
-            )}
-          </div>
+            {subject.assignment_complete ? (
+              <div
+                className="assigned-section-card"
+                style={{ borderColor: "#63c77c" }}
+              >
+                <div className="assigned-section-main">
+                  <span className="section-radio" aria-label="Assigned section">
+                    ✓
+                  </span>
 
-          {subject.assignment_complete ? (
-            <div className="assigned-section-card">
-              <div className="assigned-section-main">
-                <span className="section-radio" aria-label="Assigned section">
-                  ✓
+                  <div className="section-information">
+                    <strong>
+                      {subject.section.section_name || "Assigned Section"}
+                    </strong>
+
+                    <small>
+                      {subject.section.course_code || "Course unavailable"}
+                      {subject.section.year_level !== null
+                        ? ` • Year ${subject.section.year_level}`
+                        : ""}
+                    </small>
+
+                    <small>
+                      {subject.offering.schedule_days ||
+                        "Schedule day unavailable"}
+                      {" • "}
+                      {subject.offering.schedule_time ||
+                        "Schedule time unavailable"}
+                    </small>
+
+                    <small>
+                      Faculty: {subject.faculty.faculty_name || "Not assigned"}
+                    </small>
+
+                    <small>
+                      Room:{" "}
+                      {subject.room.room_name ||
+                        "No room assigned / not required"}
+                    </small>
+                  </div>
+                </div>
+
+                <div className="section-capacity">
+                  <strong>{subject.offering.max_students ?? "—"}</strong>
+
+                  <small>Capacity</small>
+                </div>
+
+                <span
+                  className={`section-status ${
+                    subject.offering.status?.toLowerCase() === "open"
+                      ? "open"
+                      : ""
+                  }`}
+                  style={{
+                    borderColor:
+                      subject.offering.status?.toLowerCase() === "open"
+                        ? "#63c77c"
+                        : undefined,
+                  }}
+                >
+                  {subject.offering.status || "Assigned"}
                 </span>
+              </div>
+            ) : (
+              <div
+                className="no-sections"
+                style={{ borderColor: "#8fd39f" }}
+              >
+                <span className="no-section-icon">—</span>
 
-                <div className="section-information">
-                  <strong>
-                    {subject.section.section_name || "Assigned Section"}
-                  </strong>
+                <div>
+                  <strong>Awaiting Registrar placement</strong>
 
-                  <small>
-                    {subject.section.course_code || "Course unavailable"}
-                    {subject.section.year_level !== null
-                      ? ` • Year ${subject.section.year_level}`
-                      : ""}
-                  </small>
-
-                  <small>
-                    {subject.offering.schedule_days ||
-                      "Schedule day unavailable"}
-                    {" • "}
-                    {subject.offering.schedule_time ||
-                      "Schedule time unavailable"}
-                  </small>
+                  <p>
+                    This {enrollmentType} subject is part of your enrollment, but
+                    its official section/offering has not been assigned yet.
+                  </p>
 
                   <small>
-                    Faculty: {subject.faculty.faculty_name || "Not assigned"}
-                  </small>
-
-                  <small>
-                    Room:{" "}
-                    {subject.room.room_name ||
-                      "No room assigned / not required"}
+                    Students cannot select or change section, offering, faculty,
+                    room, or schedule.
                   </small>
                 </div>
               </div>
+            )}
 
-              <div className="section-capacity">
-                <strong>{subject.offering.max_students ?? "—"}</strong>
+            <div
+              className="selected-section-message"
+              style={{ borderColor: "#8fd39f" }}
+            >
+              <span>{subject.assignment_complete ? "✓" : "i"}</span>
 
-                <small>Capacity</small>
-              </div>
-
-              <span
-                className={`section-status ${
-                  subject.offering.status?.toLowerCase() === "open"
-                    ? "open"
-                    : ""
-                }`}
-              >
-                {subject.offering.status || "Assigned"}
-              </span>
-            </div>
-          ) : (
-            <div className="no-sections">
-              <span className="no-section-icon">—</span>
-
-              <div>
-                <strong>Awaiting Registrar placement</strong>
-
-                <p>
-                  This {enrollmentType} subject is part of your enrollment, but
-                  its official section/offering has not been assigned yet.
-                </p>
-
+              <p>
+                <strong>
+                  {subject.assignment_complete
+                    ? "Registrar-controlled placement."
+                    : "Placement pending."}
+                </strong>
+                <br />
                 <small>
-                  Students cannot select or change section, offering, faculty,
-                  room, or schedule.
+                  Enrollment type: {enrollmentType}. This value comes from the
+                  persisted enrollment subject record. Room may be blank because
+                  room assignment is optional.
                 </small>
-              </div>
+              </p>
             </div>
-          )}
-
-          <div className="selected-section-message">
-            <span>{subject.assignment_complete ? "✓" : "i"}</span>
-
-            <p>
-              <strong>
-                {subject.assignment_complete
-                  ? "Registrar-controlled placement."
-                  : "Placement pending."}
-              </strong>
-              <br />
-              <small>
-                Enrollment type: {enrollmentType}. This value comes from the
-                persisted enrollment subject record. Room may be blank because
-                room assignment is optional.
-              </small>
-            </p>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -2175,7 +2378,15 @@ export default function Enrollmentmain() {
           (enrollmentIsPending || enrollmentIsApproved) &&
           officialData && (
             <div className="subjects-container">
-              <div className="subjects-header">
+              <div
+                className="subjects-header"
+                role="button"
+                tabIndex={0}
+                aria-expanded={expandedSection === "official"}
+                onClick={() => toggleEnrollmentSection("official")}
+                onKeyDown={(event) => handleSectionKeyDown(event, "official")}
+                style={{ cursor: "pointer", userSelect: "none" }}
+              >
                 <div>
                   <span className="enrollment-eyebrow">
                     {enrollmentIsApproved
@@ -2196,52 +2407,74 @@ export default function Enrollmentmain() {
                   </p>
                 </div>
 
-                <div className="selection-counter">
-                  {officialSummary?.total_subjects ?? 0} subjects •{" "}
-                  {officialUnits} units
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    flexShrink: 0,
+                  }}
+                >
+                  <div className="selection-counter">
+                    {officialSummary?.total_subjects ?? 0} subjects •{" "}
+                    {officialUnits} units
+                  </div>
+
+                  <span
+                    aria-hidden="true"
+                    style={sectionArrowStyle(expandedSection === "official")}
+                  >
+                    ▾
+                  </span>
                 </div>
               </div>
 
-              {officialSummary && (
-                <div className="selected-section-message">
-                  <span>{officialSummary.placement_complete ? "✓" : "i"}</span>
+              {expandedSection === "official" && (
+                <>
+                  {officialSummary && (
+                    <div className="selected-section-message">
+                      <span>
+                        {officialSummary.placement_complete ? "✓" : "i"}
+                      </span>
 
-                  <p>
-                    <strong>
-                      {officialSummary.placement_complete
-                        ? "Placement complete."
-                        : "Placement still in progress."}
-                    </strong>{" "}
-                    {officialSummary.placed_subjects} of{" "}
-                    {officialSummary.total_subjects} subject
-                    {officialSummary.total_subjects !== 1 ? "s" : ""} placed.
-                    <br />
-                    <small>
-                      Official load: {officialSummary.total_units} units.
-                    </small>
-                  </p>
-                </div>
-              )}
-
-              {officialSubjects.length === 0 ? (
-                <div className="no-sections">
-                  <span className="no-section-icon">—</span>
-
-                  <div>
-                    <strong>No enrolled subjects found</strong>
-
-                    <p>
-                      The enrollment exists, but no active enrollment subjects
-                      were returned.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="subject-list">
-                  {officialSubjects.map((subject) =>
-                    renderOfficialSubject(subject),
+                      <p>
+                        <strong>
+                          {officialSummary.placement_complete
+                            ? "Placement complete."
+                            : "Placement still in progress."}
+                        </strong>{" "}
+                        {officialSummary.placed_subjects} of{" "}
+                        {officialSummary.total_subjects} subject
+                        {officialSummary.total_subjects !== 1 ? "s" : ""} placed.
+                        <br />
+                        <small>
+                          Official load: {officialSummary.total_units} units.
+                        </small>
+                      </p>
+                    </div>
                   )}
-                </div>
+
+                  {officialSubjects.length === 0 ? (
+                    <div className="no-sections">
+                      <span className="no-section-icon">—</span>
+
+                      <div>
+                        <strong>No enrolled subjects found</strong>
+
+                        <p>
+                          The enrollment exists, but no active enrollment subjects
+                          were returned.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="subject-list">
+                      {officialSubjects.map((subject) =>
+                        renderOfficialSubject(subject),
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -2251,7 +2484,15 @@ export default function Enrollmentmain() {
         ==================================================== */}
 
         <div className="subjects-container">
-          <div className="subjects-header">
+          <div
+            className="subjects-header"
+            role="button"
+            tabIndex={0}
+            aria-expanded={expandedSection === "regular"}
+            onClick={() => toggleEnrollmentSection("regular")}
+            onKeyDown={(event) => handleSectionKeyDown(event, "regular")}
+            style={{ cursor: "pointer", userSelect: "none" }}
+          >
             <div>
               <span className="enrollment-eyebrow">Academic Eligibility</span>
 
@@ -2263,34 +2504,54 @@ export default function Enrollmentmain() {
               </p>
             </div>
 
-            <div className="selection-counter">
-              {regular_subjects.length} eligible
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                flexShrink: 0,
+              }}
+            >
+              <div className="selection-counter">
+                {regular_subjects.length} eligible
+              </div>
+
+              <span
+                aria-hidden="true"
+                style={sectionArrowStyle(expandedSection === "regular")}
+              >
+                ▾
+              </span>
             </div>
           </div>
 
-          {regular_subjects.length === 0 ? (
-            <div className="no-sections">
-              <span className="no-section-icon">—</span>
+          {expandedSection === "regular" && (
+            <>
+              {regular_subjects.length === 0 ? (
+                <div className="no-sections">
+                  <span className="no-section-icon">—</span>
 
-              <div>
-                <strong>No Regular subjects available</strong>
+                  <div>
+                    <strong>No Regular subjects available</strong>
 
-                <p>
-                  There are no Regular curriculum subjects currently eligible
-                  for this term.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="subject-list">
-              {[...regular_subjects]
-                .sort(
-                  (a, b) =>
-                    Number(a.display_order || 999999) -
-                    Number(b.display_order || 999999),
-                )
-                .map((subject) => renderRegularSubject(subject))}
-            </div>
+                    <p>
+                      There are no Regular curriculum subjects currently eligible
+                      for this term.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="subject-list">
+                  {[...regular_subjects]
+                    .sort(
+                      (a, b) =>
+                        Number(a.display_order || 999999) -
+                        Number(b.display_order || 999999),
+                    )
+                    .map((subject) => renderRegularSubject(subject))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -2333,7 +2594,15 @@ export default function Enrollmentmain() {
         ==================================================== */}
 
         <div className="subjects-container">
-          <div className="subjects-header">
+          <div
+            className="subjects-header"
+            role="button"
+            tabIndex={0}
+            aria-expanded={expandedSection === "retake"}
+            onClick={() => toggleEnrollmentSection("retake")}
+            onKeyDown={(event) => handleSectionKeyDown(event, "retake")}
+            style={{ cursor: "pointer", userSelect: "none" }}
+          >
             <div>
               <span className="enrollment-eyebrow">Retake Eligibility</span>
 
@@ -2345,32 +2614,52 @@ export default function Enrollmentmain() {
               </p>
             </div>
 
-            <div className="selection-counter">
-              {data.can_prepare || data.can_modify_draft
-                ? `${selectedRetakeSubjectIds.length} / ${retake_candidates.length} selected`
-                : `${retake_candidates.length} eligible`}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                flexShrink: 0,
+              }}
+            >
+              <div className="selection-counter">
+                {data.can_prepare || data.can_modify_draft
+                  ? `${selectedRetakeSubjectIds.length} / ${retake_candidates.length} selected`
+                  : `${retake_candidates.length} eligible`}
+              </div>
+
+              <span
+                aria-hidden="true"
+                style={sectionArrowStyle(expandedSection === "retake")}
+              >
+                ▾
+              </span>
             </div>
           </div>
 
-          {retake_candidates.length === 0 ? (
-            <div className="no-sections">
-              <span className="no-section-icon">✓</span>
+          {expandedSection === "retake" && (
+            <>
+              {retake_candidates.length === 0 ? (
+                <div className="no-sections">
+                  <span className="no-section-icon">✓</span>
 
-              <div>
-                <strong>No retakes required</strong>
+                  <div>
+                    <strong>No retakes required</strong>
 
-                <p>
-                  You currently have no valid Failed or Incomplete subjects
-                  available for retake.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="subject-list">
-              {retake_candidates.map((subject) =>
-                renderRetakeCandidate(subject),
+                    <p>
+                      You currently have no valid Failed or Incomplete subjects
+                      available for retake.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="subject-list">
+                  {retake_candidates.map((subject) =>
+                    renderRetakeCandidate(subject),
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
 
@@ -2380,7 +2669,15 @@ export default function Enrollmentmain() {
 
         {blocked_subjects.length > 0 && (
           <div className="subjects-container">
-            <div className="subjects-header">
+            <div
+              className="subjects-header"
+              role="button"
+              tabIndex={0}
+              aria-expanded={expandedSection === "blocked"}
+              onClick={() => toggleEnrollmentSection("blocked")}
+              onKeyDown={(event) => handleSectionKeyDown(event, "blocked")}
+              style={{ cursor: "pointer", userSelect: "none" }}
+            >
               <div>
                 <span className="enrollment-eyebrow">Not Yet Eligible</span>
 
@@ -2392,14 +2689,34 @@ export default function Enrollmentmain() {
                 </p>
               </div>
 
-              <div className="selection-counter">
-                {blocked_subjects.length} blocked
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flexShrink: 0,
+                }}
+              >
+                <div className="selection-counter">
+                  {blocked_subjects.length} blocked
+                </div>
+
+                <span
+                  aria-hidden="true"
+                  style={sectionArrowStyle(expandedSection === "blocked")}
+                >
+                  ▾
+                </span>
               </div>
             </div>
 
-            <div className="subject-list">
-              {blocked_subjects.map((subject) => renderBlockedSubject(subject))}
-            </div>
+            {expandedSection === "blocked" && (
+              <div className="subject-list">
+                {blocked_subjects.map((subject) =>
+                  renderBlockedSubject(subject),
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -2409,7 +2726,15 @@ export default function Enrollmentmain() {
 
         {completed_subjects.length > 0 && (
           <div className="subjects-container">
-            <div className="subjects-header">
+            <div
+              className="subjects-header"
+              role="button"
+              tabIndex={0}
+              aria-expanded={expandedSection === "completed"}
+              onClick={() => toggleEnrollmentSection("completed")}
+              onKeyDown={(event) => handleSectionKeyDown(event, "completed")}
+              style={{ cursor: "pointer", userSelect: "none" }}
+            >
               <div>
                 <span className="enrollment-eyebrow">Academic Record</span>
 
@@ -2421,16 +2746,34 @@ export default function Enrollmentmain() {
                 </p>
               </div>
 
-              <div className="selection-counter">
-                {completed_subjects.length} completed
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flexShrink: 0,
+                }}
+              >
+                <div className="selection-counter">
+                  {completed_subjects.length} completed
+                </div>
+
+                <span
+                  aria-hidden="true"
+                  style={sectionArrowStyle(expandedSection === "completed")}
+                >
+                  ▾
+                </span>
               </div>
             </div>
 
-            <div className="subject-list">
-              {completed_subjects.map((subject) =>
-                renderCompletedSubject(subject),
-              )}
-            </div>
+            {expandedSection === "completed" && (
+              <div className="subject-list">
+                {completed_subjects.map((subject) =>
+                  renderCompletedSubject(subject),
+                )}
+              </div>
+            )}
           </div>
         )}
 
