@@ -1,50 +1,43 @@
 import React, { useEffect, useMemo, useState } from "react";
-
 import { useNavigate } from "react-router-dom";
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Filter,
+  GraduationCap,
+  Search,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-
 import "../../../styles/RegistrarStudentlist.css";
 
-// =====================================================
-// API
-// =====================================================
-
 const API_BASE_URL = "http://localhost:3000/api/registrar/students";
-
-// =====================================================
-// TYPES
-// =====================================================
 
 interface Student {
   student_id: number;
   student_number: string;
-
   first_name: string;
   middle_name: string | null;
   last_name: string;
-
   gender: string;
   birth_date: string;
   contact_number: string;
-
   email: string;
-
   course_id: number;
   course_code: string;
-
   year_level: number;
-
   section_id: number;
   section_name: string;
-
   semester_id: number;
   semester_name: string;
-
   status: string;
-
   house_no: string | null;
   street: string | null;
   barangay: string | null;
@@ -55,17 +48,13 @@ interface Student {
 
 interface StudentResponse {
   success: boolean;
-
   message?: string;
   error?: string;
-
   page: number;
   limit: number;
-
   count: number;
   totalStudents: number;
   totalPages: number;
-
   students: Student[];
 }
 
@@ -76,109 +65,83 @@ interface Statistics {
   scholarship: number;
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+const getStudentInitials = (student: Student) => {
+  const first = student.first_name?.trim().charAt(0) || "";
+  const last = student.last_name?.trim().charAt(0) || "";
+  return `${first}${last}`.toUpperCase() || "S";
+};
+
+const getStudentName = (student: Student) => {
+  const middleInitial = student.middle_name?.trim()
+    ? `${student.middle_name.trim().charAt(0)}.`
+    : "";
+
+  return [student.first_name, middleInitial, student.last_name]
+    .filter(Boolean)
+    .join(" ");
+};
+
+const getStatusClass = (status: string) =>
+  (status || "unknown")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 export default function StudentListR() {
   const navigate = useNavigate();
 
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
-  // =====================================================
-  // STATES
-  // =====================================================
-
   const [students, setStudents] = useState<Student[]>([]);
-
   const [statistics, setStatistics] = useState<Statistics>({
     total: 0,
     regular: 0,
     executive: 0,
     scholarship: 0,
   });
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
-  // =====================================================
-  // FILTERS
-  // =====================================================
-
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-
   const [selectedCourse, setSelectedCourse] = useState("All");
-
   const [selectedYear, setSelectedYear] = useState("All");
-
   const [selectedSection, setSelectedSection] = useState("All");
 
-  // =====================================================
-  // PAGINATION
-  // =====================================================
-
   const studentsPerPage = 10;
-
   const [currentPage, setCurrentPage] = useState(1);
-
   const [totalPages, setTotalPages] = useState(1);
 
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
-
   useEffect(() => {
-    // ---------------------------------------------------
-    // NO USER OR NO JWT
-    // ---------------------------------------------------
-
     if (!authenticated) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      navigate("/login", { replace: true });
       return;
     }
 
-    // ---------------------------------------------------
-    // USER EXISTS BUT WRONG ROLE
-    // ---------------------------------------------------
-
     if (userRole !== "Registrar") {
       if (user) {
-        navigate(authService.getDashboardRoute(user.role), {
-          replace: true,
-        });
+        navigate(authService.getDashboardRoute(user.role), { replace: true });
       } else {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login", { replace: true });
       }
     }
-  }, [authenticated, userRole, navigate]);
-
-  // =====================================================
-  // FETCH STUDENTS
-  // =====================================================
+  }, [authenticated, userRole, navigate, user]);
 
   useEffect(() => {
-    // Do not make API request
-    // if authentication is missing
-    // or role is incorrect.
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setCurrentPage(1);
+    }, 350);
 
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
     if (!authenticated || userRole !== "Registrar") {
       return;
     }
@@ -190,68 +153,33 @@ export default function StudentListR() {
         setLoading(true);
         setError("");
 
-        // =============================================
-        // QUERY PARAMETERS
-        // =============================================
-
         const params = new URLSearchParams();
-
         params.append("page", currentPage.toString());
-
         params.append("limit", studentsPerPage.toString());
 
-        if (search.trim()) {
-          params.append("search", search.trim());
-        }
-
-        if (selectedCourse !== "All") {
-          params.append("course", selectedCourse);
-        }
-
-        if (selectedYear !== "All") {
-          params.append("year", selectedYear);
-        }
-
+        if (search) params.append("search", search);
+        if (selectedCourse !== "All") params.append("course", selectedCourse);
+        if (selectedYear !== "All") params.append("year", selectedYear);
         if (selectedSection !== "All") {
           params.append("section", selectedSection);
         }
 
-        const requestUrl = `${API_BASE_URL}?${params.toString()}`;
-
-        console.log("GET REGISTRAR STUDENTS:", requestUrl);
-
-        // =============================================
-        // AUTHENTICATED REQUEST
-        //
-        // authFetch automatically adds:
-        //
-        // Authorization:
-        // Bearer <JWT>
-        // =============================================
-
-        const response = await authService.authFetch(requestUrl, {
-          method: "GET",
-
-          signal: controller.signal,
-
-          headers: {
-            Accept: "application/json",
+        const response = await authService.authFetch(
+          `${API_BASE_URL}?${params.toString()}`,
+          {
+            method: "GET",
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
           },
-        });
-
-        // =============================================
-        // RESPONSE
-        // =============================================
+        );
 
         let data: StudentResponse | null = null;
-
         const contentType = response.headers.get("content-type") || "";
 
         if (contentType.includes("application/json")) {
           data = await response.json();
         } else {
           const text = await response.text();
-
           throw new Error(
             `Server returned a non-JSON response (${response.status}): ${text.slice(
               0,
@@ -260,27 +188,11 @@ export default function StudentListR() {
           );
         }
 
-        // =============================================
-        // 401
-        //
-        // JWT missing / expired / invalid
-        // =============================================
-
         if (response.status === 401) {
           authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
+          navigate("/login", { replace: true });
           return;
         }
-
-        // =============================================
-        // 403
-        //
-        // Authenticated but not Registrar
-        // =============================================
 
         if (response.status === 403) {
           throw new Error(
@@ -288,10 +200,6 @@ export default function StudentListR() {
               "You are not authorized to access student records.",
           );
         }
-
-        // =============================================
-        // OTHER HTTP ERROR
-        // =============================================
 
         if (!response.ok) {
           throw new Error(
@@ -301,27 +209,14 @@ export default function StudentListR() {
           );
         }
 
-        // =============================================
-        // API ERROR
-        // =============================================
-
         if (!data?.success) {
           throw new Error(data?.message || "Failed to load students.");
         }
 
-        // =============================================
-        // SUCCESS
-        // =============================================
-
         const studentData = Array.isArray(data.students) ? data.students : [];
 
         setStudents(studentData);
-
-        setTotalPages(data.totalPages || 1);
-
-        // =============================================
-        // COMPUTE STATISTICS
-        // =============================================
+        setTotalPages(Math.max(data.totalPages || 1, 1));
 
         let regular = 0;
         let executive = 0;
@@ -331,76 +226,45 @@ export default function StudentListR() {
           const course = (student.course_code || "").toLowerCase();
 
           if (course.includes("executive")) {
-            executive++;
+            executive += 1;
           } else if (course.includes("scholar")) {
-            scholarship++;
+            scholarship += 1;
           } else {
-            regular++;
+            regular += 1;
           }
         });
 
         setStatistics({
           total: data.totalStudents || 0,
-
           regular,
-
           executive,
-
           scholarship,
         });
       } catch (err) {
-        // =============================================
-        // ABORTED REQUEST
-        // =============================================
-
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
-        }
+        if (err instanceof DOMException && err.name === "AbortError") return;
 
         console.error("GET REGISTRAR STUDENTS ERROR:", err);
-
         setStudents([]);
-
-        setStatistics({
-          total: 0,
-          regular: 0,
-          executive: 0,
-          scholarship: 0,
-        });
-
-        // =============================================
-        // NETWORK ERROR
-        // =============================================
+        setStatistics({ total: 0, regular: 0, executive: 0, scholarship: 0 });
 
         if (err instanceof TypeError) {
           setError(
             "Unable to connect to the student records server. Make sure the backend is running on port 3000.",
           );
-
           return;
         }
 
-        // =============================================
-        // NORMAL ERROR
-        // =============================================
-
         setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load student records.",
+          err instanceof Error ? err.message : "Unable to load student records.",
         );
       } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     void fetchStudents();
 
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [
     authenticated,
     userRole,
@@ -412,400 +276,479 @@ export default function StudentListR() {
     navigate,
   ]);
 
-  // =====================================================
-  // FILTER OPTIONS
-  // =====================================================
-
-  const courseOptions = useMemo(() => {
-    return [
+  const courseOptions = useMemo(
+    () => [
       "All",
+      ...new Set(students.map((student) => student.course_code).filter(Boolean)),
+    ],
+    [students],
+  );
 
-      ...new Set(
-        students.map((student) => student.course_code).filter(Boolean),
-      ),
-    ];
-  }, [students]);
-
-  const yearOptions = useMemo(() => {
-    return [
+  const yearOptions = useMemo(
+    () => [
       "All",
-
       ...new Set(
         students
           .map((student) => student.year_level?.toString())
           .filter(Boolean) as string[],
       ),
-    ];
-  }, [students]);
+    ],
+    [students],
+  );
 
-  const sectionOptions = useMemo(() => {
-    return [
+  const sectionOptions = useMemo(
+    () => [
       "All",
-
       ...new Set(
         students.map((student) => student.section_name).filter(Boolean),
       ),
-    ];
-  }, [students]);
+    ],
+    [students],
+  );
 
-  // =====================================================
-  // SEARCH HANDLER
-  // =====================================================
+  const hasActiveFilters =
+    Boolean(searchInput.trim()) ||
+    selectedCourse !== "All" ||
+    selectedYear !== "All" ||
+    selectedSection !== "All";
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
+  const startRecord = students.length
+    ? (currentPage - 1) * studentsPerPage + 1
+    : 0;
+  const endRecord = students.length
+    ? startRecord + students.length - 1
+    : 0;
 
-    setCurrentPage(1);
-  };
-
-  // =====================================================
-  // FILTER HANDLERS
-  // =====================================================
-
-  const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCourse(event.target.value);
-
-    setCurrentPage(1);
-  };
-
-  const handleYearChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedYear(event.target.value);
-
-    setCurrentPage(1);
-  };
-
-  const handleSectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSection(event.target.value);
-
-    setCurrentPage(1);
-  };
-
-  // =====================================================
-  // PAGINATION
-  // =====================================================
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((previous) => previous - 1);
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
     }
-  };
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((previous) => previous + 1);
-    }
-  };
+    const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+    return Array.from({ length: 5 }, (_, index) => start + index);
+  }, [currentPage, totalPages]);
 
-  // =====================================================
-  // AUTH RENDER GUARD
-  // =====================================================
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setSelectedCourse("All");
+    setSelectedYear("All");
+    setSelectedSection("All");
+    setCurrentPage(1);
+  };
 
   if (!authenticated || !user || userRole !== "Registrar") {
     return null;
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <DashboardLayout>
-      <div className="registrar-listR-container">
-        {/* ===============================================
-            HEADER
-        =============================================== */}
+      <main className="registrar-student-list">
+        <section className="registrar-student-list__hero">
+          <div className="registrar-student-list__hero-copy">
+            <div className="registrar-student-list__eyebrow">
+              <span className="registrar-student-list__eyebrow-icon">
+                <UsersRound size={16} strokeWidth={2.2} />
+              </span>
+              Registrar · Student Records
+            </div>
 
-        <div className="registrar-listR-header">
-          <div>
-            <h1>Student Records</h1>
-
+            <h1>Student List</h1>
             <p>
-              Manage and view all registered students and their academic
-              information.
+              View registered students, review their profiles, and access
+              academic records and documents from one organized workspace.
             </p>
           </div>
-        </div>
 
-        {/* ===============================================
-            STATISTICS
-        =============================================== */}
+          <div className="registrar-student-list__hero-badge">
+            <span className="registrar-student-list__hero-badge-icon">
+              <ShieldCheck size={18} />
+            </span>
+            <span>
+              <small>Access</small>
+              <strong>Registrar Records</strong>
+            </span>
+          </div>
+        </section>
 
-        <div className="registrar-listR-statistics">
-          <div className="registrar-listR-card">
-            <span>Total Students</span>
+        <section className="registrar-student-list__stats" aria-label="Student statistics">
+          <article className="registrar-student-list__stat-card">
+            <div className="registrar-student-list__stat-icon registrar-student-list__stat-icon--primary">
+              <UsersRound size={21} />
+            </div>
+            <div>
+              <span>Total Students</span>
+              <strong>{statistics.total.toLocaleString()}</strong>
+              <small>All registered records</small>
+            </div>
+          </article>
 
-            <h2>{statistics.total}</h2>
+          <article className="registrar-student-list__stat-card">
+            <div className="registrar-student-list__stat-icon">
+              <UserRound size={21} />
+            </div>
+            <div>
+              <span>Regular</span>
+              <strong>{statistics.regular.toLocaleString()}</strong>
+              <small>On this result page</small>
+            </div>
+          </article>
+
+          <article className="registrar-student-list__stat-card">
+            <div className="registrar-student-list__stat-icon">
+              <BookOpen size={21} />
+            </div>
+            <div>
+              <span>Executive</span>
+              <strong>{statistics.executive.toLocaleString()}</strong>
+              <small>On this result page</small>
+            </div>
+          </article>
+
+          <article className="registrar-student-list__stat-card">
+            <div className="registrar-student-list__stat-icon">
+              <GraduationCap size={21} />
+            </div>
+            <div>
+              <span>Scholarship</span>
+              <strong>{statistics.scholarship.toLocaleString()}</strong>
+              <small>On this result page</small>
+            </div>
+          </article>
+        </section>
+
+        <section className="registrar-student-list__panel">
+          <div className="registrar-student-list__panel-heading">
+            <div>
+              <h2>Student Directory</h2>
+              <p>Search and filter student records before opening a profile.</p>
+            </div>
+
+            <div className="registrar-student-list__record-count">
+              {loading ? "Loading records..." : `${statistics.total.toLocaleString()} total records`}
+            </div>
           </div>
 
-          <div className="registrar-listR-card">
-            <span>Regular</span>
+          <div className="registrar-student-list__toolbar">
+            <label className="registrar-student-list__search">
+              <Search size={19} aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="Search by student number or name..."
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                aria-label="Search students"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  className="registrar-student-list__search-clear"
+                  onClick={() => setSearchInput("")}
+                  aria-label="Clear search"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </label>
 
-            <h2>{statistics.regular}</h2>
+            <div className="registrar-student-list__filters">
+              <span className="registrar-student-list__filter-label">
+                <Filter size={16} />
+                Filters
+              </span>
+
+              <select
+                value={selectedCourse}
+                onChange={(event) => {
+                  setSelectedCourse(event.target.value);
+                  setCurrentPage(1);
+                }}
+                aria-label="Filter by course"
+              >
+                {courseOptions.map((course) => (
+                  <option key={course} value={course}>
+                    {course === "All" ? "All Courses" : course}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedYear}
+                onChange={(event) => {
+                  setSelectedYear(event.target.value);
+                  setCurrentPage(1);
+                }}
+                aria-label="Filter by year"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year === "All" ? "All Years" : `Year ${year}`}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedSection}
+                onChange={(event) => {
+                  setSelectedSection(event.target.value);
+                  setCurrentPage(1);
+                }}
+                aria-label="Filter by section"
+              >
+                {sectionOptions.map((section) => (
+                  <option key={section} value={section}>
+                    {section === "All" ? "All Sections" : section}
+                  </option>
+                ))}
+              </select>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className="registrar-student-list__clear-filters"
+                  onClick={clearFilters}
+                >
+                  <X size={15} />
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="registrar-listR-card">
-            <span>Executive</span>
+          {hasActiveFilters && !loading && !error && (
+            <div className="registrar-student-list__filter-summary">
+              Showing filtered student records
+              {search && (
+                <span>
+                  Search: <strong>“{search}”</strong>
+                </span>
+              )}
+              {selectedCourse !== "All" && <span>Course: {selectedCourse}</span>}
+              {selectedYear !== "All" && <span>Year: {selectedYear}</span>}
+              {selectedSection !== "All" && <span>Section: {selectedSection}</span>}
+            </div>
+          )}
 
-            <h2>{statistics.executive}</h2>
-          </div>
-
-          <div className="registrar-listR-card">
-            <span>Scholarship</span>
-
-            <h2>{statistics.scholarship}</h2>
-          </div>
-        </div>
-
-        {/* ===============================================
-            TOOLBAR
-        =============================================== */}
-
-        <div className="registrar-listR-toolbar">
-          <div className="registrar-listR-search">
-            <input
-              type="text"
-              placeholder="Search student number or name..."
-              value={search}
-              onChange={handleSearch}
-            />
-          </div>
-
-          <div className="registrar-listR-filters">
-            {/* COURSE */}
-
-            <select value={selectedCourse} onChange={handleCourseChange}>
-              {courseOptions.map((course) => (
-                <option key={course} value={course}>
-                  {course === "All" ? "All Courses" : course}
-                </option>
-              ))}
-            </select>
-
-            {/* YEAR */}
-
-            <select value={selectedYear} onChange={handleYearChange}>
-              {yearOptions.map((year) => (
-                <option key={year} value={year}>
-                  {year === "All" ? "All Years" : `Year ${year}`}
-                </option>
-              ))}
-            </select>
-
-            {/* SECTION */}
-
-            <select value={selectedSection} onChange={handleSectionChange}>
-              {sectionOptions.map((section) => (
-                <option key={section} value={section}>
-                  {section === "All" ? "All Sections" : section}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* ===============================================
-            TABLE
-        =============================================== */}
-
-        <div className="registrar-listR-table-wrapper">
-          <div className="student-table-container">
-            <table className="student-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-
-                  <th>Student Name</th>
-
-                  <th>Student No.</th>
-
-                  <th>Course</th>
-
-                  <th>Year</th>
-
-                  <th>Section</th>
-
-                  <th>Status</th>
-
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {/* LOADING */}
-
-                {loading && (
+          <div className="registrar-student-list__table-shell">
+            <div className="registrar-student-list__table-scroll">
+              <table className="registrar-student-list__table">
+                <thead>
                   <tr>
-                    <td colSpan={8} className="table-message">
-                      Loading student records...
-                    </td>
+                    <th>Student</th>
+                    <th>Student No.</th>
+                    <th>Course</th>
+                    <th>Year</th>
+                    <th>Section</th>
+                    <th>Status</th>
+                    <th className="registrar-student-list__actions-heading">Actions</th>
                   </tr>
-                )}
+                </thead>
 
-                {/* ERROR */}
-
-                {!loading && error && (
-                  <tr>
-                    <td colSpan={8} className="table-message error">
-                      {error}
-                    </td>
-                  </tr>
-                )}
-
-                {/* EMPTY */}
-
-                {!loading && !error && students.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="table-message">
-                      No student records found.
-                    </td>
-                  </tr>
-                )}
-
-                {/* STUDENTS */}
-
-                {!loading &&
-                  !error &&
-                  students.map((student) => (
-                    <tr key={student.student_id}>
-                      <td>{student.student_id}</td>
-
-                      <td>
-                        <div className="student-info">
-                          <div className="student-avatar">
-                            {student.first_name?.charAt(0).toUpperCase() || "S"}
+                <tbody>
+                  {loading &&
+                    Array.from({ length: 5 }, (_, index) => (
+                      <tr key={`student-skeleton-${index}`} className="registrar-student-list__skeleton-row">
+                        <td>
+                          <div className="registrar-student-list__student-cell">
+                            <span className="registrar-student-list__skeleton registrar-student-list__skeleton--avatar" />
+                            <div>
+                              <span className="registrar-student-list__skeleton registrar-student-list__skeleton--name" />
+                              <span className="registrar-student-list__skeleton registrar-student-list__skeleton--email" />
+                            </div>
                           </div>
+                        </td>
+                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--text" /></td>
+                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--short" /></td>
+                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--short" /></td>
+                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--text" /></td>
+                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--badge" /></td>
+                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--actions" /></td>
+                      </tr>
+                    ))}
 
-                          <div>
-                            <strong>
-                              {student.first_name}{" "}
-                              {student.middle_name
-                                ? `${student.middle_name.charAt(0)}. `
-                                : ""}
-                              {student.last_name}
-                            </strong>
-
-                            <small>{student.email}</small>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td>{student.student_number}</td>
-
-                      <td>{student.course_code}</td>
-
-                      <td>Year {student.year_level}</td>
-
-                      <td>{student.section_name || "Not Assigned"}</td>
-
-                      <td>
-                        <span
-                          className={`status ${(student.status || "")
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}`}
-                        >
-                          {student.status}
-                        </span>
-                      </td>
-
-                      <td>
-                        <div className="action-buttons">
-                          {/* STUDENT PROFILE */}
-
-                          <button
-                            type="button"
-                            className="view-btn"
-                            onClick={() =>
-                              navigate(
-                                `/registrar/student/DetailsR/${student.student_id}`,
-                              )
-                            }
-                          >
-                            View
-                          </button>
-
-                          {/* ACADEMIC RECORDS */}
-
-                          <button
-                            type="button"
-                            className="record-btn"
-                            onClick={() =>
-                              navigate(
-                                `/registrar/student/${student.student_id}/AcadRecR`,
-                              )
-                            }
-                          >
-                            Records
-                          </button>
-
-                          {/* DOCUMENTS */}
-
-                          <button
-                            type="button"
-                            className="document-btn"
-                            onClick={() =>
-                              navigate(
-                                `/registrar/student/${student.student_id}/DocumentsR`,
-                              )
-                            }
-                          >
-                            Documents
-                          </button>
+                  {!loading && error && (
+                    <tr>
+                      <td colSpan={7}>
+                        <div className="registrar-student-list__state registrar-student-list__state--error">
+                          <div className="registrar-student-list__state-icon">!</div>
+                          <h3>Student records could not be loaded</h3>
+                          <p>{error}</p>
                         </div>
                       </td>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
+                  )}
+
+                  {!loading && !error && students.length === 0 && (
+                    <tr>
+                      <td colSpan={7}>
+                        <div className="registrar-student-list__state">
+                          <div className="registrar-student-list__state-icon">
+                            <Search size={24} />
+                          </div>
+                          <h3>No student records found</h3>
+                          <p>
+                            {hasActiveFilters
+                              ? "Try changing your search or clearing one of the filters."
+                              : "There are currently no student records available."}
+                          </p>
+                          {hasActiveFilters && (
+                            <button type="button" onClick={clearFilters}>
+                              Clear filters
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {!loading &&
+                    !error &&
+                    students.map((student) => (
+                      <tr key={student.student_id}>
+                        <td>
+                          <div className="registrar-student-list__student-cell">
+                            <div className="registrar-student-list__avatar" aria-hidden="true">
+                              {getStudentInitials(student)}
+                            </div>
+                            <div className="registrar-student-list__student-copy">
+                              <strong>{getStudentName(student)}</strong>
+                              <span title={student.email}>{student.email || "No email address"}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="registrar-student-list__student-number">
+                            {student.student_number}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="registrar-student-list__course-chip">
+                            {student.course_code || "—"}
+                          </span>
+                        </td>
+
+                        <td>Year {student.year_level || "—"}</td>
+                        <td>{student.section_name || "Not Assigned"}</td>
+
+                        <td>
+                          <span
+                            className={`registrar-student-list__status registrar-student-list__status--${getStatusClass(
+                              student.status,
+                            )}`}
+                          >
+                            <span className="registrar-student-list__status-dot" />
+                            {student.status || "Unknown"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className="registrar-student-list__actions">
+                            <button
+                              type="button"
+                              className="registrar-student-list__action registrar-student-list__action--primary"
+                              onClick={() =>
+                                navigate(
+                                  `/registrar/student/DetailsR/${student.student_id}`,
+                                )
+                              }
+                              title="View student profile"
+                            >
+                              <UserRound size={15} />
+                              View
+                            </button>
+
+                            <button
+                              type="button"
+                              className="registrar-student-list__action"
+                              onClick={() =>
+                                navigate(
+                                  `/registrar/student/${student.student_id}/AcadRecR`,
+                                )
+                              }
+                              title="Open academic records"
+                            >
+                              <BookOpen size={15} />
+                              Records
+                            </button>
+
+                            <button
+                              type="button"
+                              className="registrar-student-list__action"
+                              onClick={() =>
+                                navigate(
+                                  `/registrar/student/${student.student_id}/DocumentsR`,
+                                )
+                              }
+                              title="Open student documents"
+                            >
+                              <FileText size={15} />
+                              Documents
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            {!loading && !error && students.length > 0 && (
+              <div className="registrar-student-list__pagination-bar">
+                <p>
+                  Showing <strong>{startRecord}</strong>–<strong>{endRecord}</strong> of{" "}
+                  <strong>{statistics.total.toLocaleString()}</strong> students
+                </p>
+
+                <nav className="registrar-student-list__pagination" aria-label="Student list pagination">
+                  <button
+                    type="button"
+                    className="registrar-student-list__page-btn registrar-student-list__page-btn--nav"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={17} />
+                    <span>Previous</span>
+                  </button>
+
+                  <div className="registrar-student-list__page-numbers">
+                    {visiblePages.map((page) => (
+                      <button
+                        type="button"
+                        key={page}
+                        className={`registrar-student-list__page-btn${
+                          currentPage === page
+                            ? " registrar-student-list__page-btn--active"
+                            : ""
+                        }`}
+                        onClick={() => setCurrentPage(page)}
+                        aria-current={currentPage === page ? "page" : undefined}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="registrar-student-list__page-btn registrar-student-list__page-btn--nav"
+                    disabled={currentPage === totalPages}
+                    onClick={() =>
+                      setCurrentPage((page) => Math.min(totalPages, page + 1))
+                    }
+                    aria-label="Next page"
+                  >
+                    <span>Next</span>
+                    <ChevronRight size={17} />
+                  </button>
+                </nav>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* ===============================================
-            PAGINATION
-        =============================================== */}
-
-        <div className="registrar-listR-pagination">
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={currentPage === 1}
-            onClick={handlePreviousPage}
-          >
-            Previous
-          </button>
-
-          <div className="page-numbers">
-            {Array.from(
-              {
-                length: totalPages,
-              },
-
-              (_, index) => index + 1,
-            ).map((page) => (
-              <button
-                type="button"
-                key={page}
-                className={
-                  currentPage === page
-                    ? "pagination-btn active-page"
-                    : "pagination-btn"
-                }
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={currentPage === totalPages}
-            onClick={handleNextPage}
-          >
-            Next
-          </button>
-        </div>
-      </div>
+        </section>
+      </main>
     </DashboardLayout>
   );
 }

@@ -4465,13 +4465,13 @@ export default function EnrollmentDetailsR() {
     return (
       <DashboardLayout>
         <div className="registrar-enrollment-details">
-          <div className="enrollment-details-header">
+          <div className="enrollment-details-back-row">
             <button
               type="button"
               className="back-btn"
               onClick={() => navigate("/registrar/enrollment/management")}
             >
-              ← Back
+              ← Back to Enrollment Management
             </button>
           </div>
 
@@ -4496,34 +4496,84 @@ export default function EnrollmentDetailsR() {
             PAGE HEADER
         ================================================= */}
 
-        <div className="enrollment-details-header">
-          <div>
-            <button
-              type="button"
-              className="back-btn"
-              onClick={() => navigate("/registrar/enrollment/management")}
-            >
-              ← Back to Enrollments
-            </button>
-
-            <h1>Enrollment Details</h1>
-
-            <p>
-              Review enrollment type, academic eligibility, class placement,
-              irregular subjects, and final Registrar validation.
-            </p>
-          </div>
-
-          <div className="enrollment-header-badges">
-            <span className={getStatusClass(enrollment.enrollment_status)}>
-              {enrollment.enrollment_status}
-            </span>
-
-            {isIrregularEnrollment && (
-              <span className="irregular-badge">IRREGULAR</span>
-            )}
-          </div>
+        <div className="enrollment-details-back-row">
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() => navigate("/registrar/enrollment/management")}
+          >
+            ← Back to Enrollment Management
+          </button>
         </div>
+
+        <section className="enrollment-details-header">
+          <div className="enrollment-details-identity">
+            <div
+              className="enrollment-details-avatar"
+              aria-hidden="true"
+            >
+              {enrollment.student.first_name
+                ?.charAt(0)
+                .toUpperCase() || "S"}
+            </div>
+
+            <div className="enrollment-details-identity-copy">
+              <span className="enrollment-details-eyebrow">
+                Enrollment Review
+              </span>
+
+              <div className="enrollment-details-name-row">
+                <h1>{enrollment.student.student_name}</h1>
+
+                <div className="enrollment-header-badges">
+                  <span
+                    className={getStatusClass(
+                      enrollment.enrollment_status,
+                    )}
+                  >
+                    {enrollment.enrollment_status}
+                  </span>
+
+                  {isIrregularEnrollment && (
+                    <span className="irregular-badge">IRREGULAR</span>
+                  )}
+                </div>
+              </div>
+
+              <p>{enrollment.student.student_number}</p>
+            </div>
+          </div>
+
+          <div className="enrollment-details-header-summary">
+            <div>
+              <span>Course</span>
+              <strong>{enrollment.course.course_code || "—"}</strong>
+            </div>
+
+            <div>
+              <span>Year Level</span>
+              <strong>
+                {enrollment.student.year_level
+                  ? `Year ${enrollment.student.year_level}`
+                  : "—"}
+              </strong>
+            </div>
+
+            <div>
+              <span>Academic Year</span>
+              <strong>
+                {enrollment.academic_period.academic_year}
+              </strong>
+            </div>
+
+            <div>
+              <span>Semester</span>
+              <strong>
+                {enrollment.academic_period.semester_name}
+              </strong>
+            </div>
+          </div>
+        </section>
 
         {/* =================================================
             SUCCESS

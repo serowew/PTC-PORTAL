@@ -1,183 +1,114 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertTriangle,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-
-import { useNavigate } from "react-router-dom";
-
 import DepartmentModal from "./DepartmentModal";
-
 import type { Department } from "./DepartmentModal";
-
 import "../../../styles/DepartmentManagementR.css";
-
-// =====================================================
-// API
-// =====================================================
 
 const API_BASE_URL = "http://localhost:3000/api/registrar/departments";
 
-// =====================================================
-// RESPONSE TYPES
-// =====================================================
-
 interface DepartmentResponse {
   success: boolean;
-
   data?: Department[];
-
   departments?: Department[];
-
   message?: string;
-
   error?: string;
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+const formatDate = (value?: string) => {
+  if (!value) return "Not recorded";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not recorded";
+
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+};
+
+const getInitials = (code?: string) => {
+  const value = code?.trim();
+  if (!value) return "DP";
+  return value.slice(0, 3).toUpperCase();
+};
 
 export default function DepartmentManagementR() {
   const navigate = useNavigate();
 
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
-  // =====================================================
-  // DEPARTMENTS
-  // =====================================================
-
   const [departments, setDepartments] = useState<Department[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
-  // =====================================================
-  // SEARCH
-  // =====================================================
-
   const [search, setSearch] = useState("");
 
-  // =====================================================
-  // MODAL
-  // =====================================================
-
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
-
   const [selectedDepartment, setSelectedDepartment] =
     useState<Department | null>(null);
 
-  // =====================================================
-  // AUTHORIZATION
-  // =====================================================
-
   useEffect(() => {
-    // No session or token
     if (!authenticated) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      navigate("/login", { replace: true });
       return;
     }
 
-    // Logged in but wrong role
     if (userRole !== "Registrar") {
-      if (user) {
-        navigate(authService.getDashboardRoute(user.role), {
-          replace: true,
-        });
+      if (userRole) {
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
       } else {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login", { replace: true });
       }
     }
-  }, [authenticated, userRole, user, navigate]);
-
-  // =====================================================
-  // LOAD DEPARTMENTS
-  // =====================================================
+  }, [authenticated, userRole, navigate]);
 
   const loadDepartments = async () => {
-    if (!authenticated || userRole !== "Registrar") {
-      return;
-    }
+    if (!authenticated || userRole !== "Registrar") return;
 
     try {
       setLoading(true);
-
       setError("");
-
-      console.log("GET REGISTRAR DEPARTMENTS:", API_BASE_URL);
-
-      // ===============================================
-      // AUTHENTICATED REQUEST
-      //
-      // authFetch automatically adds:
-      //
-      // Authorization: Bearer <JWT>
-      // ===============================================
 
       const response = await authService.authFetch(API_BASE_URL, {
         method: "GET",
-
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
 
-      // ===============================================
-      // CHECK CONTENT TYPE
-      // ===============================================
-
       const contentType = response.headers.get("content-type") || "";
-
       let data: DepartmentResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
-
         throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
+          `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
 
-      // ===============================================
-      // 401
-      // ===============================================
-
       if (response.status === 401) {
         authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
+        navigate("/login", { replace: true });
         return;
       }
-
-      // ===============================================
-      // 403
-      // ===============================================
 
       if (response.status === 403) {
         throw new Error(
@@ -187,10 +118,6 @@ export default function DepartmentManagementR() {
         );
       }
 
-      // ===============================================
-      // HTTP ERROR
-      // ===============================================
-
       if (!response.ok) {
         throw new Error(
           data?.message ||
@@ -199,17 +126,9 @@ export default function DepartmentManagementR() {
         );
       }
 
-      // ===============================================
-      // API ERROR
-      // ===============================================
-
       if (!data?.success) {
         throw new Error(data?.message || "Failed to load departments.");
       }
-
-      // ===============================================
-      // SUPPORT BOTH RESPONSE FORMATS
-      // ===============================================
 
       const loadedDepartments = Array.isArray(data.data)
         ? data.data
@@ -217,21 +136,15 @@ export default function DepartmentManagementR() {
           ? data.departments
           : [];
 
-      // ===============================================
-      // SUCCESS
-      // ===============================================
-
       setDepartments(loadedDepartments);
     } catch (err) {
       console.error("GET DEPARTMENTS ERROR:", err);
-
       setDepartments([]);
 
       if (err instanceof TypeError) {
         setError(
           "Unable to connect to the department server. Make sure the backend is running on port 3000.",
         );
-
         return;
       }
 
@@ -243,269 +156,376 @@ export default function DepartmentManagementR() {
     }
   };
 
-  // =====================================================
-  // INITIAL LOAD
-  // =====================================================
-
   useEffect(() => {
-    if (!authenticated || userRole !== "Registrar") {
-      return;
-    }
-
+    if (!authenticated || userRole !== "Registrar") return;
     void loadDepartments();
   }, [authenticated, userRole]);
 
-  // =====================================================
-  // ADD DEPARTMENT
-  // =====================================================
+  const filteredDepartments = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return departments;
+
+    return departments.filter((department) => {
+      const code = department.department_code?.toLowerCase() || "";
+      const name = department.department_name?.toLowerCase() || "";
+      return code.includes(query) || name.includes(query);
+    });
+  }, [departments, search]);
+
+  const newestDepartment = useMemo(() => {
+    return departments.reduce<Department | null>((latest, department) => {
+      if (!department.created_at) return latest;
+      if (!latest?.created_at) return department;
+
+      const currentTime = new Date(department.created_at).getTime();
+      const latestTime = new Date(latest.created_at).getTime();
+
+      if (Number.isNaN(currentTime)) return latest;
+      if (Number.isNaN(latestTime) || currentTime > latestTime) return department;
+      return latest;
+    }, null);
+  }, [departments]);
 
   const handleAddDepartment = () => {
     setSelectedDepartment(null);
-
     setShowDepartmentModal(true);
   };
-
-  // =====================================================
-  // EDIT DEPARTMENT
-  // =====================================================
 
   const handleEditDepartment = (department: Department) => {
     setSelectedDepartment(department);
-
     setShowDepartmentModal(true);
   };
 
-  // =====================================================
-  // CLOSE MODAL
-  // =====================================================
-
   const handleCloseDepartmentModal = () => {
     setShowDepartmentModal(false);
-
     setSelectedDepartment(null);
   };
-
-  // =====================================================
-  // MODAL SUCCESS
-  // =====================================================
 
   const handleDepartmentSuccess = async () => {
     setShowDepartmentModal(false);
-
     setSelectedDepartment(null);
-
     await loadDepartments();
   };
-
-  // =====================================================
-  // SEARCH FILTER
-  // =====================================================
-
-  const filteredDepartments = departments.filter((department) => {
-    const searchValue = search.trim().toLowerCase();
-
-    if (!searchValue) {
-      return true;
-    }
-
-    const departmentCode = department.department_code?.toLowerCase() || "";
-
-    const departmentName = department.department_name?.toLowerCase() || "";
-
-    return (
-      departmentCode.includes(searchValue) ||
-      departmentName.includes(searchValue)
-    );
-  });
-
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
 
   if (!authenticated || !user || userRole !== "Registrar") {
     return null;
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <DashboardLayout>
       <div className="registrar-department-management">
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        <section className="registrar-department-management__hero">
+          <div className="registrar-department-management__hero-copy">
+            <span className="registrar-department-management__eyebrow">
+              <span className="registrar-department-management__eyebrow-icon">
+                <Building2 size={15} aria-hidden="true" />
+              </span>
+              Academic Structure
+            </span>
 
-        <div className="registrar-department-header">
-          <div>
             <h1>Department Management</h1>
-
-            <p>Manage academic departments used by courses and curricula.</p>
+            <p>
+              Maintain the academic departments used to organize courses,
+              curricula, faculty assignments, and other Registrar records.
+            </p>
           </div>
 
-          <button
-            type="button"
-            className="add-department-btn"
-            onClick={handleAddDepartment}
-          >
-            + Add Department
-          </button>
-        </div>
+          <div className="registrar-department-management__hero-actions">
+            <button
+              type="button"
+              className="registrar-department-management__button registrar-department-management__button--secondary"
+              onClick={() => void loadDepartments()}
+              disabled={loading}
+            >
+              <RefreshCw
+                size={16}
+                className={loading ? "is-spinning" : undefined}
+                aria-hidden="true"
+              />
+              Refresh
+            </button>
 
-        {/* =================================================
-            SUMMARY
-        ================================================= */}
+            <button
+              type="button"
+              className="registrar-department-management__button registrar-department-management__button--primary"
+              onClick={handleAddDepartment}
+            >
+              <Plus size={16} aria-hidden="true" />
+              Add Department
+            </button>
+          </div>
+        </section>
 
-        <div className="registrar-department-summary">
-          <div className="registrar-department-card">
-            <span>Total Departments</span>
+        <section
+          className="registrar-department-management__stats"
+          aria-label="Department summary"
+        >
+          <article className="registrar-department-management__stat-card">
+            <span className="registrar-department-management__stat-icon registrar-department-management__stat-icon--primary">
+              <Building2 size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Total Departments</span>
+              <strong>{loading ? "—" : departments.length}</strong>
+              <small>Academic departments on record</small>
+            </div>
+          </article>
 
-            <h2>{departments.length}</h2>
+          <article className="registrar-department-management__stat-card">
+            <span className="registrar-department-management__stat-icon">
+              <Search size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Showing</span>
+              <strong>{loading ? "—" : filteredDepartments.length}</strong>
+              <small>{search.trim() ? "Matching your search" : "All records visible"}</small>
+            </div>
+          </article>
+
+          <article className="registrar-department-management__stat-card">
+            <span className="registrar-department-management__stat-icon">
+              <CalendarDays size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Most Recent</span>
+              <strong className="registrar-department-management__stat-text">
+                {loading ? "—" : newestDepartment?.department_code || "None"}
+              </strong>
+              <small>
+                {newestDepartment?.created_at
+                  ? `Added ${formatDate(newestDepartment.created_at)}`
+                  : "No creation date recorded"}
+              </small>
+            </div>
+          </article>
+        </section>
+
+        <section className="registrar-department-management__workspace">
+          <div className="registrar-department-management__workspace-header">
+            <div>
+              <span className="registrar-department-management__section-kicker">
+                Directory
+              </span>
+              <h2>Academic Departments</h2>
+              <p>
+                Search department codes or names, then edit a record when its
+                official information needs to be updated.
+              </p>
+            </div>
+
+            {!loading && !error && (
+              <span className="registrar-department-management__record-count">
+                {filteredDepartments.length} of {departments.length} departments
+              </span>
+            )}
           </div>
 
-          <div className="registrar-department-card">
-            <span>Showing</span>
+          <div className="registrar-department-management__toolbar">
+            <div className="registrar-department-management__search-wrap">
+              <Search size={17} aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="Search department code or name..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label="Search departments"
+              />
+              {search && (
+                <button
+                  type="button"
+                  className="registrar-department-management__search-clear"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear department search"
+                >
+                  <X size={15} aria-hidden="true" />
+                </button>
+              )}
+            </div>
 
-            <h2>{filteredDepartments.length}</h2>
+            {search.trim() && (
+              <div className="registrar-department-management__active-filter">
+                <span>Search</span>
+                <strong>{search.trim()}</strong>
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Remove search filter"
+                >
+                  <X size={13} aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* =================================================
-            TOOLBAR
-        ================================================= */}
-
-        <div className="registrar-department-toolbar">
-          <div className="registrar-department-search">
-            <input
-              type="text"
-              placeholder="Search department code or name..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-
-          <button
-            type="button"
-            className="refresh-department-btn"
-            onClick={() => void loadDepartments()}
-            disabled={loading}
-          >
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-        </div>
-
-        {/* =================================================
-            TABLE
-        ================================================= */}
-
-        <div className="registrar-department-table-wrapper">
-          <div className="department-table-container">
-            <table className="department-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-
-                  <th>Department Code</th>
-
-                  <th>Department Name</th>
-
-                  <th>Created</th>
-
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {/* =========================================
-                    LOADING
-                ========================================= */}
-
-                {loading && (
+          {loading ? (
+            <div className="registrar-department-management__table-wrap">
+              <table className="registrar-department-management__table">
+                <thead>
                   <tr>
-                    <td colSpan={5} className="table-message">
-                      Loading departments...
-                    </td>
+                    <th>Department</th>
+                    <th>Official Name</th>
+                    <th>Created</th>
+                    <th className="registrar-department-management__actions-heading">
+                      Actions
+                    </th>
                   </tr>
-                )}
-
-                {/* =========================================
-                    ERROR
-                ========================================= */}
-
-                {!loading && error && (
-                  <tr>
-                    <td colSpan={5} className="table-message error">
-                      {error}
-                    </td>
-                  </tr>
-                )}
-
-                {/* =========================================
-                    EMPTY
-                ========================================= */}
-
-                {!loading && !error && filteredDepartments.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="table-message">
-                      {search.trim()
-                        ? "No departments match your search."
-                        : "No departments found."}
-                    </td>
-                  </tr>
-                )}
-
-                {/* =========================================
-                    DATA
-                ========================================= */}
-
-                {!loading &&
-                  !error &&
-                  filteredDepartments.map((department) => (
-                    <tr key={department.department_id}>
-                      <td>{department.department_id}</td>
-
+                </thead>
+                <tbody>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={`department-skeleton-${index}`}>
                       <td>
-                        <span className="department-code">
-                          {department.department_code}
-                        </span>
+                        <div className="registrar-department-management__skeleton registrar-department-management__skeleton--code" />
                       </td>
-
                       <td>
-                        <div className="department-name">
-                          <strong>{department.department_name}</strong>
+                        <div className="registrar-department-management__skeleton registrar-department-management__skeleton--name" />
+                      </td>
+                      <td>
+                        <div className="registrar-department-management__skeleton registrar-department-management__skeleton--date" />
+                      </td>
+                      <td>
+                        <div className="registrar-department-management__skeleton registrar-department-management__skeleton--action" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : error ? (
+            <div className="registrar-department-management__state registrar-department-management__state--error">
+              <span className="registrar-department-management__state-icon">
+                <AlertTriangle size={24} aria-hidden="true" />
+              </span>
+              <div>
+                <h3>Departments could not be loaded</h3>
+                <p>{error}</p>
+              </div>
+              <button
+                type="button"
+                className="registrar-department-management__button registrar-department-management__button--secondary"
+                onClick={() => void loadDepartments()}
+              >
+                <RefreshCw size={15} aria-hidden="true" />
+                Try Again
+              </button>
+            </div>
+          ) : filteredDepartments.length === 0 ? (
+            <div className="registrar-department-management__state">
+              <span className="registrar-department-management__state-icon">
+                {search.trim() ? (
+                  <Search size={24} aria-hidden="true" />
+                ) : (
+                  <Building2 size={24} aria-hidden="true" />
+                )}
+              </span>
+              <div>
+                <h3>
+                  {search.trim()
+                    ? "No departments match your search"
+                    : "No departments have been added yet"}
+                </h3>
+                <p>
+                  {search.trim()
+                    ? "Try a different department code or name, or clear the current search."
+                    : "Create the first academic department to begin organizing courses and curricula."}
+                </p>
+              </div>
+              {search.trim() ? (
+                <button
+                  type="button"
+                  className="registrar-department-management__button registrar-department-management__button--secondary"
+                  onClick={() => setSearch("")}
+                >
+                  <X size={15} aria-hidden="true" />
+                  Clear Search
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="registrar-department-management__button registrar-department-management__button--primary"
+                  onClick={handleAddDepartment}
+                >
+                  <Plus size={15} aria-hidden="true" />
+                  Add Department
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="registrar-department-management__table-wrap">
+              <table className="registrar-department-management__table">
+                <thead>
+                  <tr>
+                    <th>Department</th>
+                    <th>Official Name</th>
+                    <th>Created</th>
+                    <th className="registrar-department-management__actions-heading">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDepartments.map((department) => (
+                    <tr key={department.department_id}>
+                      <td>
+                        <div className="registrar-department-management__department-cell">
+                          <span className="registrar-department-management__department-mark">
+                            {getInitials(department.department_code)}
+                          </span>
+                          <div>
+                            <span className="registrar-department-management__code-badge">
+                              {department.department_code || "No code"}
+                            </span>
+                            <small>Record #{department.department_id}</small>
+                          </div>
                         </div>
                       </td>
 
                       <td>
-                        {department.created_at
-                          ? new Date(department.created_at).toLocaleDateString(
-                              "en-PH",
-                            )
-                          : "—"}
+                        <div className="registrar-department-management__name-cell">
+                          <strong>{department.department_name || "Unnamed department"}</strong>
+                          <span>Academic department</span>
+                        </div>
                       </td>
 
                       <td>
-                        <div className="department-actions">
+                        <div className="registrar-department-management__date-cell">
+                          <CalendarDays size={15} aria-hidden="true" />
+                          <span>{formatDate(department.created_at)}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="registrar-department-management__row-actions">
                           <button
                             type="button"
-                            className="edit-department-btn"
+                            className="registrar-department-management__edit-button"
                             onClick={() => handleEditDepartment(department)}
+                            aria-label={`Edit ${department.department_name}`}
                           >
+                            <Pencil size={14} aria-hidden="true" />
                             Edit
                           </button>
                         </div>
                       </td>
                     </tr>
                   ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {/* =================================================
-            DEPARTMENT MODAL
-        ================================================= */}
+          {!loading && !error && filteredDepartments.length > 0 && (
+            <div className="registrar-department-management__workspace-footer">
+              <span>
+                <CheckCircle2 size={14} aria-hidden="true" />
+                Department records are ready for Registrar maintenance.
+              </span>
+              <small>
+                Editing a department updates the shared department record used
+                elsewhere in the portal.
+              </small>
+            </div>
+          )}
+        </section>
 
         <DepartmentModal
           isOpen={showDepartmentModal}
