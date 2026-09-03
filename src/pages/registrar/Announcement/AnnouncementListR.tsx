@@ -2,17 +2,20 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Activity,
+  AlertTriangle,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
   CircleOff,
   Eye,
   Filter,
+  Loader2,
   Megaphone,
   Pencil,
   Plus,
   Search,
   ShieldCheck,
+  Trash2,
   UserRound,
   UsersRound,
   X,
@@ -41,6 +44,12 @@ interface AnnouncementResponse {
   success?: boolean;
   data?: Announcement[];
   announcements?: Announcement[];
+  message?: string;
+  error?: string;
+}
+
+interface DeleteResponse {
+  success?: boolean;
   message?: string;
   error?: string;
 }
@@ -107,6 +116,11 @@ export default function AnnouncementListR() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [recipientFilter, setRecipientFilter] = useState("all");
 
+  const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   // =====================================================
   // AUTHORIZATION
   // =====================================================
@@ -127,6 +141,26 @@ export default function AnnouncementListR() {
     }
   }, [authenticated, userRole, navigate]);
 
+  useEffect(() => {
+    if (!deleteTarget) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !deleting) {
+        setDeleteTarget(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [deleteTarget, deleting]);
+
   // =====================================================
   // LOAD ANNOUNCEMENTS
   // =====================================================
@@ -142,6 +176,7 @@ export default function AnnouncementListR() {
       try {
         setLoading(true);
         setError("");
+        setActionError("");
 
         // Registrar management endpoint is intentionally preserved.
         const url = `${API_BASE_URL}/api/announcement-management`;
@@ -309,6 +344,113 @@ export default function AnnouncementListR() {
   };
 
   // =====================================================
+  // DELETE ANNOUNCEMENT
+  // =====================================================
+
+  const openDeleteModal = (announcement: Announcement) => {
+    setActionError("");
+    setSuccessMessage("");
+    setDeleteTarget(announcement);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+  };
+
+  const deleteAnnouncement = async () => {
+    if (!deleteTarget) return;
+
+    if (!authenticated || userRole !== "Registrar") {
+      setActionError(
+        "Your session has expired or you are not authorized to delete announcements.",
+      );
+      return;
+    }
+
+    const announcementId = Number(deleteTarget.announcement_id);
+
+    if (!Number.isInteger(announcementId) || announcementId <= 0) {
+      setActionError("Invalid announcement ID.");
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      setActionError("");
+      setSuccessMessage("");
+
+      const response = await authService.authFetch(
+        `${API_BASE_URL}/api/announcement-management/${announcementId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      const contentType = response.headers.get("content-type") || "";
+      let data: DeleteResponse | null = null;
+
+      if (contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const responseText = await response.text();
+        throw new Error(
+          `Server returned a non-JSON response (${response.status}): ${responseText.slice(
+            0,
+            200,
+          )}`,
+        );
+      }
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (response.status === 403) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "You are not authorized to delete announcements.",
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            `Failed to delete announcement (${response.status}).`,
+        );
+      }
+
+      const deletedTitle = deleteTarget.title || "Announcement";
+
+      setAnnouncements((current) =>
+        current.filter(
+          (announcement) =>
+            Number(announcement.announcement_id) !== announcementId,
+        ),
+      );
+
+      setDeleteTarget(null);
+      setSuccessMessage(
+        data?.message || `"${deletedTitle}" was deleted successfully.`,
+      );
+    } catch (err) {
+      console.error("DELETE REGISTRAR ANNOUNCEMENT ERROR:", err);
+      setActionError(
+        err instanceof Error ? err.message : "Unable to delete announcement.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // =====================================================
   // AUTH GUARD
   // =====================================================
 
@@ -411,6 +553,45 @@ export default function AnnouncementListR() {
           </section>
         )}
 
+        {(actionError || successMessage) && (
+          <div
+            className={`registrar-announcements__feedback ${
+              actionError
+                ? "registrar-announcements__feedback--error"
+                : "registrar-announcements__feedback--success"
+            }`}
+            role={actionError ? "alert" : "status"}
+          >
+            <span className="registrar-announcements__feedback-icon">
+              {actionError ? (
+                <AlertTriangle size={18} />
+              ) : (
+                <CheckCircle2 size={18} />
+              )}
+            </span>
+
+            <div>
+              <strong>
+                {actionError
+                  ? "Announcement could not be deleted"
+                  : "Announcement deleted"}
+              </strong>
+              <p>{actionError || successMessage}</p>
+            </div>
+
+            <button
+              type="button"
+              aria-label="Dismiss message"
+              onClick={() => {
+                setActionError("");
+                setSuccessMessage("");
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* WORKSPACE */}
         <section className="registrar-announcements__workspace">
           <div className="registrar-announcements__workspace-header">
@@ -420,8 +601,8 @@ export default function AnnouncementListR() {
               </span>
               <h2>Manage Announcements</h2>
               <p>
-                Search, filter, open, and edit announcements without leaving the
-                Registrar management workspace.
+                Search, review, edit, and safely delete announcements without
+                leaving the Registrar management workspace.
               </p>
             </div>
 
@@ -720,6 +901,16 @@ export default function AnnouncementListR() {
                         <Pencil size={15} />
                         Edit
                       </button>
+
+                      <button
+                        type="button"
+                        className="registrar-announcements__action-button registrar-announcements__action-button--danger"
+                        onClick={() => openDeleteModal(item)}
+                        aria-label={`Delete ${item.title || "announcement"}`}
+                      >
+                        <Trash2 size={15} />
+                        Delete
+                      </button>
                     </div>
                   </article>
                 );
@@ -727,6 +918,105 @@ export default function AnnouncementListR() {
             </div>
           )}
         </section>
+
+        {deleteTarget && (
+          <div
+            className="registrar-announcements__modal-overlay"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeDeleteModal();
+              }
+            }}
+          >
+            <div
+              className="registrar-announcements__delete-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="registrar-delete-announcement-title"
+              aria-describedby="registrar-delete-announcement-description"
+            >
+              <button
+                type="button"
+                className="registrar-announcements__modal-close"
+                onClick={closeDeleteModal}
+                disabled={deleting}
+                aria-label="Close delete confirmation"
+              >
+                <X size={18} />
+              </button>
+
+              <span className="registrar-announcements__delete-icon">
+                <Trash2 size={23} />
+              </span>
+
+              <span className="registrar-announcements__delete-eyebrow">
+                Delete Announcement
+              </span>
+
+              <h2 id="registrar-delete-announcement-title">
+                Delete this announcement?
+              </h2>
+
+              <p id="registrar-delete-announcement-description">
+                This permanently removes the announcement from the portal. This
+                action cannot be undone.
+              </p>
+
+              <div className="registrar-announcements__delete-record">
+                <Megaphone size={18} />
+                <div>
+                  <span>Announcement #{deleteTarget.announcement_id}</span>
+                  <strong>
+                    {deleteTarget.title || "Untitled Announcement"}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="registrar-announcements__delete-warning">
+                <AlertTriangle size={17} />
+                <p>
+                  Recipient and attachment associations for this announcement
+                  will also be removed by the existing announcement-management
+                  delete process.
+                </p>
+              </div>
+
+              <div className="registrar-announcements__modal-actions">
+                <button
+                  type="button"
+                  className="registrar-announcements__button registrar-announcements__button--secondary"
+                  onClick={closeDeleteModal}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="registrar-announcements__button registrar-announcements__button--danger"
+                  onClick={() => void deleteAnnouncement()}
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2
+                        size={17}
+                        className="registrar-announcements__spin"
+                      />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={17} />
+                      Delete Announcement
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </DashboardLayout>
   );

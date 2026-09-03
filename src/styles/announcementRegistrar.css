@@ -1100,3 +1100,426 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* =========================================================
+   DELETE ANNOUNCEMENT FEATURE
+   Uses the existing DELETE /api/announcement-management/:id
+========================================================= */
+
+.registrar-announcements__button--danger {
+  color: #ffffff;
+  background: var(--ra-danger);
+  border-color: var(--ra-danger);
+  box-shadow: 0 5px 13px rgba(180, 35, 24, 0.16);
+}
+
+.registrar-announcements__button--danger:hover:not(:disabled) {
+  background: #912018;
+  border-color: #912018;
+}
+
+.registrar-announcements__button:disabled,
+.registrar-announcements__action-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.registrar-announcements__action-button--danger {
+  margin-left: auto;
+  color: #a52a21;
+  background: #ffffff;
+  border-color: #edcbc7;
+}
+
+.registrar-announcements__action-button--danger:hover {
+  color: var(--ra-danger);
+  background: var(--ra-danger-soft);
+  border-color: #e5aaa3;
+}
+
+.registrar-announcements__feedback {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 18px;
+  padding: 13px 14px;
+  border: 1px solid;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(31, 56, 40, 0.035);
+}
+
+.registrar-announcements__feedback-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.registrar-announcements__feedback strong {
+  display: block;
+  margin: 1px 0 3px;
+  font-size: 12.5px;
+  font-weight: 750;
+}
+
+.registrar-announcements__feedback p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.registrar-announcements__feedback > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.registrar-announcements__feedback > button:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.registrar-announcements__feedback--success {
+  color: var(--ra-green-900);
+  background: #effaf3;
+  border-color: #bfe7cc;
+}
+
+.registrar-announcements__feedback--success
+  .registrar-announcements__feedback-icon {
+  color: var(--ra-green-800);
+  background: #dcf5e6;
+}
+
+.registrar-announcements__feedback--error {
+  color: #8f251c;
+  background: var(--ra-danger-soft);
+  border-color: #f1c5bf;
+}
+
+.registrar-announcements__feedback--error
+  .registrar-announcements__feedback-icon {
+  color: var(--ra-danger);
+  background: #ffe4e0;
+}
+
+.registrar-announcements__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(7, 31, 21, 0.56);
+  backdrop-filter: blur(4px);
+}
+
+.registrar-announcements__delete-modal {
+  position: relative;
+  width: min(100%, 500px);
+  padding: 27px;
+  overflow: hidden;
+  border: 1px solid #e6d3d0;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 28px 75px rgba(4, 31, 21, 0.28);
+}
+
+.registrar-announcements__delete-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, #9f251d, #d64b3f);
+}
+
+.registrar-announcements__modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  color: var(--ra-text-500);
+  background: #f4f6f5;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.registrar-announcements__modal-close:hover:not(:disabled) {
+  color: var(--ra-danger);
+  background: var(--ra-danger-soft);
+}
+
+.registrar-announcements__modal-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.14);
+}
+
+.registrar-announcements__delete-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  margin-bottom: 15px;
+  border: 1px solid #f1c5bf;
+  border-radius: 14px;
+  color: var(--ra-danger);
+  background: var(--ra-danger-soft);
+}
+
+.registrar-announcements__delete-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ra-danger);
+  font-size: 10.5px;
+  font-weight: 780;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+}
+
+.registrar-announcements__delete-modal h2 {
+  margin: 0;
+  padding-right: 36px;
+  color: var(--ra-text-950);
+  font-size: 21px;
+  font-weight: 770;
+  line-height: 1.3;
+  letter-spacing: -0.017em;
+}
+
+.registrar-announcements__delete-modal > p {
+  margin: 8px 0 0;
+  color: var(--ra-text-600);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.registrar-announcements__delete-record {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 18px;
+  padding: 13px 14px;
+  border: 1px solid var(--ra-border);
+  border-radius: 11px;
+  background: #f8faf9;
+}
+
+.registrar-announcements__delete-record > svg {
+  flex: 0 0 auto;
+  color: var(--ra-green-700);
+}
+
+.registrar-announcements__delete-record div {
+  min-width: 0;
+}
+
+.registrar-announcements__delete-record span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--ra-text-500);
+  font-size: 9.5px;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.registrar-announcements__delete-record strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ra-text-800);
+  font-size: 12.5px;
+  font-weight: 740;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.registrar-announcements__delete-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid #f0d1cd;
+  border-radius: 10px;
+  color: #8c352e;
+  background: #fff7f6;
+}
+
+.registrar-announcements__delete-warning > svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.registrar-announcements__delete-warning p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.registrar-announcements__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.registrar-announcements__spin {
+  animation: registrar-announcements-spin 0.8s linear infinite;
+}
+
+@keyframes registrar-announcements-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .registrar-announcements__action-button--danger {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .registrar-announcements__feedback {
+    grid-template-columns: auto 1fr;
+  }
+
+  .registrar-announcements__feedback > button {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .registrar-announcements__modal-overlay {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .registrar-announcements__delete-modal {
+    width: 100%;
+    padding: 24px 18px 18px;
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .registrar-announcements__modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .registrar-announcements__modal-actions
+    .registrar-announcements__button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   ANNOUNCEMENT CARD ACTION ALIGNMENT FIX
+   Keeps View Details / Edit / Delete on one row.
+========================================================= */
+
+.registrar-announcements__card-actions {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.34fr)
+    minmax(0, 0.82fr)
+    minmax(0, 0.94fr);
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+}
+
+.registrar-announcements__action-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 35px;
+  padding: 7px 8px;
+  gap: 5px;
+  overflow: hidden;
+  font-size: 10.75px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.registrar-announcements__action-button svg {
+  flex: 0 0 auto;
+}
+
+.registrar-announcements__action-button--primary {
+  padding-left: 8px;
+  padding-right: 7px;
+}
+
+.registrar-announcements__action-button--primary svg:last-child {
+  margin-left: 0;
+}
+
+.registrar-announcements__action-button--danger {
+  margin-left: 0;
+}
+
+/* Never stack the three card actions vertically. */
+@media (max-width: 760px) {
+  .registrar-announcements__card-actions {
+    grid-template-columns:
+      minmax(0, 1.34fr)
+      minmax(0, 0.82fr)
+      minmax(0, 0.94fr);
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .registrar-announcements__action-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .registrar-announcements__action-button--danger {
+    margin-left: 0;
+  }
+}
+
+/* Extra-tight sizing for very narrow phones/cards. */
+@media (max-width: 390px) {
+  .registrar-announcements__card-actions {
+    gap: 5px;
+  }
+
+  .registrar-announcements__action-button {
+    min-height: 34px;
+    padding: 6px 6px;
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .registrar-announcements__action-button svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* The leading Eye icon already communicates the action on tight widths. */
+  .registrar-announcements__action-button--primary svg:last-child {
+    display: none;
+  }
+}
