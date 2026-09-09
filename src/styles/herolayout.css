@@ -153,9 +153,9 @@
     linear-gradient(
       135deg,
       rgba(10, 9, 22, 0.9),
-      rgba(29, 182, 50, 0.9)
+      rgba(29, 182, 49, 0.308)
     ),
-    url("../assets/BG.png") no-repeat center/cover;
+    url("../assets/bgptc.png") no-repeat center/cover;
 }
 
 .greeting {

@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 
 import "../../styles/herolayout.css";
 
-import ptcBackground from "../../assets/ptcbackground.jpg";
+import ptcBackground from "../../assets/1st.png";
 import campusExterior from "../../assets/campus.webp";
 import classroom from "../../assets/classrooms.webp";
-import assembly from "../../assets/student activities.png";
-import library from "../../assets/GROUP6.png";
-import studentsWalking from "../../assets/BG.png";
+import assembly from "../../assets/studentactivities.png";
+import library from "../../assets/research rooms.jpg";
+import studentsWalking from "../../assets/student comunity.jpg";
 
 interface GalleryImage {
   url: string;
