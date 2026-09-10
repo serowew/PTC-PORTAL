@@ -553,45 +553,76 @@
 .registrar-enrollment-management__table-wrap {
   width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.registrar-enrollment-management__table-wrap::-webkit-scrollbar {
+  height: 10px;
+}
+
+.registrar-enrollment-management__table-wrap::-webkit-scrollbar-track {
+  background: #f2f6f3;
+}
+
+.registrar-enrollment-management__table-wrap::-webkit-scrollbar-thumb {
+  border: 2px solid #f2f6f3;
+  border-radius: 999px;
+  background: #c4d5ca;
+}
+
+.registrar-enrollment-management__table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #aabfb1;
 }
 
 .registrar-enrollment-management__table {
   width: 100%;
-  min-width: 1160px;
+  min-width: 1480px;
   border-collapse: collapse;
   table-layout: fixed;
 }
 
 .registrar-enrollment-management__table th,
 .registrar-enrollment-management__table td {
+  min-width: 0;
   text-align: left;
-  vertical-align: middle;
 }
 
 .registrar-enrollment-management__table thead th {
-  padding: 11px 14px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--rem-border);
   color: #65716a;
   background: #f8faf8;
   font-size: 10.5px;
   font-weight: 780;
+  line-height: 1.3;
   letter-spacing: 0.045em;
   text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
-.registrar-enrollment-management__table thead th:nth-child(1) { width: 22%; }
-.registrar-enrollment-management__table thead th:nth-child(2) { width: 16%; }
-.registrar-enrollment-management__table thead th:nth-child(3) { width: 14%; }
-.registrar-enrollment-management__table thead th:nth-child(4) { width: 19%; }
-.registrar-enrollment-management__table thead th:nth-child(5) { width: 10%; }
-.registrar-enrollment-management__table thead th:nth-child(6) { width: 11%; }
-.registrar-enrollment-management__table thead th:nth-child(7) { width: 8%; }
+.registrar-enrollment-management__table thead th:nth-child(1) { width: 260px; }
+.registrar-enrollment-management__table thead th:nth-child(2) { width: 300px; }
+.registrar-enrollment-management__table thead th:nth-child(3) { width: 220px; }
+.registrar-enrollment-management__table thead th:nth-child(4) { width: 270px; }
+.registrar-enrollment-management__table thead th:nth-child(5) { width: 140px; }
+.registrar-enrollment-management__table thead th:nth-child(6) { width: 170px; }
+.registrar-enrollment-management__table thead th:nth-child(7) { width: 120px; }
 
 .registrar-enrollment-management__table tbody td {
-  padding: 14px;
+  padding: 16px 18px;
   border-bottom: 1px solid #edf1ee;
   color: var(--rem-text-800);
   font-size: 12px;
+  line-height: 1.45;
+  vertical-align: top;
+}
+
+.registrar-enrollment-management__table tbody td:last-child {
+  vertical-align: middle;
 }
 
 .registrar-enrollment-management__table tbody tr:last-child td {
@@ -734,6 +765,43 @@
   font-size: 10.5px;
 }
 
+.registrar-enrollment-management__program strong,
+.registrar-enrollment-management__program small,
+.registrar-enrollment-management__period strong,
+.registrar-enrollment-management__period > div > span,
+.registrar-enrollment-management__period small,
+.registrar-enrollment-management__status-cell small {
+  overflow: visible;
+  max-width: 100%;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.registrar-enrollment-management__program strong {
+  max-width: 100%;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.registrar-enrollment-management__period {
+  min-width: 0;
+}
+
+.registrar-enrollment-management__period > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.registrar-enrollment-management__period strong,
+.registrar-enrollment-management__period > div > span,
+.registrar-enrollment-management__period small {
+  max-width: 100%;
+  line-height: 1.4;
+}
+
 /* =========================================================
    PLACEMENT
 ========================================================= */
@@ -755,12 +823,13 @@
 }
 
 .registrar-enrollment-management__placement-topline strong {
-  overflow: hidden;
+  min-width: 0;
   color: var(--rem-text-950);
   font-size: 11.5px;
   font-weight: 730;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .registrar-enrollment-management__progress {
@@ -781,23 +850,32 @@
 }
 
 .registrar-enrollment-management__placement-meta {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(125px, 1fr) max-content;
   align-items: center;
-  justify-content: space-between;
-  gap: 7px;
+  gap: 10px;
   color: var(--rem-text-500);
-  font-size: 9.5px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.registrar-enrollment-management__placement-meta > span:first-child {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .registrar-enrollment-management__placement-status {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
-  padding: 3px 6px;
+  justify-content: center;
+  min-height: 23px;
+  padding: 4px 8px;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 760;
-  line-height: 1.1;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
@@ -860,12 +938,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 8px;
+  max-width: 100%;
+  padding: 5px 9px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 800;
-  line-height: 1;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
@@ -905,8 +984,17 @@
   border-color: #dce3de;
 }
 
+.registrar-enrollment-management__status-cell {
+  gap: 5px;
+}
+
 .registrar-enrollment-management__status-cell small {
   max-width: 100%;
+  margin-top: 0;
+  font-size: 10.5px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* =========================================================
@@ -915,7 +1003,9 @@
 
 .registrar-enrollment-management__row-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .registrar-enrollment-management__review-button {
