@@ -1,20 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertCircle,
+  BookOpenCheck,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  Filter,
+  GraduationCap,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  UsersRound,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-
 import "../../../styles/MyClasses.css";
 
-// =====================================================
-// API
-// =====================================================
-
 const API_BASE_URL = "http://localhost:3000/api/faculty/classes";
-
-// =====================================================
-// TYPES
-// =====================================================
 
 interface FacultyInfo {
   faculty_id: number;
@@ -35,9 +41,7 @@ interface FacultyInfo {
 interface FacultyClass {
   offering_id: number;
   section_subject_id: number;
-
   offering_status: "Open" | "Closed" | "Cancelled" | string;
-
   section_subject_status: string;
 
   subject: {
@@ -65,7 +69,6 @@ interface FacultyClass {
     academic_year_id: number;
     academic_year: string;
     is_current_academic_year: boolean;
-
     semester_id: number;
     semester_name: string;
   };
@@ -91,7 +94,6 @@ interface FacultyClass {
 
 interface FacultyClassesResponse {
   success: boolean;
-
   faculty?: FacultyInfo;
 
   filters?: {
@@ -107,14 +109,9 @@ interface FacultyClassesResponse {
   };
 
   classes?: FacultyClass[];
-
   message?: string;
   error?: string;
 }
-
-// =====================================================
-// SAFE JSON
-// =====================================================
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
@@ -132,10 +129,6 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 
   return response.json() as Promise<T>;
 }
-
-// =====================================================
-// HELPERS
-// =====================================================
 
 function formatScheduleDays(value: string | null) {
   if (!value) {
@@ -159,65 +152,35 @@ function formatScheduleDays(value: string | null) {
 
 function getRoomLabel(room: FacultyClass["room"]) {
   if (!room) {
-    return "—";
+    return "Not assigned";
   }
 
   if (room.room_code && room.room_name) {
-    return `${room.room_code} • ${room.room_name}`;
+    return `${room.room_code} · ${room.room_name}`;
   }
 
-  return room.room_code || room.room_name || "—";
+  return room.room_code || room.room_name || "Not assigned";
 }
-// =====================================================
-// COMPONENT
-// =====================================================
 
 export default function MyClasses() {
   const navigate = useNavigate();
 
-  // ===================================================
-  // AUTH
-  // ===================================================
-
   const session = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = session?.role;
-
   const authenticated = Boolean(session && token);
 
-  // ===================================================
-  // STATE
-  // ===================================================
-
   const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
-
   const [classes, setClasses] = useState<FacultyClass[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // ===================================================
-  // FILTER STATE
-  // ===================================================
-
   const [search, setSearch] = useState("");
-
   const [academicYear, setAcademicYear] = useState("All");
-
   const [semester, setSemester] = useState("All");
-
   const [section, setSection] = useState("All");
-
   const [status, setStatus] = useState("All");
-
-  // ===================================================
-  // AUTHORIZATION
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated) {
@@ -236,10 +199,6 @@ export default function MyClasses() {
       });
     }
   }, [authenticated, userRole, session, navigate]);
-
-  // ===================================================
-  // FETCH MY CLASSES
-  // ===================================================
 
   useEffect(() => {
     if (!authenticated || userRole !== "Faculty") {
@@ -283,7 +242,6 @@ export default function MyClasses() {
         }
 
         setFaculty(data.faculty || null);
-
         setClasses(Array.isArray(data.classes) ? data.classes : []);
       } catch (requestError) {
         if (
@@ -316,10 +274,6 @@ export default function MyClasses() {
     };
   }, [authenticated, userRole, navigate, refreshKey]);
 
-  // ===================================================
-  // FILTER OPTIONS
-  // ===================================================
-
   const academicYears = useMemo(() => {
     const values = new Map<number, string>();
 
@@ -351,9 +305,6 @@ export default function MyClasses() {
       new Set(classes.map((item) => item.section.section_name)),
     ).sort();
   }, [classes]);
-  // ===================================================
-  // FILTERED CLASSES
-  // ===================================================
 
   const filteredClasses = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -394,31 +345,20 @@ export default function MyClasses() {
     });
   }, [classes, search, academicYear, semester, section, status]);
 
-  // ===================================================
-  // SUMMARY
-  // ===================================================
-
   const summary = useMemo(() => {
     return {
       total: filteredClasses.length,
-
       open: filteredClasses.filter((item) => item.offering_status === "Open")
         .length,
-
       closed: filteredClasses.filter(
         (item) => item.offering_status === "Closed",
       ).length,
-
       officialMemberships: filteredClasses.reduce(
         (total, item) => total + Number(item.capacity.official_students || 0),
         0,
       ),
     };
   }, [filteredClasses]);
-
-  // ===================================================
-  // ACTIONS
-  // ===================================================
 
   const openClass = (item: FacultyClass) => {
     navigate(`/faculty/classes/students?offering_id=${item.offering_id}`);
@@ -436,34 +376,34 @@ export default function MyClasses() {
     setStatus("All");
   };
 
-  // ===================================================
-  // AUTH GUARD RENDER
-  // ===================================================
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    academicYear !== "All" ||
+    semester !== "All" ||
+    section !== "All" ||
+    status !== "All";
 
   if (!authenticated || userRole !== "Faculty") {
     return null;
   }
 
-  // ===================================================
-  // UI
-  // ===================================================
-
   return (
     <DashboardLayout>
       <main className="faculty-classes-page">
-        {/* =============================================
-            HEADER
-        ============================================= */}
-
         <section className="faculty-classes-header">
-          <div>
-            <span className="faculty-classes-eyebrow">Faculty</span>
+          <div className="faculty-classes-header__copy">
+            <div className="faculty-classes-eyebrow">
+              <span>
+                <BookOpenCheck size={16} strokeWidth={2.2} />
+              </span>
+              Faculty · Manage Classes
+            </div>
 
             <h1>My Classes</h1>
 
             <p>
-              View your Registrar-assigned classes and official enrolled
-              students.
+              Review your Registrar-assigned teaching loads, official class
+              memberships, schedules, sections, and academic periods.
             </p>
           </div>
 
@@ -473,166 +413,211 @@ export default function MyClasses() {
             onClick={refreshClasses}
             disabled={loading}
           >
+            <RefreshCw
+              size={16}
+              className={loading ? "is-spinning" : ""}
+            />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </section>
 
-        {/* =============================================
-            FACULTY INFO
-        ============================================= */}
-
         {faculty && (
           <section className="faculty-classes-profile">
-            <div>
-              <span>Faculty</span>
+            <div className="faculty-classes-profile__identity">
+              <span className="faculty-classes-profile__icon">
+                <GraduationCap size={20} strokeWidth={2.1} />
+              </span>
 
-              <strong>{faculty.faculty_name}</strong>
+              <div>
+                <small>Faculty</small>
+                <strong>{faculty.faculty_name}</strong>
+              </div>
             </div>
 
             <div>
-              <span>Employee Number</span>
-
+              <small>Employee Number</small>
               <strong>{faculty.employee_number}</strong>
             </div>
 
             <div>
-              <span>Employment</span>
-
-              <strong>{faculty.employment_status || "—"}</strong>
+              <small>Employment</small>
+              <strong>{faculty.employment_status || "Not recorded"}</strong>
             </div>
           </section>
         )}
 
-        {/* =============================================
-            SUMMARY
-        ============================================= */}
+        <section
+          className="faculty-classes-summary"
+          aria-label="Class summary"
+        >
+          <article className="faculty-class-stat">
+            <span className="faculty-class-stat__icon">
+              <BookOpenCheck size={19} />
+            </span>
 
-        <section className="faculty-classes-summary">
-          <div className="faculty-class-stat">
-            <span>Assigned Classes</span>
+            <div>
+              <small>Assigned Classes</small>
+              <strong>{loading ? "…" : summary.total}</strong>
+              <span>Matching the current filters</span>
+            </div>
+          </article>
 
-            <strong>{summary.total}</strong>
-          </div>
+          <article className="faculty-class-stat">
+            <span className="faculty-class-stat__icon">
+              <CheckCircle2 size={19} />
+            </span>
 
-          <div className="faculty-class-stat">
-            <span>Open Classes</span>
+            <div>
+              <small>Open Classes</small>
+              <strong>{loading ? "…" : summary.open}</strong>
+              <span>Currently marked open</span>
+            </div>
+          </article>
 
-            <strong>{summary.open}</strong>
-          </div>
+          <article className="faculty-class-stat">
+            <span className="faculty-class-stat__icon">
+              <Clock3 size={19} />
+            </span>
 
-          <div className="faculty-class-stat">
-            <span>Closed Classes</span>
+            <div>
+              <small>Closed Classes</small>
+              <strong>{loading ? "…" : summary.closed}</strong>
+              <span>Enrollment placement closed</span>
+            </div>
+          </article>
 
-            <strong>{summary.closed}</strong>
-          </div>
+          <article className="faculty-class-stat">
+            <span className="faculty-class-stat__icon">
+              <UsersRound size={19} />
+            </span>
 
-          <div className="faculty-class-stat">
-            <span>Official Class Memberships</span>
-
-            <strong>{summary.officialMemberships}</strong>
-          </div>
+            <div>
+              <small>Official Memberships</small>
+              <strong>{loading ? "…" : summary.officialMemberships}</strong>
+              <span>Approved enrolled students</span>
+            </div>
+          </article>
         </section>
-
-        {/* =============================================
-            FILTERS
-        ============================================= */}
 
         <section className="faculty-classes-filters">
-          <div className="faculty-classes-search">
-            <label htmlFor="faculty-class-search">Search</label>
+          <header className="faculty-classes-filters__header">
+            <div>
+              <span className="faculty-classes-filters__icon">
+                <Filter size={16} />
+              </span>
 
-            <input
-              id="faculty-class-search"
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Subject, section, or course..."
-            />
+              <div>
+                <strong>Filter Classes</strong>
+                <p>
+                  Narrow the list by subject, academic period, section, or
+                  offering status.
+                </p>
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="faculty-classes-clear"
+                onClick={clearFilters}
+              >
+                <RotateCcw size={14} />
+                Clear Filters
+              </button>
+            )}
+          </header>
+
+          <div className="faculty-classes-filter-grid">
+            <label className="faculty-classes-search">
+              <span>Search</span>
+
+              <div className="faculty-classes-search__control">
+                <Search size={15} />
+
+                <input
+                  id="faculty-class-search"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Subject, section, or course..."
+                />
+              </div>
+            </label>
+
+            <label>
+              <span>Academic Year</span>
+
+              <select
+                value={academicYear}
+                onChange={(event) => setAcademicYear(event.target.value)}
+              >
+                <option value="All">All Academic Years</option>
+
+                {academicYears.map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Semester</span>
+
+              <select
+                value={semester}
+                onChange={(event) => setSemester(event.target.value)}
+              >
+                <option value="All">All Semesters</option>
+
+                {semesters.map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Section</span>
+
+              <select
+                value={section}
+                onChange={(event) => setSection(event.target.value)}
+              >
+                <option value="All">All Sections</option>
+
+                {sections.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Status</span>
+
+              <select
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                <option value="All">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </label>
           </div>
-
-          <div>
-            <label>Academic Year</label>
-
-            <select
-              value={academicYear}
-              onChange={(event) => setAcademicYear(event.target.value)}
-            >
-              <option value="All">All</option>
-
-              {academicYears.map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label>Semester</label>
-
-            <select
-              value={semester}
-              onChange={(event) => setSemester(event.target.value)}
-            >
-              <option value="All">All</option>
-
-              {semesters.map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label>Section</label>
-
-            <select
-              value={section}
-              onChange={(event) => setSection(event.target.value)}
-            >
-              <option value="All">All</option>
-
-              {sections.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label>Status</label>
-
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              <option value="All">All</option>
-
-              <option value="Open">Open</option>
-
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-
-          <button
-            type="button"
-            className="faculty-classes-clear"
-            onClick={clearFilters}
-          >
-            Clear
-          </button>
         </section>
-        {/* =============================================
-            ERROR
-        ============================================= */}
 
         {error && (
-          <section className="faculty-classes-error">
+          <section className="faculty-classes-error" role="alert">
+            <span className="faculty-classes-error__icon">
+              <AlertCircle size={20} />
+            </span>
+
             <div>
               <strong>Classes could not be loaded</strong>
-
               <p>{error}</p>
             </div>
 
@@ -642,78 +627,73 @@ export default function MyClasses() {
           </section>
         )}
 
-        {/* =============================================
-            LOADING
-        ============================================= */}
-
         {loading && (
           <section className="faculty-classes-loading">
             <div className="faculty-classes-spinner" />
 
             <div>
               <strong>Loading your classes</strong>
-
               <span>Retrieving your official teaching assignments...</span>
             </div>
           </section>
         )}
 
-        {/* =============================================
-            EMPTY
-        ============================================= */}
-
         {!loading && !error && filteredClasses.length === 0 && (
           <section className="faculty-classes-empty">
+            <span className="faculty-classes-empty__icon">
+              <BookOpenCheck size={24} />
+            </span>
+
             <strong>No classes found</strong>
 
-            <p>No assigned classes match the current filters.</p>
+            <p>
+              {classes.length === 0
+                ? "No teaching assignments are currently available for your Faculty account."
+                : "No assigned classes match the current filters."}
+            </p>
 
-            <button type="button" onClick={clearFilters}>
-              Clear Filters
-            </button>
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters}>
+                <RotateCcw size={14} />
+                Clear Filters
+              </button>
+            )}
           </section>
         )}
 
-        {/* =============================================
-            CLASS TABLE
-        ============================================= */}
-
         {!loading && !error && filteredClasses.length > 0 && (
           <section className="faculty-classes-content">
-            <div className="faculty-classes-content-header">
+            <header className="faculty-classes-content-header">
               <div>
+                <span className="faculty-classes-content-kicker">
+                  Official Teaching Assignments
+                </span>
+
                 <h2>Assigned Classes</h2>
 
                 <p>
-                  Students shown in these classes come only from Approved
-                  enrollments.
+                  Student totals are based on approved enrollment memberships
+                  assigned to each class offering.
                 </p>
               </div>
 
-              <span>
+              <span className="faculty-classes-result-count">
                 {filteredClasses.length} class
                 {filteredClasses.length === 1 ? "" : "es"}
               </span>
-            </div>
+            </header>
 
             <div className="faculty-classes-table-wrapper">
               <table className="faculty-classes-table">
                 <thead>
                   <tr>
                     <th>Subject</th>
-
                     <th>Section</th>
-
                     <th>Academic Period</th>
-
                     <th>Schedule</th>
-
                     <th>Room</th>
-
                     <th>Official Students</th>
-
                     <th>Status</th>
-
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -724,42 +704,62 @@ export default function MyClasses() {
                       <td>
                         <div className="faculty-class-subject">
                           <strong>{item.subject.subject_code}</strong>
-
                           <span>{item.subject.subject_name}</span>
-
-                          <small>{item.subject.units} units</small>
+                          <small>
+                            {item.subject.units} unit
+                            {item.subject.units === 1 ? "" : "s"}
+                          </small>
                         </div>
                       </td>
 
                       <td>
-                        <strong>{item.section.section_name}</strong>
-
-                        <small>
-                          {item.section.course.course_code} • Year{" "}
-                          {item.section.year_level}
-                        </small>
+                        <div className="faculty-class-cell-stack">
+                          <strong>{item.section.section_name}</strong>
+                          <small>
+                            {item.section.course.course_code} · Year{" "}
+                            {item.section.year_level}
+                          </small>
+                        </div>
                       </td>
 
                       <td>
-                        <strong>{item.academic_period.academic_year}</strong>
-
-                        <small>{item.academic_period.semester_name}</small>
+                        <div className="faculty-class-cell-stack">
+                          <strong>{item.academic_period.academic_year}</strong>
+                          <small>
+                            {item.academic_period.semester_name}
+                            {item.academic_period.is_current_academic_year
+                              ? " · Current"
+                              : ""}
+                          </small>
+                        </div>
                       </td>
 
                       <td>
-                        <strong>
-                          {formatScheduleDays(item.schedule.days)}
-                        </strong>
+                        <div className="faculty-class-cell-stack faculty-class-cell-stack--schedule">
+                          <strong>
+                            <CalendarDays size={13} />
+                            {formatScheduleDays(item.schedule.days)}
+                          </strong>
 
-                        <small>{item.schedule.time || "Not scheduled"}</small>
+                          <small>
+                            <Clock3 size={12} />
+                            {item.schedule.time || "Not scheduled"}
+                          </small>
+                        </div>
                       </td>
 
-                      <td>{getRoomLabel(item.room)}</td>
+                      <td>
+                        <div className="faculty-class-room">
+                          <Building2 size={14} />
+                          <span>{getRoomLabel(item.room)}</span>
+                        </div>
+                      </td>
 
                       <td>
-                        <strong>{item.capacity.official_students}</strong>
-
-                        <small>of {item.capacity.max_students}</small>
+                        <div className="faculty-class-students">
+                          <strong>{item.capacity.official_students}</strong>
+                          <small>of {item.capacity.max_students}</small>
+                        </div>
                       </td>
 
                       <td>
@@ -777,6 +777,7 @@ export default function MyClasses() {
                           onClick={() => openClass(item)}
                         >
                           View Class
+                          <ChevronRight size={14} />
                         </button>
                       </td>
                     </tr>

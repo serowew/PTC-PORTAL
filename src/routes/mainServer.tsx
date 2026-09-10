@@ -104,7 +104,7 @@ import ProgramHeadDashboard from "../pages/programhead/dashboard/Dashboard";
 import AnnouncementProg from "../pages/programhead/Announcement/AnnouncementProg";
 import AnnouncementProgD from "../pages/programhead/Announcement/AnnouncementDProg";
 import PendingGrades from "../pages/programhead/GradeApproval/PendingGrades";
-import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/TransferEvaulationPROG";
+import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/TransferEvaluationReview";
 
 //Registrar
 import RegistrarDashboard from "../pages/registrar/Dashboard";

@@ -109,9 +109,9 @@ interface UpdateResponse {
 const RECIPIENT_ROLES: Role[] = [
   { role_id: 1, role_name: "Admin" },
   { role_id: 2, role_name: "Registrar" },
-  { role_id: 3, role_name: "Student" },
+  { role_id: 3, role_name: "Program Head" },
   { role_id: 4, role_name: "Faculty" },
-  { role_id: 5, role_name: "Program Head" },
+  { role_id: 5, role_name: "Student" },
 ];
 
 // =====================================================

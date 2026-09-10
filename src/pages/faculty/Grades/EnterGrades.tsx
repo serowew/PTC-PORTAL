@@ -1,6 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import {
+  AlertCircle,
+  ArrowLeft,
+  BadgeCheck,
+  BookOpenCheck,
+  CalendarDays,
+  CheckCircle2,
+  CircleDashed,
+  Clock3,
+  FilePenLine,
+  Filter,
+  GraduationCap,
+  MapPin,
+  MessageSquareText,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
+  Send,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 
@@ -193,24 +215,10 @@ interface GradeForm {
   remarks: GradeRemark;
 }
 
-interface GradeComputation {
-  complete: boolean;
-  rawAverage: number | null;
-  finalRating: number | null;
-  finalRatingText: string;
-  remarks: GradeRemark;
-}
-
 interface RowFeedback {
   type: "success" | "error";
   message: string;
 }
-
-type EditableGradeField = "prelimGrade" | "midtermGrade" | "finalGrade";
-
-const OFFICIAL_GRADE_SCALE = [
-  1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 4, 5,
-] as const;
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
@@ -251,6 +259,20 @@ function gradeValueToString(value: number | null | undefined): string {
   return String(value);
 }
 
+function createGradeForm(grade: FacultyGrade | null): GradeForm {
+  return {
+    prelimGrade: gradeValueToString(grade?.prelim_grade),
+
+    midtermGrade: gradeValueToString(grade?.midterm_grade),
+
+    finalGrade: gradeValueToString(grade?.final_grade),
+
+    finalRating: gradeValueToString(grade?.final_rating),
+
+    remarks: grade?.remarks || "",
+  };
+}
+
 function toNullableNumber(value: string): number | null {
   const clean = value.trim();
 
@@ -261,134 +283,6 @@ function toNullableNumber(value: string): number | null {
   const parsed = Number(clean);
 
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function getRemarkFromFinalRating(value: number | null): GradeRemark {
-  if (value === null) {
-    return "";
-  }
-
-  if (value >= 1 && value <= 3) {
-    return "Passed";
-  }
-
-  if (value === 4) {
-    return "Incomplete";
-  }
-
-  if (value === 5) {
-    return "Failed";
-  }
-
-  return "";
-}
-
-function normalizeToOfficialGradeScale(average: number): number {
-  let closest: number = OFFICIAL_GRADE_SCALE[0];
-  let closestDistance = Math.abs(average - closest);
-
-  for (const grade of OFFICIAL_GRADE_SCALE) {
-    const distance = Math.abs(average - grade);
-
-    if (distance < closestDistance) {
-      closest = grade;
-      closestDistance = distance;
-      continue;
-    }
-
-    if (distance === closestDistance && grade > closest) {
-      closest = grade;
-    }
-  }
-
-  return closest;
-}
-
-function calculateGrade(
-  prelimGrade: string,
-  midtermGrade: string,
-  finalGrade: string,
-): GradeComputation {
-  const prelimText = prelimGrade.trim();
-  const midtermText = midtermGrade.trim();
-  const finalText = finalGrade.trim();
-
-  if (!prelimText || !midtermText || !finalText) {
-    return {
-      complete: false,
-      rawAverage: null,
-      finalRating: null,
-      finalRatingText: "",
-      remarks: "",
-    };
-  }
-
-  const prelim = Number(prelimText);
-  const midterm = Number(midtermText);
-  const final = Number(finalText);
-
-  if (
-    !Number.isFinite(prelim) ||
-    !Number.isFinite(midterm) ||
-    !Number.isFinite(final)
-  ) {
-    return {
-      complete: false,
-      rawAverage: null,
-      finalRating: null,
-      finalRatingText: "",
-      remarks: "",
-    };
-  }
-
-  const rawAverage = (prelim + midterm + final) / 3;
-
-  const normalizedFinalRating = normalizeToOfficialGradeScale(rawAverage);
-
-  const remarks = getRemarkFromFinalRating(normalizedFinalRating);
-
-  return {
-    complete: true,
-    rawAverage,
-    finalRating: normalizedFinalRating,
-    finalRatingText: normalizedFinalRating.toFixed(2),
-    remarks,
-  };
-}
-
-function createGradeForm(grade: FacultyGrade | null): GradeForm {
-  const prelimGrade = gradeValueToString(grade?.prelim_grade);
-
-  const midtermGrade = gradeValueToString(grade?.midterm_grade);
-
-  const finalGrade = gradeValueToString(grade?.final_grade);
-
-  if (
-    grade &&
-    (grade.grade_status === "Draft" || grade.grade_status === "Returned")
-  ) {
-    const calculated = calculateGrade(prelimGrade, midtermGrade, finalGrade);
-
-    return {
-      prelimGrade,
-      midtermGrade,
-      finalGrade,
-
-      finalRating: calculated.complete ? calculated.finalRatingText : "",
-
-      remarks: calculated.complete ? calculated.remarks : "",
-    };
-  }
-
-  return {
-    prelimGrade,
-    midtermGrade,
-    finalGrade,
-
-    finalRating: gradeValueToString(grade?.final_rating),
-
-    remarks: grade?.remarks || "",
-  };
 }
 
 function formatDays(value: string | null): string {
@@ -458,6 +352,32 @@ function isEditable(student: GradebookStudent): boolean {
   );
 }
 
+function getSuggestedRemark(value: string): string | null {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const rating = Number(value);
+
+  if (!Number.isFinite(rating)) {
+    return null;
+  }
+
+  if (rating >= 1 && rating <= 3) {
+    return "Passed";
+  }
+
+  if (rating === 4) {
+    return "Incomplete";
+  }
+
+  if (rating === 5) {
+    return "Failed";
+  }
+
+  return null;
+}
+
 function emptySummary(): GradebookSummary {
   return {
     total_students: 0,
@@ -473,6 +393,7 @@ export default function EnterGrades() {
   const navigate = useNavigate();
 
   const session = authService.getSession();
+
   const token = authService.getToken();
 
   const userRole = session?.role;
@@ -549,10 +470,12 @@ export default function EnterGrades() {
     const loadClasses = async () => {
       try {
         setClassesLoading(true);
+
         setClassesError("");
 
         const response = await authService.authFetch(API_BASE_URL, {
           method: "GET",
+
           signal: controller.signal,
         });
 
@@ -588,6 +511,7 @@ export default function EnterGrades() {
 
         if (loadedClasses.length === 0) {
           setSelectedOfferingId(null);
+
           return;
         }
 
@@ -637,6 +561,7 @@ export default function EnterGrades() {
     async (signal?: AbortSignal) => {
       if (!selectedOfferingId) {
         setGradebookClass(null);
+
         setStudents([]);
         setForms({});
         setSummary(emptySummary());
@@ -646,12 +571,14 @@ export default function EnterGrades() {
 
       try {
         setGradebookLoading(true);
+
         setGradebookError("");
 
         const response = await authService.authFetch(
           `${API_BASE_URL}/${selectedOfferingId}/gradebook`,
           {
             method: "GET",
+
             signal,
           },
         );
@@ -746,6 +673,7 @@ export default function EnterGrades() {
         console.error("LOAD FACULTY GRADEBOOK ERROR:", requestError);
 
         setGradebookClass(null);
+
         setStudents([]);
         setForms({});
         setSummary(emptySummary());
@@ -828,46 +756,30 @@ export default function EnterGrades() {
     setStatusFilter("All");
 
     setRowFeedback({});
+
     setGradebookError("");
   };
 
   const updateForm = (
     enrollmentSubjectId: number,
-    field: EditableGradeField,
+    field: keyof GradeForm,
     value: string,
   ) => {
-    setForms((current) => {
-      const currentForm = current[enrollmentSubjectId] || {
-        prelimGrade: "",
-        midtermGrade: "",
-        finalGrade: "",
-        finalRating: "",
-        remarks: "",
-      };
+    setForms((current) => ({
+      ...current,
 
-      const nextForm: GradeForm = {
-        ...currentForm,
+      [enrollmentSubjectId]: {
+        ...(current[enrollmentSubjectId] || {
+          prelimGrade: "",
+          midtermGrade: "",
+          finalGrade: "",
+          finalRating: "",
+          remarks: "",
+        }),
+
         [field]: value,
-      };
-
-      const calculation = calculateGrade(
-        nextForm.prelimGrade,
-        nextForm.midtermGrade,
-        nextForm.finalGrade,
-      );
-
-      nextForm.finalRating = calculation.complete
-        ? calculation.finalRatingText
-        : "";
-
-      nextForm.remarks = calculation.complete ? calculation.remarks : "";
-
-      return {
-        ...current,
-
-        [enrollmentSubjectId]: nextForm,
-      };
-    });
+      },
+    }));
 
     setRowFeedback((current) => {
       const next = {
@@ -881,12 +793,6 @@ export default function EnterGrades() {
   };
 
   const buildGradeBody = (form: GradeForm) => {
-    const calculation = calculateGrade(
-      form.prelimGrade,
-      form.midtermGrade,
-      form.finalGrade,
-    );
-
     return {
       prelim_grade: toNullableNumber(form.prelimGrade),
 
@@ -894,9 +800,9 @@ export default function EnterGrades() {
 
       final_grade: toNullableNumber(form.finalGrade),
 
-      final_rating: calculation.complete ? calculation.finalRating : null,
+      final_rating: toNullableNumber(form.finalRating),
 
-      remarks: calculation.complete ? calculation.remarks : null,
+      remarks: form.remarks || null,
     };
   };
 
@@ -904,17 +810,23 @@ export default function EnterGrades() {
     const fields = [
       {
         label: "Prelim grade",
+
         value: form.prelimGrade,
       },
-
       {
         label: "Midterm grade",
+
         value: form.midtermGrade,
       },
-
       {
         label: "Final grade",
+
         value: form.finalGrade,
+      },
+      {
+        label: "Final rating",
+
+        value: form.finalRating,
       },
     ];
 
@@ -925,14 +837,8 @@ export default function EnterGrades() {
         continue;
       }
 
-      const numeric = Number(clean);
-
-      if (!Number.isFinite(numeric)) {
+      if (!Number.isFinite(Number(clean))) {
         return `${field.label} must be a valid number.`;
-      }
-
-      if (numeric < 1 || numeric > 5) {
-        return `${field.label} must be between 1.00 and 5.00.`;
       }
     }
 
@@ -946,36 +852,36 @@ export default function EnterGrades() {
       return numericError;
     }
 
-    const missing: string[] = [];
-
-    if (!form.prelimGrade.trim()) {
-      missing.push("Prelim");
+    if (!form.remarks) {
+      return "Grade remarks are required before submission.";
     }
 
-    if (!form.midtermGrade.trim()) {
-      missing.push("Midterm");
-    }
+    // Passed / Failed require complete grades.
 
-    if (!form.finalGrade.trim()) {
-      missing.push("Final Grade");
-    }
+    if (form.remarks === "Passed" || form.remarks === "Failed") {
+      const missing: string[] = [];
 
-    if (missing.length > 0) {
-      return `Complete the following before submission: ${missing.join(", ")}.`;
-    }
+      if (!form.prelimGrade.trim()) {
+        missing.push("Prelim");
+      }
 
-    const calculation = calculateGrade(
-      form.prelimGrade,
-      form.midtermGrade,
-      form.finalGrade,
-    );
+      if (!form.midtermGrade.trim()) {
+        missing.push("Midterm");
+      }
 
-    if (
-      !calculation.complete ||
-      calculation.finalRating === null ||
-      !calculation.remarks
-    ) {
-      return "The Final Rating could not be calculated.";
+      if (!form.finalGrade.trim()) {
+        missing.push("Final Grade");
+      }
+
+      if (!form.finalRating.trim()) {
+        missing.push("Final Rating");
+      }
+
+      if (missing.length > 0) {
+        return `Complete the following before submission: ${missing.join(
+          ", ",
+        )}.`;
+      }
     }
 
     return null;
@@ -1123,20 +1029,8 @@ export default function EnterGrades() {
       return;
     }
 
-    const calculation = calculateGrade(
-      form.prelimGrade,
-      form.midtermGrade,
-      form.finalGrade,
-    );
-
     const confirmed = window.confirm(
-      `Submit the grade for ${student.student_number} - ${student.full_name}?\n\nPrelim: ${form.prelimGrade}\nMidterm: ${form.midtermGrade}\nFinal: ${form.finalGrade}\nAverage: ${
-        calculation.rawAverage !== null
-          ? calculation.rawAverage.toFixed(2)
-          : "—"
-      }\nFinal Rating: ${calculation.finalRatingText || "—"}\nResult: ${
-        calculation.remarks || "—"
-      }\n\nAfter submission, Faculty cannot edit it unless the Program Head returns it.`,
+      `Submit the grade for ${student.student_number} - ${student.full_name}?\n\nAfter submission, Faculty cannot edit it unless the Program Head returns it.`,
     );
 
     if (!confirmed) {
@@ -1245,43 +1139,52 @@ export default function EnterGrades() {
     <DashboardLayout>
       <main className="faculty-enter-grades-page">
         <section className="faculty-grade-header">
-          <div>
+          <div className="faculty-grade-header__copy">
             <button
               type="button"
               className="faculty-grade-back"
               onClick={backToClasses}
             >
-              ← Back to My Classes
+              <ArrowLeft size={15} strokeWidth={2.1} />
+              My Classes
             </button>
 
-            <span className="faculty-grade-eyebrow">
-              Faculty Grade Encoding
-            </span>
+            <div className="faculty-grade-eyebrow">
+              <span className="faculty-grade-eyebrow__icon">
+                <FilePenLine size={16} strokeWidth={2.2} />
+              </span>
+              Faculty · Grade Encoding
+            </div>
 
             <h1>Enter Grades</h1>
 
             <p>
-              Enter the Prelim, Midterm, and Final grades. The system
-              automatically calculates the student's Final Rating and academic
-              result.
+              Encode and submit grades for students with official Approved
+              enrollment in your assigned classes.
             </p>
           </div>
 
           <div className="faculty-grade-header-actions">
             <button
               type="button"
+              className="faculty-grade-header-button"
               onClick={viewRoster}
               disabled={!selectedOfferingId}
             >
+              <UsersRound size={16} />
               View Roster
             </button>
 
             <button
               type="button"
-              className="primary"
+              className="faculty-grade-header-button faculty-grade-header-button--primary"
               onClick={refreshGradebook}
               disabled={gradebookLoading || !selectedOfferingId}
             >
+              <RefreshCw
+                size={16}
+                className={gradebookLoading ? "is-spinning" : ""}
+              />
               {gradebookLoading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
@@ -1289,14 +1192,29 @@ export default function EnterGrades() {
 
         <section className="faculty-grade-toolbar">
           <div className="faculty-grade-faculty">
-            <span>Faculty</span>
+            <span className="faculty-grade-faculty__icon">
+              <GraduationCap size={20} />
+            </span>
 
-            <strong>{faculty?.faculty_name || "Faculty"}</strong>
-
-            <small>{faculty?.employee_number || "—"}</small>
+            <div className="faculty-grade-faculty__copy">
+              <small>Faculty</small>
+              <strong>{faculty?.faculty_name || "Faculty"}</strong>
+              <span>{faculty?.employee_number || "Employee number unavailable"}</span>
+            </div>
           </div>
 
           <div className="faculty-grade-class-select">
+            <div className="faculty-grade-class-select__heading">
+              <div>
+                <small>Gradebook Context</small>
+                <strong>Select Assigned Class</strong>
+              </div>
+
+              <span>
+                {classes.length} class{classes.length === 1 ? "" : "es"}
+              </span>
+            </div>
+
             <label htmlFor="faculty-grade-class">Assigned Class</label>
 
             <select
@@ -1321,10 +1239,13 @@ export default function EnterGrades() {
         </section>
 
         {classesError && (
-          <section className="faculty-grade-error">
+          <section className="faculty-grade-error" role="alert">
+            <span className="faculty-grade-error__icon">
+              <AlertCircle size={20} />
+            </span>
+
             <div>
               <strong>Assigned classes could not be loaded</strong>
-
               <p>{classesError}</p>
             </div>
           </section>
@@ -1333,115 +1254,180 @@ export default function EnterGrades() {
         {selectedClass && (
           <section className="faculty-grade-class-card">
             <div className="faculty-grade-subject">
-              <span>Subject</span>
+              <div className="faculty-grade-subject__label">
+                <span className="faculty-grade-subject__icon">
+                  <BookOpenCheck size={18} />
+                </span>
+                Selected Subject
+              </div>
 
               <strong>{selectedClass.subject.subject_code}</strong>
-
               <p>{selectedClass.subject.subject_name}</p>
+
+              <span className="faculty-grade-subject__units">
+                {selectedClass.subject.units} unit
+                {selectedClass.subject.units === 1 ? "" : "s"}
+              </span>
             </div>
 
             <div className="faculty-grade-class-details">
               <div>
-                <span>Section</span>
-
-                <strong>{selectedClass.section.section_name}</strong>
-
-                <small>
-                  {selectedClass.section.course.course_code} • Year{" "}
-                  {selectedClass.section.year_level}
-                </small>
+                <span className="faculty-grade-detail-icon">
+                  <GraduationCap size={15} />
+                </span>
+                <section>
+                  <small>Section</small>
+                  <strong>{selectedClass.section.section_name}</strong>
+                  <p>
+                    {selectedClass.section.course.course_code} · Year{" "}
+                    {selectedClass.section.year_level}
+                  </p>
+                </section>
               </div>
 
               <div>
-                <span>Academic Period</span>
-
-                <strong>{selectedClass.academic_period.academic_year}</strong>
-
-                <small>{selectedClass.academic_period.semester_name}</small>
+                <span className="faculty-grade-detail-icon">
+                  <CalendarDays size={15} />
+                </span>
+                <section>
+                  <small>Academic Period</small>
+                  <strong>{selectedClass.academic_period.academic_year}</strong>
+                  <p>{selectedClass.academic_period.semester_name}</p>
+                </section>
               </div>
 
               <div>
-                <span>Schedule</span>
-
-                <strong>{formatDays(selectedClass.schedule.days)}</strong>
-
-                <small>{selectedClass.schedule.time || "Not scheduled"}</small>
+                <span className="faculty-grade-detail-icon">
+                  <Clock3 size={15} />
+                </span>
+                <section>
+                  <small>Schedule</small>
+                  <strong>{formatDays(selectedClass.schedule.days)}</strong>
+                  <p>{selectedClass.schedule.time || "Not scheduled"}</p>
+                </section>
               </div>
 
               <div>
-                <span>Room</span>
-
-                <strong>{getRoomLabel(selectedClass.room)}</strong>
-
-                <small>Room is optional</small>
+                <span className="faculty-grade-detail-icon">
+                  <MapPin size={15} />
+                </span>
+                <section>
+                  <small>Room</small>
+                  <strong>{getRoomLabel(selectedClass.room)}</strong>
+                  <p>Registrar-assigned classroom</p>
+                </section>
               </div>
 
               <div>
-                <span>Units</span>
-
-                <strong>{selectedClass.subject.units}</strong>
+                <span className="faculty-grade-detail-icon">
+                  <UsersRound size={15} />
+                </span>
+                <section>
+                  <small>Official Students</small>
+                  <strong>{summary.total_students}</strong>
+                  <p>Approved enrollment memberships</p>
+                </section>
               </div>
 
               <div>
-                <span>Offering Status</span>
-
-                <strong
-                  className={`faculty-grade-offering-status ${selectedClass.offering_status.toLowerCase()}`}
-                >
-                  {selectedClass.offering_status}
-                </strong>
+                <span className="faculty-grade-detail-icon">
+                  <ShieldCheck size={15} />
+                </span>
+                <section>
+                  <small>Offering Status</small>
+                  <strong
+                    className={`faculty-grade-offering-status ${selectedClass.offering_status.toLowerCase()}`}
+                  >
+                    {selectedClass.offering_status}
+                  </strong>
+                  <p>Current class availability</p>
+                </section>
               </div>
             </div>
           </section>
         )}
 
-        <section className="faculty-grade-summary">
-          <div>
-            <span>Official Students</span>
+        <section className="faculty-grade-summary" aria-label="Grade status summary">
+          <article className="faculty-grade-summary-card faculty-grade-summary-card--total">
+            <span className="faculty-grade-summary-icon">
+              <UsersRound size={18} />
+            </span>
+            <div>
+              <small>Official Students</small>
+              <strong>{summary.total_students}</strong>
+              <span>Students in this gradebook</span>
+            </div>
+          </article>
 
-            <strong>{summary.total_students}</strong>
-          </div>
+          <article className="faculty-grade-summary-card faculty-grade-summary-card--empty">
+            <span className="faculty-grade-summary-icon">
+              <CircleDashed size={18} />
+            </span>
+            <div>
+              <small>Not Started</small>
+              <strong>{summary.without_grade}</strong>
+              <span>No grade record yet</span>
+            </div>
+          </article>
 
-          <div>
-            <span>Not Started</span>
+          <article className="faculty-grade-summary-card faculty-grade-summary-card--draft">
+            <span className="faculty-grade-summary-icon">
+              <FilePenLine size={18} />
+            </span>
+            <div>
+              <small>Draft</small>
+              <strong>{summary.draft}</strong>
+              <span>Still editable</span>
+            </div>
+          </article>
 
-            <strong>{summary.without_grade}</strong>
-          </div>
+          <article className="faculty-grade-summary-card faculty-grade-summary-card--submitted">
+            <span className="faculty-grade-summary-icon">
+              <Send size={18} />
+            </span>
+            <div>
+              <small>Submitted</small>
+              <strong>{summary.submitted}</strong>
+              <span>Waiting for review</span>
+            </div>
+          </article>
 
-          <div>
-            <span>Draft</span>
+          <article className="faculty-grade-summary-card faculty-grade-summary-card--returned">
+            <span className="faculty-grade-summary-icon">
+              <RotateCcw size={18} />
+            </span>
+            <div>
+              <small>Returned</small>
+              <strong>{summary.returned}</strong>
+              <span>Needs correction</span>
+            </div>
+          </article>
 
-            <strong>{summary.draft}</strong>
-          </div>
-
-          <div>
-            <span>Submitted</span>
-
-            <strong>{summary.submitted}</strong>
-          </div>
-
-          <div>
-            <span>Returned</span>
-
-            <strong>{summary.returned}</strong>
-          </div>
-
-          <div>
-            <span>Approved</span>
-
-            <strong>{summary.approved}</strong>
-          </div>
+          <article className="faculty-grade-summary-card faculty-grade-summary-card--approved">
+            <span className="faculty-grade-summary-icon">
+              <BadgeCheck size={18} />
+            </span>
+            <div>
+              <small>Approved</small>
+              <strong>{summary.approved}</strong>
+              <span>Official and locked</span>
+            </div>
+          </article>
         </section>
 
         {gradebookError && (
-          <section className="faculty-grade-error">
+          <section className="faculty-grade-error" role="alert">
+            <span className="faculty-grade-error__icon">
+              <AlertCircle size={20} />
+            </span>
+
             <div>
               <strong>Gradebook could not be loaded</strong>
-
               <p>{gradebookError}</p>
             </div>
 
             <button type="button" onClick={refreshGradebook}>
+              <RefreshCw size={14} />
               Try Again
             </button>
           </section>
@@ -1453,7 +1439,6 @@ export default function EnterGrades() {
 
             <div>
               <strong>Loading gradebook</strong>
-
               <span>Retrieving official students and grade records...</span>
             </div>
           </section>
@@ -1464,392 +1449,440 @@ export default function EnterGrades() {
           !gradebookError &&
           gradebookClass && (
             <section className="faculty-gradebook">
-              <div className="faculty-gradebook-header">
-                <div>
-                  <h2>Class Gradebook</h2>
+              <header className="faculty-gradebook-header">
+                <div className="faculty-gradebook-header__title">
+                  <span className="faculty-gradebook-header__icon">
+                    <BookOpenCheck size={18} />
+                  </span>
 
-                  <p>
-                    Enter Prelim, Midterm, and Final. Final Rating and Remarks
-                    are calculated automatically. Draft and Returned grades are
-                    editable. Submitted and Approved grades are locked.
-                  </p>
+                  <div>
+                    <span>Official Class Record</span>
+                    <h2>Class Gradebook</h2>
+                    <p>
+                      Draft and Returned grades are editable. Submitted and
+                      Approved grades remain locked while under review or after
+                      approval.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="faculty-gradebook-filters">
-                  <input
-                    type="text"
-                    value={studentSearch}
-                    onChange={(event) => setStudentSearch(event.target.value)}
-                    placeholder="Search student..."
-                  />
+                <div className="faculty-gradebook-tools">
+                  <label className="faculty-gradebook-search">
+                    <span>Search Student</span>
+                    <div>
+                      <Search size={15} />
+                      <input
+                        type="search"
+                        value={studentSearch}
+                        onChange={(event) =>
+                          setStudentSearch(event.target.value)
+                        }
+                        placeholder="Name, student no., or email..."
+                      />
+                    </div>
+                  </label>
 
-                  <select
-                    value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value)}
-                  >
-                    <option value="All">All Statuses</option>
-
-                    <option value="Not Started">Not Started</option>
-
-                    <option value="Draft">Draft</option>
-
-                    <option value="Submitted">Submitted</option>
-
-                    <option value="Returned">Returned</option>
-
-                    <option value="Approved">Approved</option>
-                  </select>
+                  <label className="faculty-gradebook-filter">
+                    <span>
+                      <Filter size={13} />
+                      Grade Status
+                    </span>
+                    <select
+                      value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value)}
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Not Started">Not Started</option>
+                      <option value="Draft">Draft</option>
+                      <option value="Submitted">Submitted</option>
+                      <option value="Returned">Returned</option>
+                      <option value="Approved">Approved</option>
+                    </select>
+                  </label>
                 </div>
-              </div>
+              </header>
 
               {students.length === 0 ? (
                 <div className="faculty-grade-empty">
+                  <span className="faculty-grade-empty__icon">
+                    <UsersRound size={23} />
+                  </span>
                   <strong>No official students</strong>
-
                   <p>This class has no Approved enrollment memberships.</p>
                 </div>
               ) : filteredStudents.length === 0 ? (
                 <div className="faculty-grade-empty">
+                  <span className="faculty-grade-empty__icon">
+                    <Search size={23} />
+                  </span>
                   <strong>No matching students</strong>
-
                   <p>No gradebook row matches your current filters.</p>
-
                   <button
                     type="button"
                     onClick={() => {
                       setStudentSearch("");
-
                       setStatusFilter("All");
                     }}
                   >
+                    <RotateCcw size={14} />
                     Clear Filters
                   </button>
                 </div>
               ) : (
-                <div className="faculty-grade-table-wrapper">
-                  <table className="faculty-grade-table">
-                    <thead>
-                      <tr>
-                        <th>Student</th>
-                        <th>Prelim</th>
-                        <th>Midterm</th>
-                        <th>Final</th>
-                        <th>Final Rating</th>
-                        <th>Remarks</th>
-                        <th>Status</th>
-                        <th>Program Head Review</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
+                <>
+                  <div className="faculty-gradebook-table-meta">
+                    <span>
+                      Showing <strong>{filteredStudents.length}</strong> of{" "}
+                      <strong>{students.length}</strong> students
+                    </span>
+                    <small>
+                      Grade inputs remain editable only while a record is Draft
+                      or Returned.
+                    </small>
+                  </div>
 
-                    <tbody>
-                      {filteredStudents.map((student) => {
-                        const id = student.enrollment_subject_id;
+                  <div className="faculty-grade-table-wrapper">
+                    <table className="faculty-grade-table">
+                      <thead>
+                        <tr>
+                          <th>Student</th>
+                          <th>Prelim</th>
+                          <th>Midterm</th>
+                          <th>Final</th>
+                          <th>Final Rating</th>
+                          <th>Remarks</th>
+                          <th>Status</th>
+                          <th>Program Head Review</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
 
-                        const form =
-                          forms[id] || createGradeForm(student.grade);
+                      <tbody>
+                        {filteredStudents.map((student) => {
+                          const id = student.enrollment_subject_id;
+                          const form =
+                            forms[id] || createGradeForm(student.grade);
+                          const editable = isEditable(student);
+                          const isSaving = savingId === id;
+                          const isSubmitting = submittingId === id;
+                          const busy = isSaving || isSubmitting;
+                          const status = getGradeStatus(student);
+                          const feedback = rowFeedback[id];
+                          const suggestedRemark = getSuggestedRemark(
+                            form.finalRating,
+                          );
 
-                        const editable = isEditable(student);
+                          return (
+                            <tr
+                              key={id}
+                              className={
+                                student.grade?.grade_status === "Returned"
+                                  ? "returned-row"
+                                  : ""
+                              }
+                            >
+                              <td>
+                                <div className="faculty-grade-student">
+                                  <span className="faculty-grade-student__avatar">
+                                    <UserRound size={16} />
+                                  </span>
 
-                        const isSaving = savingId === id;
+                                  <div>
+                                    <strong>{student.full_name}</strong>
+                                    <span>{student.student_number}</span>
+                                    <small>
+                                      Enrollment Subject #{student.enrollment_subject_id}
+                                    </small>
+                                  </div>
+                                </div>
+                              </td>
 
-                        const isSubmitting = submittingId === id;
-
-                        const busy = isSaving || isSubmitting;
-
-                        const status = getGradeStatus(student);
-
-                        const feedback = rowFeedback[id];
-
-                        const calculation = calculateGrade(
-                          form.prelimGrade,
-                          form.midtermGrade,
-                          form.finalGrade,
-                        );
-
-                        return (
-                          <tr
-                            key={id}
-                            className={
-                              student.grade?.grade_status === "Returned"
-                                ? "returned-row"
-                                : ""
-                            }
-                          >
-                            <td>
-                              <div className="faculty-grade-student">
-                                <strong>{student.full_name}</strong>
-
-                                <span>{student.student_number}</span>
-
-                                <small>
-                                  ES #{student.enrollment_subject_id}
-                                </small>
-                              </div>
-                            </td>
-
-                            <td>
-                              <input
-                                className="faculty-grade-input"
-                                type="number"
-                                min="1"
-                                max="5"
-                                step="0.01"
-                                value={form.prelimGrade}
-                                onChange={(event) =>
-                                  updateForm(
-                                    id,
-                                    "prelimGrade",
-                                    event.target.value,
-                                  )
-                                }
-                                disabled={!editable || busy}
-                                placeholder="—"
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                className="faculty-grade-input"
-                                type="number"
-                                min="1"
-                                max="5"
-                                step="0.01"
-                                value={form.midtermGrade}
-                                onChange={(event) =>
-                                  updateForm(
-                                    id,
-                                    "midtermGrade",
-                                    event.target.value,
-                                  )
-                                }
-                                disabled={!editable || busy}
-                                placeholder="—"
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                className="faculty-grade-input"
-                                type="number"
-                                min="1"
-                                max="5"
-                                step="0.01"
-                                value={form.finalGrade}
-                                onChange={(event) =>
-                                  updateForm(
-                                    id,
-                                    "finalGrade",
-                                    event.target.value,
-                                  )
-                                }
-                                disabled={!editable || busy}
-                                placeholder="—"
-                              />
-                            </td>
-
-                            <td>
-                              <div className="faculty-grade-rating-field">
+                              <td>
                                 <input
                                   className="faculty-grade-input"
-                                  type="text"
-                                  value={form.finalRating}
-                                  readOnly
-                                  disabled
-                                  placeholder="Auto"
+                                  type="number"
+                                  step="0.01"
+                                  value={form.prelimGrade}
+                                  onChange={(event) =>
+                                    updateForm(
+                                      id,
+                                      "prelimGrade",
+                                      event.target.value,
+                                    )
+                                  }
+                                  disabled={!editable || busy}
+                                  placeholder="—"
+                                  aria-label={`Prelim grade for ${student.full_name}`}
                                 />
+                              </td>
 
-                                {editable &&
-                                  calculation.complete &&
-                                  calculation.rawAverage !== null && (
+                              <td>
+                                <input
+                                  className="faculty-grade-input"
+                                  type="number"
+                                  step="0.01"
+                                  value={form.midtermGrade}
+                                  onChange={(event) =>
+                                    updateForm(
+                                      id,
+                                      "midtermGrade",
+                                      event.target.value,
+                                    )
+                                  }
+                                  disabled={!editable || busy}
+                                  placeholder="—"
+                                  aria-label={`Midterm grade for ${student.full_name}`}
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  className="faculty-grade-input"
+                                  type="number"
+                                  step="0.01"
+                                  value={form.finalGrade}
+                                  onChange={(event) =>
+                                    updateForm(
+                                      id,
+                                      "finalGrade",
+                                      event.target.value,
+                                    )
+                                  }
+                                  disabled={!editable || busy}
+                                  placeholder="—"
+                                  aria-label={`Final grade for ${student.full_name}`}
+                                />
+                              </td>
+
+                              <td>
+                                <div className="faculty-grade-rating-field">
+                                  <input
+                                    className="faculty-grade-input"
+                                    type="number"
+                                    step="0.01"
+                                    value={form.finalRating}
+                                    onChange={(event) =>
+                                      updateForm(
+                                        id,
+                                        "finalRating",
+                                        event.target.value,
+                                      )
+                                    }
+                                    disabled={!editable || busy}
+                                    placeholder="—"
+                                    aria-label={`Final rating for ${student.full_name}`}
+                                  />
+
+                                  {suggestedRemark && (
                                     <small>
-                                      Average:{" "}
-                                      {calculation.rawAverage.toFixed(2)}
+                                      Suggested: <strong>{suggestedRemark}</strong>
                                     </small>
                                   )}
+                                </div>
+                              </td>
 
-                                {editable && !calculation.complete && (
-                                  <small>Auto-calculated</small>
-                                )}
-                              </div>
-                            </td>
-
-                            <td>
-                              <select
-                                className="faculty-grade-remarks"
-                                value={form.remarks}
-                                disabled
-                              >
-                                <option value="">Pending</option>
-
-                                <option value="Passed">Passed</option>
-
-                                <option value="Incomplete">Incomplete</option>
-
-                                <option value="Failed">Failed</option>
-                              </select>
-                            </td>
-
-                            <td>
-                              <div className="faculty-grade-status-cell">
-                                <span
-                                  className={`faculty-grade-status ${status
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "-")}`}
+                              <td>
+                                <select
+                                  className="faculty-grade-remarks"
+                                  value={form.remarks}
+                                  onChange={(event) =>
+                                    updateForm(id, "remarks", event.target.value)
+                                  }
+                                  disabled={!editable || busy}
+                                  aria-label={`Remarks for ${student.full_name}`}
                                 >
-                                  {status}
-                                </span>
+                                  <option value="">Select</option>
+                                  <option value="Passed">Passed</option>
+                                  <option value="Incomplete">Incomplete</option>
+                                  <option value="Failed">Failed</option>
+                                </select>
+                              </td>
 
-                                {student.grade?.submitted_at && (
-                                  <small>
-                                    Submitted{" "}
-                                    {formatDateTime(student.grade.submitted_at)}
-                                  </small>
-                                )}
-                              </div>
-                            </td>
+                              <td>
+                                <div className="faculty-grade-status-cell">
+                                  <span
+                                    className={`faculty-grade-status ${status
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")}`}
+                                  >
+                                    {status}
+                                  </span>
 
-                            <td>
-                              {student.grade?.review?.review_remarks ? (
-                                <div className="faculty-grade-review">
-                                  <strong>
-                                    {student.grade.review
-                                      .reviewed_by_username || "Program Head"}
-                                  </strong>
-
-                                  <p>{student.grade.review.review_remarks}</p>
-
-                                  <small>
-                                    {formatDateTime(
-                                      student.grade.review.reviewed_at,
-                                    )}
-                                  </small>
+                                  {student.grade?.submitted_at && (
+                                    <small>
+                                      Submitted{" "}
+                                      {formatDateTime(student.grade.submitted_at)}
+                                    </small>
+                                  )}
                                 </div>
-                              ) : student.grade?.grade_status === "Approved" ? (
-                                <div className="faculty-grade-review approved">
-                                  <strong>Approved</strong>
+                              </td>
 
-                                  <small>
-                                    {formatDateTime(
-                                      student.grade.review.reviewed_at,
-                                    )}
-                                  </small>
-                                </div>
-                              ) : (
-                                <span className="faculty-grade-no-review">
-                                  —
-                                </span>
-                              )}
-                            </td>
+                              <td>
+                                {student.grade?.review?.review_remarks ? (
+                                  <div className="faculty-grade-review">
+                                    <span className="faculty-grade-review__icon">
+                                      <MessageSquareText size={14} />
+                                    </span>
 
-                            <td>
-                              <div className="faculty-grade-actions">
-                                {editable ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className="faculty-grade-save"
-                                      onClick={() => void saveDraft(student)}
-                                      disabled={busy}
-                                    >
-                                      {isSaving
-                                        ? "Saving..."
-                                        : student.grade?.grade_status ===
-                                            "Returned"
-                                          ? "Save Correction"
-                                          : "Save Draft"}
-                                    </button>
+                                    <div>
+                                      <strong>
+                                        {student.grade.review
+                                          .reviewed_by_username || "Program Head"}
+                                      </strong>
+                                      <p>{student.grade.review.review_remarks}</p>
+                                      <small>
+                                        {formatDateTime(
+                                          student.grade.review.reviewed_at,
+                                        )}
+                                      </small>
+                                    </div>
+                                  </div>
+                                ) : student.grade?.grade_status === "Approved" ? (
+                                  <div className="faculty-grade-review approved">
+                                    <span className="faculty-grade-review__icon">
+                                      <CheckCircle2 size={14} />
+                                    </span>
 
-                                    <button
-                                      type="button"
-                                      className="faculty-grade-submit"
-                                      onClick={() => void submitGrade(student)}
-                                      disabled={busy}
-                                    >
-                                      {isSubmitting
-                                        ? "Submitting..."
-                                        : student.grade?.grade_status ===
-                                            "Returned"
-                                          ? "Resubmit"
-                                          : "Submit Grade"}
-                                    </button>
-                                  </>
+                                    <div>
+                                      <strong>Approved</strong>
+                                      <small>
+                                        {formatDateTime(
+                                          student.grade.review.reviewed_at,
+                                        )}
+                                      </small>
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <span className="faculty-grade-locked">
-                                    {student.subject_status !== "Enrolled"
-                                      ? `Academic result: ${student.subject_status}`
-                                      : status === "Submitted"
-                                        ? "Waiting for Program Head"
-                                        : status === "Approved"
-                                          ? "Official grade locked"
-                                          : "Locked"}
+                                  <span className="faculty-grade-no-review">
+                                    No review yet
                                   </span>
                                 )}
+                              </td>
 
-                                {feedback && (
-                                  <div
-                                    className={`faculty-grade-feedback ${feedback.type}`}
-                                  >
-                                    {feedback.message}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                              <td>
+                                <div className="faculty-grade-actions">
+                                  {editable ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="faculty-grade-save"
+                                        onClick={() => void saveDraft(student)}
+                                        disabled={busy}
+                                      >
+                                        <Save size={13} />
+                                        {isSaving
+                                          ? "Saving..."
+                                          : student.grade?.grade_status ===
+                                              "Returned"
+                                            ? "Save Correction"
+                                            : "Save Draft"}
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        className="faculty-grade-submit"
+                                        onClick={() => void submitGrade(student)}
+                                        disabled={busy}
+                                      >
+                                        <Send size={13} />
+                                        {isSubmitting
+                                          ? "Submitting..."
+                                          : student.grade?.grade_status ===
+                                              "Returned"
+                                            ? "Resubmit"
+                                            : "Submit Grade"}
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <span className="faculty-grade-locked">
+                                      <ShieldCheck size={13} />
+                                      {student.subject_status !== "Enrolled"
+                                        ? `Academic result: ${student.subject_status}`
+                                        : status === "Submitted"
+                                          ? "Waiting for Program Head"
+                                          : status === "Approved"
+                                            ? "Official grade locked"
+                                            : "Locked"}
+                                    </span>
+                                  )}
+
+                                  {feedback && (
+                                    <div
+                                      className={`faculty-grade-feedback ${feedback.type}`}
+                                    >
+                                      {feedback.message}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </section>
           )}
 
         {!classesLoading && classes.length > 0 && (
-          <section className="faculty-grade-workflow">
-            <div>
-              <span>1</span>
-
+          <section className="faculty-grade-workflow-section">
+            <header>
               <div>
-                <strong>Encode</strong>
-
-                <p>Enter Prelim, Midterm, and Final grades.</p>
-              </div>
-            </div>
-
-            <div>
-              <span>2</span>
-
-              <div>
-                <strong>Calculate</strong>
-
+                <span>Grade Submission Process</span>
+                <h2>Faculty Grade Workflow</h2>
                 <p>
-                  Final Rating and academic result are calculated automatically.
+                  Follow the normal grading sequence before a grade becomes an
+                  official academic result.
                 </p>
               </div>
-            </div>
+            </header>
 
-            <div>
-              <span>3</span>
+            <div className="faculty-grade-workflow">
+              <article>
+                <span className="faculty-grade-workflow__number">01</span>
+                <span className="faculty-grade-workflow__icon">
+                  <FilePenLine size={17} />
+                </span>
+                <div>
+                  <strong>Encode</strong>
+                  <p>Enter grading components, final rating, and remarks.</p>
+                </div>
+              </article>
 
-              <div>
-                <strong>Save Draft</strong>
+              <article>
+                <span className="faculty-grade-workflow__number">02</span>
+                <span className="faculty-grade-workflow__icon">
+                  <Save size={17} />
+                </span>
+                <div>
+                  <strong>Save Draft</strong>
+                  <p>Keep unfinished grade records editable before submission.</p>
+                </div>
+              </article>
 
-                <p>Draft grades remain editable by Faculty.</p>
-              </div>
-            </div>
+              <article>
+                <span className="faculty-grade-workflow__number">03</span>
+                <span className="faculty-grade-workflow__icon">
+                  <Send size={17} />
+                </span>
+                <div>
+                  <strong>Submit</strong>
+                  <p>Lock the grade and send it to the Program Head for review.</p>
+                </div>
+              </article>
 
-            <div>
-              <span>4</span>
-
-              <div>
-                <strong>Submit</strong>
-
-                <p>
-                  Submitted grades are locked while awaiting Program Head
-                  review.
-                </p>
-              </div>
+              <article>
+                <span className="faculty-grade-workflow__number">04</span>
+                <span className="faculty-grade-workflow__icon">
+                  <BadgeCheck size={17} />
+                </span>
+                <div>
+                  <strong>Review</strong>
+                  <p>The Program Head approves the grade or returns it for correction.</p>
+                </div>
+              </article>
             </div>
           </section>
         )}
