@@ -2,6 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
+import {
+  AlertCircle,
+  BookOpenCheck,
+  CalendarDays,
+  GraduationCap,
+  Layers3,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Settings2,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
+
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 
 import { authService } from "../../../services/auth.service";
@@ -1594,6 +1608,32 @@ export default function ClassOfferingManagementR() {
   };
 
   // =====================================================
+  // RESET CURRENT SETUP SELECTION
+  //
+  // Keep the selected/current academic year in place and
+  // clear the remaining cascade. This is frontend-only and
+  // does not mutate offering data.
+  // =====================================================
+
+  const resetSetupSelection = () => {
+    setSemesterId("");
+
+    setCourseId("");
+
+    setYearLevel("");
+
+    setCurriculumId("");
+
+    setSectionId("");
+
+    resetOfferingUi();
+  };
+
+  const hasSetupSelection = Boolean(
+    semesterId || courseId || yearLevel || curriculumId || sectionId,
+  );
+
+  // =====================================================
   // AUTH GUARD
   // =====================================================
 
@@ -1607,31 +1647,146 @@ export default function ClassOfferingManagementR() {
 
   return (
     <DashboardLayout>
-      <div className="class-offering-managementR">
-        {/* ================================================= */}
-        {/* PAGE HEADER */}
-        {/* ================================================= */}
+      <main className="registrar-class-offering">
+        <section className="registrar-class-offering__hero">
+          <div className="registrar-class-offering__hero-copy">
+            <div className="registrar-class-offering__eyebrow">
+              <span className="registrar-class-offering__eyebrow-icon">
+                <BookOpenCheck size={16} aria-hidden="true" />
+              </span>
+              Registrar · Academic Setup
+            </div>
 
-        <div className="class-offering-header">
-          <div>
             <h1>Class Offerings</h1>
 
             <p>
-              Configure section subjects, faculty, schedules, rooms, capacity,
-              and enrollment availability.
+              Prepare section subjects and configure faculty, schedules, rooms,
+              capacity, and enrollment availability for each class offering.
             </p>
           </div>
-        </div>
 
-        {/* ================================================= */}
-        {/* SETUP ERROR */}
-        {/* ================================================= */}
+          <div className="registrar-class-offering__hero-actions">
+            {hasSetupSelection && (
+              <button
+                type="button"
+                className="registrar-class-offering__button registrar-class-offering__button--secondary"
+                onClick={resetSetupSelection}
+              >
+                <RotateCcw size={16} aria-hidden="true" />
+                Reset Setup
+              </button>
+            )}
 
-        {setupError && <div className="class-offering-error">{setupError}</div>}
+            <button
+              type="button"
+              className="registrar-class-offering__button registrar-class-offering__button--primary"
+              onClick={refreshOfferingData}
+              disabled={setupLoading || readinessLoading}
+            >
+              <RefreshCw
+                size={16}
+                className={
+                  setupLoading || readinessLoading
+                    ? "registrar-class-offering__spin"
+                    : undefined
+                }
+                aria-hidden="true"
+              />
+              Refresh
+            </button>
+          </div>
+        </section>
 
-        {/* ================================================= */}
-        {/* FILTERS */}
-        {/* ================================================= */}
+        <section
+          className="registrar-class-offering__overview"
+          aria-label="Selected class offering setup"
+        >
+          <article className="registrar-class-offering__overview-card">
+            <span className="registrar-class-offering__overview-icon">
+              <CalendarDays size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Academic Period</span>
+              <strong>{selectedAcademicYear?.academic_year || "Select year"}</strong>
+              <small>{selectedSemester?.semester_name || "Semester not selected"}</small>
+            </div>
+          </article>
+
+          <article className="registrar-class-offering__overview-card">
+            <span className="registrar-class-offering__overview-icon">
+              <GraduationCap size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Program</span>
+              <strong>{selectedCourse?.course_code || "Select course"}</strong>
+              <small>
+                {yearLevel
+                  ? `Year ${yearLevel}`
+                  : selectedCourse?.course_name || "Year level not selected"}
+              </small>
+            </div>
+          </article>
+
+          <article className="registrar-class-offering__overview-card">
+            <span className="registrar-class-offering__overview-icon">
+              <UsersRound size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Section</span>
+              <strong>{selectedSection?.section_name || "Select section"}</strong>
+              <small>
+                {selectedSection?.max_students
+                  ? `Capacity ${selectedSection.max_students}`
+                  : selectedCurriculum?.curriculum_name ||
+                    "Curriculum and section not selected"}
+              </small>
+            </div>
+          </article>
+
+          <article
+            className={`registrar-class-offering__overview-card ${
+              readiness?.ready
+                ? "registrar-class-offering__overview-card--ready"
+                : ""
+            }`}
+          >
+            <span className="registrar-class-offering__overview-icon">
+              <Layers3 size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Enrollment Readiness</span>
+              <strong>
+                {!selectionComplete
+                  ? "Awaiting setup"
+                  : readinessLoading
+                    ? "Checking…"
+                    : readiness?.ready
+                      ? "Ready"
+                      : readiness
+                        ? "Needs setup"
+                        : "Not checked"}
+              </strong>
+              <small>
+                {readiness
+                  ? `${readiness.summary.ready_for_enrollment}/${readiness.summary.curriculum_subjects} curriculum offerings ready`
+                  : "Complete the setup filters to check readiness"}
+              </small>
+            </div>
+          </article>
+        </section>
+
+        {setupError && (
+          <div className="class-offering-error" role="alert">
+            <AlertCircle size={18} aria-hidden="true" />
+            <div>
+              <strong>Unable to load offering setup</strong>
+              <span>{setupError}</span>
+            </div>
+            <button type="button" onClick={refreshOfferingData}>
+              Try Again
+            </button>
+          </div>
+        )}
 
         <OfferingSetupFilters
           academicYears={academicYears}
@@ -1655,53 +1810,49 @@ export default function ClassOfferingManagementR() {
           onSectionChange={handleSectionChange}
         />
 
-        {/* ================================================= */}
-        {/* SELECTION INCOMPLETE */}
-        {/* ================================================= */}
-
         {!selectionComplete && (
           <section className="class-offering-section">
-            <div className="class-offering-empty">
+            <div className="class-offering-empty class-offering-empty--setup">
+              <span className="class-offering-empty-icon">
+                <Settings2 size={24} aria-hidden="true" />
+              </span>
               <h3>Select an Academic Setup</h3>
-
               <p>
                 Complete Academic Year, Semester, Course, Year Level,
-                Curriculum, and Section to view its class offerings.
+                Curriculum, and Section to review and configure class offerings.
               </p>
             </div>
           </section>
         )}
 
-        {/* ================================================= */}
-        {/* READINESS ERROR */}
-        {/* ================================================= */}
-
         {selectionComplete && readinessError && (
-          <div className="class-offering-error">{readinessError}</div>
+          <div className="class-offering-error" role="alert">
+            <AlertCircle size={18} aria-hidden="true" />
+            <div>
+              <strong>Unable to check offering readiness</strong>
+              <span>{readinessError}</span>
+            </div>
+            <button type="button" onClick={refreshOfferingData}>
+              Try Again
+            </button>
+          </div>
         )}
-
-        {/* ================================================= */}
-        {/* READINESS LOADING */}
-        {/* ================================================= */}
 
         {selectionComplete && readinessLoading && (
           <section className="class-offering-section">
             <div className="class-offering-loading">
-              Checking class offering readiness...
+              <RefreshCw
+                size={18}
+                className="registrar-class-offering__spin"
+                aria-hidden="true"
+              />
+              Checking class offering readiness…
             </div>
           </section>
         )}
 
-        {/* ================================================= */}
-        {/* READINESS DATA */}
-        {/* ================================================= */}
-
         {selectionComplete && !readinessLoading && readiness && (
           <>
-            {/* ============================================= */}
-            {/* READINESS */}
-            {/* ============================================= */}
-
             <OfferingReadiness
               ready={readiness.ready}
               courseCode={readiness.course.course_code}
@@ -1711,44 +1862,37 @@ export default function ClassOfferingManagementR() {
               summary={readiness.summary}
             />
 
-            {/* ============================================= */}
-            {/* MISSING SECTION SUBJECTS */}
-            {/* ============================================= */}
-
             {readiness.summary.missing_section_subjects > 0 && (
               <section className="class-offering-prepare-section">
                 <div className="class-offering-prepare-section-content">
-                  <div className="class-offering-prepare-icon">!</div>
+                  <div className="class-offering-prepare-icon">
+                    <AlertCircle size={20} aria-hidden="true" />
+                  </div>
 
                   <div className="class-offering-prepare-section-text">
                     <h3>Section Setup Required</h3>
 
                     <p>
                       <strong>{readiness.section.section_name}</strong> has{" "}
-                      <strong>
-                        {readiness.summary.missing_section_subjects}
-                      </strong>{" "}
+                      <strong>{readiness.summary.missing_section_subjects}</strong>{" "}
                       curriculum subject
                       {readiness.summary.missing_section_subjects !== 1
                         ? "s"
                         : ""}{" "}
-                      that still need to be prepared before class offerings can
-                      be created.
+                      that still need to be prepared before their class offerings
+                      can be configured.
                     </p>
                   </div>
                 </div>
 
                 <button type="button" onClick={openPrepareSectionSubjects}>
+                  <Layers3 size={16} aria-hidden="true" />
                   Prepare {readiness.summary.missing_section_subjects} Section
                   Subject
                   {readiness.summary.missing_section_subjects !== 1 ? "s" : ""}
                 </button>
               </section>
             )}
-
-            {/* ============================================= */}
-            {/* OFFERING TABLE */}
-            {/* ============================================= */}
 
             <OfferingTable
               subjects={readiness.subjects}
@@ -1758,33 +1902,35 @@ export default function ClassOfferingManagementR() {
               onSectionSubjectStatus={openSectionSubjectStatus}
             />
 
-            {/* ============================================= */}
-            {/* SPECIAL / RETAKE */}
-            {/* ============================================= */}
-
             <section className="class-offering-section">
               <div className="class-offering-section-header">
                 <div>
+                  <div className="class-offering-section-kicker">
+                    <Sparkles size={14} aria-hidden="true" />
+                    Exceptions
+                  </div>
                   <h2>Special / Retake Offerings</h2>
 
                   <p>
-                    Exception / retake classes outside the normal curriculum
-                    subjects for this term. New special offerings are created
-                    Closed and INCOMPLETE until faculty and schedule are
-                    configured.
+                    Manage exception and retake classes outside the normal
+                    curriculum subjects for this term. New special offerings
+                    start Closed and remain incomplete until faculty and schedule
+                    are configured.
                   </p>
                 </div>
 
-                <button type="button" onClick={openAddSpecialOffering}>
+                <button
+                  type="button"
+                  className="class-offering-section-action"
+                  onClick={openAddSpecialOffering}
+                >
+                  <Plus size={16} aria-hidden="true" />
                   Add Special Offering
                 </button>
               </div>
 
               {normalizedSpecialSubjects.length > 0 ? (
                 <OfferingTable
-                  // A newly created Special / Retake row should already have
-                  // offering !== null. OfferingTable will therefore expose
-                  // Edit / status actions instead of Create Offering.
                   subjects={normalizedSpecialSubjects}
                   onCreateOffering={openAddOffering}
                   onEditOffering={openEditOffering}
@@ -1793,6 +1939,10 @@ export default function ClassOfferingManagementR() {
                 />
               ) : (
                 <div className="class-offering-empty">
+                  <span className="class-offering-empty-icon">
+                    <Sparkles size={22} aria-hidden="true" />
+                  </span>
+                  <h3>No Special Offerings</h3>
                   <p>
                     No special or retake offerings have been created for this
                     academic setup.
@@ -1802,10 +1952,6 @@ export default function ClassOfferingManagementR() {
             </section>
           </>
         )}
-
-        {/* ================================================= */}
-        {/* PREPARE SECTION SUBJECTS MODAL */}
-        {/* ================================================= */}
 
         <PrepareSectionSubjectsModal
           open={showPrepareSectionSubjects}
@@ -1844,10 +1990,6 @@ export default function ClassOfferingManagementR() {
           onUnauthorized={handleUnauthorized}
         />
 
-        {/* ================================================= */}
-        {/* ADD OFFERING MODAL */}
-        {/* ================================================= */}
-
         <AddOfferingModal
           open={showAddOffering}
           subject={selectedSubject}
@@ -1857,10 +1999,6 @@ export default function ClassOfferingManagementR() {
           onSuccess={handleAddOfferingSuccess}
           onUnauthorized={handleUnauthorized}
         />
-
-        {/* ================================================= */}
-        {/* EDIT OFFERING MODAL */}
-        {/* ================================================= */}
 
         <EditOfferingModal
           open={showEditOffering}
@@ -1872,10 +2010,6 @@ export default function ClassOfferingManagementR() {
           onUnauthorized={handleUnauthorized}
         />
 
-        {/* ================================================= */}
-        {/* OFFERING STATUS MODAL */}
-        {/* ================================================= */}
-
         <OfferingStatusModal
           open={showOfferingStatus}
           subject={selectedSubject}
@@ -1884,10 +2018,6 @@ export default function ClassOfferingManagementR() {
           onUnauthorized={handleUnauthorized}
         />
 
-        {/* ================================================= */}
-        {/* SECTION SUBJECT STATUS MODAL */}
-        {/* ================================================= */}
-
         <SectionSubjectStatusModal
           open={showSectionSubjectStatus}
           subject={selectedSubject}
@@ -1895,10 +2025,6 @@ export default function ClassOfferingManagementR() {
           onSuccess={handleSectionSubjectStatusSuccess}
           onUnauthorized={handleUnauthorized}
         />
-
-        {/* ================================================= */}
-        {/* ADD SPECIAL / RETAKE OFFERING MODAL */}
-        {/* ================================================= */}
 
         <AddSpecialOfferingModal
           open={showAddSpecialOffering}
@@ -1934,18 +2060,9 @@ export default function ClassOfferingManagementR() {
             ) || 50
           }
           existingSubjectIds={[
-            // Normal current-term curriculum subjects must not be duplicated
-            // through Special / Retake creation.
             ...(readiness?.subjects || []).map(
               (item) => item.subject.subject_id,
             ),
-
-            // For special rows, exclude only subjects that already have an
-            // offering. If a special section_subject exists but its offering
-            // creation previously failed, keep the subject selectable so the
-            // modal can recover: POST special returns the existing
-            // section_subject_id, then Step 2 creates the missing incomplete
-            // subject_offering.
             ...normalizedSpecialSubjects
               .filter((item) => item.has_offering)
               .map((item) => item.subject.subject_id),
@@ -1954,7 +2071,7 @@ export default function ClassOfferingManagementR() {
           onSuccess={handleAddSpecialOfferingSuccess}
           onUnauthorized={handleUnauthorized}
         />
-      </div>
+      </main>
     </DashboardLayout>
   );
 }

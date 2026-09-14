@@ -3256,7 +3256,6 @@ router.post("/prepare", async (req, res) => {
     // =================================================
     // 12. CARRY OVER SUBJECTS
     // =================================================
-
     const carryOverEligible = carryOverEvaluation.eligible.map((subject) => ({
       subject_id: Number(subject.subject_id),
 
@@ -3268,16 +3267,15 @@ router.post("/prepare", async (req, res) => {
 
       curriculum_subject_id: Number(subject.curriculum_subject_id),
 
-      original_year_level: Number(subject.year_level),
+      original_year_level: Number(subject.original_year_level),
 
-      original_semester_id: Number(subject.semester_id),
+      original_semester_id: Number(subject.original_semester_id),
 
       enrollment_type: "Carry Over",
 
       carry_over_reason:
         subject.carry_over_reason || "EARLIER_REQUIRED_SUBJECT_NOT_TAKEN",
     }));
-
     // =================================================
     // 13. LOAD ALL CURRICULUM SUBJECTS
     //

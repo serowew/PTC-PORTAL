@@ -23,6 +23,10 @@ export const programHeadNavGroups = [
         label: "Pending Grades",
         path: "/programhead/gradeapproval/pending",
       },
+      {
+        label: "Transfer Evaluations",
+        path: "/programhead/transfer-evaluations",
+      },
     ],
   },
   {

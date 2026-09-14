@@ -4,7 +4,6 @@
    Signature Theme: PTC Green
    ========================================================= */
 
-
 /* =========================================================
    PAGE / DESIGN TOKENS
    ========================================================= */
@@ -56,7 +55,6 @@
   color: var(--text-primary);
 }
 
-
 /* =========================================================
    HEADER
    ========================================================= */
@@ -84,18 +82,12 @@
       rgba(34, 197, 94, 0.15),
       transparent 28%
     ),
-    linear-gradient(
-      135deg,
-      #ffffff 0%,
-      #f6fcf8 55%,
-      #eafbf0 100%
-    );
+    linear-gradient(135deg, #ffffff 0%, #f6fcf8 55%, #eafbf0 100%);
 
   box-shadow:
     0 8px 24px rgba(15, 61, 36, 0.06),
     0 2px 5px rgba(0, 0, 0, 0.025);
 }
-
 
 .student-record-header::before {
   content: "";
@@ -115,7 +107,6 @@
   );
 }
 
-
 .student-record-header::after {
   content: "";
 
@@ -132,12 +123,10 @@
   background: rgba(21, 128, 61, 0.055);
 }
 
-
 .student-record-header > * {
   position: relative;
   z-index: 1;
 }
-
 
 .student-record-eyebrow {
   display: block;
@@ -153,7 +142,6 @@
   text-transform: uppercase;
 }
 
-
 .student-record-header h1 {
   margin: 0;
 
@@ -166,7 +154,6 @@
   letter-spacing: -0.5px;
 }
 
-
 .student-record-header p {
   max-width: 760px;
 
@@ -177,7 +164,6 @@
   font-size: 14px;
   line-height: 1.6;
 }
-
 
 /* =========================================================
    REFRESH BUTTON
@@ -219,7 +205,6 @@
     filter 0.18s ease;
 }
 
-
 .student-record-refresh:hover:not(:disabled) {
   transform: translateY(-2px);
 
@@ -230,19 +215,16 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-
 .student-record-refresh:focus-visible {
   outline: 3px solid rgba(34, 197, 94, 0.28);
   outline-offset: 3px;
 }
-
 
 .student-record-refresh:disabled {
   opacity: 0.55;
 
   cursor: not-allowed;
 }
-
 
 /* =========================================================
    OFFICIAL RECORD NOTICE
@@ -262,7 +244,6 @@
 
   background: var(--ptc-green-soft);
 }
-
 
 .student-record-official-icon {
   width: 31px;
@@ -284,7 +265,6 @@
   font-weight: 900;
 }
 
-
 .student-record-official-notice strong {
   display: block;
 
@@ -296,7 +276,6 @@
   font-weight: 800;
 }
 
-
 .student-record-official-notice p {
   margin: 0;
 
@@ -305,7 +284,6 @@
   font-size: 13px;
   line-height: 1.55;
 }
-
 
 /* =========================================================
    STUDENT PROFILE
@@ -323,7 +301,6 @@
   margin-bottom: 18px;
 }
 
-
 .student-record-profile > div {
   position: relative;
 
@@ -336,8 +313,7 @@
 
   background: #ffffff;
 
-  box-shadow:
-    0 3px 12px rgba(20, 83, 45, 0.035);
+  box-shadow: 0 3px 12px rgba(20, 83, 45, 0.035);
 
   transition:
     border-color 0.2s ease,
@@ -345,21 +321,17 @@
     box-shadow 0.2s ease;
 }
 
-
 .student-record-profile > div:hover {
   transform: translateY(-2px);
 
   border-color: var(--ptc-green-border);
 
-  box-shadow:
-    0 7px 18px rgba(20, 83, 45, 0.07);
+  box-shadow: 0 7px 18px rgba(20, 83, 45, 0.07);
 }
-
 
 .student-record-profile-primary {
   border-left: 4px solid var(--ptc-green-medium) !important;
 }
-
 
 .student-record-profile span {
   display: block;
@@ -374,7 +346,6 @@
   letter-spacing: 0.65px;
   text-transform: uppercase;
 }
-
 
 .student-record-profile strong {
   display: block;
@@ -392,7 +363,6 @@
   white-space: nowrap;
 }
 
-
 .student-record-profile small {
   display: block;
 
@@ -408,7 +378,6 @@
   white-space: nowrap;
 }
 
-
 /* =========================================================
    SUMMARY CARDS
    ========================================================= */
@@ -422,7 +391,6 @@
 
   margin-bottom: 20px;
 }
-
 
 .student-record-summary > div {
   position: relative;
@@ -438,8 +406,7 @@
 
   background: #ffffff;
 
-  box-shadow:
-    0 3px 12px rgba(20, 83, 45, 0.035);
+  box-shadow: 0 3px 12px rgba(20, 83, 45, 0.035);
 
   transition:
     transform 0.2s ease,
@@ -447,16 +414,13 @@
     box-shadow 0.2s ease;
 }
 
-
 .student-record-summary > div:hover {
   transform: translateY(-2px);
 
   border-color: var(--ptc-green-border);
 
-  box-shadow:
-    0 7px 17px rgba(20, 83, 45, 0.07);
+  box-shadow: 0 7px 17px rgba(20, 83, 45, 0.07);
 }
-
 
 .student-record-summary > div::before {
   position: absolute;
@@ -472,7 +436,6 @@
   content: "";
 }
 
-
 .student-record-summary span {
   display: block;
 
@@ -487,7 +450,6 @@
   letter-spacing: 0.4px;
 }
 
-
 .student-record-summary strong {
   color: var(--ptc-green-deep);
 
@@ -496,7 +458,6 @@
 
   line-height: 1.1;
 }
-
 
 /* =========================================================
    FILTERS
@@ -522,15 +483,12 @@
 
   background: #ffffff;
 
-  box-shadow:
-    0 3px 12px rgba(20, 83, 45, 0.03);
+  box-shadow: 0 3px 12px rgba(20, 83, 45, 0.03);
 }
-
 
 .student-record-filters > div {
   min-width: 0;
 }
-
 
 .student-record-filters label {
   display: block;
@@ -542,7 +500,6 @@
   font-size: 11.5px;
   font-weight: 800;
 }
-
 
 .student-record-filters input,
 .student-record-filters select {
@@ -571,26 +528,21 @@
     background 0.18s ease;
 }
 
-
 .student-record-filters input:hover,
 .student-record-filters select:hover {
   border-color: #a9c9b3;
 }
 
-
 .student-record-filters input:focus,
 .student-record-filters select:focus {
   border-color: var(--ptc-green-medium);
 
-  box-shadow:
-    0 0 0 3px rgba(34, 197, 94, 0.11);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.11);
 }
-
 
 .student-record-filters input::placeholder {
   color: #9aa7a0;
 }
-
 
 .student-record-clear-filter {
   min-height: 42px;
@@ -616,7 +568,6 @@
     color 0.18s ease;
 }
 
-
 .student-record-clear-filter:hover {
   border-color: var(--ptc-green-border);
 
@@ -624,7 +575,6 @@
 
   color: var(--ptc-green-dark);
 }
-
 
 /* =========================================================
    ERROR
@@ -646,7 +596,6 @@
   background: var(--danger-soft);
 }
 
-
 .student-record-error strong {
   display: block;
 
@@ -657,7 +606,6 @@
   font-size: 14px;
 }
 
-
 .student-record-error p {
   margin: 0;
 
@@ -666,7 +614,6 @@
   font-size: 12.5px;
   line-height: 1.5;
 }
-
 
 .student-record-error button,
 .student-record-empty button {
@@ -687,7 +634,6 @@
 
   cursor: pointer;
 }
-
 
 /* =========================================================
    LOADING
@@ -710,7 +656,6 @@
   background: #ffffff;
 }
 
-
 .student-record-loading > div:last-child {
   display: flex;
   flex-direction: column;
@@ -718,20 +663,17 @@
   gap: 4px;
 }
 
-
 .student-record-loading strong {
   color: var(--text-primary);
 
   font-size: 14px;
 }
 
-
 .student-record-loading span {
   color: var(--text-secondary);
 
   font-size: 12px;
 }
-
 
 .student-record-spinner {
   width: 34px;
@@ -746,13 +688,11 @@
   animation: student-record-spin 700ms linear infinite;
 }
 
-
 @keyframes student-record-spin {
   to {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -780,7 +720,6 @@
   text-align: center;
 }
 
-
 .student-record-empty-icon {
   width: 44px;
   height: 44px;
@@ -799,13 +738,11 @@
   font-weight: 900;
 }
 
-
 .student-record-empty strong {
   color: var(--text-primary);
 
   font-size: 15px;
 }
-
 
 .student-record-empty p {
   max-width: 450px;
@@ -817,7 +754,6 @@
   font-size: 13px;
   line-height: 1.55;
 }
-
 
 /* =========================================================
    HISTORY CONTAINER
@@ -833,10 +769,8 @@
 
   background: #ffffff;
 
-  box-shadow:
-    0 4px 16px rgba(20, 83, 45, 0.035);
+  box-shadow: 0 4px 16px rgba(20, 83, 45, 0.035);
 }
-
 
 .student-record-history-header {
   display: flex;
@@ -849,13 +783,8 @@
 
   border-bottom: 1px solid var(--border-soft);
 
-  background: linear-gradient(
-    90deg,
-    #ffffff,
-    #f8fcf9
-  );
+  background: linear-gradient(90deg, #ffffff, #f8fcf9);
 }
-
 
 .student-record-history-header h2 {
   margin: 0;
@@ -866,7 +795,6 @@
   font-weight: 850;
 }
 
-
 .student-record-history-header p {
   margin: 5px 0 0;
 
@@ -875,7 +803,6 @@
   font-size: 13px;
   line-height: 1.5;
 }
-
 
 .student-record-history-header > span {
   flex-shrink: 0;
@@ -893,7 +820,6 @@
   font-weight: 800;
 }
 
-
 /* =========================================================
    ACADEMIC YEARS
    ========================================================= */
@@ -901,7 +827,6 @@
 .student-record-years {
   padding: 17px;
 }
-
 
 .student-record-year {
   overflow: hidden;
@@ -914,11 +839,9 @@
   background: #ffffff;
 }
 
-
 .student-record-year:last-child {
   margin-bottom: 0;
 }
-
 
 .student-record-year-header {
   display: flex;
@@ -931,13 +854,8 @@
 
   border-bottom: 1px solid var(--ptc-green-border);
 
-  background: linear-gradient(
-    90deg,
-    var(--ptc-green-soft),
-    #f9fdfa
-  );
+  background: linear-gradient(90deg, var(--ptc-green-soft), #f9fdfa);
 }
-
 
 .student-record-year-header span {
   display: block;
@@ -953,7 +871,6 @@
   letter-spacing: 0.6px;
 }
 
-
 .student-record-year-header h3 {
   margin: 0;
 
@@ -963,14 +880,12 @@
   font-weight: 850;
 }
 
-
 .student-record-year-header > strong {
   color: var(--text-secondary);
 
   font-size: 12px;
   font-weight: 750;
 }
-
 
 /* =========================================================
    SEMESTER
@@ -980,11 +895,9 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
-
 .student-record-semester:last-child {
   border-bottom: none;
 }
-
 
 .student-record-semester-header {
   display: flex;
@@ -998,7 +911,6 @@
   background: #ffffff;
 }
 
-
 .student-record-semester-header h4 {
   margin: 0;
 
@@ -1008,15 +920,11 @@
   font-weight: 850;
 }
 
-
-.student-record-semester-header
-  > div:first-child
-  > span {
+.student-record-semester-header > div:first-child > span {
   color: var(--text-secondary);
 
   font-size: 11.5px;
 }
-
 
 .student-record-semester-stats {
   display: flex;
@@ -1029,13 +937,11 @@
   font-size: 11.5px;
 }
 
-
 .student-record-semester-stats strong {
   color: var(--ptc-green-deep);
 
   font-weight: 850;
 }
-
 
 /* =========================================================
    TABLE WRAPPER
@@ -1049,7 +955,6 @@
   border-top: 1px solid var(--border-soft);
 }
 
-
 /* =========================================================
    TABLE
    ========================================================= */
@@ -1060,7 +965,6 @@
 
   border-collapse: collapse;
 }
-
 
 .student-record-table th {
   padding: 12px 13px;
@@ -1082,7 +986,6 @@
   letter-spacing: 0.35px;
 }
 
-
 .student-record-table td {
   padding: 14px 13px;
 
@@ -1096,21 +999,17 @@
   line-height: 1.45;
 }
 
-
 .student-record-table tbody tr:last-child td {
   border-bottom: none;
 }
-
 
 .student-record-table tbody tr {
   transition: background 0.15s ease;
 }
 
-
 .student-record-table tbody tr:hover {
   background: var(--ptc-green-soft-2);
 }
-
 
 /* =========================================================
    SUBJECT
@@ -1125,14 +1024,12 @@
   gap: 3px;
 }
 
-
 .student-record-subject strong {
   color: var(--text-primary);
 
   font-size: 13px;
   font-weight: 850;
 }
-
 
 .student-record-subject span {
   color: var(--ptc-green);
@@ -1141,13 +1038,11 @@
   font-weight: 750;
 }
 
-
 .student-record-subject small {
   color: var(--text-muted);
 
   font-size: 11px;
 }
-
 
 .student-record-units {
   color: var(--text-primary);
@@ -1155,7 +1050,6 @@
   font-size: 13px;
   font-weight: 700;
 }
-
 
 /* =========================================================
    FINAL RATING
@@ -1182,7 +1076,6 @@
   font-weight: 900;
 }
 
-
 /* =========================================================
    RESULT BADGES
    ========================================================= */
@@ -1203,7 +1096,6 @@
   font-weight: 850;
 }
 
-
 /* PASSED */
 
 .student-record-result.passed {
@@ -1213,7 +1105,6 @@
 
   color: var(--ptc-green-dark);
 }
-
 
 /* INCOMPLETE */
 
@@ -1225,7 +1116,6 @@
   color: var(--warning-dark);
 }
 
-
 /* FAILED */
 
 .student-record-result.failed {
@@ -1235,7 +1125,6 @@
 
   color: #991b1b;
 }
-
 
 /* UNKNOWN */
 
@@ -1247,7 +1136,6 @@
   color: var(--gray);
 }
 
-
 .student-record-retake {
   display: block;
 
@@ -1258,7 +1146,6 @@
   font-size: 11px;
   font-weight: 750;
 }
-
 
 /* =========================================================
    SUBJECT ACADEMIC STATUS
@@ -1284,7 +1171,6 @@
   font-weight: 850;
 }
 
-
 .student-record-subject-status.completed {
   border-color: var(--ptc-green-border);
 
@@ -1292,7 +1178,6 @@
 
   color: var(--ptc-green-dark);
 }
-
 
 .student-record-subject-status.failed {
   border-color: var(--danger-border);
@@ -1302,7 +1187,6 @@
   color: #991b1b;
 }
 
-
 .student-record-subject-status.incomplete {
   border-color: var(--warning-border);
 
@@ -1310,7 +1194,6 @@
 
   color: var(--warning-dark);
 }
-
 
 /* =========================================================
    APPROVAL
@@ -1326,7 +1209,6 @@
 
   gap: 4px;
 }
-
 
 .student-record-approved-badge {
   display: inline-flex;
@@ -1348,14 +1230,12 @@
   font-weight: 850;
 }
 
-
 .student-record-approval small {
   color: var(--text-secondary);
 
   font-size: 11px;
   line-height: 1.4;
 }
-
 
 /* =========================================================
    RESULT GUIDE
@@ -1378,10 +1258,8 @@
 
   background: #ffffff;
 
-  box-shadow:
-    0 3px 12px rgba(20, 83, 45, 0.03);
+  box-shadow: 0 3px 12px rgba(20, 83, 45, 0.03);
 }
-
 
 .student-record-legend-header span {
   display: block;
@@ -1397,13 +1275,11 @@
   letter-spacing: 0.6px;
 }
 
-
 .student-record-legend-header strong {
   color: var(--ptc-green-deep);
 
   font-size: 15px;
 }
-
 
 .student-record-legend-items {
   display: grid;
@@ -1412,7 +1288,6 @@
 
   gap: 11px;
 }
-
 
 .student-record-legend-items > div {
   display: flex;
@@ -1430,7 +1305,6 @@
   background: #fcfefd;
 }
 
-
 .student-record-legend-rating {
   flex-shrink: 0;
 
@@ -1443,7 +1317,6 @@
   font-weight: 900;
 }
 
-
 .student-record-legend-rating.passed {
   border-color: var(--ptc-green-border);
 
@@ -1451,7 +1324,6 @@
 
   color: var(--ptc-green-dark);
 }
-
 
 .student-record-legend-rating.incomplete {
   border-color: var(--warning-border);
@@ -1461,7 +1333,6 @@
   color: var(--warning-dark);
 }
 
-
 .student-record-legend-rating.failed {
   border-color: var(--danger-border);
 
@@ -1469,7 +1340,6 @@
 
   color: #991b1b;
 }
-
 
 .student-record-legend-items strong {
   display: block;
@@ -1482,7 +1352,6 @@
   font-weight: 800;
 }
 
-
 .student-record-legend-items p {
   margin: 0;
 
@@ -1491,7 +1360,6 @@
   font-size: 11.5px;
   line-height: 1.45;
 }
-
 
 /* =========================================================
    FOOTER
@@ -1509,21 +1377,14 @@
   border: 1px solid var(--border);
   border-radius: 12px;
 
-  background: linear-gradient(
-    90deg,
-    #ffffff,
-    #f8fcf9
-  );
+  background: linear-gradient(90deg, #ffffff, #f8fcf9);
 
-  box-shadow:
-    0 3px 12px rgba(20, 83, 45, 0.03);
+  box-shadow: 0 3px 12px rgba(20, 83, 45, 0.03);
 }
-
 
 .student-record-footer > div:first-child {
   max-width: 760px;
 }
-
 
 .student-record-footer strong {
   color: var(--text-primary);
@@ -1531,7 +1392,6 @@
   font-size: 13px;
   font-weight: 800;
 }
-
 
 .student-record-footer p {
   margin: 5px 0 0;
@@ -1541,7 +1401,6 @@
   font-size: 11.5px;
   line-height: 1.5;
 }
-
 
 .student-record-footer-stat {
   flex-shrink: 0;
@@ -1558,7 +1417,6 @@
   text-align: center;
 }
 
-
 .student-record-footer-stat span {
   display: block;
 
@@ -1570,14 +1428,12 @@
   font-weight: 700;
 }
 
-
 .student-record-footer-stat strong {
   color: var(--ptc-green-dark);
 
   font-size: 22px;
   font-weight: 900;
 }
-
 
 /* =========================================================
    TABLE SCROLLBAR
@@ -1587,11 +1443,9 @@
   height: 8px;
 }
 
-
 .student-record-table-wrapper::-webkit-scrollbar-track {
   background: #eef3ef;
 }
-
 
 .student-record-table-wrapper::-webkit-scrollbar-thumb {
   border: 2px solid #eef3ef;
@@ -1600,11 +1454,9 @@
   background: #a5cbb0;
 }
 
-
 .student-record-table-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--ptc-green-medium);
 }
-
 
 /* =========================================================
    RESPONSIVE - LARGE
@@ -1612,27 +1464,20 @@
 
 @media (max-width: 1300px) {
   .student-record-profile {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
 
   .student-record-summary {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
 
   .student-record-filters {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 
   .student-record-search {
     grid-column: span 2;
   }
-
 
   .student-record-clear-filter {
     grid-column: span 2;
@@ -1640,12 +1485,10 @@
     width: 100%;
   }
 
-
   .student-record-legend {
     grid-template-columns: 1fr;
   }
 }
-
 
 /* =========================================================
    RESPONSIVE - TABLET
@@ -1656,7 +1499,6 @@
     padding: 22px 18px 45px;
   }
 
-
   .student-record-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1664,22 +1506,17 @@
     padding: 23px 21px;
   }
 
-
   .student-record-refresh {
     width: 100%;
   }
 
-
   .student-record-profile {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 
   .student-record-legend-items {
     grid-template-columns: 1fr;
   }
-
 
   .student-record-footer {
     flex-direction: column;
@@ -1687,12 +1524,10 @@
     align-items: stretch;
   }
 
-
   .student-record-footer-stat {
     width: auto;
   }
 }
-
 
 /* =========================================================
    RESPONSIVE - MOBILE
@@ -1703,43 +1538,34 @@
     padding: 16px 13px 40px;
   }
 
-
   .student-record-header {
     padding: 20px 18px;
   }
-
 
   .student-record-header h1 {
     font-size: 25px;
   }
 
-
   .student-record-header p {
     font-size: 13px;
   }
-
 
   .student-record-profile {
     grid-template-columns: 1fr;
   }
 
-
   .student-record-summary {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 
   .student-record-filters {
     grid-template-columns: 1fr;
   }
 
-
   .student-record-search,
   .student-record-clear-filter {
     grid-column: auto;
   }
-
 
   .student-record-history-header,
   .student-record-year-header,
@@ -1749,7 +1575,6 @@
     align-items: flex-start;
   }
 
-
   .student-record-semester-stats {
     width: 100%;
 
@@ -1758,22 +1583,18 @@
     justify-content: flex-start;
   }
 
-
   .student-record-years {
     padding: 12px;
   }
-
 
   .student-record-history-header {
     padding: 17px;
   }
 
-
   .student-record-legend {
     padding: 15px;
   }
 }
-
 
 /* =========================================================
    RESPONSIVE - SMALL PHONE
@@ -1785,18 +1606,830 @@
     padding-right: 10px;
   }
 
-
   .student-record-summary {
     grid-template-columns: 1fr;
   }
-
 
   .student-record-header {
     padding: 18px 15px;
   }
 
-
   .student-record-header h1 {
     font-size: 23px;
+  }
+}
+/* =========================================================
+   CURRICULUM PROGRESS
+   ========================================================= */
+
+.student-curriculum-progress {
+  margin-bottom: 22px;
+  overflow: hidden;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 6px 22px rgba(15, 61, 36, 0.055),
+    0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+.student-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 21px 22px;
+  border-bottom: 1px solid var(--ptc-green-border);
+  background:
+    radial-gradient(
+      circle at 92% 18%,
+      rgba(34, 197, 94, 0.12),
+      transparent 30%
+    ),
+    linear-gradient(90deg, #ffffff 0%, #f5fcf7 100%);
+}
+
+.student-progress-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--ptc-green);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+}
+
+.student-progress-header h2 {
+  margin: 0;
+  color: var(--ptc-green-deep);
+  font-size: 21px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.student-progress-header p {
+  max-width: 760px;
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.student-progress-percentage {
+  min-width: 125px;
+  padding: 11px 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 11px;
+  background: var(--ptc-green-soft);
+  text-align: center;
+}
+
+.student-progress-percentage strong {
+  display: block;
+  color: var(--ptc-green-dark);
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.student-progress-percentage span {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+}
+
+.student-progress-overview {
+  display: grid;
+  grid-template-columns: minmax(330px, 1.15fr) minmax(430px, 1.85fr);
+  gap: 14px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.student-progress-primary-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: linear-gradient(145deg, #ffffff, #f7fcf8);
+  box-shadow: 0 3px 12px rgba(20, 83, 45, 0.035);
+}
+
+.student-progress-primary-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.student-progress-primary-topline > div > span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+}
+
+.student-progress-primary-topline > div > strong {
+  display: block;
+  color: var(--ptc-green-deep);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.student-progress-context-badge {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 999px;
+  background: var(--ptc-green-soft);
+  color: var(--ptc-green-dark);
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.student-progress-bar {
+  height: 10px;
+  margin: 18px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8f2eb;
+  box-shadow: inset 0 1px 2px rgba(15, 61, 36, 0.07);
+}
+
+.student-progress-bar > div {
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--ptc-green-medium),
+    var(--ptc-green),
+    var(--ptc-green-dark)
+  );
+  transition: width 300ms ease;
+}
+
+.student-progress-unit-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.student-progress-unit-row > div {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--border-soft);
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.student-progress-unit-row span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 9.5px;
+  font-weight: 750;
+}
+
+.student-progress-unit-row strong {
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.student-progress-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.student-progress-status-grid > div {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: 12px 12px 11px 15px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.student-progress-status-grid > div::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--ptc-green-medium);
+  content: "";
+}
+
+.student-progress-status-grid > div.retake::before,
+.student-progress-status-grid > div.blocked::before {
+  background: var(--warning);
+}
+
+.student-progress-status-grid > div.future::before,
+.student-progress-status-grid > div.remaining::before {
+  background: #94a3b8;
+}
+
+.student-progress-status-grid span,
+.student-progress-status-grid small {
+  display: block;
+}
+
+.student-progress-status-grid span {
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.student-progress-status-grid strong {
+  display: block;
+  color: var(--ptc-green-deep);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.student-progress-status-grid small {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.student-progress-unit-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 0 18px 18px;
+  padding: 13px 14px;
+  border: 1px solid var(--warning-border);
+  border-radius: 10px;
+  background: var(--warning-soft);
+}
+
+.student-progress-unit-warning-icon {
+  width: 27px;
+  height: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.student-progress-unit-warning strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--warning-dark);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.student-progress-unit-warning p {
+  margin: 0;
+  color: #9a5a08;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.student-progress-subjects {
+  border-top: 1px solid var(--border-soft);
+  background: #ffffff;
+}
+
+.student-progress-subjects-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-soft);
+  background: linear-gradient(90deg, #ffffff, #fafdfb);
+}
+
+.student-progress-subjects-header h3 {
+  margin: 0;
+  color: var(--ptc-green-deep);
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.student-progress-subjects-header p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.student-progress-subjects-header > span {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--ptc-green-border);
+  border-radius: 999px;
+  background: var(--ptc-green-soft);
+  color: var(--ptc-green-dark);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.student-progress-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.6fr) minmax(190px, 0.8fr) auto;
+  align-items: end;
+  gap: 11px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border-soft);
+  background: #fbfdfb;
+}
+
+.student-progress-filters > div {
+  min-width: 0;
+}
+
+.student-progress-filters label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.student-progress-filters input,
+.student-progress-filters select {
+  width: 100%;
+  min-height: 39px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #cdd8d0;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.student-progress-filters input:focus,
+.student-progress-filters select:focus {
+  border-color: var(--ptc-green-medium);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.student-progress-filters button {
+  min-height: 39px;
+  padding: 8px 14px;
+  border: 1px solid #cad5cd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.student-progress-filters button:hover:not(:disabled) {
+  border-color: var(--ptc-green-border);
+  background: var(--ptc-green-soft);
+  color: var(--ptc-green-dark);
+}
+
+.student-progress-filters button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-progress-empty {
+  padding: 34px 20px;
+  text-align: center;
+}
+
+.student-progress-empty strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.student-progress-empty p {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.student-progress-years {
+  padding: 16px;
+}
+
+.student-progress-year {
+  overflow: hidden;
+  margin-bottom: 15px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.student-progress-year:last-child {
+  margin-bottom: 0;
+}
+
+.student-progress-year-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--ptc-green-border);
+  background: linear-gradient(90deg, var(--ptc-green-soft), #f9fdfa);
+}
+
+.student-progress-year-header span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ptc-green);
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.55px;
+}
+
+.student-progress-year-header h4 {
+  margin: 0;
+  color: var(--ptc-green-deep);
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.student-progress-year-header > strong {
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 750;
+}
+
+.student-progress-semester {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.student-progress-semester:last-child {
+  border-bottom: none;
+}
+
+.student-progress-semester-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 14px;
+  background: #ffffff;
+}
+
+.student-progress-semester-header h5 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.student-progress-semester-header > div:first-child > span {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 9.5px;
+}
+
+.student-progress-semester-header > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-secondary);
+  font-size: 9.5px;
+}
+
+.student-progress-semester-header > div:last-child strong {
+  color: var(--ptc-green-deep);
+  font-weight: 850;
+}
+
+.student-progress-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid var(--border-soft);
+}
+
+.student-progress-table {
+  width: 100%;
+  min-width: 930px;
+  border-collapse: collapse;
+}
+
+.student-progress-table th {
+  padding: 10px 11px;
+  border-bottom: 1px solid var(--border);
+  background: #f5faf6;
+  color: var(--ptc-green-dark);
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 850;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.student-progress-table td {
+  padding: 12px 11px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.student-progress-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.student-progress-table tbody tr:hover {
+  background: var(--ptc-green-soft-2);
+}
+
+.student-progress-subject-name {
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-progress-subject-name strong {
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-weight: 850;
+}
+
+.student-progress-subject-name span {
+  color: var(--ptc-green);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.student-progress-subject-name small {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.student-progress-units {
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-weight: 850;
+}
+
+.student-progress-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.student-progress-status.completed-ptc,
+.student-progress-status.completed-transfer {
+  border-color: var(--ptc-green-border);
+  background: var(--ptc-green-light);
+  color: var(--ptc-green-dark);
+}
+
+.student-progress-status.retake-required {
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+  color: var(--danger-dark);
+}
+
+.student-progress-status.eligible {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.student-progress-status.blocked-prerequisite {
+  border-color: var(--warning-border);
+  background: var(--warning-soft);
+  color: var(--warning-dark);
+}
+
+.student-progress-status.not-yet-due,
+.student-progress-status.unresolved {
+  border-color: #e2e8f0;
+  background: var(--gray-soft);
+  color: #475569;
+}
+
+.student-progress-prerequisites {
+  min-width: 130px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.student-progress-prerequisites span,
+.student-progress-no-prereq {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+.student-progress-prerequisites .satisfied {
+  border: 1px solid var(--ptc-green-border);
+  background: var(--ptc-green-soft);
+  color: var(--ptc-green-dark);
+}
+
+.student-progress-prerequisites .missing {
+  border: 1px solid var(--warning-border);
+  background: var(--warning-soft);
+  color: var(--warning-dark);
+}
+
+.student-progress-no-prereq {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: var(--gray);
+}
+
+.student-progress-detail {
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.student-progress-detail strong {
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.student-progress-detail small {
+  color: var(--text-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.student-progress-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 14px 15px;
+  border: 1px solid var(--warning-border);
+  border-radius: 11px;
+  background: var(--warning-soft);
+}
+
+.student-progress-error strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--warning-dark);
+  font-size: 12.5px;
+}
+
+.student-progress-error p {
+  margin: 0;
+  color: #9a5a08;
+  font-size: 11px;
+}
+
+.student-progress-error button {
+  min-height: 36px;
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--warning-border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--warning-dark);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.student-progress-table-wrapper::-webkit-scrollbar {
+  height: 7px;
+}
+
+.student-progress-table-wrapper::-webkit-scrollbar-track {
+  background: #eef3ef;
+}
+
+.student-progress-table-wrapper::-webkit-scrollbar-thumb {
+  border: 2px solid #eef3ef;
+  border-radius: 999px;
+  background: #a5cbb0;
+}
+
+.student-progress-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--ptc-green-medium);
+}
+
+@media (max-width: 1180px) {
+  .student-progress-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .student-progress-status-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .student-progress-header,
+  .student-progress-subjects-header,
+  .student-progress-year-header,
+  .student-progress-semester-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-progress-percentage {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .student-progress-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-progress-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .student-progress-filters button {
+    grid-column: span 2;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .student-progress-header {
+    padding: 18px 16px;
+  }
+
+  .student-progress-overview {
+    padding: 13px;
+  }
+
+  .student-progress-primary-topline {
+    flex-direction: column;
+  }
+
+  .student-progress-unit-row,
+  .student-progress-status-grid,
+  .student-progress-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .student-progress-filters button {
+    grid-column: auto;
+  }
+
+  .student-progress-unit-warning {
+    margin: 0 13px 13px;
+  }
+
+  .student-progress-years {
+    padding: 11px;
+  }
+
+  .student-progress-semester-header > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
   }
 }

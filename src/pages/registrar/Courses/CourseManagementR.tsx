@@ -1,44 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertTriangle,
+  BookOpen,
+  Building2,
+  CalendarDays,
+  Plus,
+  Pencil,
+  GraduationCap,
+  RefreshCw,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-
-import { useNavigate } from "react-router-dom";
-
 import AddCourseModal from "./AddCourseModal";
 import EditCourseModal from "./EditCourseModal";
-
 import "../../../styles/CoursemanagementR.css";
 
 const API_BASE_URL = "http://localhost:3000/api/registrar/courses";
 
-// =====================================================
-// TYPES
-// =====================================================
-
 interface Course {
   course_id: number;
   department_id: number;
-
   course_code: string;
   course_name: string;
-
   total_years: number;
-
   department_code: string;
   department_name: string;
-
   created_at?: string;
 }
 
 interface CourseResponse {
   success: boolean;
-
   data?: Course[];
-
   courses?: Course[];
-
   message?: string;
   error?: string;
 }
@@ -51,11 +49,8 @@ interface Department {
 
 interface DepartmentResponse {
   success: boolean;
-
   data?: Department[];
-
   departments?: Department[];
-
   message?: string;
   error?: string;
 }
@@ -66,179 +61,112 @@ interface DeleteCourseResponse {
   error?: string;
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+const formatDate = (value?: string) => {
+  if (!value) return "Not recorded";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not recorded";
+
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+};
+
+const formatYears = (years: number) =>
+  `${years} ${years === 1 ? "Year" : "Years"}`;
 
 export default function CoursemanagementR() {
   const navigate = useNavigate();
 
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
-  // =====================================================
-  // COURSE STATES
-  // =====================================================
-
   const [courses, setCourses] = useState<Course[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
-  // =====================================================
-  // DEPARTMENT STATES
-  // =====================================================
-
   const [departments, setDepartments] = useState<Department[]>([]);
-
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-
   const [departmentError, setDepartmentError] = useState("");
 
-  // =====================================================
-  // FILTERS
-  // =====================================================
-
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-
   const [department, setDepartment] = useState("All");
 
-  // =====================================================
-  // MODALS
-  // =====================================================
-
   const [showAddCourse, setShowAddCourse] = useState(false);
-
   const [showEditCourse, setShowEditCourse] = useState(false);
-
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
-  // =====================================================
-  // DELETE STATE
-  // =====================================================
-
+  const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
   const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
-
-  // =====================================================
-  // AUTHORIZATION
-  // =====================================================
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      navigate("/login", { replace: true });
       return;
     }
 
     if (userRole !== "Registrar") {
       if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), {
-          replace: true,
-        });
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
       } else {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login", { replace: true });
       }
     }
   }, [authenticated, userRole, navigate]);
 
-  // =====================================================
-  // LOAD COURSES
-  // =====================================================
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   const loadCourses = async () => {
-    if (!authenticated || userRole !== "Registrar") {
-      return;
-    }
+    if (!authenticated || userRole !== "Registrar") return;
 
     try {
       setLoading(true);
-
       setError("");
 
       const params = new URLSearchParams();
-
-      if (search.trim()) {
-        params.set("search", search.trim());
-      }
-
-      if (department !== "All") {
-        params.set("department", department);
-      }
+      if (search) params.set("search", search);
+      if (department !== "All") params.set("department", department);
 
       const queryString = params.toString();
-
       const requestUrl = queryString
         ? `${API_BASE_URL}?${queryString}`
         : API_BASE_URL;
 
-      console.log("GET REGISTRAR COURSES:", requestUrl);
-
-      // =================================================
-      // JWT AUTHENTICATED REQUEST
-      // =================================================
-
       const response = await authService.authFetch(requestUrl, {
         method: "GET",
-
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
 
-      // =================================================
-      // SAFE RESPONSE
-      // =================================================
-
       const contentType = response.headers.get("content-type") || "";
-
       let data: CourseResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
-
         throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
+          `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
 
-      // =================================================
-      // 401
-      // =================================================
-
       if (response.status === 401) {
         authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
+        navigate("/login", { replace: true });
         return;
       }
-
-      // =================================================
-      // 403
-      // =================================================
 
       if (response.status === 403) {
         throw new Error(
@@ -248,10 +176,6 @@ export default function CoursemanagementR() {
         );
       }
 
-      // =================================================
-      // HTTP ERROR
-      // =================================================
-
       if (!response.ok) {
         throw new Error(
           data?.message ||
@@ -259,10 +183,6 @@ export default function CoursemanagementR() {
             `Failed to load courses (${response.status}).`,
         );
       }
-
-      // =================================================
-      // API ERROR
-      // =================================================
 
       if (!data?.success) {
         throw new Error(data?.message || "Failed to load courses.");
@@ -277,14 +197,12 @@ export default function CoursemanagementR() {
       setCourses(loadedCourses);
     } catch (err) {
       console.error("GET COURSES ERROR:", err);
-
       setCourses([]);
 
       if (err instanceof TypeError) {
         setError(
           "Unable to connect to the course server. Make sure the backend is running on port 3000.",
         );
-
         return;
       }
 
@@ -294,72 +212,38 @@ export default function CoursemanagementR() {
     }
   };
 
-  // =====================================================
-  // LOAD DEPARTMENTS
-  // =====================================================
-
   const loadDepartments = async () => {
-    if (!authenticated || userRole !== "Registrar") {
-      return;
-    }
+    if (!authenticated || userRole !== "Registrar") return;
 
     try {
       setLoadingDepartments(true);
-
       setDepartmentError("");
 
-      const url = `${API_BASE_URL}/departments/list`;
-
-      // =================================================
-      // JWT AUTHENTICATED REQUEST
-      // =================================================
-
-      const response = await authService.authFetch(url, {
-        method: "GET",
-
-        headers: {
-          Accept: "application/json",
+      const response = await authService.authFetch(
+        `${API_BASE_URL}/departments/list`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
         },
-      });
-
-      // =================================================
-      // SAFE RESPONSE
-      // =================================================
+      );
 
       const contentType = response.headers.get("content-type") || "";
-
       let data: DepartmentResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
-
         throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
+          `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
 
-      // =================================================
-      // 401
-      // =================================================
-
       if (response.status === 401) {
         authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
+        navigate("/login", { replace: true });
         return;
       }
-
-      // =================================================
-      // 403
-      // =================================================
 
       if (response.status === 403) {
         throw new Error(
@@ -369,10 +253,6 @@ export default function CoursemanagementR() {
         );
       }
 
-      // =================================================
-      // HTTP ERROR
-      // =================================================
-
       if (!response.ok) {
         throw new Error(
           data?.message ||
@@ -380,10 +260,6 @@ export default function CoursemanagementR() {
             `Failed to load departments (${response.status}).`,
         );
       }
-
-      // =================================================
-      // API ERROR
-      // =================================================
 
       if (!data?.success) {
         throw new Error(data?.message || "Failed to load departments.");
@@ -398,12 +274,10 @@ export default function CoursemanagementR() {
       setDepartments(loadedDepartments);
     } catch (err) {
       console.error("GET DEPARTMENTS ERROR:", err);
-
       setDepartments([]);
 
       if (err instanceof TypeError) {
         setDepartmentError("Unable to connect to the department server.");
-
         return;
       }
 
@@ -415,170 +289,125 @@ export default function CoursemanagementR() {
     }
   };
 
-  // =====================================================
-  // INITIAL LOAD
-  // =====================================================
-
   useEffect(() => {
-    if (!authenticated || userRole !== "Registrar") {
-      return;
-    }
-
+    if (!authenticated || userRole !== "Registrar") return;
     void loadDepartments();
   }, [authenticated, userRole]);
 
-  // =====================================================
-  // LOAD COURSES WHEN FILTER CHANGES
-  // =====================================================
-
   useEffect(() => {
-    if (!authenticated || userRole !== "Registrar") {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      void loadCourses();
-    }, 300);
-
-    return () => {
-      clearTimeout(timeout);
-    };
+    if (!authenticated || userRole !== "Registrar") return;
+    void loadCourses();
   }, [authenticated, userRole, search, department]);
 
-  // =====================================================
-  // SEARCH
-  // =====================================================
+  const hasActiveFilters = Boolean(search || department !== "All");
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
+  const selectedDepartmentName = useMemo(() => {
+    if (department === "All") return "All Departments";
+
+    const match = departments.find(
+      (item) => String(item.department_id) === department,
+    );
+
+    return match
+      ? `${match.department_code} — ${match.department_name}`
+      : "Selected Department";
+  }, [department, departments]);
+
+  const averageProgramYears = useMemo(() => {
+    if (courses.length === 0) return 0;
+    const total = courses.reduce((sum, course) => sum + course.total_years, 0);
+    return total / courses.length;
+  }, [courses]);
+
+  const longestProgramYears = useMemo(() => {
+    if (courses.length === 0) return 0;
+    return Math.max(...courses.map((course) => course.total_years));
+  }, [courses]);
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setDepartment("All");
   };
 
-  // =====================================================
-  // DEPARTMENT FILTER
-  // =====================================================
-
-  const handleDepartmentChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setDepartment(event.target.value);
+  const handleRefresh = () => {
+    void loadDepartments();
+    void loadCourses();
   };
-
-  // =====================================================
-  // ADD COURSE SUCCESS
-  // =====================================================
 
   const handleCourseAdded = async () => {
     setShowAddCourse(false);
-
     await loadCourses();
   };
-
-  // =====================================================
-  // EDIT COURSE
-  // =====================================================
 
   const handleEdit = (course: Course) => {
     setSelectedCourse(course);
-
     setShowEditCourse(true);
   };
 
-  // =====================================================
-  // EDIT SUCCESS
-  // =====================================================
-
   const handleCourseUpdated = async () => {
     setShowEditCourse(false);
-
     setSelectedCourse(null);
-
     await loadCourses();
   };
 
-  // =====================================================
-  // DELETE COURSE
-  // =====================================================
+  const openDeleteDialog = (course: Course) => {
+    setDeleteError("");
+    setDeleteTarget(course);
+  };
 
-  const handleDelete = async (course: Course) => {
+  const closeDeleteDialog = () => {
+    if (deletingCourseId !== null) return;
+    setDeleteError("");
+    setDeleteTarget(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
     if (!authenticated || userRole !== "Registrar") {
-      window.alert(
+      setDeleteError(
         "Your session has expired or you are not authorized to delete courses.",
       );
-
       return;
     }
 
-    const courseId = Number(course.course_id);
+    const courseId = Number(deleteTarget.course_id);
 
     if (!Number.isInteger(courseId) || courseId <= 0) {
-      window.alert("Invalid course ID.");
-
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${course.course_code}?\n\n${course.course_name}`,
-    );
-
-    if (!confirmed) {
+      setDeleteError("Invalid course ID.");
       return;
     }
 
     try {
       setDeletingCourseId(courseId);
+      setDeleteError("");
 
-      const url = `${API_BASE_URL}/${courseId}`;
-
-      // =================================================
-      // JWT AUTHENTICATED DELETE
-      // =================================================
-
-      const response = await authService.authFetch(url, {
-        method: "DELETE",
-
-        headers: {
-          Accept: "application/json",
+      const response = await authService.authFetch(
+        `${API_BASE_URL}/${courseId}`,
+        {
+          method: "DELETE",
+          headers: { Accept: "application/json" },
         },
-      });
-
-      // =================================================
-      // SAFE RESPONSE
-      // =================================================
+      );
 
       const contentType = response.headers.get("content-type") || "";
-
       let data: DeleteCourseResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
-
         throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
+          `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
 
-      // =================================================
-      // 401
-      // =================================================
-
       if (response.status === 401) {
         authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
+        navigate("/login", { replace: true });
         return;
       }
-
-      // =================================================
-      // 403
-      // =================================================
 
       if (response.status === 403) {
         throw new Error(
@@ -588,10 +417,6 @@ export default function CoursemanagementR() {
         );
       }
 
-      // =================================================
-      // HTTP ERROR
-      // =================================================
-
       if (!response.ok) {
         throw new Error(
           data?.message ||
@@ -600,19 +425,15 @@ export default function CoursemanagementR() {
         );
       }
 
-      // =================================================
-      // API ERROR
-      // =================================================
-
       if (!data?.success) {
         throw new Error(data?.message || "Failed to delete course.");
       }
 
+      setDeleteTarget(null);
       await loadCourses();
     } catch (err) {
       console.error("DELETE COURSE ERROR:", err);
-
-      window.alert(
+      setDeleteError(
         err instanceof Error ? err.message : "Unable to delete course.",
       );
     } finally {
@@ -620,221 +441,390 @@ export default function CoursemanagementR() {
     }
   };
 
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
-
   if (!authenticated || !user || userRole !== "Registrar") {
     return null;
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <DashboardLayout>
       <div className="registrar-course-management">
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        <section className="registrar-course-management__hero">
+          <div className="registrar-course-management__hero-copy">
+            <div className="registrar-course-management__eyebrow">
+              <span className="registrar-course-management__eyebrow-icon">
+                <GraduationCap size={16} aria-hidden="true" />
+              </span>
+              Registrar · Academic Setup
+            </div>
 
-        <div className="registrar-course-header">
-          <div>
             <h1>Course Management</h1>
-
-            <p>Manage academic courses and their departments.</p>
+            <p>
+              Maintain the academic programs offered by PTC, their department
+              assignments, and standard program duration.
+            </p>
           </div>
 
-          <button
-            type="button"
-            className="add-course-btn"
-            onClick={() => setShowAddCourse(true)}
-          >
-            + Add Course
-          </button>
-        </div>
-
-        {/* =================================================
-            SUMMARY
-        ================================================= */}
-
-        <div className="registrar-course-summary">
-          <div className="registrar-course-card">
-            <span>Total Courses</span>
-
-            <h2>{courses.length}</h2>
-          </div>
-
-          <div className="registrar-course-card">
-            <span>Departments</span>
-
-            <h2>{departments.length}</h2>
-          </div>
-
-          <div className="registrar-course-card">
-            <span>Showing</span>
-
-            <h2>{courses.length}</h2>
-          </div>
-        </div>
-
-        {/* =================================================
-            TOOLBAR
-        ================================================= */}
-
-        <div className="registrar-course-toolbar">
-          <div className="registrar-course-search">
-            <input
-              type="text"
-              placeholder="Search course code or course name..."
-              value={search}
-              onChange={handleSearch}
-            />
-          </div>
-
-          <div className="registrar-course-filters">
-            <select
-              value={department}
-              onChange={handleDepartmentChange}
-              disabled={loadingDepartments}
+          <div className="registrar-course-management__hero-actions">
+            <button
+              type="button"
+              className="registrar-course-management__button registrar-course-management__button--secondary"
+              onClick={handleRefresh}
+              disabled={loading || loadingDepartments}
             >
-              <option value="All">All Departments</option>
+              <RefreshCw
+                size={16}
+                className={loading ? "is-spinning" : ""}
+                aria-hidden="true"
+              />
+              Refresh
+            </button>
 
-              {departments.map((item) => (
-                <option
-                  key={item.department_id}
-                  value={String(item.department_id)}
+            <button
+              type="button"
+              className="registrar-course-management__button registrar-course-management__button--primary"
+              onClick={() => setShowAddCourse(true)}
+              disabled={loadingDepartments || departments.length === 0}
+              title={
+                departmentError
+                  ? "Departments must load before a course can be added."
+                  : undefined
+              }
+            >
+              <Plus size={17} aria-hidden="true" />
+              Add Course
+            </button>
+          </div>
+        </section>
+
+        <section
+          className="registrar-course-management__stats"
+          aria-label="Course summary"
+        >
+          <article className="registrar-course-management__stat-card">
+            <span className="registrar-course-management__stat-icon registrar-course-management__stat-icon--primary">
+              <BookOpen size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>{hasActiveFilters ? "Matching Courses" : "Courses"}</span>
+              <strong>{loading ? "—" : courses.length}</strong>
+              <small>{hasActiveFilters ? "Current filtered result" : "Programs currently listed"}</small>
+            </div>
+          </article>
+
+          <article className="registrar-course-management__stat-card">
+            <span className="registrar-course-management__stat-icon">
+              <Building2 size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Departments</span>
+              <strong>{loadingDepartments ? "—" : departments.length}</strong>
+              <small>Available for course assignment</small>
+            </div>
+          </article>
+
+          <article className="registrar-course-management__stat-card">
+            <span className="registrar-course-management__stat-icon">
+              <CalendarDays size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Average Duration</span>
+              <strong>
+                {loading || courses.length === 0
+                  ? "—"
+                  : `${averageProgramYears.toFixed(1)} yr`}
+              </strong>
+              <small>Across courses shown</small>
+            </div>
+          </article>
+
+          <article className="registrar-course-management__stat-card">
+            <span className="registrar-course-management__stat-icon">
+              <GraduationCap size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Longest Program</span>
+              <strong>
+                {loading || longestProgramYears === 0
+                  ? "—"
+                  : `${longestProgramYears} yr`}
+              </strong>
+              <small>Maximum duration shown</small>
+            </div>
+          </article>
+        </section>
+
+        <section className="registrar-course-management__workspace">
+          <div className="registrar-course-management__workspace-header">
+            <div>
+              <span className="registrar-course-management__section-kicker">
+                Course Directory
+              </span>
+              <h2>Academic Programs</h2>
+              <p>
+                Search, review, add, and maintain course information from one
+                workspace.
+              </p>
+            </div>
+
+            <div className="registrar-course-management__result-count">
+              <strong>{loading ? "—" : courses.length}</strong>
+              <span>{courses.length === 1 ? "course shown" : "courses shown"}</span>
+            </div>
+          </div>
+
+          <div className="registrar-course-management__toolbar">
+            <label className="registrar-course-management__search">
+              <Search size={18} aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="Search by course code or course name..."
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                aria-label="Search courses"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  className="registrar-course-management__search-clear"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearch("");
+                  }}
+                  aria-label="Clear course search"
                 >
-                  {item.department_code} - {item.department_name}
-                </option>
-              ))}
-            </select>
+                  <X size={15} aria-hidden="true" />
+                </button>
+              )}
+            </label>
+
+            <label className="registrar-course-management__filter">
+              <span>Department</span>
+              <select
+                value={department}
+                onChange={(event) => setDepartment(event.target.value)}
+                disabled={loadingDepartments}
+              >
+                <option value="All">All Departments</option>
+                {departments.map((item) => (
+                  <option
+                    key={item.department_id}
+                    value={String(item.department_id)}
+                  >
+                    {item.department_code} - {item.department_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="registrar-course-management__clear-filters"
+                onClick={clearFilters}
+              >
+                <X size={15} aria-hidden="true" />
+                Clear Filters
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* =================================================
-            DEPARTMENT ERROR
-        ================================================= */}
+          {hasActiveFilters && !loading && (
+            <div className="registrar-course-management__active-filters">
+              <span>Viewing:</span>
+              {search && <strong>Search “{search}”</strong>}
+              {department !== "All" && <strong>{selectedDepartmentName}</strong>}
+            </div>
+          )}
 
-        {departmentError && (
-          <div className="course-filter-error">{departmentError}</div>
-        )}
+          {departmentError && (
+            <div className="registrar-course-management__notice registrar-course-management__notice--warning">
+              <AlertTriangle size={18} aria-hidden="true" />
+              <div>
+                <strong>Department list unavailable</strong>
+                <span>{departmentError}</span>
+              </div>
+              <button type="button" onClick={() => void loadDepartments()}>
+                Retry
+              </button>
+            </div>
+          )}
 
-        {/* =================================================
-            TABLE
-        ================================================= */}
-
-        <div className="registrar-course-table-wrapper">
-          <div className="course-table-container">
-            <table className="course-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Course</th>
-                  <th>Course Name</th>
-                  <th>Department</th>
-                  <th>Years</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {/* LOADING */}
-
-                {loading && (
-                  <tr>
-                    <td colSpan={6} className="table-message">
-                      Loading courses...
-                    </td>
-                  </tr>
-                )}
-
-                {/* ERROR */}
-
-                {!loading && error && (
-                  <tr>
-                    <td colSpan={6} className="table-message error">
-                      {error}
-                    </td>
-                  </tr>
-                )}
-
-                {/* EMPTY */}
-
-                {!loading && !error && courses.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="table-message">
-                      No courses found.
-                    </td>
-                  </tr>
-                )}
-
-                {/* DATA */}
-
-                {!loading &&
-                  !error &&
-                  courses.map((course) => (
-                    <tr key={course.course_id}>
-                      <td>{course.course_id}</td>
-
-                      <td>
-                        <div className="course-code-cell">
-                          <strong>{course.course_code}</strong>
-                        </div>
-                      </td>
-
-                      <td>
-                        <div className="course-name-cell">
-                          <strong>{course.course_name}</strong>
-                        </div>
-                      </td>
-
-                      <td>
-                        <div className="course-department-cell">
-                          <strong>{course.department_code}</strong>
-
-                          <small>{course.department_name}</small>
-                        </div>
-                      </td>
-
-                      <td>
-                        {course.total_years}{" "}
-                        {course.total_years === 1 ? "Year" : "Years"}
-                      </td>
-
-                      <td>
-                        <div className="course-actions">
-                          <button
-                            type="button"
-                            className="course-edit-btn"
-                            onClick={() => handleEdit(course)}
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            className="course-delete-btn"
-                            disabled={deletingCourseId === course.course_id}
-                            onClick={() => handleDelete(course)}
-                          >
-                            {deletingCourseId === course.course_id
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
-                        </div>
-                      </td>
+          {error && !loading ? (
+            <div className="registrar-course-management__state registrar-course-management__state--error">
+              <span className="registrar-course-management__state-icon">
+                <AlertTriangle size={24} aria-hidden="true" />
+              </span>
+              <h3>Courses could not be loaded</h3>
+              <p>{error}</p>
+              <button
+                type="button"
+                className="registrar-course-management__button registrar-course-management__button--secondary"
+                onClick={() => void loadCourses()}
+              >
+                <RefreshCw size={16} aria-hidden="true" />
+                Try Again
+              </button>
+            </div>
+          ) : (
+            <div className="registrar-course-management__table-shell">
+              <div className="registrar-course-management__table-scroll">
+                <table className="registrar-course-management__table">
+                  <thead>
+                    <tr>
+                      <th>Course</th>
+                      <th>Program Name</th>
+                      <th>Department</th>
+                      <th>Duration</th>
+                      <th>Added</th>
+                      <th className="registrar-course-management__actions-heading">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
 
-        {/* =================================================
-            ADD COURSE MODAL
-        ================================================= */}
+                  <tbody>
+                    {loading &&
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <tr key={`course-skeleton-${index}`}>
+                          <td>
+                            <span className="registrar-course-management__skeleton registrar-course-management__skeleton--code" />
+                          </td>
+                          <td>
+                            <span className="registrar-course-management__skeleton registrar-course-management__skeleton--wide" />
+                          </td>
+                          <td>
+                            <span className="registrar-course-management__skeleton registrar-course-management__skeleton--medium" />
+                          </td>
+                          <td>
+                            <span className="registrar-course-management__skeleton registrar-course-management__skeleton--short" />
+                          </td>
+                          <td>
+                            <span className="registrar-course-management__skeleton registrar-course-management__skeleton--medium" />
+                          </td>
+                          <td>
+                            <span className="registrar-course-management__skeleton registrar-course-management__skeleton--actions" />
+                          </td>
+                        </tr>
+                      ))}
+
+                    {!loading && courses.length === 0 && (
+                      <tr>
+                        <td colSpan={6}>
+                          <div className="registrar-course-management__empty-state">
+                            <span className="registrar-course-management__state-icon">
+                              <BookOpen size={25} aria-hidden="true" />
+                            </span>
+                            <h3>
+                              {hasActiveFilters
+                                ? "No matching courses"
+                                : "No courses yet"}
+                            </h3>
+                            <p>
+                              {hasActiveFilters
+                                ? "Try adjusting your search or department filter."
+                                : "Add the first academic course to begin building the course directory."}
+                            </p>
+                            {hasActiveFilters ? (
+                              <button
+                                type="button"
+                                className="registrar-course-management__button registrar-course-management__button--secondary"
+                                onClick={clearFilters}
+                              >
+                                <X size={16} aria-hidden="true" />
+                                Clear Filters
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="registrar-course-management__button registrar-course-management__button--primary"
+                                onClick={() => setShowAddCourse(true)}
+                                disabled={departments.length === 0}
+                              >
+                                <Plus size={16} aria-hidden="true" />
+                                Add Course
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+
+                    {!loading &&
+                      courses.map((course) => (
+                        <tr key={course.course_id}>
+                          <td>
+                            <div className="registrar-course-management__course-code">
+                              <span>{course.course_code}</span>
+                              <small>Course #{course.course_id}</small>
+                            </div>
+                          </td>
+
+                          <td>
+                            <div className="registrar-course-management__course-name">
+                              <strong title={course.course_name}>
+                                {course.course_name}
+                              </strong>
+                            </div>
+                          </td>
+
+                          <td>
+                            <div className="registrar-course-management__department-cell">
+                              <span className="registrar-course-management__department-code">
+                                {course.department_code || "—"}
+                              </span>
+                              <div>
+                                <strong>{course.department_name || "Not assigned"}</strong>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td>
+                            <span className="registrar-course-management__duration-pill">
+                              <CalendarDays size={14} aria-hidden="true" />
+                              {formatYears(course.total_years)}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="registrar-course-management__date">
+                              {formatDate(course.created_at)}
+                            </span>
+                          </td>
+
+                          <td>
+                            <div className="registrar-course-management__row-actions">
+                              <button
+                                type="button"
+                                className="registrar-course-management__icon-button registrar-course-management__icon-button--edit"
+                                onClick={() => handleEdit(course)}
+                                aria-label={`Edit ${course.course_code}`}
+                                title="Edit course"
+                              >
+                                <Pencil size={16} aria-hidden="true" />
+                                <span>Edit</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                className="registrar-course-management__icon-button registrar-course-management__icon-button--delete"
+                                onClick={() => openDeleteDialog(course)}
+                                disabled={deletingCourseId === course.course_id}
+                                aria-label={`Delete ${course.course_code}`}
+                                title="Delete course"
+                              >
+                                <Trash2 size={16} aria-hidden="true" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
 
         {showAddCourse && (
           <AddCourseModal
@@ -844,21 +834,84 @@ export default function CoursemanagementR() {
           />
         )}
 
-        {/* =================================================
-            EDIT COURSE MODAL
-        ================================================= */}
-
         {showEditCourse && selectedCourse && (
           <EditCourseModal
             course={selectedCourse}
             departments={departments}
             onClose={() => {
               setShowEditCourse(false);
-
               setSelectedCourse(null);
             }}
             onSuccess={handleCourseUpdated}
           />
+        )}
+
+        {deleteTarget && (
+          <div
+            className="registrar-course-management__delete-overlay"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) closeDeleteDialog();
+            }}
+          >
+            <div
+              className="registrar-course-management__delete-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-course-title"
+            >
+              <button
+                type="button"
+                className="registrar-course-management__dialog-close"
+                onClick={closeDeleteDialog}
+                disabled={deletingCourseId !== null}
+                aria-label="Close delete confirmation"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+
+              <span className="registrar-course-management__delete-icon">
+                <AlertTriangle size={25} aria-hidden="true" />
+              </span>
+
+              <h2 id="delete-course-title">Delete this course?</h2>
+              <p>
+                You are about to remove <strong>{deleteTarget.course_code}</strong>
+                {" — "}
+                {deleteTarget.course_name}.
+              </p>
+
+              <div className="registrar-course-management__delete-warning">
+                Courses already referenced by a curriculum cannot be deleted.
+                If this course is in use, the server will keep it and explain why.
+              </div>
+
+              {deleteError && (
+                <div className="registrar-course-management__delete-error">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="registrar-course-management__dialog-actions">
+                <button
+                  type="button"
+                  className="registrar-course-management__button registrar-course-management__button--secondary"
+                  onClick={closeDeleteDialog}
+                  disabled={deletingCourseId !== null}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="registrar-course-management__button registrar-course-management__button--danger"
+                  onClick={() => void handleDelete()}
+                  disabled={deletingCourseId !== null}
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                  {deletingCourseId !== null ? "Deleting..." : "Delete Course"}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>

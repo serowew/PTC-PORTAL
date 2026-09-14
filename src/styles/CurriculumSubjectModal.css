@@ -1,417 +1,507 @@
-/* =====================================================
-   CURRICULUM SUBJECT MODAL
-===================================================== */
+/* =========================================================
+   REGISTRAR · CURRICULUM SUBJECT MODAL
+   Scoped styles for CurriculumSubjectModal.tsx
+   ========================================================= */
 
-.curriculum-modal-overlay {
+.registrar-curriculum-subject-modal__overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-
+  z-index: 100000;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 24px;
-
-  background: rgba(15, 23, 42, 0.55);
-
-  backdrop-filter: blur(4px);
-
-  animation: curriculumModalFadeIn 0.18s ease;
+  padding: 22px;
+  background: rgba(7, 24, 12, 0.56);
+  backdrop-filter: blur(3px);
+  animation: rcsm-fade 0.18s ease-out;
 }
 
-/* =====================================================
-   MODAL
-===================================================== */
+.registrar-curriculum-subject-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 44px);
+  overflow: hidden;
+  border: 1px solid #d8e3da;
+  border-radius: 17px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(6, 38, 16, 0.24);
+  color: #1e2b22;
+  animation: rcsm-rise 0.2s ease-out;
+}
 
-.curriculum-subject-modal {
-  width: 100%;
-  max-width: 720px;
+.registrar-curriculum-subject-modal *,
+.registrar-curriculum-subject-modal *::before,
+.registrar-curriculum-subject-modal *::after {
+  box-sizing: border-box;
+}
 
-  max-height: calc(100vh - 48px);
+.registrar-curriculum-subject-modal button,
+.registrar-curriculum-subject-modal input,
+.registrar-curriculum-subject-modal select {
+  font: inherit;
+}
 
+.registrar-curriculum-subject-modal form {
   display: flex;
   flex-direction: column;
-
-  overflow: hidden;
-
-  background: #ffffff;
-
-  border-radius: 16px;
-
-  box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.22),
-    0 8px 24px rgba(15, 23, 42, 0.12);
-
-  animation: curriculumModalSlideIn 0.2s ease;
+  max-height: calc(100vh - 44px - 122px);
 }
 
-/* =====================================================
-   HEADER
-===================================================== */
-
-.curriculum-modal-header {
+.registrar-curriculum-subject-modal__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
-  gap: 20px;
-
-  padding: 24px 28px;
-
-  border-bottom: 1px solid #e5e7eb;
+  gap: 18px;
+  padding: 21px 22px;
+  border-bottom: 1px solid #dfe8e1;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(22, 163, 74, 0.13), transparent 30%),
+    linear-gradient(135deg, #f7fcf8, #ffffff);
 }
 
-.curriculum-modal-header h2 {
-  margin: 0;
-
-  font-size: 21px;
-  font-weight: 700;
-
-  color: #111827;
-}
-
-.curriculum-modal-header p {
-  margin: 6px 0 0;
-
-  font-size: 13px;
-
-  color: #6b7280;
-}
-
-.curriculum-modal-close {
-  width: 36px;
-  height: 36px;
-
+.registrar-curriculum-subject-modal__header-copy {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  gap: 13px;
+  min-width: 0;
+}
 
+.registrar-curriculum-subject-modal__header-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
-
-  border: none;
-  border-radius: 8px;
-
-  background: transparent;
-
-  color: #6b7280;
-
-  font-size: 26px;
-  line-height: 1;
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
+  border-radius: 11px;
+  background: #e8f8ec;
+  color: #157a38;
 }
 
-.curriculum-modal-close:hover:not(:disabled) {
-  background: #f3f4f6;
-  color: #111827;
+.registrar-curriculum-subject-modal__header-copy > div:last-child > span {
+  display: block;
+  margin-bottom: 2px;
+  color: #16803b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
-.curriculum-modal-close:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.registrar-curriculum-subject-modal__header h2 {
+  margin: 0;
+  color: #16301d;
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: -0.015em;
 }
 
-/* =====================================================
-   BODY
-===================================================== */
-
-.curriculum-modal-body {
-  padding: 26px 28px;
-
-  overflow-y: auto;
-}
-
-.curriculum-modal-body::-webkit-scrollbar {
-  width: 7px;
-}
-
-.curriculum-modal-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.curriculum-modal-body::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 10px;
-}
-
-/* =====================================================
-   ERROR
-===================================================== */
-
-.curriculum-modal-error {
-  margin-bottom: 20px;
-
-  padding: 12px 14px;
-
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-
-  background: #fef2f2;
-
-  color: #b91c1c;
-
-  font-size: 13px;
+.registrar-curriculum-subject-modal__header p {
+  max-width: 590px;
+  margin: 5px 0 0;
+  color: #68756c;
+  font-size: 12px;
   line-height: 1.5;
 }
 
-/* =====================================================
-   FORM
-===================================================== */
+.registrar-curriculum-subject-modal__close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid #d7e0d9;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #657168;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
 
-.curriculum-form-group {
+.registrar-curriculum-subject-modal__close:hover:not(:disabled) {
+  border-color: #b9cabb;
+  background: #f3f8f4;
+  color: #245d32;
+}
+
+.registrar-curriculum-subject-modal__close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.registrar-curriculum-subject-modal__body {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  overflow-y: auto;
+  background: #f8faf8;
+}
+
+.registrar-curriculum-subject-modal__section {
+  padding: 15px;
+  border: 1px solid #e0e8e1;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.registrar-curriculum-subject-modal__section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+
+.registrar-curriculum-subject-modal__section-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #eef8f0;
+  color: #1b7a3c;
+}
+
+.registrar-curriculum-subject-modal__section-heading h3 {
+  margin: 0;
+  color: #25332a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.registrar-curriculum-subject-modal__section-heading p {
+  margin: 3px 0 0;
+  color: #758079;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.registrar-curriculum-subject-modal__grid {
+  display: grid;
+  gap: 12px;
+}
+
+.registrar-curriculum-subject-modal__grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.registrar-curriculum-subject-modal__grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.registrar-curriculum-subject-modal__field {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-
-  gap: 7px;
-
-  flex: 1;
+  gap: 6px;
 }
 
-.curriculum-form-group label {
-  font-size: 13px;
-  font-weight: 600;
-
-  color: #374151;
+.registrar-curriculum-subject-modal__field + .registrar-curriculum-subject-modal__field {
+  margin-top: 12px;
 }
 
-.curriculum-form-group label span {
-  color: #dc2626;
+.registrar-curriculum-subject-modal__grid .registrar-curriculum-subject-modal__field + .registrar-curriculum-subject-modal__field {
+  margin-top: 0;
 }
 
-.curriculum-form-group input,
-.curriculum-form-group select {
+.registrar-curriculum-subject-modal__field label {
+  color: #405047;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+
+.registrar-curriculum-subject-modal__field label span {
+  color: #b64040;
+}
+
+.registrar-curriculum-subject-modal__field input,
+.registrar-curriculum-subject-modal__field select,
+.registrar-curriculum-subject-modal__search input {
   width: 100%;
-  height: 42px;
-
-  box-sizing: border-box;
-
-  padding: 0 12px;
-
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-
+  min-height: 40px;
+  border: 1px solid #d2ddd4;
+  border-radius: 9px;
   background: #ffffff;
-
-  color: #111827;
-
-  font-size: 14px;
-
+  color: #253229;
+  font-size: 12px;
   outline: none;
-
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: border-color 0.17s ease, box-shadow 0.17s ease, background 0.17s ease;
 }
 
-.curriculum-form-group input:focus,
-.curriculum-form-group select:focus {
-  border-color: #2563eb;
-
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+.registrar-curriculum-subject-modal__field input,
+.registrar-curriculum-subject-modal__field select {
+  padding: 0 11px;
 }
 
-.curriculum-form-group input:disabled,
-.curriculum-form-group select:disabled {
-  background: #f9fafb;
+.registrar-curriculum-subject-modal__field input:focus,
+.registrar-curriculum-subject-modal__field select:focus,
+.registrar-curriculum-subject-modal__search input:focus {
+  border-color: #7eb58a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
 
-  color: #9ca3af;
-
+.registrar-curriculum-subject-modal__field input:disabled,
+.registrar-curriculum-subject-modal__field select:disabled,
+.registrar-curriculum-subject-modal__search input:disabled {
+  background: #f3f5f3;
+  color: #879189;
   cursor: not-allowed;
 }
 
-/* =====================================================
-   FORM ROW
-===================================================== */
-
-.curriculum-form-row {
-  display: flex;
-
-  gap: 16px;
-
-  margin-top: 18px;
+.registrar-curriculum-subject-modal__field small {
+  color: #7c877f;
+  font-size: 9.5px;
+  line-height: 1.4;
 }
 
-.curriculum-form-row.three-columns {
+.registrar-curriculum-subject-modal__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.registrar-curriculum-subject-modal__search > svg {
+  position: absolute;
+  left: 11px;
+  color: #77827a;
+  pointer-events: none;
+}
+
+.registrar-curriculum-subject-modal__search input {
+  padding: 0 36px 0 35px;
+}
+
+.registrar-curriculum-subject-modal__search button {
+  position: absolute;
+  right: 8px;
   display: grid;
-
-  grid-template-columns: repeat(3, 1fr);
-}
-
-/* =====================================================
-   SELECTED SUBJECT
-===================================================== */
-
-.selected-subject-display {
-  min-height: 42px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  padding: 9px 12px;
-
-  box-sizing: border-box;
-
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-
-  background: #f9fafb;
-
-  font-size: 14px;
-}
-
-.selected-subject-display strong {
-  color: #1d4ed8;
-}
-
-.selected-subject-display span {
-  color: #374151;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* =====================================================
-   FOOTER
-===================================================== */
-
-.curriculum-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 18px 28px;
-
-  border-top: 1px solid #e5e7eb;
-
-  background: #fafafa;
-}
-
-.curriculum-modal-cancel,
-.curriculum-modal-submit {
-  height: 40px;
-
-  padding: 0 18px;
-
-  border-radius: 8px;
-
-  font-size: 13px;
-  font-weight: 600;
-
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6e7a72;
   cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.1s ease;
 }
 
-.curriculum-modal-cancel {
-  border: 1px solid #d1d5db;
+.registrar-curriculum-subject-modal__search button:hover:not(:disabled) {
+  background: #edf5ef;
+  color: #176c34;
+}
 
+.registrar-curriculum-subject-modal__subject-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #cfe3d3;
+  border-radius: 11px;
+  background: #f2faf4;
+}
+
+.registrar-curriculum-subject-modal__subject-preview > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.registrar-curriculum-subject-modal__subject-preview strong {
+  color: #176c34;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.registrar-curriculum-subject-modal__subject-preview span {
+  color: #425047;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.registrar-curriculum-subject-modal__subject-preview small {
+  flex-shrink: 0;
+  padding: 5px 7px;
+  border-radius: 7px;
   background: #ffffff;
-
-  color: #374151;
+  color: #496052;
+  font-size: 10px;
+  font-weight: 750;
 }
 
-.curriculum-modal-cancel:hover:not(:disabled) {
-  background: #f3f4f6;
+.registrar-curriculum-subject-modal__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid #efc8c8;
+  border-radius: 10px;
+  background: #fff6f6;
+  color: #9d3838;
 }
 
-.curriculum-modal-submit {
-  border: 1px solid #2563eb;
-
-  background: #2563eb;
-
+.registrar-curriculum-subject-modal__error > span {
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #b94646;
   color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
 }
 
-.curriculum-modal-submit:hover:not(:disabled) {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+.registrar-curriculum-subject-modal__error p {
+  margin: 1px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
-.curriculum-modal-submit:active:not(:disabled),
-.curriculum-modal-cancel:active:not(:disabled) {
-  transform: translateY(1px);
+.registrar-curriculum-subject-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid #dfe8e1;
+  background: #ffffff;
 }
 
-.curriculum-modal-cancel:disabled,
-.curriculum-modal-submit:disabled {
-  opacity: 0.6;
+.registrar-curriculum-subject-modal__footer-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #738078;
+  font-size: 10.5px;
+}
 
+.registrar-curriculum-subject-modal__footer-note svg {
+  color: #278149;
+}
+
+.registrar-curriculum-subject-modal__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.registrar-curriculum-subject-modal__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.registrar-curriculum-subject-modal__button:disabled {
+  opacity: 0.58;
   cursor: not-allowed;
 }
 
-/* =====================================================
-   ANIMATIONS
-===================================================== */
-
-@keyframes curriculumModalFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+.registrar-curriculum-subject-modal__button--secondary {
+  border: 1px solid #d2ddd4;
+  background: #ffffff;
+  color: #4c5d51;
 }
 
-@keyframes curriculumModalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.registrar-curriculum-subject-modal__button--secondary:hover:not(:disabled) {
+  border-color: #aec3b2;
+  background: #f6f9f6;
 }
 
-/* =====================================================
-   RESPONSIVE
-===================================================== */
+.registrar-curriculum-subject-modal__button--primary {
+  border: 1px solid #166534;
+  background: linear-gradient(180deg, #17813d, #166534);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(21, 128, 61, 0.16);
+}
 
-@media (max-width: 700px) {
-  .curriculum-modal-overlay {
+.registrar-curriculum-subject-modal__button--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(21, 128, 61, 0.2);
+}
+
+.registrar-curriculum-subject-modal button:focus-visible,
+.registrar-curriculum-subject-modal input:focus-visible,
+.registrar-curriculum-subject-modal select:focus-visible {
+  outline: 3px solid rgba(22, 163, 74, 0.2);
+  outline-offset: 2px;
+}
+
+.registrar-curriculum-subject-modal .is-spinning {
+  animation: rcsm-spin 0.8s linear infinite;
+}
+
+@keyframes rcsm-spin { to { transform: rotate(360deg); } }
+@keyframes rcsm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rcsm-rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 680px) {
+  .registrar-curriculum-subject-modal__overlay {
     padding: 12px;
   }
 
-  .curriculum-subject-modal {
+  .registrar-curriculum-subject-modal {
     max-height: calc(100vh - 24px);
-
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
-  .curriculum-modal-header {
-    padding: 20px;
+  .registrar-curriculum-subject-modal form {
+    max-height: calc(100vh - 24px - 126px);
   }
 
-  .curriculum-modal-body {
-    padding: 20px;
+  .registrar-curriculum-subject-modal__header {
+    padding: 17px 16px;
   }
 
-  .curriculum-modal-footer {
-    padding: 16px 20px;
+  .registrar-curriculum-subject-modal__header-icon {
+    display: none;
   }
 
-  .curriculum-form-row {
-    flex-direction: column;
-
-    gap: 16px;
+  .registrar-curriculum-subject-modal__body {
+    padding: 14px;
   }
 
-  .curriculum-form-row.three-columns {
+  .registrar-curriculum-subject-modal__grid--two,
+  .registrar-curriculum-subject-modal__grid--three {
     grid-template-columns: 1fr;
+  }
+
+  .registrar-curriculum-subject-modal__footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px 14px;
+  }
+
+  .registrar-curriculum-subject-modal__footer-note {
+    display: none;
+  }
+
+  .registrar-curriculum-subject-modal__footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registrar-curriculum-subject-modal,
+  .registrar-curriculum-subject-modal *,
+  .registrar-curriculum-subject-modal__overlay {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

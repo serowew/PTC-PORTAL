@@ -1,48 +1,97 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Activity,
+  AlertTriangle,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  CircleOff,
+  Eye,
+  Filter,
+  Loader2,
+  Megaphone,
+  Pencil,
+  Plus,
+  Search,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-
-import { useNavigate } from "react-router-dom";
-
 import "../../../styles/announcementRegistrar.css";
 
 const API_BASE_URL = "http://localhost:3000";
 
 interface Announcement {
   announcement_id: number;
-
   title: string;
-
   content: string;
-
   created_by: string;
-
   publish_date: string;
-
   expiry_date: string | null;
-
   is_active: number;
-
   created_at: string;
-
   recipients: string | null;
-
   attachments: string | null;
 }
 
 interface AnnouncementResponse {
   success?: boolean;
-
   data?: Announcement[];
-
   announcements?: Announcement[];
-
   message?: string;
-
   error?: string;
 }
+
+interface DeleteResponse {
+  success?: boolean;
+  message?: string;
+  error?: string;
+}
+
+type StatusFilter = "all" | "active" | "inactive";
+
+const formatDate = (date: string | null | undefined) => {
+  if (!date) return "Not set";
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return "Not set";
+
+  return parsedDate.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const getRecipientLabels = (recipients: string | null) => {
+  if (!recipients?.trim()) return [];
+
+  const value = recipients.trim();
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((item) => String(item).trim())
+        .filter(Boolean);
+    }
+  } catch {
+    // The backend may return a normal comma-separated string.
+  }
+
+  return value
+    .split(/[,;|]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
 
 export default function AnnouncementListR() {
   const navigate = useNavigate();
@@ -52,11 +101,8 @@ export default function AnnouncementListR() {
   // =====================================================
 
   const user = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = user?.role;
-
   const authenticated = Boolean(user && token);
 
   // =====================================================
@@ -64,10 +110,16 @@ export default function AnnouncementListR() {
   // =====================================================
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [recipientFilter, setRecipientFilter] = useState("all");
+
+  const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // =====================================================
   // AUTHORIZATION
@@ -76,26 +128,38 @@ export default function AnnouncementListR() {
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      navigate("/login", { replace: true });
       return;
     }
 
     if (userRole !== "Registrar") {
       if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), {
-          replace: true,
-        });
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
       } else {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login", { replace: true });
       }
     }
   }, [authenticated, userRole, navigate]);
+
+  useEffect(() => {
+    if (!deleteTarget) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !deleting) {
+        setDeleteTarget(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [deleteTarget, deleting]);
 
   // =====================================================
   // LOAD ANNOUNCEMENTS
@@ -111,53 +175,23 @@ export default function AnnouncementListR() {
     const loadAnnouncements = async () => {
       try {
         setLoading(true);
-
         setError("");
+        setActionError("");
 
-        // =================================================
-        // REGISTRAR MANAGEMENT ENDPOINT
-        //
-        // This page can:
-        // - View all announcements
-        // - Create announcements
-        // - Edit announcements
-        //
-        // Therefore it uses:
-        //
-        // /api/announcement-management
-        //
-        // NOT:
-        //
-        // /api/announcements
-        //
-        // The shared /api/announcements route is only for
-        // normal role-filtered announcement viewing.
-        // =================================================
-
+        // Registrar management endpoint is intentionally preserved.
         const url = `${API_BASE_URL}/api/announcement-management`;
 
         console.log("GET REGISTRAR ANNOUNCEMENT MANAGEMENT:", url);
 
-        // =================================================
-        // JWT AUTHENTICATED REQUEST
-        // =================================================
-
         const response = await authService.authFetch(url, {
           method: "GET",
-
           signal: controller.signal,
-
           headers: {
             Accept: "application/json",
           },
         });
 
-        // =================================================
-        // SAFE RESPONSE
-        // =================================================
-
         const contentType = response.headers.get("content-type") || "";
-
         let data: Announcement[] | AnnouncementResponse | null = null;
 
         if (contentType.includes("application/json")) {
@@ -173,23 +207,11 @@ export default function AnnouncementListR() {
           );
         }
 
-        // =================================================
-        // 401
-        // =================================================
-
         if (response.status === 401) {
           authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
+          navigate("/login", { replace: true });
           return;
         }
-
-        // =================================================
-        // 403
-        // =================================================
 
         if (response.status === 403) {
           const responseObject = !Array.isArray(data) ? data : null;
@@ -201,10 +223,6 @@ export default function AnnouncementListR() {
           );
         }
 
-        // =================================================
-        // HTTP ERROR
-        // =================================================
-
         if (!response.ok) {
           const responseObject = !Array.isArray(data) ? data : null;
 
@@ -214,18 +232,6 @@ export default function AnnouncementListR() {
               `Failed to load announcements (${response.status}).`,
           );
         }
-
-        // =================================================
-        // NORMALIZE RESPONSE
-        //
-        // Supports:
-        //
-        // [...]
-        //
-        // { data: [...] }
-        //
-        // { announcements: [...] }
-        // =================================================
 
         let loadedAnnouncements: Announcement[] = [];
 
@@ -238,7 +244,6 @@ export default function AnnouncementListR() {
         }
 
         console.log("REGISTRAR MANAGEMENT ANNOUNCEMENTS:", loadedAnnouncements);
-
         setAnnouncements(loadedAnnouncements);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
@@ -246,14 +251,12 @@ export default function AnnouncementListR() {
         }
 
         console.error("LOAD REGISTRAR ANNOUNCEMENTS ERROR:", err);
-
         setAnnouncements([]);
 
         if (err instanceof TypeError) {
           setError(
             "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
           );
-
           return;
         }
 
@@ -273,6 +276,181 @@ export default function AnnouncementListR() {
   }, [authenticated, userRole, navigate]);
 
   // =====================================================
+  // FRONTEND-ONLY DIRECTORY HELPERS
+  // =====================================================
+
+  const recipientOptions = useMemo(() => {
+    const recipients = new Set<string>();
+
+    announcements.forEach((announcement) => {
+      getRecipientLabels(announcement.recipients).forEach((recipient) => {
+        recipients.add(recipient);
+      });
+    });
+
+    return Array.from(recipients).sort((a, b) => a.localeCompare(b));
+  }, [announcements]);
+
+  const summary = useMemo(() => {
+    const active = announcements.filter(
+      (announcement) => Number(announcement.is_active) === 1,
+    ).length;
+
+    return {
+      total: announcements.length,
+      active,
+      inactive: announcements.length - active,
+      audiences: recipientOptions.length,
+    };
+  }, [announcements, recipientOptions.length]);
+
+  const filteredAnnouncements = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return announcements.filter((announcement) => {
+      const active = Number(announcement.is_active) === 1;
+      const recipientLabels = getRecipientLabels(announcement.recipients);
+
+      const matchesSearch =
+        !normalizedSearch ||
+        announcement.title?.toLowerCase().includes(normalizedSearch) ||
+        announcement.content?.toLowerCase().includes(normalizedSearch) ||
+        announcement.created_by?.toLowerCase().includes(normalizedSearch) ||
+        recipientLabels.some((recipient) =>
+          recipient.toLowerCase().includes(normalizedSearch),
+        );
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && active) ||
+        (statusFilter === "inactive" && !active);
+
+      const matchesRecipient =
+        recipientFilter === "all" || recipientLabels.includes(recipientFilter);
+
+      return matchesSearch && matchesStatus && matchesRecipient;
+    });
+  }, [announcements, searchTerm, statusFilter, recipientFilter]);
+
+  const hasFilters =
+    searchTerm.trim().length > 0 ||
+    statusFilter !== "all" ||
+    recipientFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setRecipientFilter("all");
+  };
+
+  // =====================================================
+  // DELETE ANNOUNCEMENT
+  // =====================================================
+
+  const openDeleteModal = (announcement: Announcement) => {
+    setActionError("");
+    setSuccessMessage("");
+    setDeleteTarget(announcement);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+  };
+
+  const deleteAnnouncement = async () => {
+    if (!deleteTarget) return;
+
+    if (!authenticated || userRole !== "Registrar") {
+      setActionError(
+        "Your session has expired or you are not authorized to delete announcements.",
+      );
+      return;
+    }
+
+    const announcementId = Number(deleteTarget.announcement_id);
+
+    if (!Number.isInteger(announcementId) || announcementId <= 0) {
+      setActionError("Invalid announcement ID.");
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      setActionError("");
+      setSuccessMessage("");
+
+      const response = await authService.authFetch(
+        `${API_BASE_URL}/api/announcement-management/${announcementId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      const contentType = response.headers.get("content-type") || "";
+      let data: DeleteResponse | null = null;
+
+      if (contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const responseText = await response.text();
+        throw new Error(
+          `Server returned a non-JSON response (${response.status}): ${responseText.slice(
+            0,
+            200,
+          )}`,
+        );
+      }
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (response.status === 403) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "You are not authorized to delete announcements.",
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            `Failed to delete announcement (${response.status}).`,
+        );
+      }
+
+      const deletedTitle = deleteTarget.title || "Announcement";
+
+      setAnnouncements((current) =>
+        current.filter(
+          (announcement) =>
+            Number(announcement.announcement_id) !== announcementId,
+        ),
+      );
+
+      setDeleteTarget(null);
+      setSuccessMessage(
+        data?.message || `"${deletedTitle}" was deleted successfully.`,
+      );
+    } catch (err) {
+      console.error("DELETE REGISTRAR ANNOUNCEMENT ERROR:", err);
+      setActionError(
+        err instanceof Error ? err.message : "Unable to delete announcement.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // =====================================================
   // AUTH GUARD
   // =====================================================
 
@@ -286,129 +464,560 @@ export default function AnnouncementListR() {
 
   return (
     <DashboardLayout>
-      <div className="registrar-announcement-listR">
-        {/* =================================================
-            HEADER
-        ================================================= */}
+      <main className="registrar-announcements">
+        {/* HERO */}
+        <section className="registrar-announcements__hero">
+          <div className="registrar-announcements__hero-copy">
+            <div className="registrar-announcements__eyebrow">
+              <span className="registrar-announcements__eyebrow-icon">
+                <Megaphone size={16} strokeWidth={2.2} />
+              </span>
+              Registrar · Announcements
+            </div>
 
-        <div className="announcement-header">
-          <h2>Announcement Management</h2>
+            <h1>Announcement Management</h1>
+            <p>
+              Create, review, and manage official portal announcements from one
+              organized Registrar workspace.
+            </p>
+          </div>
 
-          <button
-            type="button"
-            className="announcement-btn"
-            onClick={() => navigate("/registrar/announcement/createR")}
-          >
-            + Create Announcement
-          </button>
-        </div>
+          <div className="registrar-announcements__hero-actions">
+            <div className="registrar-announcements__hero-badge">
+              <span className="registrar-announcements__hero-badge-icon">
+                <ShieldCheck size={19} strokeWidth={2.1} />
+              </span>
+              <span>
+                <small>Access</small>
+                <strong>Registrar Manager</strong>
+              </span>
+            </div>
 
-        {/* =================================================
-            LOADING
-        ================================================= */}
+            <button
+              type="button"
+              className="registrar-announcements__button registrar-announcements__button--primary"
+              onClick={() => navigate("/registrar/announcement/createR")}
+            >
+              <Plus size={17} strokeWidth={2.3} />
+              Create Announcement
+            </button>
+          </div>
+        </section>
 
-        {loading && <p>Loading announcements...</p>}
+        {/* SUMMARY */}
+        {!loading && !error && (
+          <section className="registrar-announcements__stats" aria-label="Announcement summary">
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon registrar-announcements__stat-icon--primary">
+                <Megaphone size={20} />
+              </span>
+              <div>
+                <span>Total Announcements</span>
+                <strong>{summary.total}</strong>
+                <small>All management records</small>
+              </div>
+            </article>
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon registrar-announcements__stat-icon--success">
+                <CheckCircle2 size={20} />
+              </span>
+              <div>
+                <span>Active</span>
+                <strong>{summary.active}</strong>
+                <small>Currently marked active</small>
+              </div>
+            </article>
 
-        {!loading && error && <p className="error">{error}</p>}
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon">
+                <CircleOff size={20} />
+              </span>
+              <div>
+                <span>Inactive</span>
+                <strong>{summary.inactive}</strong>
+                <small>Currently marked inactive</small>
+              </div>
+            </article>
 
-        {/* =================================================
-            EMPTY
-        ================================================= */}
-
-        {!loading && !error && announcements.length === 0 && (
-          <p>No announcements found.</p>
+            <article className="registrar-announcements__stat-card">
+              <span className="registrar-announcements__stat-icon">
+                <UsersRound size={20} />
+              </span>
+              <div>
+                <span>Audience Groups</span>
+                <strong>{summary.audiences}</strong>
+                <small>Recipient labels in use</small>
+              </div>
+            </article>
+          </section>
         )}
 
-        {/* =================================================
-            ANNOUNCEMENT LIST
-        ================================================= */}
+        {(actionError || successMessage) && (
+          <div
+            className={`registrar-announcements__feedback ${
+              actionError
+                ? "registrar-announcements__feedback--error"
+                : "registrar-announcements__feedback--success"
+            }`}
+            role={actionError ? "alert" : "status"}
+          >
+            <span className="registrar-announcements__feedback-icon">
+              {actionError ? (
+                <AlertTriangle size={18} />
+              ) : (
+                <CheckCircle2 size={18} />
+              )}
+            </span>
 
-        <div className="announcement-list">
-          {!loading &&
-            !error &&
-            announcements.map((item) => (
-              <div key={item.announcement_id} className="announcement-card">
-                {/* TITLE */}
+            <div>
+              <strong>
+                {actionError
+                  ? "Announcement could not be deleted"
+                  : "Announcement deleted"}
+              </strong>
+              <p>{actionError || successMessage}</p>
+            </div>
 
-                <h3>{item.title}</h3>
+            <button
+              type="button"
+              aria-label="Dismiss message"
+              onClick={() => {
+                setActionError("");
+                setSuccessMessage("");
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
-                {/* CONTENT PREVIEW */}
+        {/* WORKSPACE */}
+        <section className="registrar-announcements__workspace">
+          <div className="registrar-announcements__workspace-header">
+            <div>
+              <span className="registrar-announcements__section-kicker">
+                <Activity size={14} /> Announcement Directory
+              </span>
+              <h2>Manage Announcements</h2>
+              <p>
+                Search, review, edit, and safely delete announcements without
+                leaving the Registrar management workspace.
+              </p>
+            </div>
 
-                <p>
-                  {item.content && item.content.length > 150
-                    ? `${item.content.substring(0, 150)}...`
-                    : item.content}
-                </p>
+            {!loading && !error && (
+              <span className="registrar-announcements__record-count">
+                {filteredAnnouncements.length} of {announcements.length} records
+              </span>
+            )}
+          </div>
 
-                {/* META */}
+          {!loading && !error && announcements.length > 0 && (
+            <>
+              <div className="registrar-announcements__toolbar">
+                <div className="registrar-announcements__search">
+                  <Search size={17} />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search title, content, creator, or recipient..."
+                    aria-label="Search announcements"
+                  />
 
-                <div className="announcement-footer">
-                  <span>
-                    Created by:
-                    <strong> {item.created_by || "Unknown"}</strong>
-                  </span>
-
-                  <span>
-                    {item.publish_date
-                      ? new Date(item.publish_date).toLocaleDateString()
-                      : "No publish date"}
-                  </span>
-                </div>
-
-                {/* STATUS */}
-
-                <div className="announcement-footer">
-                  <span>
-                    Status:
-                    <strong>
-                      {" "}
-                      {Number(item.is_active) === 1 ? "Active" : "Inactive"}
-                    </strong>
-                  </span>
-
-                  {item.recipients && (
-                    <span>
-                      Recipients:
-                      <strong> {item.recipients}</strong>
-                    </span>
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      className="registrar-announcements__search-clear"
+                      onClick={() => setSearchTerm("")}
+                      aria-label="Clear search"
+                    >
+                      <X size={15} />
+                    </button>
                   )}
                 </div>
 
-                {/* ACTIONS */}
+                <div className="registrar-announcements__filters">
+                  <span className="registrar-announcements__filter-label">
+                    <Filter size={14} /> Filters
+                  </span>
 
-                <div className="announcement-actions">
-                  <button
-                    type="button"
-                    className="announcement-btn"
-                    onClick={() =>
-                      navigate(
-                        `/registrar/announcement/DetailR/${item.announcement_id}`,
-                      )
+                  <select
+                    value={statusFilter}
+                    onChange={(event) =>
+                      setStatusFilter(event.target.value as StatusFilter)
                     }
+                    aria-label="Filter announcements by status"
                   >
-                    View Details
-                  </button>
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
 
-                  <button
-                    type="button"
-                    className="announcement-btn"
-                    onClick={() =>
-                      navigate(
-                        `/registrar/announcement/editR/${item.announcement_id}`,
-                      )
-                    }
+                  <select
+                    value={recipientFilter}
+                    onChange={(event) => setRecipientFilter(event.target.value)}
+                    aria-label="Filter announcements by recipient"
                   >
-                    Edit
-                  </button>
+                    <option value="all">All Recipients</option>
+                    {recipientOptions.map((recipient) => (
+                      <option value={recipient} key={recipient}>
+                        {recipient}
+                      </option>
+                    ))}
+                  </select>
+
+                  {hasFilters && (
+                    <button
+                      type="button"
+                      className="registrar-announcements__clear-filters"
+                      onClick={clearFilters}
+                    >
+                      <X size={14} />
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
-        </div>
-      </div>
+
+              {hasFilters && (
+                <div className="registrar-announcements__filter-summary">
+                  <Filter size={13} />
+                  <strong>Active filters</strong>
+                  {searchTerm.trim() && <span>Search: {searchTerm.trim()}</span>}
+                  {statusFilter !== "all" && <span>Status: {statusFilter}</span>}
+                  {recipientFilter !== "all" && (
+                    <span>Recipient: {recipientFilter}</span>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* LOADING */}
+          {loading && (
+            <div className="registrar-announcements__card-grid registrar-announcements__card-grid--loading">
+              {[1, 2, 3, 4, 5, 6].map((item) => (
+                <div className="registrar-announcements__skeleton-card" key={item}>
+                  <div className="registrar-announcements__skeleton-line registrar-announcements__skeleton-line--short" />
+                  <div className="registrar-announcements__skeleton-line registrar-announcements__skeleton-line--title" />
+                  <div className="registrar-announcements__skeleton-line" />
+                  <div className="registrar-announcements__skeleton-line" />
+                  <div className="registrar-announcements__skeleton-footer" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ERROR */}
+          {!loading && error && (
+            <div className="registrar-announcements__state registrar-announcements__state--error">
+              <span className="registrar-announcements__state-icon">
+                <CircleOff size={25} />
+              </span>
+              <h3>Announcements could not be loaded</h3>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {/* EMPTY */}
+          {!loading && !error && announcements.length === 0 && (
+            <div className="registrar-announcements__state">
+              <span className="registrar-announcements__state-icon">
+                <Megaphone size={26} />
+              </span>
+              <h3>No announcements yet</h3>
+              <p>
+                Create the first Registrar announcement to start building the
+                announcement directory.
+              </p>
+              <button
+                type="button"
+                className="registrar-announcements__button registrar-announcements__button--primary"
+                onClick={() => navigate("/registrar/announcement/createR")}
+              >
+                <Plus size={17} />
+                Create Announcement
+              </button>
+            </div>
+          )}
+
+          {/* FILTERED EMPTY */}
+          {!loading &&
+            !error &&
+            announcements.length > 0 &&
+            filteredAnnouncements.length === 0 && (
+              <div className="registrar-announcements__state">
+                <span className="registrar-announcements__state-icon">
+                  <Search size={26} />
+                </span>
+                <h3>No matching announcements</h3>
+                <p>
+                  Try changing the search term or clearing one of the active
+                  filters.
+                </p>
+                <button
+                  type="button"
+                  className="registrar-announcements__button registrar-announcements__button--secondary"
+                  onClick={clearFilters}
+                >
+                  <X size={16} />
+                  Clear Filters
+                </button>
+              </div>
+            )}
+
+          {/* ANNOUNCEMENT GRID */}
+          {!loading && !error && filteredAnnouncements.length > 0 && (
+            <div className="registrar-announcements__card-grid">
+              {filteredAnnouncements.map((item) => {
+                const active = Number(item.is_active) === 1;
+                const recipientLabels = getRecipientLabels(item.recipients);
+                const visibleRecipients = recipientLabels.slice(0, 3);
+                const hiddenRecipientCount = Math.max(
+                  recipientLabels.length - visibleRecipients.length,
+                  0,
+                );
+
+                return (
+                  <article
+                    key={item.announcement_id}
+                    className="registrar-announcements__card"
+                  >
+                    <div className="registrar-announcements__card-top">
+                      <span className="registrar-announcements__card-icon">
+                        <Megaphone size={18} />
+                      </span>
+
+                      <span
+                        className={`registrar-announcements__status ${
+                          active
+                            ? "registrar-announcements__status--active"
+                            : "registrar-announcements__status--inactive"
+                        }`}
+                      >
+                        <span />
+                        {active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="registrar-announcements__card-heading">
+                      <span>Announcement #{item.announcement_id}</span>
+                      <h3>{item.title || "Untitled Announcement"}</h3>
+                    </div>
+
+                    <p className="registrar-announcements__preview">
+                      {item.content
+                        ? item.content.length > 180
+                          ? `${item.content.substring(0, 180)}...`
+                          : item.content
+                        : "No announcement content was provided."}
+                    </p>
+
+                    <div className="registrar-announcements__meta-grid">
+                      <div className="registrar-announcements__meta-item">
+                        <UserRound size={15} />
+                        <div>
+                          <span>Created By</span>
+                          <strong>{item.created_by || "Unknown"}</strong>
+                        </div>
+                      </div>
+
+                      <div className="registrar-announcements__meta-item">
+                        <CalendarDays size={15} />
+                        <div>
+                          <span>Publish Date</span>
+                          <strong>{formatDate(item.publish_date)}</strong>
+                        </div>
+                      </div>
+
+                      {item.expiry_date && (
+                        <div className="registrar-announcements__meta-item registrar-announcements__meta-item--wide">
+                          <CalendarDays size={15} />
+                          <div>
+                            <span>Expiry Date</span>
+                            <strong>{formatDate(item.expiry_date)}</strong>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="registrar-announcements__recipients">
+                      <div className="registrar-announcements__recipients-label">
+                        <UsersRound size={14} />
+                        <span>Recipients</span>
+                      </div>
+
+                      <div className="registrar-announcements__recipient-list">
+                        {visibleRecipients.length > 0 ? (
+                          <>
+                            {visibleRecipients.map((recipient) => (
+                              <span
+                                className="registrar-announcements__recipient-chip"
+                                key={`${item.announcement_id}-${recipient}`}
+                              >
+                                {recipient}
+                              </span>
+                            ))}
+                            {hiddenRecipientCount > 0 && (
+                              <span className="registrar-announcements__recipient-chip registrar-announcements__recipient-chip--more">
+                                +{hiddenRecipientCount}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="registrar-announcements__recipient-chip registrar-announcements__recipient-chip--muted">
+                            Not specified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="registrar-announcements__card-actions">
+                      <button
+                        type="button"
+                        className="registrar-announcements__action-button registrar-announcements__action-button--primary"
+                        onClick={() =>
+                          navigate(
+                            `/registrar/announcement/DetailR/${item.announcement_id}`,
+                          )
+                        }
+                      >
+                        <Eye size={15} />
+                        View Details
+                        <ChevronRight size={14} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="registrar-announcements__action-button"
+                        onClick={() =>
+                          navigate(
+                            `/registrar/announcement/editR/${item.announcement_id}`,
+                          )
+                        }
+                      >
+                        <Pencil size={15} />
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="registrar-announcements__action-button registrar-announcements__action-button--danger"
+                        onClick={() => openDeleteModal(item)}
+                        aria-label={`Delete ${item.title || "announcement"}`}
+                      >
+                        <Trash2 size={15} />
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {deleteTarget && (
+          <div
+            className="registrar-announcements__modal-overlay"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeDeleteModal();
+              }
+            }}
+          >
+            <div
+              className="registrar-announcements__delete-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="registrar-delete-announcement-title"
+              aria-describedby="registrar-delete-announcement-description"
+            >
+              <button
+                type="button"
+                className="registrar-announcements__modal-close"
+                onClick={closeDeleteModal}
+                disabled={deleting}
+                aria-label="Close delete confirmation"
+              >
+                <X size={18} />
+              </button>
+
+              <span className="registrar-announcements__delete-icon">
+                <Trash2 size={23} />
+              </span>
+
+              <span className="registrar-announcements__delete-eyebrow">
+                Delete Announcement
+              </span>
+
+              <h2 id="registrar-delete-announcement-title">
+                Delete this announcement?
+              </h2>
+
+              <p id="registrar-delete-announcement-description">
+                This permanently removes the announcement from the portal. This
+                action cannot be undone.
+              </p>
+
+              <div className="registrar-announcements__delete-record">
+                <Megaphone size={18} />
+                <div>
+                  <span>Announcement #{deleteTarget.announcement_id}</span>
+                  <strong>
+                    {deleteTarget.title || "Untitled Announcement"}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="registrar-announcements__delete-warning">
+                <AlertTriangle size={17} />
+                <p>
+                  Recipient and attachment associations for this announcement
+                  will also be removed by the existing announcement-management
+                  delete process.
+                </p>
+              </div>
+
+              <div className="registrar-announcements__modal-actions">
+                <button
+                  type="button"
+                  className="registrar-announcements__button registrar-announcements__button--secondary"
+                  onClick={closeDeleteModal}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="registrar-announcements__button registrar-announcements__button--danger"
+                  onClick={() => void deleteAnnouncement()}
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2
+                        size={17}
+                        className="registrar-announcements__spin"
+                      />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={17} />
+                      Delete Announcement
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </DashboardLayout>
   );
 }

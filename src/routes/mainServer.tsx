@@ -23,16 +23,7 @@ import StudentCourseHistory from "../pages/student/AcademicRecord/CourseHistory"
 import StudentRecord from "../pages/student/AcademicRecord/StudentRecord";
 
 // Student pages — Enrollment
-
-import AddDropSubjects from "../pages/student/Enrollment/AddDrop";
-
 import Enrollmentmain from "../pages/student/Enrollment/Enrollmentmain";
-
-// Student pages — Financial
-import TuitionFees from "../pages/student/Financial/Tuitionfees";
-import PaymentHistory from "../pages/student/Financial/PaymentHistory";
-import BalanceInquiry from "../pages/student/Financial/Balance";
-import OnlinePayment from "../pages/student/Financial/OnlinePayment";
 
 // Student pages — Document
 import RequestDocument from "../pages/student/Documents/RequestDocument";
@@ -110,6 +101,7 @@ import ProgramHeadDashboard from "../pages/programhead/dashboard/Dashboard";
 import AnnouncementProg from "../pages/programhead/Announcement/AnnouncementProg";
 import AnnouncementProgD from "../pages/programhead/Announcement/AnnouncementDProg";
 import PendingGrades from "../pages/programhead/GradeApproval/PendingGrades";
+import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/TransferEvaulationPROG";
 
 //Registrar
 import RegistrarDashboard from "../pages/registrar/Dashboard";
@@ -281,31 +273,8 @@ export default function AppRoutes() {
         {/* ── Student: Enrollment ── */}
 
         <Route
-          path="/student/enrollment/add-drop"
-          element={<StudentRoute element={<AddDropSubjects />} />}
-        />
-
-        <Route
           path="/student/enrollment/main"
           element={<StudentRoute element={<Enrollmentmain />} />}
-        />
-
-        {/* ── Student: Financial ── */}
-        <Route
-          path="/student/financial/tuition"
-          element={<StudentRoute element={<TuitionFees />} />}
-        />
-        <Route
-          path="/student/financial/history"
-          element={<StudentRoute element={<PaymentHistory />} />}
-        />
-        <Route
-          path="/student/financial/balance"
-          element={<StudentRoute element={<BalanceInquiry />} />}
-        />
-        <Route
-          path="/student/financial/pay"
-          element={<StudentRoute element={<OnlinePayment />} />}
         />
 
         {/* ── Student: Document ── */}
@@ -501,22 +470,31 @@ export default function AppRoutes() {
           element={<AdminRoute element={<AnnouncementDetails />} />}
         />
 
-        {/* ── programhead: Dashboard ── */}
+        {/* ── Program Head ── */}
+
         <Route
           path="/programhead/dashboard"
           element={<ProgramHeadRoute element={<ProgramHeadDashboard />} />}
         />
+
         <Route
           path="/programhead/announcementprog"
           element={<ProgramHeadRoute element={<AnnouncementProg />} />}
         />
+
         <Route
           path="/programhead/announcementprogD/:id"
           element={<ProgramHeadRoute element={<AnnouncementProgD />} />}
         />
+
         <Route
           path="/programhead/gradeapproval/pending"
           element={<ProgramHeadRoute element={<PendingGrades />} />}
+        />
+
+        <Route
+          path="/programhead/transfer-evaluations"
+          element={<ProgramHeadRoute element={<TransferEvaluationPROG />} />}
         />
 
         <Route

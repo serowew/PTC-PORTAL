@@ -4,9 +4,162 @@ import express from "express";
 import db from "../../db.js";
 
 import { getOfficialAcademicRecordForStudent } from "../../services/academicRecord.service.js";
+import { getCurriculumProgressForStudent } from "../../services/curriculumProgress.service.js";
 
 const router = express.Router();
 
+// =====================================================
+// GET STUDENT CURRICULUM PROGRESS
+// =====================================================
+//
+// GET /api/student/academic-records/curriculum-progress
+//
+// SECURITY:
+//
+// - Student JWT required.
+// - Student identity comes ONLY from req.user.
+// - No student_id from frontend.
+// - Read-only.
+//
+// =====================================================
+
+router.get("/curriculum-progress", async (req, res) => {
+  try {
+    // =================================================
+    // 1. AUTHENTICATION
+    // =================================================
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        code: "AUTHENTICATION_REQUIRED",
+        message: "Authentication is required.",
+      });
+    }
+
+    if (req.user.role_name !== "Student") {
+      return res.status(403).json({
+        success: false,
+        code: "STUDENT_ACCESS_REQUIRED",
+        message: "Student access is required.",
+      });
+    }
+
+    const userId = Number(req.user.user_id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(401).json({
+        success: false,
+        code: "INVALID_AUTHENTICATED_USER",
+        message: "Authenticated user ID is invalid.",
+      });
+    }
+
+    // =================================================
+    // 2. AUTHENTICATED STUDENT
+    // =================================================
+
+    const [studentRows] = await db.execute(
+      `
+        SELECT
+            student_id
+        FROM students
+        WHERE user_id = ?
+        LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (studentRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        code: "STUDENT_PROFILE_NOT_FOUND",
+        message: "No Student profile is connected to this account.",
+      });
+    }
+
+    const studentId = Number(studentRows[0].student_id);
+
+    // =================================================
+    // 3. CURRICULUM PROGRESS
+    // =================================================
+
+    const progress = await getCurriculumProgressForStudent(studentId, {
+      executor: db,
+    });
+
+    // =================================================
+    // 4. RESPONSE
+    // =================================================
+
+    return res.status(200).json({
+      success: true,
+
+      code: "CURRICULUM_PROGRESS_RETRIEVED",
+
+      message: "Student curriculum progress retrieved successfully.",
+
+      student: progress.student,
+
+      curriculum: progress.curriculum,
+
+      current_academic_context: progress.current_academic_context,
+
+      summary: progress.summary,
+
+      subjects: progress.subjects,
+
+      academic_rule: progress.academic_rule,
+
+      academic_effect: {
+        read_only: true,
+
+        changes_ptc_grades: false,
+
+        changes_transfer_evaluations: false,
+
+        changes_current_enrollment: false,
+
+        reason:
+          "Curriculum progress is calculated from the Student's active curriculum, official Approved PTC grades, and official Completed + Credited transfer credits.",
+      },
+    });
+  } catch (error) {
+    console.error(
+      "GET /api/student/academic-records/curriculum-progress ERROR:",
+      error,
+    );
+
+    if (error.code === "STUDENT_PROFILE_NOT_FOUND") {
+      return res.status(404).json({
+        success: false,
+        code: error.code,
+        message: error.message,
+      });
+    }
+
+    if (
+      error.code === "VALID_ACTIVE_CURRICULUM_REQUIRED" ||
+      error.code === "ACTIVE_CURRICULUM_MISMATCH"
+    ) {
+      return res.status(409).json({
+        success: false,
+        code: error.code,
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+
+      code: "CURRICULUM_PROGRESS_RETRIEVAL_FAILED",
+
+      message: "Failed to retrieve Student curriculum progress.",
+
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
 // =====================================================
 // GET STUDENT OFFICIAL ACADEMIC RECORD
 // =====================================================

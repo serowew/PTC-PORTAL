@@ -1,336 +1,861 @@
 /* =========================================================
-   DELETE SUBJECT MODAL
-   ========================================================= */
+   REGISTRAR — DEPARTMENT MANAGEMENT
+   Fully scoped to the Department Management page.
+========================================================= */
 
-.delete-subject-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
+.registrar-department-management {
+  --rdm-green-950: #073b24;
+  --rdm-green-900: #0a4b2d;
+  --rdm-green-800: #0d653b;
+  --rdm-green-700: #0f7a45;
+  --rdm-green-600: #159452;
+  --rdm-green-100: #dcf5e6;
+  --rdm-green-50: #f1fbf5;
+  --rdm-text-950: #17201b;
+  --rdm-text-800: #28352d;
+  --rdm-text-600: #5e6b63;
+  --rdm-text-500: #76827b;
+  --rdm-border: #dfe8e2;
+  --rdm-border-strong: #cfdcd3;
+  --rdm-surface: #ffffff;
+  --rdm-bg: #f5f8f6;
+  --rdm-danger: #b42318;
+  --rdm-danger-soft: #fff2f0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 100%;
+  padding: 28px 30px 38px;
+  background:
+    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    var(--rdm-bg);
+  color: var(--rdm-text-950);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
 
-  padding: 20px;
-
-  background: rgba(15, 23, 42, 0.55);
-
+.registrar-department-management *,
+.registrar-department-management *::before,
+.registrar-department-management *::after {
   box-sizing: border-box;
 }
 
-/* =========================================================
-   MODAL
-   ========================================================= */
-
-.delete-subject-modal {
-  width: 100%;
-  max-width: 440px;
-
-  padding: 28px;
-
-  background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  box-shadow:
-    0 20px 40px rgba(15, 23, 42, 0.15),
-    0 4px 12px rgba(15, 23, 42, 0.08);
-
-  box-sizing: border-box;
-
-  animation: delete-subject-modal-in 0.18s ease-out;
-}
-
-@keyframes delete-subject-modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.registrar-department-management button,
+.registrar-department-management input {
+  font: inherit;
 }
 
 /* =========================================================
-   ICON
-   ========================================================= */
+   HERO
+========================================================= */
 
-.delete-subject-modal-icon {
-  width: 44px;
-  height: 44px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  margin-bottom: 18px;
-
-  border-radius: 50%;
-
-  background: #fef2f2;
-  color: #dc2626;
-
-  font-size: 22px;
-  font-weight: 800;
-}
-
-/* =========================================================
-   CONTENT
-   ========================================================= */
-
-.delete-subject-modal-content h2 {
-  margin: 0 0 8px;
-
-  color: #111827;
-
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.delete-subject-modal-content p {
-  margin: 0;
-
-  color: #6b7280;
-
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-/* =========================================================
-   SUBJECT INFORMATION
-   ========================================================= */
-
-.delete-subject-info {
+.registrar-department-management__hero {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  gap: 15px;
-
-  margin-top: 20px;
-  padding: 15px 16px;
-
-  background: #f9fafb;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-
-  box-sizing: border-box;
+  gap: 24px;
+  padding: 25px 28px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(15, 122, 69, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(247, 253, 249, 0.98) 66%,
+    rgba(230, 247, 237, 0.98) 100%
+  );
+  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
 }
 
-.delete-subject-info-main {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 4px;
+.registrar-department-management__hero::after {
+  content: "";
+  position: absolute;
+  top: -90px;
+  right: -72px;
+  width: 230px;
+  height: 230px;
+  border: 38px solid rgba(15, 122, 69, 0.055);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.delete-subject-info-main strong {
-  color: #1d4ed8;
+.registrar-department-management__hero-copy,
+.registrar-department-management__hero-actions {
+  position: relative;
+  z-index: 1;
+}
 
+.registrar-department-management__hero-copy {
+  max-width: 780px;
+}
+
+.registrar-department-management__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--rdm-green-800);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.registrar-department-management__eyebrow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--rdm-green-700);
+  background: var(--rdm-green-100);
+  border-radius: 9px;
+}
+
+.registrar-department-management__hero h1 {
+  margin: 0;
+  color: var(--rdm-text-950);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 760;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.registrar-department-management__hero p {
+  max-width: 760px;
+  margin: 9px 0 0;
+  color: var(--rdm-text-600);
   font-size: 14px;
-  font-weight: 700;
+  line-height: 1.65;
 }
 
-.delete-subject-info-main span {
-  overflow: hidden;
+.registrar-department-management__hero-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
 
-  color: #374151;
+/* =========================================================
+   BUTTONS
+========================================================= */
 
+.registrar-department-management__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   font-size: 13px;
+  font-weight: 720;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
 
+.registrar-department-management__button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.registrar-department-management__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.registrar-department-management__button--primary {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--rdm-green-700), var(--rdm-green-900));
+  border-color: var(--rdm-green-800);
+  box-shadow: 0 6px 16px rgba(10, 75, 45, 0.16);
+}
+
+.registrar-department-management__button--primary:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(10, 75, 45, 0.22);
+}
+
+.registrar-department-management__button--secondary {
+  color: var(--rdm-green-800);
+  background: #ffffff;
+  border-color: var(--rdm-border-strong);
+}
+
+.registrar-department-management__button--secondary:hover:not(:disabled) {
+  background: var(--rdm-green-50);
+  border-color: rgba(15, 122, 69, 0.34);
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.registrar-department-management__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.registrar-department-management__stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 17px 18px;
+  background: var(--rdm-surface);
+  border: 1px solid var(--rdm-border);
+  border-radius: 15px;
+  box-shadow: 0 5px 18px rgba(31, 56, 40, 0.045);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.registrar-department-management__stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 122, 69, 0.28);
+  box-shadow: 0 9px 24px rgba(31, 56, 40, 0.07);
+}
+
+.registrar-department-management__stat-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 43px;
+  height: 43px;
+  color: var(--rdm-green-700);
+  background: var(--rdm-green-50);
+  border: 1px solid rgba(15, 122, 69, 0.12);
+  border-radius: 12px;
+}
+
+.registrar-department-management__stat-icon--primary {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--rdm-green-700), var(--rdm-green-900));
+  border-color: transparent;
+}
+
+.registrar-department-management__stat-card > div:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.registrar-department-management__stat-card span:not(.registrar-department-management__stat-icon) {
+  color: var(--rdm-text-600);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.registrar-department-management__stat-card strong {
+  color: var(--rdm-text-950);
+  font-size: 24px;
+  font-weight: 780;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.registrar-department-management__stat-card strong.registrar-department-management__stat-text {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 20px;
+  white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.registrar-department-management__stat-card small {
+  overflow: hidden;
+  color: var(--rdm-text-500);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   WORKSPACE
+========================================================= */
+
+.registrar-department-management__workspace {
+  overflow: hidden;
+  background: var(--rdm-surface);
+  border: 1px solid var(--rdm-border);
+  border-radius: 17px;
+  box-shadow: 0 7px 24px rgba(31, 56, 40, 0.055);
+}
+
+.registrar-department-management__workspace-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid #edf2ee;
+}
+
+.registrar-department-management__workspace-header > div {
+  max-width: 740px;
+}
+
+.registrar-department-management__section-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--rdm-green-700);
+  font-size: 11px;
+  font-weight: 760;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+}
+
+.registrar-department-management__workspace-header h2 {
+  margin: 0;
+  color: var(--rdm-text-950);
+  font-size: 19px;
+  font-weight: 760;
+  letter-spacing: -0.015em;
+}
+
+.registrar-department-management__workspace-header p {
+  margin: 6px 0 0;
+  color: var(--rdm-text-600);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.registrar-department-management__record-count {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  color: var(--rdm-green-800);
+  background: var(--rdm-green-50);
+  border: 1px solid rgba(15, 122, 69, 0.13);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 720;
   white-space: nowrap;
 }
 
-.delete-subject-info-units {
-  flex-shrink: 0;
+/* =========================================================
+   TOOLBAR
+========================================================= */
 
+.registrar-department-management__toolbar {
   display: flex;
-  align-items: baseline;
-
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #fbfcfb;
+  border-bottom: 1px solid #edf2ee;
 }
 
-.delete-subject-info-units strong {
-  color: #111827;
-
-  font-size: 15px;
-  font-weight: 700;
+.registrar-department-management__search-wrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 420px;
+  align-items: center;
+  max-width: 560px;
 }
 
-.delete-subject-info-units span {
-  color: #6b7280;
+.registrar-department-management__search-wrap > svg {
+  position: absolute;
+  left: 13px;
+  color: var(--rdm-text-500);
+  pointer-events: none;
+}
 
+.registrar-department-management__search-wrap input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 42px 9px 39px;
+  color: var(--rdm-text-950);
+  background: #ffffff;
+  border: 1px solid var(--rdm-border-strong);
+  border-radius: 10px;
+  outline: none;
+  font-size: 13px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.registrar-department-management__search-wrap input::placeholder {
+  color: #929d96;
+}
+
+.registrar-department-management__search-wrap input:focus {
+  border-color: rgba(15, 122, 69, 0.66);
+  box-shadow: 0 0 0 3px rgba(15, 122, 69, 0.1);
+}
+
+.registrar-department-management__search-clear {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--rdm-text-500);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.registrar-department-management__search-clear:hover {
+  color: var(--rdm-text-950);
+  background: #f0f4f1;
+}
+
+.registrar-department-management__active-filter {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px 6px 10px;
+  color: var(--rdm-green-800);
+  background: var(--rdm-green-50);
+  border: 1px solid rgba(15, 122, 69, 0.15);
+  border-radius: 999px;
   font-size: 11px;
 }
 
-/* =========================================================
-   WARNING
-   ========================================================= */
-
-.delete-subject-warning {
-  margin-top: 15px;
-  padding: 13px 15px;
-
-  background: #fff7ed;
-
-  border: 1px solid #fed7aa;
-  border-radius: 8px;
+.registrar-department-management__active-filter span {
+  color: var(--rdm-text-500);
 }
 
-.delete-subject-warning strong {
-  display: block;
-
-  margin-bottom: 4px;
-
-  color: #c2410c;
-
-  font-size: 12px;
-  font-weight: 700;
+.registrar-department-management__active-filter strong {
+  overflow: hidden;
+  max-width: 170px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.delete-subject-warning p {
-  margin: 0;
+.registrar-department-management__active-filter button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
 
-  color: #9a3412;
-
-  font-size: 12px;
-  line-height: 1.5;
+.registrar-department-management__active-filter button:hover {
+  background: rgba(15, 122, 69, 0.1);
 }
 
 /* =========================================================
-   ERROR
-   ========================================================= */
+   TABLE
+========================================================= */
 
-.delete-subject-error {
-  margin-top: 15px;
-  padding: 11px 13px;
+.registrar-department-management__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
 
-  background: #fef2f2;
+.registrar-department-management__table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
 
-  border: 1px solid #fecaca;
+.registrar-department-management__table th,
+.registrar-department-management__table td {
+  padding: 15px 18px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.registrar-department-management__table th {
+  color: var(--rdm-text-500);
+  background: #f8faf8;
+  border-bottom: 1px solid var(--rdm-border);
+  font-size: 11px;
+  font-weight: 760;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.registrar-department-management__table td {
+  color: var(--rdm-text-800);
+  border-bottom: 1px solid #edf2ee;
+  font-size: 13px;
+}
+
+.registrar-department-management__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.registrar-department-management__table tbody tr {
+  transition: background 150ms ease;
+}
+
+.registrar-department-management__table tbody tr:hover {
+  background: #fbfdfb;
+}
+
+.registrar-department-management__actions-heading {
+  width: 130px;
+  text-align: right !important;
+}
+
+.registrar-department-management__department-cell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.registrar-department-management__department-mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0 5px;
+  overflow: hidden;
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--rdm-green-700), var(--rdm-green-900));
+  border-radius: 11px;
+  box-shadow: 0 5px 12px rgba(10, 75, 45, 0.12);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.registrar-department-management__department-cell > div {
+  display: grid;
+  gap: 5px;
+}
+
+.registrar-department-management__department-cell small {
+  color: var(--rdm-text-500);
+  font-size: 10px;
+}
+
+.registrar-department-management__code-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  color: var(--rdm-green-800);
+  background: var(--rdm-green-50);
+  border: 1px solid rgba(15, 122, 69, 0.14);
   border-radius: 7px;
-
-  color: #b91c1c;
-
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.035em;
 }
 
-/* =========================================================
-   ACTIONS
-   ========================================================= */
+.registrar-department-management__name-cell {
+  display: grid;
+  gap: 3px;
+  min-width: 220px;
+}
 
-.delete-subject-modal-actions {
+.registrar-department-management__name-cell strong {
+  color: var(--rdm-text-950);
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.4;
+}
+
+.registrar-department-management__name-cell span {
+  color: var(--rdm-text-500);
+  font-size: 11px;
+}
+
+.registrar-department-management__date-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--rdm-text-600);
+  white-space: nowrap;
+}
+
+.registrar-department-management__date-cell svg {
+  color: var(--rdm-green-700);
+}
+
+.registrar-department-management__row-actions {
   display: flex;
   justify-content: flex-end;
-
-  gap: 10px;
-
-  margin-top: 24px;
 }
 
-/* =========================================================
-   CANCEL
-   ========================================================= */
-
-.delete-subject-cancel,
-.delete-subject-confirm {
-  min-height: 38px;
-
-  padding: 0 15px;
-
-  border-radius: 7px;
-
-  font-family: inherit;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.delete-subject-cancel {
-  border: 1px solid #d1d5db;
-
+.registrar-department-management__edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 11px;
+  color: var(--rdm-green-800);
   background: #ffffff;
-  color: #374151;
+  border: 1px solid var(--rdm-border-strong);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 720;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
 }
 
-.delete-subject-cancel:hover:not(:disabled) {
-  background: #f9fafb;
-
-  border-color: #9ca3af;
-}
-
-/* =========================================================
-   DELETE BUTTON
-   ========================================================= */
-
-.delete-subject-confirm {
-  border: 1px solid #dc2626;
-
-  background: #dc2626;
-  color: #ffffff;
-}
-
-.delete-subject-confirm:hover:not(:disabled) {
-  background: #b91c1c;
-
-  border-color: #b91c1c;
+.registrar-department-management__edit-button:hover {
+  transform: translateY(-1px);
+  background: var(--rdm-green-50);
+  border-color: rgba(15, 122, 69, 0.32);
 }
 
 /* =========================================================
-   DISABLED
-   ========================================================= */
+   STATES / SKELETONS
+========================================================= */
 
-.delete-subject-cancel:disabled,
-.delete-subject-confirm:disabled {
-  opacity: 0.55;
+.registrar-department-management__state {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 180px;
+  padding: 30px 24px;
+  color: var(--rdm-text-600);
+}
 
-  cursor: not-allowed;
+.registrar-department-management__state > div {
+  flex: 1 1 auto;
+}
+
+.registrar-department-management__state-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: var(--rdm-green-700);
+  background: var(--rdm-green-50);
+  border: 1px solid rgba(15, 122, 69, 0.13);
+  border-radius: 14px;
+}
+
+.registrar-department-management__state h3 {
+  margin: 0;
+  color: var(--rdm-text-950);
+  font-size: 15px;
+  font-weight: 740;
+}
+
+.registrar-department-management__state p {
+  max-width: 620px;
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.registrar-department-management__state--error .registrar-department-management__state-icon {
+  color: var(--rdm-danger);
+  background: var(--rdm-danger-soft);
+  border-color: rgba(180, 35, 24, 0.14);
+}
+
+.registrar-department-management__skeleton {
+  height: 12px;
+  background: linear-gradient(90deg, #eef2ef 25%, #f7f9f7 50%, #eef2ef 75%);
+  background-size: 200% 100%;
+  border-radius: 7px;
+  animation: registrarDepartmentSkeleton 1.25s ease-in-out infinite;
+}
+
+.registrar-department-management__skeleton--code {
+  width: 112px;
+  height: 34px;
+}
+
+.registrar-department-management__skeleton--name {
+  width: min(290px, 80%);
+}
+
+.registrar-department-management__skeleton--date {
+  width: 105px;
+}
+
+.registrar-department-management__skeleton--action {
+  width: 70px;
+  height: 32px;
+  margin-left: auto;
 }
 
 /* =========================================================
-   MOBILE
-   ========================================================= */
+   FOOTER
+========================================================= */
 
-@media (max-width: 480px) {
-  .delete-subject-modal-overlay {
-    padding: 15px;
+.registrar-department-management__workspace-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 18px;
+  color: var(--rdm-text-500);
+  background: #fbfcfb;
+  border-top: 1px solid #edf2ee;
+  font-size: 10px;
+}
+
+.registrar-department-management__workspace-footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rdm-green-800);
+  font-weight: 650;
+}
+
+.registrar-department-management__workspace-footer small {
+  color: var(--rdm-text-500);
+  text-align: right;
+}
+
+/* =========================================================
+   ACCESSIBILITY / ANIMATION
+========================================================= */
+
+.registrar-department-management button:focus-visible,
+.registrar-department-management input:focus-visible {
+  outline: 3px solid rgba(15, 122, 69, 0.19);
+  outline-offset: 2px;
+}
+
+.registrar-department-management .is-spinning {
+  animation: registrarDepartmentSpin 800ms linear infinite;
+}
+
+@keyframes registrarDepartmentSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes registrarDepartmentSkeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 980px) {
+  .registrar-department-management {
+    padding: 22px 20px 32px;
   }
 
-  .delete-subject-modal {
-    padding: 22px;
-  }
-
-  .delete-subject-info {
+  .registrar-department-management__hero {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .delete-subject-info-main span {
-    white-space: normal;
+  .registrar-department-management__hero-actions {
+    width: 100%;
   }
 
-  .delete-subject-modal-actions {
+  .registrar-department-management__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .registrar-department-management__stats article:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .registrar-department-management {
+    padding: 16px 14px 26px;
+  }
+
+  .registrar-department-management__hero {
+    padding: 21px 20px;
+    border-radius: 15px;
+  }
+
+  .registrar-department-management__hero-actions {
     flex-direction: column-reverse;
   }
 
-  .delete-subject-cancel,
-  .delete-subject-confirm {
+  .registrar-department-management__hero-actions .registrar-department-management__button {
     width: 100%;
+  }
+
+  .registrar-department-management__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .registrar-department-management__stats article:last-child {
+    grid-column: auto;
+  }
+
+  .registrar-department-management__workspace-header {
+    flex-direction: column;
+    padding: 19px 18px 15px;
+  }
+
+  .registrar-department-management__record-count {
+    white-space: normal;
+  }
+
+  .registrar-department-management__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px 18px;
+  }
+
+  .registrar-department-management__search-wrap {
+    flex-basis: auto;
+    max-width: none;
+  }
+
+  .registrar-department-management__active-filter {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .registrar-department-management__state {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .registrar-department-management__workspace-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .registrar-department-management__workspace-footer small {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registrar-department-management *,
+  .registrar-department-management *::before,
+  .registrar-department-management *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
