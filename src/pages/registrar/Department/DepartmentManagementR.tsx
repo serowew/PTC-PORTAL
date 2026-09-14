@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -80,7 +80,7 @@ export default function DepartmentManagementR() {
     }
   }, [authenticated, userRole, navigate]);
 
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     if (!authenticated || userRole !== "Registrar") return;
 
     try {
@@ -154,12 +154,15 @@ export default function DepartmentManagementR() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    authenticated,
+    userRole,
+    navigate,
+  ]);
 
   useEffect(() => {
-    if (!authenticated || userRole !== "Registrar") return;
     void loadDepartments();
-  }, [authenticated, userRole]);
+  }, [loadDepartments]);
 
   const filteredDepartments = useMemo(() => {
     const query = search.trim().toLowerCase();

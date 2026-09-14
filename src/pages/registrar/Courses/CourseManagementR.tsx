@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -129,7 +129,7 @@ export default function CoursemanagementR() {
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     if (!authenticated || userRole !== "Registrar") return;
 
     try {
@@ -210,9 +210,15 @@ export default function CoursemanagementR() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    authenticated,
+    userRole,
+    search,
+    department,
+    navigate,
+  ]);
 
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     if (!authenticated || userRole !== "Registrar") return;
 
     try {
@@ -287,17 +293,19 @@ export default function CoursemanagementR() {
     } finally {
       setLoadingDepartments(false);
     }
-  };
+  }, [
+    authenticated,
+    userRole,
+    navigate,
+  ]);
 
   useEffect(() => {
-    if (!authenticated || userRole !== "Registrar") return;
     void loadDepartments();
-  }, [authenticated, userRole]);
+  }, [loadDepartments]);
 
   useEffect(() => {
-    if (!authenticated || userRole !== "Registrar") return;
     void loadCourses();
-  }, [authenticated, userRole, search, department]);
+  }, [loadCourses]);
 
   const hasActiveFilters = Boolean(search || department !== "All");
 

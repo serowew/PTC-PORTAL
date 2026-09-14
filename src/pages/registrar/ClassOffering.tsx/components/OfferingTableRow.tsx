@@ -1,76 +1,24 @@
-import OfferingTableRow from "./OfferingTableRow";
+import {
+  CalendarDays,
+  MapPin,
+  Pencil,
+  Plus,
+  Settings2,
+  UserRound,
+} from "lucide-react";
 
-// =====================================================
-// TYPES
-// =====================================================
+import OfferingStatusBadge, {
+  type OfferingDisplayStatus,
+} from "./OfferingStatusBadge";
 
-interface OfferingFaculty {
-  faculty_id: number;
-  faculty_name: string;
-}
-
-interface OfferingRoom {
-  room_id: number;
-  room_name: string;
-  room_code?: string | null;
-}
-
-interface OfferingSchedule {
-  days: string | null;
-  time: string | null;
-}
-
-interface OfferingCapacity {
-  max_students: number;
-  enrolled_count: number;
-  available_slots: number;
-  is_full: boolean;
-}
-
-interface Offering {
-  offering_id: number;
-  status: "Open" | "Closed" | "Cancelled";
-  faculty: OfferingFaculty | null;
-  room: OfferingRoom | null;
-  schedule: OfferingSchedule;
-  capacity: OfferingCapacity;
-}
-
-interface SectionSubject {
-  section_subject_id: number;
-  status: "Open" | "Closed" | "Cancelled";
-  max_students: number | null;
-}
-
-interface SubjectInfo {
-  subject_id: number;
-  subject_code: string;
-  subject_name: string;
-  units: number;
-  lecture_hours?: number;
-  laboratory_hours?: number;
-  is_required?: boolean;
-  display_order?: number | null;
-}
-
-export interface OfferingTableSubject {
-  curriculum_subject_id: number | null;
-  subject: SubjectInfo;
-  section_subject: SectionSubject | null;
-  offering: Offering | null;
-  has_section_subject: boolean;
-  has_offering: boolean;
-  configuration_complete: boolean;
-  ready_for_enrollment: boolean;
-  missing_configuration: string[];
-}
+import type { OfferingTableSubject } from "./OfferingTable";
 
 // =====================================================
 // PROPS
 // =====================================================
 
-interface OfferingTableProps {
-  subjects: OfferingTableSubject[];
+interface OfferingTableRowProps {
+  item: OfferingTableSubject;
   onCreateOffering: (subject: OfferingTableSubject) => void;
   onEditOffering: (subject: OfferingTableSubject) => void;
   onOfferingStatus: (subject: OfferingTableSubject) => void;
@@ -78,102 +26,245 @@ interface OfferingTableProps {
 }
 
 // =====================================================
-// ROW KEY
+// DISPLAY STATUS
 // =====================================================
 
-function getRowKey(item: OfferingTableSubject) {
-  if (item.curriculum_subject_id !== null) {
-    return `curriculum-${item.curriculum_subject_id}`;
+function getDisplayStatus(item: OfferingTableSubject): OfferingDisplayStatus {
+  const sectionStatus = item.section_subject?.status;
+  const offeringStatus = item.offering?.status;
+
+  if (!item.section_subject) {
+    return "NO SECTION SUBJECT";
   }
 
-  if (item.section_subject?.section_subject_id) {
-    return `section-subject-${item.section_subject.section_subject_id}`;
+  if (sectionStatus === "Cancelled") {
+    return "SECTION CANCELLED";
   }
 
-  if (item.offering?.offering_id) {
-    return `offering-${item.offering.offering_id}`;
+  if (sectionStatus === "Closed") {
+    return "SECTION CLOSED";
   }
 
-  return `subject-${item.subject.subject_id}`;
+  if (!item.offering) {
+    return "NO OFFERING";
+  }
+
+  if (offeringStatus === "Cancelled") {
+    return "CANCELLED";
+  }
+
+  if (item.ready_for_enrollment) {
+    return "READY";
+  }
+
+  if (item.configuration_complete && offeringStatus === "Closed") {
+    return "CONFIGURED";
+  }
+
+  if (item.missing_configuration.length > 0) {
+    return "INCOMPLETE";
+  }
+
+  return "NOT READY";
 }
 
 // =====================================================
 // COMPONENT
 // =====================================================
 
-export default function OfferingTable({
-  subjects,
+export default function OfferingTableRow({
+  item,
   onCreateOffering,
   onEditOffering,
   onOfferingStatus,
   onSectionSubjectStatus,
-}: OfferingTableProps) {
-  const isSpecialTable =
-    subjects.length > 0 &&
-    subjects.every((item) => item.curriculum_subject_id === null);
+}: OfferingTableRowProps) {
+  const { subject, section_subject: sectionSubject, offering } = item;
 
-  const tableContent = (
-    <div className="class-offering-table-wrapper">
-      <table className="class-offering-table">
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>Faculty</th>
-            <th>Schedule &amp; Room</th>
-            <th>Capacity</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+  const displayStatus = getDisplayStatus(item);
 
-        <tbody>
-          {subjects.length === 0 && (
-            <tr>
-              <td colSpan={6}>
-                <div className="class-offering-table-empty">
-                  No curriculum subjects found for this academic setup.
-                </div>
-              </td>
-            </tr>
-          )}
-
-          {subjects.map((item) => (
-            <OfferingTableRow
-              key={getRowKey(item)}
-              item={item}
-              onCreateOffering={onCreateOffering}
-              onEditOffering={onEditOffering}
-              onOfferingStatus={onOfferingStatus}
-              onSectionSubjectStatus={onSectionSubjectStatus}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const maxStudents = Number(
+    offering?.capacity.max_students ?? sectionSubject?.max_students ?? 0,
   );
 
-  if (isSpecialTable) {
-    return tableContent;
-  }
+  const enrolledCount = Number(offering?.capacity.enrolled_count ?? 0);
+
+  const availableSlots = Number(
+    offering?.capacity.available_slots ?? Math.max(maxStudents - enrolledCount, 0),
+  );
+
+  const capacityPercent =
+    maxStudents > 0
+      ? Math.min(100, Math.max(0, (enrolledCount / maxStudents) * 100))
+      : 0;
+
+  const scheduleDays = offering?.schedule.days?.trim() || "Schedule not set";
+  const scheduleTime = offering?.schedule.time?.trim() || "Time not set";
+
+  const roomLabel = offering?.room
+    ? [offering.room.room_code, offering.room.room_name]
+        .filter(Boolean)
+        .join(" — ")
+    : "Room not assigned";
+
+  const canCreateOffering = Boolean(sectionSubject) && !offering;
 
   return (
-    <section className="class-offering-section">
-      <div className="class-offering-section-header">
-        <div>
-          <div className="class-offering-section-kicker">Curriculum Plan</div>
-          <h2>Curriculum Class Offerings</h2>
-          <p>
-            Every expected curriculum subject is shown, including subjects that
-            still need a section-subject record or a class offering.
-          </p>
+    <tr>
+      {/* SUBJECT */}
+      <td>
+        <div className="class-offering-subject-cell">
+          <span className="class-offering-subject-code">
+            {subject.subject_code}
+          </span>
+
+          <div className="class-offering-subject-copy">
+            <strong>{subject.subject_name}</strong>
+
+            <span>
+              {subject.units} unit{subject.units === 1 ? "" : "s"}
+              {typeof subject.is_required === "boolean"
+                ? ` • ${subject.is_required ? "Required" : "Elective"}`
+                : ""}
+            </span>
+          </div>
         </div>
+      </td>
 
-        <span className="class-offering-section-count">
-          {subjects.length} subject{subjects.length === 1 ? "" : "s"}
-        </span>
-      </div>
+      {/* FACULTY */}
+      <td>
+        <div className="class-offering-meta-line">
+          <UserRound size={15} aria-hidden="true" />
 
-      {tableContent}
-    </section>
+          <span>
+            <strong>{offering?.faculty?.faculty_name || "Not assigned"}</strong>
+            <small>{offering ? "Faculty" : "No offering yet"}</small>
+          </span>
+        </div>
+      </td>
+
+      {/* SCHEDULE + ROOM */}
+      <td>
+        <div className="class-offering-schedule-cell">
+          <div className="class-offering-meta-line">
+            <CalendarDays size={15} aria-hidden="true" />
+
+            <span>
+              <strong>{scheduleDays}</strong>
+              <small>{scheduleTime}</small>
+            </span>
+          </div>
+
+          <div className="class-offering-meta-line class-offering-meta-line--muted">
+            <MapPin size={15} aria-hidden="true" />
+
+            <span>
+              <strong>{roomLabel}</strong>
+              <small>Room</small>
+            </span>
+          </div>
+        </div>
+      </td>
+
+      {/* CAPACITY */}
+      <td>
+        <div className="class-offering-capacity-cell">
+          {offering ? (
+            <>
+              <div className="class-offering-capacity-value">
+                <strong>{enrolledCount}</strong>
+                <span>/ {maxStudents}</span>
+                {offering.capacity.is_full ? <em>Full</em> : null}
+              </div>
+
+              <div className="class-offering-capacity-track" aria-hidden="true">
+                <span style={{ width: `${capacityPercent}%` }} />
+              </div>
+
+              <small>
+                {availableSlots} slot{availableSlots === 1 ? "" : "s"} available
+              </small>
+            </>
+          ) : (
+            <>
+              <strong>{maxStudents || "—"}</strong>
+              <small>{sectionSubject ? "Section capacity" : "Not prepared"}</small>
+            </>
+          )}
+        </div>
+      </td>
+
+      {/* STATUS */}
+      <td>
+        <div className="class-offering-status-stack">
+          <OfferingStatusBadge status={displayStatus} />
+
+          {sectionSubject ? (
+            <small>Section: {sectionSubject.status}</small>
+          ) : (
+            <small>Prepare section subject first</small>
+          )}
+
+          {item.missing_configuration.length > 0 && offering ? (
+            <small>{item.missing_configuration.join(", ")}</small>
+          ) : null}
+        </div>
+      </td>
+
+      {/* ACTIONS */}
+      <td>
+        <div className="class-offering-actions">
+          {canCreateOffering ? (
+            <button
+              type="button"
+              className="class-offering-action-button class-offering-action-button--primary"
+              onClick={() => onCreateOffering(item)}
+            >
+              <Plus size={14} aria-hidden="true" />
+              Create
+            </button>
+          ) : null}
+
+          {offering ? (
+            <>
+              <button
+                type="button"
+                className="class-offering-action-button"
+                onClick={() => onEditOffering(item)}
+              >
+                <Pencil size={14} aria-hidden="true" />
+                Edit
+              </button>
+
+              <button
+                type="button"
+                className="class-offering-action-button"
+                onClick={() => onOfferingStatus(item)}
+              >
+                <Settings2 size={14} aria-hidden="true" />
+                Offering Status
+              </button>
+            </>
+          ) : null}
+
+          {sectionSubject ? (
+            <button
+              type="button"
+              className="class-offering-action-button"
+              onClick={() => onSectionSubjectStatus(item)}
+            >
+              <Settings2 size={14} aria-hidden="true" />
+              Section Status
+            </button>
+          ) : null}
+
+          {!sectionSubject ? (
+            <span className="class-offering-action-note">
+              Prepare the section subject before creating an offering.
+            </span>
+          ) : null}
+        </div>
+      </td>
+    </tr>
   );
 }
