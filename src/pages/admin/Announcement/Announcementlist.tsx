@@ -410,13 +410,7 @@ export default function AnnouncementList() {
       <div className="admin-announcement-list">
         {/* HEADER */}
 
-        <div className="announcement-header">
-          <div>
-            <h1>Announcement Management</h1>
 
-            <p>Manage portal announcements.</p>
-          </div>
-        </div>
 
         {/* ERROR */}
 

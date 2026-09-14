@@ -1,651 +1,1212 @@
 /* =========================================================
-   STUDENT MANAGEMENT / FILE EXPLORER
-   Light Green + White Modern Theme
+   ADMIN STUDENT MANAGEMENT / STUDENT LIST
+   PTC Portal Unified Admin Theme
+
+   Features:
+   - Matches Admin Dashboard / User Management
+   - Full-width Admin green shell
+   - No nested 100vh
+   - Strong visible borders
+   - Clean file explorer
+   - Professional folder navigation
+   - White data/table surfaces
+   - Responsive layout
+   - Scoped selectors only
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* =========================================================
-   DESIGN TOKENS & VARIABLES
+   PAGE DESIGN TOKENS
+   Scoped so they do not affect other pages.
    ========================================================= */
 
-:root {
-  /* Typography */
-  --font-family-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+.admin-manage-students {
+  --student-primary: #66c44f;
+  --student-primary-dark: #3f9d39;
+  --student-primary-soft: #f0fdf4;
 
-  /* Primary Palette */
-  --color-primary: #2e9f47;
-  --color-primary-hover: #218838;
-  --color-primary-dark: #164d28;
-  --color-primary-darker: #1c4c29;
-  --color-primary-light: #e8f9ed;
-  --color-primary-subtle: #f0faf2;
+  --student-blue: #2563eb;
+  --student-blue-hover: #1d4ed8;
+  --student-blue-soft: #eff6ff;
 
-  /* Secondary & Neutral Palette */
-  --color-text-main: #34463a;
-  --color-text-muted: #6b7d70;
-  --color-text-light: #66786b;
-  --color-border: #dcebe0;
-  --color-border-subtle: #cfe4d4;
-  --color-bg-white: #ffffff;
+  --student-text: #1f2937;
+  --student-heading: #111827;
+  --student-secondary: #374151;
+  --student-muted: #6b7280;
+  --student-placeholder: #9ca3af;
 
-  /* State Colors */
-  --color-warning-bg: #fff7e6;
-  --color-warning-border: #f0d59d;
-  --color-warning-text: #87651f;
+  --student-border: #cbd5e1;
+  --student-divider: #d7dde4;
+  --student-divider-light: #e2e7ec;
 
-  /* Layout & Utility */
-  --radius-lg: 20px;
-  --radius-md: 14px;
-  --radius-sm: 8px;
-  --transition-fast: 0.2s ease;
-  --shadow-soft: 0 18px 45px rgba(32, 104, 50, 0.10), 0 3px 12px rgba(0, 0, 0, 0.04);
+  --student-surface: #ffffff;
+  --student-surface-soft: #f9fafb;
 }
+
 
 /* =========================================================
-   ANIMATIONS
-   ========================================================= */
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes folderAppear {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* =========================================================
-   GLOBAL PAGE CONTAINER
+   PAGE ROOT
    ========================================================= */
 
 .admin-manage-students {
   position: relative;
-  min-height: calc(100vh - 80px);
+
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+
+  margin: 0;
   padding: 28px;
-  font-family: var(--font-family-main);
-  background: linear-gradient(135deg, rgba(232, 249, 237, 0.96), rgba(255, 255, 255, 0.98));
-  border-radius: var(--radius-lg);
-  animation: fadeInUp 0.45s ease both;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    #66c44f 0%,
+    #f4f5f1 100%
+  );
+
+  color: var(--student-text);
+
+  border: 1.5px solid var(--student-border);
+  border-radius: 14px;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+
+  overflow: hidden;
+
+  animation: ptcAdminFadeInUp 0.45s ease both;
 }
 
-/* Decorative background circles */
-.admin-manage-students::before,
-.admin-manage-students::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.admin-manage-students::before {
-  width: 280px;
-  height: 280px;
-  top: 20px;
-  right: 50px;
-  background: rgba(46, 160, 67, 0.08);
-  filter: blur(5px);
-}
-
-.admin-manage-students::after {
-  width: 220px;
-  height: 220px;
-  bottom: 40px;
-  left: 20px;
-  background: rgba(120, 210, 140, 0.08);
-  filter: blur(8px);
-}
-
-.admin-manage-students > * {
-  position: relative;
-  z-index: 1;
-}
 
 /* =========================================================
-   PAGE TITLE & HEADINGS
+   PAGE TITLE
    ========================================================= */
 
 .admin-manage-students h1 {
   margin: 0;
-  color: var(--color-primary-dark);
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -0.7px;
+
+  color: var(--student-heading);
+
+  font-size: 24px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.01em;
 }
 
-.student-subtitle {
-  margin: 7px 0 22px;
-  color: var(--color-text-muted);
+
+/* =========================================================
+   SUBTITLE
+   ========================================================= */
+
+.admin-manage-students .student-subtitle {
+  margin:
+    6px
+    0
+    22px;
+
+  color: var(--student-secondary);
+
   font-size: 14px;
-  line-height: 1.6;
+
+  line-height: 1.55;
 }
 
+
 /* =========================================================
-   FILE EXPLORER MAIN CONTAINER
+   FILE EXPLORER
    ========================================================= */
 
-.file-explorer {
+.admin-manage-students .file-explorer {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  min-height: 620px;
-  border: 1px solid #afb8b0;
-  border-radius: 18px;
+
+  grid-template-columns:
+    280px
+    minmax(0, 1fr);
+
+  width: 100%;
+  min-width: 0;
+
+  min-height: 560px;
+
+  box-sizing: border-box;
+
+  background: var(--student-surface);
+
+  border: 1.5px solid var(--student-border);
+  border-radius: 10px;
+
   overflow: hidden;
-  box-shadow: var(--shadow-soft);
-  animation: fadeInScale 0.5s ease both;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 18px rgba(15, 23, 42, 0.04);
+
+  animation: ptcAdminFadeInScale 0.5s ease both;
 }
 
-.file-explorer {
-  background: linear-gradient(
-    180deg, 
-    #2e7d43 0%,    /* Deep, professional forest green top */
-    #e8f5eb 60%,   /* Fresh light green transition */
-    #f6fbf7 100%    /* Soft off-white base */
-  );
-}
-/* Optional Background Image Feature */
-/*
-.file-explorer {
-  background:
-    linear-gradient(rgba(242, 251, 244, 0.94), rgba(255, 255, 255, 0.97)),
-    url("../assets/student-ptc background.jpg");
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-*/
 
 /* =========================================================
-   LEFT SIDEBAR / FOLDER TREE
+   LEFT FOLDER TREE
    ========================================================= */
 
-.folder-tree {
-  padding: 22px 14px;
-  background: linear-gradient(180deg, #3caf5c 0%, #f4fbf6 55%, #ececeb 100%);
-  border-right: 1px solid #012b0a;
+.admin-manage-students .folder-tree {
+  min-width: 0;
+
+  padding: 18px 12px;
+
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    180deg,
+    #f0fdf4 0%,
+    #f8fafc 100%
+  );
+
+  border-right: 1.5px solid var(--student-border);
+
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
+
+/* =========================================================
+   FOLDER TREE SCROLLBAR
+   ========================================================= */
+
+.admin-manage-students
 .folder-tree::-webkit-scrollbar {
   width: 6px;
 }
 
+.admin-manage-students
 .folder-tree::-webkit-scrollbar-track {
   background: transparent;
 }
 
+.admin-manage-students
 .folder-tree::-webkit-scrollbar-thumb {
-  background: #b7d9be;
-  border-radius: 10px;
+  background: #cbd5e1;
+
+  border-radius: 999px;
 }
 
+.admin-manage-students
 .folder-tree::-webkit-scrollbar-thumb:hover {
-  background: #83bd91;
+  background: #94a3b8;
 }
 
-.folder-group {
-  margin-bottom: 4px;
-}
 
 /* =========================================================
-   FOLDER ROWS & NAVIGATION ITEMS
+   FOLDER GROUP
    ========================================================= */
 
-.folder-row {
-  width: 100%;
+.admin-manage-students .folder-group {
+  margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   MAIN FOLDER ROW
+   ========================================================= */
+
+.admin-manage-students .folder-row {
   display: flex;
   align-items: center;
+
   gap: 9px;
-  padding: 11px 12px;
-  border: none;
-  border-radius: 10px;
+
+  width: 100%;
+
+  min-height: 40px;
+
+  padding: 9px 10px;
+
+  box-sizing: border-box;
+
   background: transparent;
-  color: #272222;
-  font-family: inherit;
-  font-size: 14px;
+
+  color: var(--student-secondary);
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  font: inherit;
+
+  font-size: 13px;
   font-weight: 600;
+
   text-align: left;
+
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
-.folder-row:hover {
-  background: #dff2e4;
-  color: #000000;
+
+/* =========================================================
+   FOLDER ROW HOVER
+   ========================================================= */
+
+.admin-manage-students .folder-row:hover {
+  background: #ffffff;
+
+  color: #166534;
+
+  border-color: #bbf7d0;
+
   transform: translateX(2px);
+
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
-.folder-row:active {
+
+/* =========================================================
+   FOLDER ROW ACTIVE
+   Future-safe if class is applied.
+   ========================================================= */
+
+.admin-manage-students .folder-row.active {
+  background: #dcfce7;
+
+  color: #166534;
+
+  border-color: #86efac;
+}
+
+
+/* =========================================================
+   FOLDER ROW ACTIVE PRESS
+   ========================================================= */
+
+.admin-manage-students .folder-row:active {
   transform: translateX(1px);
 }
 
-.folder-row svg {
+
+/* =========================================================
+   FOLDER ICON
+   ========================================================= */
+
+.admin-manage-students .folder-row svg {
   flex-shrink: 0;
-  color: #d1a103;
-  transition: transform var(--transition-fast), color var(--transition-fast);
+
+  color: #d97706;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.folder-row:hover svg {
-  color: var(--color-primary-hover);
+.admin-manage-students .folder-row:hover svg {
+  color: #15803d;
 }
 
-.chevron {
-  transition: transform var(--transition-fast);
-  color: #907676 !important;
+
+/* =========================================================
+   CHEVRON
+   ========================================================= */
+
+.admin-manage-students .chevron {
+  flex-shrink: 0;
+
+  color: #64748b !important;
+
+  transition:
+    transform 0.2s ease;
 }
 
-.chevron.open {
+.admin-manage-students .chevron.open {
   transform: rotate(90deg);
 }
 
-.folder-label {
+
+/* =========================================================
+   FOLDER LABEL
+   ========================================================= */
+
+.admin-manage-students .folder-label {
   flex: 1;
+
+  min-width: 0;
+
   overflow: hidden;
+
   white-space: nowrap;
+
   text-overflow: ellipsis;
 }
 
-.sub-row {
-  padding-left: 30px;
-  font-size: 13px;
+
+/* =========================================================
+   SUB ROW
+   ========================================================= */
+
+.admin-manage-students .sub-row {
+  padding-left: 28px;
+
+  font-size: 12.5px;
 }
 
-.sub-row:hover {
-  background: #08992a;
+
+/* =========================================================
+   CHILDREN WRAPPER
+   ========================================================= */
+
+.admin-manage-students .folder-children {
+  margin:
+    3px
+    0
+    5px
+    17px;
+
+  padding-left: 9px;
+
+  border-left: 1.5px solid #bbf7d0;
 }
 
-.folder-children {
-  margin-left: 16px;
-  padding-left: 10px;
-  border-left: 1px solid #00bb2c;
-  animation: folderAppear 0.25s ease both;
-}
 
-.folder-child-row {
-  width: 100%;
+/* =========================================================
+   CHILD FOLDER ROW
+   ========================================================= */
+
+.admin-manage-students .folder-child-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 9px 10px;
-  border: none;
-  border-radius: var(--radius-sm);
+
+  gap: 8px;
+
+  width: 100%;
+
+  min-height: 36px;
+
+  margin: 2px 0;
+
+  padding: 8px 9px;
+
+  box-sizing: border-box;
+
   background: transparent;
-  color: var(--color-text-light);
-  font-family: inherit;
-  font-size: 13px;
+
+  color: #475569;
+
+  border: 1px solid transparent;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 12.5px;
   font-weight: 500;
+
   text-align: left;
+
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
+
+/* =========================================================
+   CHILD ICON
+   ========================================================= */
+
+.admin-manage-students
 .folder-child-row svg {
-  color: #73a57c;
   flex-shrink: 0;
+
+  color: #65a30d;
 }
 
+
+/* =========================================================
+   CHILD HOVER
+   ========================================================= */
+
+.admin-manage-students
 .folder-child-row:hover {
-  background: #e7f6ea;
-  color: #217536;
-  transform: translateX(3px);
+  background: #ffffff;
+
+  color: #166534;
+
+  border-color: #d1fae5;
+
+  transform: translateX(2px);
 }
 
+
+/* =========================================================
+   CHILD ACTIVE
+   ========================================================= */
+
+.admin-manage-students
 .folder-child-row.active {
-  background: var(--color-primary);
-  color: #000000;
-  box-shadow: 0 5px 14px rgba(46, 159, 71, 0.22);
+  background: #66c44f;
+
+  color: #ffffff;
+
+  border-color: #4dad3b;
+
+  box-shadow:
+    0 3px 8px rgba(77, 173, 59, 0.18);
 }
 
+.admin-manage-students
 .folder-child-row.active svg {
-  color: #000000;
+  color: #ffffff;
 }
+
 
 /* =========================================================
    RIGHT CONTENT AREA
    ========================================================= */
 
-.folder-content {
+.admin-manage-students .folder-content {
   min-width: 0;
-  padding: 26px;
-  background: linear-gradient(180deg, #3caf5c 0%, #f4fbf6 55%, #ececeb 100%);
+
+  padding: 22px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
 }
 
+
+/* =========================================================
+   CONTENT HEADER
+   ========================================================= */
+
+.admin-manage-students
 .folder-content-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
+
+  gap: 16px;
+
   margin-bottom: 18px;
-  animation: fadeInUp 0.45s ease both;
+
+  padding-bottom: 14px;
+
+  border-bottom: 1.5px solid var(--student-divider);
+
+  flex-wrap: wrap;
 }
 
+
+/* =========================================================
+   CONTENT TITLE
+   ========================================================= */
+
+.admin-manage-students
 .folder-content-title {
   margin: 0;
-  color: var(--color-primary-darker);
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
+
+  color: var(--student-heading);
+
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  letter-spacing: -0.01em;
 }
+
+
+/* =========================================================
+   SEARCH WRAPPER
+   ========================================================= */
+
+.admin-manage-students
+.folder-search-wrap {
+  width: 300px;
+  max-width: 100%;
+
+  flex-shrink: 0;
+}
+
 
 /* =========================================================
    SEARCH INPUT
    ========================================================= */
 
-.folder-search-wrap {
-  width: 280px;
-  flex-shrink: 0;
-}
-
+.admin-manage-students
 .folder-search-input {
   width: 100%;
+
+  height: 40px;
+
+  padding:
+    0
+    13px
+    0
+    39px;
+
   box-sizing: border-box;
-  padding: 11px 15px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 10px;
-  background: var(--color-bg-white);
-  color: #26382b;
-  font-family: inherit;
-  font-size: 13px;
+
+  background:
+    #f9fafb
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'><path d='M11.742 10.344a6.5 6.5 0 1 0-1.398 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/></svg>")
+    no-repeat
+    12px
+    center;
+
+  background-size: 14px 14px;
+
+  color: var(--student-text);
+
+  border: 1.5px solid var(--student-border);
+  border-radius: 8px;
+
   outline: none;
-  box-shadow: 0 3px 10px rgba(39, 99, 52, 0.04);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+
+  font: inherit;
+  font-size: 13px;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
+
+/* =========================================================
+   SEARCH PLACEHOLDER
+   ========================================================= */
+
+.admin-manage-students
 .folder-search-input::placeholder {
-  color: #9aaa9f;
+  color: var(--student-placeholder);
 }
 
+
+/* =========================================================
+   SEARCH HOVER
+   ========================================================= */
+
+.admin-manage-students
 .folder-search-input:hover {
-  border-color: #9bcaa5;
+  border-color: #94a3b8;
 }
 
+
+/* =========================================================
+   SEARCH FOCUS
+   ========================================================= */
+
+.admin-manage-students
 .folder-search-input:focus {
-  border-color: #36a34b;
-  box-shadow: 0 0 0 3px rgba(54, 163, 75, 0.12), 0 5px 15px rgba(43, 118, 57, 0.08);
+  background-color: #ffffff;
+
+  border-color: var(--student-blue);
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+
   transform: translateY(-1px);
 }
 
+
 /* =========================================================
-   STATS & NOTIFICATIONS
+   STUDENT TOTAL BOX
    ========================================================= */
 
+.admin-manage-students
 .student-total-box {
   display: flex;
   align-items: center;
-  gap: 5px;
+
+  gap: 6px;
+
   margin-bottom: 18px;
-  padding: 15px 18px;
-  border: 1px solid #cfe9d4;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #e3f6e7, #f7fcf8);
-  color: #246337;
-  font-size: 14px;
-  box-shadow: 0 5px 15px rgba(46, 126, 61, 0.06);
-  animation: fadeInScale 0.4s ease both;
-}
 
-.student-total-box strong {
-  color: #185c2b;
-}
-
-.student-error-text {
-  margin: 12px 0;
   padding: 12px 14px;
-  border-radius: 9px;
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  color: var(--color-warning-text);
+
+  box-sizing: border-box;
+
+  background: #f0fdf4;
+
+  color: #166534;
+
+  border: 1.5px solid #bbf7d0;
+  border-radius: 8px;
+
   font-size: 13px;
+
+  line-height: 1.4;
 }
+
+.admin-manage-students
+.student-total-box strong {
+  color: #15803d;
+
+  font-weight: 700;
+}
+
 
 /* =========================================================
-   TABLE & DATA GRID
+   ERROR / WARNING MESSAGE
    ========================================================= */
 
+.admin-manage-students
+.student-error-text {
+  margin:
+    0
+    0
+    16px;
+
+  padding: 11px 14px;
+
+  box-sizing: border-box;
+
+  background: #fffbeb;
+
+  color: #b45309;
+
+  border: 1.5px solid #fcd34d;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+   ========================================================= */
+
+.admin-manage-students
 .student-table-wrap {
   width: 100%;
+  max-width: 100%;
+
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-white);
-  box-shadow: 0 8px 24px rgba(34, 91, 46, 0.07);
-  animation: fadeInUp 0.5s ease both;
-}
 
-.student-table-wrap::-webkit-scrollbar {
-  height: 7px;
-}
+  background: #ffffff;
 
-.student-table-wrap::-webkit-scrollbar-track {
-  background: #0c0606;
-}
-
-.student-table-wrap::-webkit-scrollbar-thumb {
-  background: #b4d4ba;
+  border: 1.5px solid var(--student-border);
   border-radius: 10px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 5px 14px rgba(15, 23, 42, 0.03);
 }
 
-.student-table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: collapse;
-  background: var(--color-bg-white);
-}
-
-.student-table thead {
-  background: linear-gradient(135deg, #237b36, #31994a);
-}
-
-.student-table thead tr {
-  text-align: left;
-  
-}
-
-.student-table th {
-  padding: 14px 13px;
-  border-bottom: none;
-  color: #000000;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-}
-
-.student-table td {
-  padding: 13px;
-  border-bottom: 1px solid #edf3ee;
-  color: var(--color-text-main);
-  font-size: 13px;
-  font-weight: 500;
-  vertical-align: middle;
-}
-
-.student-table tbody tr {
-  background: var(--color-bg-white);
-  animation: fadeInUp 0.35s ease both;
-  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.student-table tbody tr:hover {
-  background: var(--color-primary-subtle);
-}
-
-.student-table tbody tr:nth-child(even) {
-  background: #fbfdfb;
-}
-
-.student-table tbody tr:nth-child(even):hover {
-  background: #eef9f1;
-}
-
-/* Staggered Row Animation Delays */
-.student-table tbody tr:nth-child(1) { animation-delay: 0.05s; }
-.student-table tbody tr:nth-child(2) { animation-delay: 0.08s; }
-.student-table tbody tr:nth-child(3) { animation-delay: 0.11s; }
-.student-table tbody tr:nth-child(4) { animation-delay: 0.14s; }
-.student-table tbody tr:nth-child(5) { animation-delay: 0.17s; }
-.student-table tbody tr:nth-child(6) { animation-delay: 0.20s; }
-.student-table tbody tr:nth-child(7) { animation-delay: 0.23s; }
-.student-table tbody tr:nth-child(8) { animation-delay: 0.26s; }
-.student-table tbody tr:nth-child(n + 9) { animation-delay: 0.30s; }
-
-.student-table-empty {
-  padding: 40px 20px !important;
-  text-align: center;
-  color: #7b8c80 !important;
-  font-size: 14px !important;
-}
 
 /* =========================================================
-   BUTTONS & ACTIONS
+   TABLE SCROLLBAR
    ========================================================= */
 
-.student-profile-btn {
-  padding: 8px 14px;
-  border: 1px solid #2d9144;
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-white);
-  color: #23783a;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+.admin-manage-students
+.student-table-wrap::-webkit-scrollbar {
+  height: 8px;
 }
 
-.student-profile-btn:hover {
-  background: var(--color-primary);
-  color: var(--color-bg-white);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 13px rgba(46, 159, 71, 0.25);
+.admin-manage-students
+.student-table-wrap::-webkit-scrollbar-track {
+  background: #f9fafb;
 }
 
-.student-profile-btn:active {
-  transform: translateY(0);
+.admin-manage-students
+.student-table-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+
+  border-radius: 999px;
 }
+
+.admin-manage-students
+.student-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 
 /* =========================================================
-   RESPONSIVE LAYOUT
+   TABLE
+   ========================================================= */
+
+.admin-manage-students .student-table {
+  width: 100%;
+
+  min-width: 900px;
+
+  border-collapse: collapse;
+
+  background: #ffffff;
+
+  table-layout: auto;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.admin-manage-students
+.student-table thead {
+  background: #f9fafb;
+}
+
+.admin-manage-students
+.student-table th {
+  padding: 13px 14px;
+
+  color: var(--student-muted);
+
+  font-size: 10.5px;
+  font-weight: 700;
+
+  text-align: left;
+  text-transform: uppercase;
+
+  letter-spacing: 0.05em;
+
+  white-space: nowrap;
+
+  border-bottom: 1.5px solid var(--student-border);
+  border-right: 1px solid var(--student-divider);
+}
+
+.admin-manage-students
+.student-table th:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   TABLE CELLS
+   ========================================================= */
+
+.admin-manage-students
+.student-table td {
+  padding: 13px 14px;
+
+  color: var(--student-text);
+
+  font-size: 13px;
+  font-weight: 400;
+
+  line-height: 1.45;
+
+  vertical-align: middle;
+
+  border-bottom: 1px solid var(--student-divider);
+  border-right: 1px solid var(--student-divider-light);
+}
+
+.admin-manage-students
+.student-table td:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   TABLE ROW
+   ========================================================= */
+
+.admin-manage-students
+.student-table tbody tr {
+  background: #ffffff;
+
+  animation: ptcAdminRowIn 0.28s ease both;
+
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+/* =========================================================
+   ALTERNATING ROW
+   ========================================================= */
+
+.admin-manage-students
+.student-table tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+
+/* =========================================================
+   ROW HOVER
+   ========================================================= */
+
+.admin-manage-students
+.student-table tbody tr:hover {
+  background: #f5f7f9;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(even):hover {
+  background: #f5f7f9;
+}
+
+
+/* =========================================================
+   FINAL ROW
+   ========================================================= */
+
+.admin-manage-students
+.student-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   ROW ENTRANCE STAGGER
+   ========================================================= */
+
+.admin-manage-students
+.student-table tbody tr:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(3) {
+  animation-delay: 0.07s;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(5) {
+  animation-delay: 0.11s;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(6) {
+  animation-delay: 0.13s;
+}
+
+.admin-manage-students
+.student-table tbody tr:nth-child(n + 7) {
+  animation-delay: 0.15s;
+}
+
+
+/* =========================================================
+   TABLE EMPTY STATE
+   ========================================================= */
+
+.admin-manage-students
+.student-table-empty {
+  padding: 42px 20px !important;
+
+  background: #ffffff !important;
+
+  color: var(--student-muted) !important;
+
+  text-align: center;
+
+  font-size: 14px !important;
+  font-weight: 400 !important;
+
+  border-right: none !important;
+}
+
+
+/* =========================================================
+   STUDENT PROFILE BUTTON
+   ========================================================= */
+
+.admin-manage-students
+.student-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 34px;
+
+  padding: 7px 11px;
+
+  box-sizing: border-box;
+
+  background: var(--student-blue-soft);
+
+  color: #1d4ed8;
+
+  border: 1.5px solid #bfdbfe;
+  border-radius: 7px;
+
+  font: inherit;
+
+  font-size: 11.5px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+/* =========================================================
+   PROFILE BUTTON HOVER
+   ========================================================= */
+
+.admin-manage-students
+.student-profile-btn:hover:not(:disabled) {
+  background: var(--student-blue);
+
+  color: #ffffff;
+
+  border-color: var(--student-blue);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(37, 99, 235, 0.16);
+}
+
+
+/* =========================================================
+   PROFILE BUTTON ACTIVE
+   ========================================================= */
+
+.admin-manage-students
+.student-profile-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   PROFILE BUTTON DISABLED
+   ========================================================= */
+
+.admin-manage-students
+.student-profile-btn:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   FOCUS STATES
+   ========================================================= */
+
+.admin-manage-students
+.folder-row:focus-visible,
+
+.admin-manage-students
+.folder-child-row:focus-visible,
+
+.admin-manage-students
+.student-profile-btn:focus-visible,
+
+.admin-manage-students
+.folder-search-input:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   LARGE TABLET
    ========================================================= */
 
 @media (max-width: 1100px) {
-  .file-explorer {
-    grid-template-columns: 230px minmax(0, 1fr);
+  .admin-manage-students .file-explorer {
+    grid-template-columns:
+      240px
+      minmax(0, 1fr);
   }
 
+
+  .admin-manage-students
   .folder-content {
     padding: 20px;
   }
 
+
+  .admin-manage-students
   .folder-search-wrap {
-    width: 230px;
+    width: 260px;
   }
 }
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
 
 @media (max-width: 850px) {
   .admin-manage-students {
     padding: 18px;
+
+    border-radius: 12px;
   }
 
-  .file-explorer {
+
+  .admin-manage-students .file-explorer {
     grid-template-columns: 1fr;
+
+    min-height: 0;
   }
 
-  .folder-tree {
+
+  .admin-manage-students .folder-tree {
     max-height: 300px;
+
     border-right: none;
-    border-bottom: 1px solid #d9ebdd;
+
+    border-bottom:
+      1.5px solid
+      var(--student-border);
   }
 
+
+  .admin-manage-students
   .folder-content-header {
-    align-items: stretch;
     flex-direction: column;
+
+    align-items: stretch;
   }
 
+
+  .admin-manage-students
   .folder-search-wrap {
     width: 100%;
   }
+
+
+  .admin-manage-students
+  .folder-search-input {
+    font-size: 16px;
+  }
 }
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
 
 @media (max-width: 600px) {
   .admin-manage-students {
-    padding: 12px;
-    border-radius: 12px;
+    padding: 14px;
   }
+
 
   .admin-manage-students h1 {
-    font-size: 24px;
+    font-size: 21px;
   }
 
+
+  .admin-manage-students
   .student-subtitle {
+    margin-bottom: 18px;
+
     font-size: 13px;
   }
 
-  .file-explorer {
-    border-radius: 12px;
-  }
 
+  .admin-manage-students
   .folder-tree {
-    padding: 15px 10px;
+    padding: 14px 10px;
   }
 
+
+  .admin-manage-students
   .folder-content {
     padding: 15px;
   }
 
+
+  .admin-manage-students
   .folder-content-title {
-    font-size: 18px;
+    font-size: 17px;
   }
 
+
+  .admin-manage-students
   .student-total-box {
-    padding: 13px;
+    padding: 11px 12px;
+  }
+
+
+  .admin-manage-students
+  .student-table th,
+
+  .admin-manage-students
+  .student-table td {
+    padding: 11px 12px;
   }
 }
+
 
 /* =========================================================
-   ACCESSIBILITY & USER PREFERENCES
+   VERY SMALL MOBILE
    ========================================================= */
 
-.folder-row:focus-visible,
-.folder-child-row:focus-visible,
-.student-profile-btn:focus-visible,
-.folder-search-input:focus-visible {
-  outline: 3px solid rgba(46, 159, 71, 0.25);
-  outline-offset: 2px;
+@media (max-width: 420px) {
+  .admin-manage-students {
+    padding: 12px;
+  }
+
+
+  .admin-manage-students
+  .folder-content {
+    padding: 12px;
+  }
+
+
+  .admin-manage-students
+  .student-profile-btn {
+    width: 100%;
+  }
 }
 
+
+/* =========================================================
+   REDUCED MOTION
+   Scoped only to Student Management.
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  .admin-manage-students,
+  .admin-manage-students *,
+  .admin-manage-students *::before,
+  .admin-manage-students *::after {
     animation-duration: 0.01ms !important;
+
     animation-iteration-count: 1 !important;
+
     transition-duration: 0.01ms !important;
   }
 }

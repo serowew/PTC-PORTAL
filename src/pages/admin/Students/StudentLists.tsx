@@ -458,11 +458,6 @@ export default function StudentManagement() {
   return (
     <DashboardLayout>
       <div className="admin-manage-students">
-        <h1>Student List</h1>
-
-        <p className="student-subtitle">
-          Manage and review the students registered in the system.
-        </p>
 
         <div className="file-explorer">
           {/* =================================================

@@ -522,7 +522,7 @@ export default function CreateAnnouncement() {
   return (
     <DashboardLayout>
       <div className="admin-announcement-create">
-        <h1>Create Announcement</h1>
+       
 
         {error && <p className="error-message">{error}</p>}
 

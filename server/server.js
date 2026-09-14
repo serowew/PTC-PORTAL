@@ -8,6 +8,7 @@ import authRouter from "./routes/auth.routes.js";
 import usersRouter from "./routes/admin/users.routes.js";
 import studentsRouter from "./routes/admin/students.routes.js";
 import rolesRouter from "./routes/admin/roles.routes.js";
+import adminDashboardRouter from "./routes/admin/dashboard.routes.js";
 
 import activityRouter from "./routes/admin/activity.routes.js";
 import filesRouter from "./routes/files.routes.js";
@@ -61,11 +62,33 @@ app.use("/auth", authRouter);
 // ADMIN ROUTES
 // =====================================================
 
-app.use("/api/users", authenticate, requireRole("Admin"), usersRouter);
+app.use(
+  "/api/admin/dashboard",
+  authenticate,
+  requireRole("Admin"),
+  adminDashboardRouter,
+);
 
-app.use("/api/roles", authenticate, requireRole("Admin"), rolesRouter);
+app.use(
+  "/api/users",
+  authenticate,
+  requireRole("Admin"),
+  usersRouter,
+);
 
-app.use("/api/students", authenticate, requireRole("Admin"), studentsRouter);
+app.use(
+  "/api/roles",
+  authenticate,
+  requireRole("Admin"),
+  rolesRouter,
+);
+
+app.use(
+  "/api/students",
+  authenticate,
+  requireRole("Admin"),
+  studentsRouter,
+);
 
 app.use(
   "/api/activity-logs",

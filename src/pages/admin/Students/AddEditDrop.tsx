@@ -491,7 +491,7 @@ export default function AddEditDrop() {
         ================================================= */}
 
         <div className="admin-manage-students__header">
-          <h1>Add / Edit Students</h1>
+         
 
           <button
             type="button"

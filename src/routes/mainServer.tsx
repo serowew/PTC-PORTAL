@@ -77,10 +77,7 @@ import EditStudent from "../pages/admin/Students/editstudent";
 import Sprofile from "../pages/admin/Students/Sprofile";
 
 // ── Admin: Enrollment Management ──
-import ApproveEnrollment from "../pages/admin/Enrollment/ApproveEnrollment";
-import EnrollmentRequests from "../pages/admin/Enrollment/EnrollmentRequests";
-import EnrollmentHistory from "../pages/admin/Enrollment/EnrollmentHistory";
-import EnrollmentAnalytics from "../pages/admin/Enrollment/EnrollmentAnalytics";
+
 
 // ── Admin: Financial Management ──
 import Payment from "../pages/admin/FinancialManagement/Payments";
@@ -404,22 +401,7 @@ export default function AppRoutes() {
         />
 
         {/* ── Admin: Enrollment Management ── */}
-        <Route
-          path="/admin/enrollment/approve"
-          element={<AdminRoute element={<ApproveEnrollment />} />}
-        />
-        <Route
-          path="/admin/enrollment/request"
-          element={<AdminRoute element={<EnrollmentRequests />} />}
-        />
-        <Route
-          path="/admin/enrollment/history"
-          element={<AdminRoute element={<EnrollmentHistory />} />}
-        />
-        <Route
-          path="/admin/enrollment/analytics"
-          element={<AdminRoute element={<EnrollmentAnalytics />} />}
-        />
+
 
         {/* ── Admin: Financial Management ── */}
         <Route

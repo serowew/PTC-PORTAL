@@ -1,33 +1,32 @@
 /* =========================================================
+   PTC PORTAL
    ADMIN DASHBOARD
-   PTC Portal Admin Theme
    ========================================================= */
 
 .admin-dashboard {
   width: 100%;
-  max-width: none;
   min-width: 0;
-
-  margin: 0;
 
   padding: 28px;
 
   box-sizing: border-box;
 
-  background: linear-gradient(
-    180deg,
-    #66c44f 0%,
-    #f4f5f1 100%
-  );
+  border: 1px solid #d8e1da;
+  border-radius: 16px;
 
-  border: 1.5px solid #cbd5e1;
-  border-radius: 14px;
-
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 8px 24px rgba(0, 0, 0, 0.05);
+  background:
+    linear-gradient(
+      180deg,
+      #eaf7ec 0px,
+      #f7faf7 180px,
+      #f5f7f5 100%
+    );
 
   color: #1f2937;
+
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.04),
+    0 12px 30px rgba(15, 23, 42, 0.04);
 }
 
 
@@ -36,51 +35,96 @@
    ========================================================= */
 
 .admin-dashboard .dashboard-header {
-  margin-bottom: 24px;
+  position: relative;
 
-  padding-bottom: 18px;
+  margin-bottom: 22px;
 
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.9);
+  padding: 24px 26px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(22, 101, 52, 0.2);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #166534 0%,
+      #15803d 60%,
+      #16a34a 100%
+    );
+
+  box-shadow:
+    0 8px 22px rgba(22, 101, 52, 0.14);
+}
+
+.admin-dashboard .dashboard-header::after {
+  content: "";
+
+  position: absolute;
+
+  width: 190px;
+  height: 190px;
+
+  top: -100px;
+  right: -50px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  pointer-events: none;
 }
 
 .admin-dashboard .header-content {
+  position: relative;
+  z-index: 1;
+
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
 
-  gap: 18px;
-
-  flex-wrap: wrap;
+  gap: 22px;
 }
 
 .admin-dashboard .dashboard-header h1 {
-  margin: 0 0 6px;
+  margin: 0 0 7px;
 
-  color: #111827;
+  color: #ffffff;
 
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 25px;
+  font-weight: 750;
 
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+
+  letter-spacing: -0.02em;
 }
 
 .admin-dashboard .dashboard-header p {
+  max-width: 720px;
+
   margin: 0;
 
-  color: #374151;
+  color: rgba(255, 255, 255, 0.82);
 
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.admin-dashboard .dashboard-header p strong {
+  color: #ffffff;
 }
 
 
 /* =========================================================
-   HEADER STATS
+   HEADER CONTROLS
    ========================================================= */
 
 .admin-dashboard .header-stats {
   display: flex;
+  align-items: center;
 
-  gap: 8px;
+  gap: 9px;
 
   flex-wrap: wrap;
 }
@@ -91,147 +135,207 @@
 
   gap: 7px;
 
+  min-height: 38px;
+
   padding: 8px 11px;
 
-  background: rgba(255, 255, 255, 0.92);
+  box-sizing: border-box;
 
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 8px;
 
-  color: #374151;
+  background: rgba(255, 255, 255, 0.12);
 
-  font-size: 12px;
-  font-weight: 600;
+  color: #ffffff;
 
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-size: 11px;
+  font-weight: 650;
 
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.admin-dashboard .header-stat:hover {
-  transform: translateY(-1px);
-
-  border-color: #94a3b8;
-
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(8px);
 }
 
 
 /* =========================================================
-   STATISTICS GRID
+   GENERAL BUTTONS
+   ========================================================= */
+
+.admin-dashboard .action-btn {
+  min-height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 8px 12px;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+
+  background: #f0fdf4;
+
+  color: #166534;
+
+  font: inherit;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.admin-dashboard .dashboard-header .action-btn {
+  border-color: rgba(255, 255, 255, 0.32);
+
+  background: rgba(255, 255, 255, 0.95);
+
+  color: #166534;
+}
+
+.admin-dashboard .action-btn:hover:not(:disabled) {
+  border-color: #86efac;
+
+  background: #dcfce7;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px rgba(22, 101, 52, 0.1);
+}
+
+.admin-dashboard .action-btn:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   STATISTICS
    ========================================================= */
 
 .admin-dashboard .stats-grid {
   display: grid;
 
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(220px, 1fr)
-  );
-
-  gap: 16px;
-
-  margin-bottom: 26px;
-}
-
-
-/* =========================================================
-   STAT CARDS
-   ========================================================= */
-
-.admin-dashboard .stat-card {
-  display: flex;
-  align-items: flex-start;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
 
   gap: 14px;
 
+  margin-bottom: 24px;
+}
+
+.admin-dashboard .stat-card {
+  position: relative;
+
   min-width: 0;
 
-  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+
+  gap: 13px;
+
+  padding: 17px;
+
+  overflow: hidden;
+
+  border: 1px solid #dce5de;
+  border-radius: 11px;
 
   background: #ffffff;
 
-  border: 1.5px solid #cbd5e1;
-  border-radius: 10px;
-
   box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.05),
-    0 5px 14px rgba(15, 23, 42, 0.03);
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 6px 16px rgba(15, 23, 42, 0.035);
 
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.admin-dashboard .stat-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 4px;
+  height: 100%;
+
+  background: #16a34a;
 }
 
 .admin-dashboard .stat-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 
-  border-color: #aeb9c7;
+  border-color: #b8d3bf;
 
   box-shadow:
-    0 4px 10px rgba(15, 23, 42, 0.07),
-    0 12px 26px rgba(15, 23, 42, 0.06);
+    0 4px 10px rgba(15, 23, 42, 0.05),
+    0 12px 24px rgba(15, 23, 42, 0.05);
 }
 
+.admin-dashboard .stat-icon {
+  width: 42px;
+  height: 42px;
 
-/* =========================================================
-   STAT ICON
-   ========================================================= */
-
-.admin-dashboard .stat-icon,
-.admin-dashboard .overview-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  flex-shrink: 0;
+  flex: 0 0 42px;
 
-  color: #2563eb;
+  border-radius: 10px;
+
+  background: #eaf8ed;
+
+  color: #15803d;
 }
-
-
-/* =========================================================
-   STAT CONTENT
-   ========================================================= */
 
 .admin-dashboard .stat-content {
   min-width: 0;
 }
 
 .admin-dashboard .stat-content h3 {
-  margin: 0;
+  margin: 1px 0 0;
 
-  color: #6b7280;
+  color: #647067;
 
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 750;
+
+  letter-spacing: 0.055em;
 
   text-transform: uppercase;
-
-  letter-spacing: 0.05em;
 }
 
 .admin-dashboard .stat-number {
   margin: 6px 0 8px;
 
-  color: #111827;
+  color: #18231b;
 
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 27px;
+  font-weight: 750;
 
-  line-height: 1.15;
+  line-height: 1;
 }
 
 .admin-dashboard .stat-breakdown {
   display: flex;
 
-  gap: 7px;
-
   flex-wrap: wrap;
+
+  gap: 5px;
 }
 
 .admin-dashboard .stat-breakdown span,
@@ -239,423 +343,385 @@
   display: inline-flex;
   align-items: center;
 
-  padding: 4px 9px;
+  padding: 4px 7px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e3e8e4;
   border-radius: 999px;
 
-  background: #f3f4f6;
+  background: #f6f8f6;
 
-  color: #6b7280;
+  color: #667069;
 
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 650;
 }
 
 
 /* =========================================================
-   STAT STATES
+   STATUS COLORS
    ========================================================= */
 
-.admin-dashboard .stat-approved,
 .admin-dashboard .stat-active,
+.admin-dashboard .stat-approved,
 .admin-dashboard .stat-completed {
-  background: #dcfce7 !important;
-
-  color: #15803d !important;
-
   border-color: #bbf7d0 !important;
+
+  background: #f0fdf4 !important;
+
+  color: #166534 !important;
 }
 
 .admin-dashboard .stat-pending,
 .admin-dashboard .stat-upcoming {
+  border-color: #fde68a !important;
+
   background: #fffbeb !important;
 
-  color: #b45309 !important;
-
-  border-color: #fde68a !important;
+  color: #a16207 !important;
 }
 
-.admin-dashboard .stat-rejected,
-.admin-dashboard .stat-inactive {
+.admin-dashboard .stat-inactive,
+.admin-dashboard .stat-rejected {
+  border-color: #fecaca !important;
+
   background: #fef2f2 !important;
 
   color: #b91c1c !important;
-
-  border-color: #fecaca !important;
 }
 
-.admin-dashboard .stat-ongoing,
-.admin-dashboard .stat-month {
+.admin-dashboard .stat-month,
+.admin-dashboard .stat-ongoing {
+  border-color: #bfdbfe !important;
+
   background: #eff6ff !important;
 
   color: #1d4ed8 !important;
-
-  border-color: #bfdbfe !important;
 }
 
 
 /* =========================================================
-   SHARED DASHBOARD CARDS
-   ========================================================= */
-
-.admin-dashboard .dashboard-card,
-.admin-dashboard .overview-card,
-.admin-dashboard .activity-timeline {
-  background: #ffffff;
-
-  border: 1.5px solid #cbd5e1;
-  border-radius: 10px;
-
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.05),
-    0 5px 14px rgba(15, 23, 42, 0.03);
-}
-
-.admin-dashboard .dashboard-card {
-  padding: 18px;
-}
-
-
-/* =========================================================
-   CARD HEADER
-   ========================================================= */
-
-.admin-dashboard .card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 12px;
-
-  margin-bottom: 14px;
-
-  padding-bottom: 12px;
-
-  border-bottom: 1px solid #d7dde4;
-
-  background: transparent;
-}
-
-.admin-dashboard .card-header h3 {
-  margin: 0;
-
-  color: #111827;
-
-  font-size: 15px;
-  font-weight: 700;
-}
-
-
-/* =========================================================
-   DASHBOARD SECTIONS
+   SECTIONS
    ========================================================= */
 
 .admin-dashboard .dashboard-section {
-  margin-bottom: 26px;
+  margin-bottom: 22px;
 }
 
 .admin-dashboard .dashboard-section:last-child {
   margin-bottom: 0;
 }
 
-.admin-dashboard .dashboard-section h2 {
-  margin: 0 0 14px;
+.admin-dashboard .dashboard-section > h2 {
+  margin: 0 0 12px;
 
-  color: #111827;
+  color: #1e2921;
 
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 750;
 }
 
-.admin-dashboard .dashboard-section.split-section {
+.admin-dashboard .split-section {
   display: grid;
 
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(260px, 1fr)
-  );
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 
-  gap: 16px;
+  gap: 14px;
+
+  align-items: stretch;
 }
 
 
 /* =========================================================
-   QUICK ACTIONS
+   SHARED CARD
    ========================================================= */
 
-.admin-dashboard .quick-actions-grid,
-.admin-dashboard .action-grid {
-  display: grid;
-
-  grid-template-columns: repeat(
-    2,
-    minmax(0, 1fr)
-  );
-
-  gap: 10px;
-}
-
-.admin-dashboard .quick-actions-grid button,
-.admin-dashboard .action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  gap: 8px;
-
+.admin-dashboard .dashboard-card {
   min-width: 0;
 
-  padding: 11px 12px;
+  padding: 18px;
 
-  border: 1.5px solid #bfdbfe;
-  border-radius: 8px;
+  border: 1px solid #dce5de;
+  border-radius: 11px;
 
-  background: #eff6ff;
+  background: #ffffff;
 
-  color: #1d4ed8;
-
-  font: inherit;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background-color 0.2s ease,
-    transform 0.15s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 6px 16px rgba(15, 23, 42, 0.03);
 }
 
-.admin-dashboard .quick-actions-grid button:hover,
-.admin-dashboard .action-btn:hover {
-  background: #dbeafe;
+.admin-dashboard .card-header {
+  min-height: 35px;
 
-  border-color: #93c5fd;
-
-  transform: translateY(-2px);
-
-  box-shadow: 0 5px 12px rgba(37, 99, 235, 0.12);
-}
-
-.admin-dashboard .quick-actions-grid button:active,
-.admin-dashboard .action-btn:active {
-  transform: translateY(0);
-}
-
-
-/* =========================================================
-   NOTIFICATIONS / ANNOUNCEMENTS
-   ========================================================= */
-
-.admin-dashboard .notifications-card ul,
-.admin-dashboard .announcements-card ul {
-  list-style: none;
-
-  margin: 0;
-
-  padding: 0;
-}
-
-.admin-dashboard .notifications-card li,
-.admin-dashboard .announcements-card li {
-  padding: 11px 0;
-
-  border-bottom: 1px solid #d7dde4;
-
-  color: #1f2937;
-
-  font-size: 13px;
-
-  transition: background-color 0.15s ease;
-}
-
-.admin-dashboard .notifications-card li:last-child,
-.admin-dashboard .announcements-card li:last-child {
-  border-bottom: none;
-}
-
-.admin-dashboard .notifications-card li:hover,
-.admin-dashboard .announcements-card li:hover {
-  background: #f9fafb;
-}
-
-.admin-dashboard .notifications-card small,
-.admin-dashboard .announcements-card small {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #9ca3af;
-
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   UNREAD STATE
-   ========================================================= */
-
-.admin-dashboard .notifications-card .unread-badge {
-  padding: 3px 7px;
-
-  border: 1px solid #fecaca;
-  border-radius: 999px;
-
-  background: #fef2f2;
-
-  color: #b91c1c;
-
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.admin-dashboard .notifications-card li.unread {
-  margin: 0 -8px;
-
-  padding: 11px 8px;
-
-  background: #fffbeb;
-
-  border-left: 3px solid #f59e0b;
-}
-
-.admin-dashboard .notifications-card li.read {
-  opacity: 0.72;
-}
-
-
-/* =========================================================
-   MARK READ BUTTON
-   ========================================================= */
-
-.admin-dashboard .notifications-card .mark-read-btn {
-  margin-top: 6px;
-
-  padding: 6px 9px;
-
-  border: 1.5px solid #bfdbfe;
-  border-radius: 6px;
-
-  background: #eff6ff;
-
-  color: #1d4ed8;
-
-  font-size: 11px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.admin-dashboard .notifications-card .mark-read-btn:hover {
-  background: #dbeafe;
-
-  border-color: #93c5fd;
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY
-   ========================================================= */
-
-.admin-dashboard .activity-timeline {
-  overflow: hidden;
-}
-
-.admin-dashboard .activity-item {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
 
   gap: 12px;
 
-  padding: 14px 16px;
+  margin-bottom: 12px;
 
-  border-bottom: 1px solid #d7dde4;
+  padding-bottom: 11px;
 
-  transition:
-    background-color 0.15s ease,
-    transform 0.15s ease;
+  border-bottom: 1px solid #edf0ed;
 }
 
-.admin-dashboard .activity-item:last-child {
-  border-bottom: none;
+.admin-dashboard .card-header h2,
+.admin-dashboard .card-header h3 {
+  margin: 0;
+
+  color: #1d2920;
+
+  font-size: 14px;
+  font-weight: 750;
 }
 
-.admin-dashboard .activity-item:hover {
-  background: #f9fafb;
+.admin-dashboard .card-subtitle {
+  margin: 4px 0 0;
+
+  color: #7b847e;
+
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 
 /* =========================================================
-   ACTIVITY ICON
+   TEXT LINK BUTTON
    ========================================================= */
 
-.admin-dashboard .activity-icon {
+.admin-dashboard .dashboard-text-button {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 5px 7px;
+
+  border: none;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #15803d;
+
+  font: inherit;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.admin-dashboard .dashboard-text-button:hover {
+  background: #edf9ef;
+
+  color: #166534;
+}
+
+
+/* =========================================================
+   QUICK ACCESS
+   ========================================================= */
+
+.admin-dashboard .quick-access-card {
+  width: 100%;
+}
+
+.admin-dashboard .quick-actions-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 9px;
+}
+
+.admin-dashboard .quick-action-item {
+  min-width: 0;
+  min-height: 74px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 11px;
+
+  border: 1px solid #dceadd;
+  border-radius: 9px;
+
+  background: #f8fcf8;
+
+  color: #166534;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.admin-dashboard .quick-action-item:hover {
+  transform: translateY(-1px);
+
+  border-color: #a7d7b1;
+
+  background: #eef9f0;
+
+  box-shadow:
+    0 5px 12px rgba(22, 101, 52, 0.07);
+}
+
+.admin-dashboard .quick-action-icon {
+  width: 37px;
+  height: 37px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  width: 34px;
-  height: 34px;
+  flex: 0 0 37px;
 
-  flex: 0 0 34px;
+  border-radius: 9px;
 
-  border: 1px solid #e5e7eb;
-  border-radius: 50%;
-
-  background: #f3f4f6;
-
-  color: #374151;
-}
-
-.admin-dashboard .activity-icon.success {
-  background: #dcfce7;
+  background: #dff4e3;
 
   color: #15803d;
-
-  border-color: #bbf7d0;
 }
 
-.admin-dashboard .activity-icon.info,
-.admin-dashboard .activity-icon.primary {
-  background: #eff6ff;
+.admin-dashboard .quick-action-content {
+  min-width: 0;
 
-  color: #1d4ed8;
+  display: flex;
+  flex-direction: column;
 
-  border-color: #bfdbfe;
+  gap: 3px;
 }
 
-.admin-dashboard .activity-icon.warning {
-  background: #fffbeb;
+.admin-dashboard .quick-action-content strong {
+  color: #233126;
 
-  color: #b45309;
+  font-size: 11px;
+  font-weight: 750;
+}
 
-  border-color: #fde68a;
+.admin-dashboard .quick-action-content small {
+  color: #7b847e;
+
+  font-size: 9px;
+  line-height: 1.35;
 }
 
 
 /* =========================================================
-   ACTIVITY CONTENT
+   ACTIVITY LIST
    ========================================================= */
+
+.admin-dashboard .activity-timeline {
+  min-width: 0;
+}
+
+.admin-dashboard .activity-item {
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 11px 2px;
+
+  border-bottom: 1px solid #edf0ed;
+}
+
+.admin-dashboard .activity-item:first-child {
+  padding-top: 2px;
+}
+
+.admin-dashboard .activity-item:last-child {
+  padding-bottom: 2px;
+
+  border-bottom: none;
+}
+
+.admin-dashboard .activity-icon {
+  width: 31px;
+  height: 31px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 31px;
+
+  border: 1px solid #e2e8e3;
+  border-radius: 8px;
+
+  background: #f4f6f4;
+
+  color: #657069;
+}
+
+.admin-dashboard .activity-icon.success {
+  border-color: #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+.admin-dashboard .activity-icon.info,
+.admin-dashboard .activity-icon.primary {
+  border-color: #bfdbfe;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+}
+
+.admin-dashboard .activity-icon.warning {
+  border-color: #fde68a;
+
+  background: #fffbeb;
+
+  color: #b45309;
+}
 
 .admin-dashboard .activity-content {
   min-width: 0;
+
+  flex: 1;
 }
 
 .admin-dashboard .activity-content p {
   margin: 0;
 
-  color: #1f2937;
+  color: #29342c;
 
-  font-size: 13px;
+  font-size: 11px;
+  line-height: 1.4;
 
   overflow-wrap: anywhere;
+}
+
+.admin-dashboard .activity-content p strong {
+  font-weight: 700;
 }
 
 .admin-dashboard .activity-content small {
@@ -663,121 +729,727 @@
 
   margin-top: 3px;
 
-  color: #9ca3af;
+  color: #8a938d;
 
-  font-size: 11px;
+  font-size: 9px;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard .activity-role {
+  display: inline-flex;
+
+  margin-left: 6px;
+
+  padding: 2px 6px;
+
+  border: 1px solid #dbe7dd;
+  border-radius: 999px;
+
+  background: #f3f8f4;
+
+  color: #52705a;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  vertical-align: middle;
 }
 
 
 /* =========================================================
-   OVERVIEW
+   SECURITY OVERVIEW
    ========================================================= */
 
 .admin-dashboard .overview-grid {
   display: grid;
 
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(240px, 1fr)
-  );
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
 
-  gap: 16px;
+  gap: 12px;
 }
 
 .admin-dashboard .overview-card {
-  padding: 18px;
+  min-width: 0;
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
+  padding: 16px;
 
-.admin-dashboard .overview-card:hover {
-  transform: translateY(-3px);
+  border: 1px solid #dce5de;
+  border-radius: 10px;
 
-  border-color: #aeb9c7;
+  background: #ffffff;
 
   box-shadow:
-    0 4px 10px rgba(15, 23, 42, 0.07),
-    0 12px 26px rgba(15, 23, 42, 0.06);
+    0 1px 2px rgba(15, 23, 42, 0.025),
+    0 5px 14px rgba(15, 23, 42, 0.025);
+}
+
+.admin-dashboard .overview-icon {
+  width: 36px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #eaf8ed;
+
+  color: #15803d;
 }
 
 .admin-dashboard .overview-card h3 {
-  margin: 10px 0 7px;
+  margin: 10px 0 4px;
 
-  color: #111827;
+  color: #37433a;
 
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 700;
 }
 
-.admin-dashboard .overview-card p {
+.admin-dashboard .overview-card > p {
   margin: 0;
 
-  color: #6b7280;
+  color: #16231a;
 
-  font-size: 13px;
+  font-size: 25px;
+  font-weight: 750;
 
-  line-height: 1.55;
+  line-height: 1;
 }
 
 .admin-dashboard .overview-metrics {
   display: flex;
 
-  gap: 7px;
-
   flex-wrap: wrap;
 
-  margin-top: 12px;
+  gap: 5px;
+
+  margin-top: 10px;
 }
 
 
 /* =========================================================
-   ACCESSIBILITY
+   ANNOUNCEMENTS
+   ========================================================= */
+
+.admin-dashboard .announcement-list {
+  list-style: none;
+
+  margin: 0;
+  padding: 0;
+}
+
+.admin-dashboard .announcement-item {
+  margin: 0;
+
+  border-bottom: 1px solid #edf0ed;
+}
+
+.admin-dashboard .announcement-item:last-child {
+  border-bottom: none;
+}
+
+.admin-dashboard .announcement-item-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 11px 2px;
+
+  border: none;
+
+  background: transparent;
+
+  color: inherit;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s ease,
+    padding 0.18s ease;
+}
+
+.admin-dashboard .announcement-item:first-child
+  .announcement-item-button {
+  padding-top: 2px;
+}
+
+.admin-dashboard .announcement-item:last-child
+  .announcement-item-button {
+  padding-bottom: 2px;
+}
+
+.admin-dashboard .announcement-item-button:hover {
+  padding-left: 6px;
+  padding-right: 6px;
+
+  background: #f8fbf8;
+}
+
+.admin-dashboard .announcement-main {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.admin-dashboard .announcement-title-row {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 6px;
+}
+
+.admin-dashboard .announcement-title {
+  color: #29342c;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard .announcement-preview {
+  display: -webkit-box;
+
+  margin: 4px 0 0;
+
+  overflow: hidden;
+
+  color: #7d8680;
+
+  font-size: 10px;
+  line-height: 1.4;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.admin-dashboard .announcement-meta {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 4px 10px;
+
+  margin-top: 6px;
+
+  color: #9aa19c;
+
+  font-size: 8px;
+}
+
+.admin-dashboard .announcement-meta strong {
+  color: #68736b;
+
+  font-weight: 650;
+}
+
+.admin-dashboard .announcement-status {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 6px;
+
+  border: 1px solid transparent;
+  border-radius: 999px;
+
+  font-size: 7px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  letter-spacing: 0.05em;
+
+  text-transform: uppercase;
+}
+
+.admin-dashboard .announcement-status.active {
+  border-color: #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #166534;
+}
+
+.admin-dashboard .announcement-status.scheduled {
+  border-color: #bfdbfe;
+
+  background: #eff6ff;
+
+  color: #1d4ed8;
+}
+
+.admin-dashboard .announcement-status.expired {
+  border-color: #e5e7eb;
+
+  background: #f7f7f7;
+
+  color: #6b7280;
+}
+
+.admin-dashboard .announcement-status.inactive {
+  border-color: #fecaca;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+}
+
+.admin-dashboard .announcement-chevron {
+  flex: 0 0 auto;
+
+  color: #a4aba6;
+
+  transition:
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.admin-dashboard
+  .announcement-item-button:hover
+  .announcement-chevron {
+  color: #15803d;
+
+  transform: translateX(2px);
+}
+
+
+/* =========================================================
+   NOTIFICATIONS
+   ========================================================= */
+
+.admin-dashboard .notification-heading {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+.admin-dashboard .notification-list {
+  list-style: none;
+
+  margin: 0;
+  padding: 0;
+}
+
+.admin-dashboard .notification-item {
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  padding: 11px 2px;
+
+  border-bottom: 1px solid #edf0ed;
+}
+
+.admin-dashboard .notification-item:first-child {
+  padding-top: 2px;
+}
+
+.admin-dashboard .notification-item:last-child {
+  padding-bottom: 2px;
+
+  border-bottom: none;
+}
+
+.admin-dashboard .notification-item.unread {
+  margin: 0 -6px;
+
+  padding-left: 8px;
+  padding-right: 6px;
+
+  border-left: 3px solid #16a34a;
+
+  background: #f7fdf8;
+}
+
+.admin-dashboard .notification-item.read {
+  opacity: 0.68;
+}
+
+.admin-dashboard .notification-type-icon {
+  width: 31px;
+  height: 31px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 31px;
+
+  border: 1px solid #e2e8e3;
+  border-radius: 8px;
+
+  background: #f4f6f4;
+
+  color: #647067;
+}
+
+.admin-dashboard .notification-type-icon.system {
+  border-color: #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+.admin-dashboard .notification-type-icon.announcement {
+  border-color: #bfdbfe;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+}
+
+.admin-dashboard .notification-type-icon.grades {
+  border-color: #ddd6fe;
+
+  background: #f5f3ff;
+
+  color: #7c3aed;
+}
+
+.admin-dashboard .notification-type-icon.finance {
+  border-color: #fde68a;
+
+  background: #fffbeb;
+
+  color: #b45309;
+}
+
+.admin-dashboard .notification-content {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.admin-dashboard .notification-title-row {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 6px;
+}
+
+.admin-dashboard .notification-title-row strong {
+  color: #29342c;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard .notification-content p {
+  margin: 4px 0 0;
+
+  color: #7d8680;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.admin-dashboard .notification-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin-top: 7px;
+}
+
+.admin-dashboard .notification-footer small {
+  color: #9aa19c;
+
+  font-size: 8px;
+}
+
+.admin-dashboard .notification-type-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 6px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+
+  background: #f8f8f8;
+
+  color: #6b7280;
+
+  font-size: 7px;
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+
+  text-transform: uppercase;
+}
+
+.admin-dashboard .notification-type-badge.system {
+  border-color: #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #166534;
+}
+
+.admin-dashboard .notification-type-badge.announcement {
+  border-color: #bfdbfe;
+
+  background: #eff6ff;
+
+  color: #1d4ed8;
+}
+
+.admin-dashboard .notification-type-badge.grades {
+  border-color: #ddd6fe;
+
+  background: #f5f3ff;
+
+  color: #6d28d9;
+}
+
+.admin-dashboard .notification-type-badge.finance {
+  border-color: #fde68a;
+
+  background: #fffbeb;
+
+  color: #a16207;
+}
+
+
+/* =========================================================
+   NOTIFICATION BADGES / ACTION
+   ========================================================= */
+
+.admin-dashboard .unread-badge {
+  min-width: 19px;
+  height: 19px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 5px;
+
+  border-radius: 999px;
+
+  background: #dcfce7;
+
+  color: #166534;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.admin-dashboard .mark-read-btn {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 4px 7px;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+
+  background: #f0fdf4;
+
+  color: #166534;
+
+  font: inherit;
+
+  font-size: 8px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.admin-dashboard .mark-read-btn:hover:not(:disabled) {
+  border-color: #86efac;
+
+  background: #dcfce7;
+}
+
+.admin-dashboard .mark-read-btn:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+.admin-dashboard .notification-read-label {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #808983;
+
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.admin-dashboard .notification-action-error {
+  margin-bottom: 10px;
+
+  padding: 7px 9px;
+
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  font-size: 9px;
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.admin-dashboard .dashboard-empty-state {
+  min-height: 160px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+}
+
+.admin-dashboard .dashboard-empty-compact {
+  min-height: 145px;
+}
+
+.admin-dashboard .dashboard-empty-icon {
+  width: 40px;
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 8px;
+
+  border-radius: 10px;
+
+  background: #eaf8ed;
+
+  color: #15803d;
+}
+
+.admin-dashboard .dashboard-empty-state strong {
+  color: #29342c;
+
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.admin-dashboard .dashboard-empty-state p {
+  max-width: 300px;
+
+  margin: 4px 0 10px;
+
+  color: #858e88;
+
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+
+/* =========================================================
+   LOADING / ERROR CARD
+   ========================================================= */
+
+.admin-dashboard > .dashboard-card:first-child {
+  min-height: 150px;
+}
+
+
+/* =========================================================
+   FOCUS
    ========================================================= */
 
 .admin-dashboard button:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.2);
+  outline: 3px solid rgba(22, 163, 74, 0.18);
 
   outline-offset: 2px;
 }
 
 
 /* =========================================================
-   RESPONSIVE
+   TABLET
    ========================================================= */
 
-@media (max-width: 992px) {
+@media (max-width: 1100px) {
+
   .admin-dashboard .stats-grid {
-    grid-template-columns: repeat(
-      2,
-      minmax(0, 1fr)
-    );
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
+
+  .admin-dashboard .overview-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-dashboard .quick-actions-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
 }
 
-@media (max-width: 768px) {
+
+/* =========================================================
+   MOBILE / SMALL TABLET
+   ========================================================= */
+
+@media (max-width: 760px) {
+
   .admin-dashboard {
-    padding: 18px;
+    padding: 16px;
 
     border-radius: 12px;
   }
 
+  .admin-dashboard .dashboard-header {
+    padding: 20px;
+  }
+
   .admin-dashboard .header-content {
     flex-direction: column;
-
-    align-items: stretch;
-  }
-
-  .admin-dashboard .stats-grid,
-  .admin-dashboard .dashboard-section.split-section {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-dashboard .quick-actions-grid,
-  .admin-dashboard .action-grid {
-    grid-template-columns: 1fr;
   }
 
   .admin-dashboard .header-stats {
@@ -789,23 +1461,65 @@
 
     justify-content: center;
   }
-}
 
-@media (max-width: 480px) {
-  .admin-dashboard .stats-grid {
+  .admin-dashboard .dashboard-header .action-btn {
+    flex: 1 1 auto;
+  }
+
+  .admin-dashboard .split-section,
+  .admin-dashboard .dashboard-bottom-grid {
     grid-template-columns: 1fr;
   }
 
-  .admin-dashboard .stat-card {
-    padding: 15px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .admin-dashboard {
+    padding: 12px;
   }
 
-  .admin-dashboard .dashboard-card,
-  .admin-dashboard .overview-card {
-    padding: 15px;
+  .admin-dashboard .dashboard-header {
+    padding: 18px 16px;
   }
 
   .admin-dashboard .dashboard-header h1 {
-    font-size: 22px;
+    font-size: 21px;
   }
+
+  .admin-dashboard .dashboard-header p {
+    font-size: 11px;
+  }
+
+  .admin-dashboard .stats-grid,
+  .admin-dashboard .overview-grid,
+  .admin-dashboard .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard .stat-card,
+  .admin-dashboard .dashboard-card,
+  .admin-dashboard .overview-card {
+    padding: 14px;
+  }
+
+  .admin-dashboard .card-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .admin-dashboard .dashboard-text-button {
+    padding-left: 0;
+  }
+
+  .admin-dashboard .notification-footer {
+    align-items: flex-start;
+  }
+
 }

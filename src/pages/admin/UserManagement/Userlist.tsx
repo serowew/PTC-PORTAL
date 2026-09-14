@@ -509,7 +509,7 @@ export default function UserList() {
         ================================================= */}
 
         <div className="admin-user-list__header">
-          <h1>User Management</h1>
+        
 
           <button
             type="button"
