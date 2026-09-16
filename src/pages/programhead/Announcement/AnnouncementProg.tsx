@@ -21,6 +21,8 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 
+import CreateAnnouncement from "./CreateAnnouncement";
+
 import "../../../styles/announcementStudent.css";
 
 const API_BASE_URL = "http://localhost:3000";
@@ -223,6 +225,10 @@ export default function AnnouncementProg() {
     authService.getSession(),
   );
 
+  const [token] = useState(() =>
+    authService.getToken(),
+  );
+
   const [announcements, setAnnouncements] =
     useState<Announcement[]>([]);
 
@@ -243,6 +249,9 @@ export default function AnnouncementProg() {
   const [refreshKey, setRefreshKey] =
     useState(0);
 
+  const [showCreate, setShowCreate] =
+    useState(false);
+
   // =====================================================
   // LOAD ANNOUNCEMENTS
   // =====================================================
@@ -255,10 +264,12 @@ export default function AnnouncementProg() {
         setLoading(true);
         setError("");
 
-        if (!user) {
-          throw new Error(
-            "User session not found.",
-          );
+        if (!user || !token) {
+          authService.logout();
+          navigate("/login", {
+            replace: true,
+          });
+          return;
         }
 
         if (user.role !== "Program Head") {
@@ -269,8 +280,8 @@ export default function AnnouncementProg() {
           return;
         }
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/announcements?role_id=${user.role_id}`,
+        const response = await authService.authFetch(
+          `${API_BASE_URL}/api/announcements`,
           {
             method: "GET",
             signal: controller.signal,
@@ -309,6 +320,27 @@ export default function AnnouncementProg() {
           "PROGRAM HEAD ANNOUNCEMENTS:",
           data,
         );
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", {
+            replace: true,
+          });
+          return;
+        }
+
+        if (response.status === 403) {
+          const responseObject =
+            Array.isArray(data)
+              ? null
+              : data;
+
+          throw new Error(
+            responseObject?.message ||
+              responseObject?.error ||
+              "Program Head access is required to view announcements.",
+          );
+        }
 
         if (!response.ok) {
           const responseObject =
@@ -377,7 +409,7 @@ export default function AnnouncementProg() {
     return () => {
       controller.abort();
     };
-  }, [user, navigate, refreshKey]);
+  }, [user, token, navigate, refreshKey]);
 
   // =====================================================
   // ACTIVE ANNOUNCEMENTS
@@ -517,11 +549,34 @@ export default function AnnouncementProg() {
     setAttentionOnly(false);
   };
 
+  const openCreateAnnouncement = () => {
+    setShowCreate(true);
+  };
+
+  const closeCreateAnnouncement = () => {
+    setShowCreate(false);
+  };
+
+  const handleAnnouncementCreated = () => {
+    setShowCreate(false);
+    setRefreshKey((current) => current + 1);
+  };
+
   if (
     !user ||
+    !token ||
     user.role !== "Program Head"
   ) {
     return null;
+  }
+
+  if (showCreate) {
+    return (
+      <CreateAnnouncement
+        onCancel={closeCreateAnnouncement}
+        onCreated={handleAnnouncementCreated}
+      />
+    );
   }
 
   return (
@@ -542,7 +597,7 @@ export default function AnnouncementProg() {
             </div>
 
             <h1>
-              Announcement &amp; Action Center
+              Announcement Management
             </h1>
 
             <p>
@@ -558,9 +613,7 @@ export default function AnnouncementProg() {
             <button
               type="button"
               className="programhead-announcement-create"
-              onClick={() =>
-                navigate("/programhead/announcement/create")
-              }
+              onClick={openCreateAnnouncement}
             >
               <Plus size={16} />
               Create Announcement

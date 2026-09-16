@@ -260,6 +260,10 @@ export default function AnnouncementProgD() {
     authService.getSession(),
   );
 
+  const [token] = useState(() =>
+    authService.getToken(),
+  );
+
   const [
     announcement,
     setAnnouncement,
@@ -286,10 +290,12 @@ export default function AnnouncementProgD() {
         setLoading(true);
         setError("");
 
-        if (!user) {
-          throw new Error(
-            "User session not found.",
-          );
+        if (!user || !token) {
+          authService.logout();
+          navigate("/login", {
+            replace: true,
+          });
+          return;
         }
 
         if (
@@ -308,10 +314,10 @@ export default function AnnouncementProgD() {
           );
         }
 
-        const response = await fetch(
+        const response = await authService.authFetch(
           `${API_BASE_URL}/api/announcements/${encodeURIComponent(
             id,
-          )}?role_id=${user.role_id}`,
+          )}`,
           {
             method: "GET",
             signal: controller.signal,
@@ -350,6 +356,22 @@ export default function AnnouncementProgD() {
           "PROGRAM HEAD DETAIL:",
           data,
         );
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", {
+            replace: true,
+          });
+          return;
+        }
+
+        if (response.status === 403) {
+          throw new Error(
+            data.message ||
+              data.error ||
+              "This announcement is not available to your Program Head account.",
+          );
+        }
 
         if (!response.ok) {
           throw new Error(
@@ -407,7 +429,7 @@ export default function AnnouncementProgD() {
     return () => {
       controller.abort();
     };
-  }, [id, user, navigate]);
+  }, [id, user, token, navigate]);
 
   const category = useMemo(
     () =>
@@ -425,6 +447,7 @@ export default function AnnouncementProgD() {
 
   if (
     !user ||
+    !token ||
     user.role !== "Program Head"
   ) {
     return null;
