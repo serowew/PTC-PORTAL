@@ -903,17 +903,14 @@ router.get("/setup-data", async (req, res) => {
         is_required: Number(row.is_required) === 1,
       }));
     }
+
     // =================================================
-    // TEACHING USERS
+    // FACULTY
     //
-    // Both Faculty and Program Head can be assigned
-    // to teach a subject offering.
+    // If course is selected, use its department.
     //
-    // Only return:
-    // - Faculty / Program Head roles
-    // - active accounts
-    // - verified accounts
-    // - users belonging to the selected course department
+    // Current faculty schema does not contain
+    // an "active" flag, so do not invent one.
     // =================================================
 
     let faculty = [];
@@ -921,106 +918,49 @@ router.get("/setup-data", async (req, res) => {
     if (courseId) {
       const [rows] = await db.execute(
         `
-      SELECT
-          f.faculty_id,
-          f.user_id,
-          f.employee_number,
-          f.first_name,
-          f.middle_name,
-          f.last_name,
-
-          CONCAT_WS(
-            ' ',
+        SELECT
+            f.faculty_id,
+            f.user_id,
+            f.employee_number,
             f.first_name,
-            NULLIF(f.middle_name, ''),
-            f.last_name
-          ) AS faculty_name,
+            f.middle_name,
+            f.last_name,
 
-          f.email,
-          f.department_id,
-          f.employment_status,
+            CONCAT_WS(
+              ' ',
+              f.first_name,
+              NULLIF(f.middle_name, ''),
+              f.last_name
+            ) AS faculty_name,
 
-          d.department_name,
+            f.email,
+            f.department_id,
+            f.employment_status,
 
-          u.username,
-          u.is_active,
-          u.is_verified,
+            d.department_name
 
-          r.role_id,
-          r.role_name
+        FROM faculty f
 
-      FROM faculty f
+        INNER JOIN courses c
+            ON c.department_id =
+               f.department_id
 
-      INNER JOIN users u
-          ON u.user_id = f.user_id
+        LEFT JOIN departments d
+            ON d.department_id =
+               f.department_id
 
-      INNER JOIN roles r
-          ON r.role_id = u.role_id
+        WHERE c.course_id = ?
 
-      INNER JOIN courses c
-          ON c.department_id = f.department_id
-
-      LEFT JOIN departments d
-          ON d.department_id = f.department_id
-
-      WHERE c.course_id = ?
-
-        AND u.is_active = 1
-
-        AND u.is_verified = 1
-
-        AND r.role_name IN (
-          'Faculty',
-          'Program Head'
-        )
-
-      ORDER BY
-          CASE
-            WHEN r.role_name = 'Program Head'
-            THEN 0
-            ELSE 1
-          END,
-
-          f.last_name ASC,
-          f.first_name ASC
-    `,
+        ORDER BY
+            f.last_name ASC,
+            f.first_name ASC
+        `,
         [courseId],
       );
 
-      faculty = rows.map((row) => ({
-        faculty_id: Number(row.faculty_id),
-
-        user_id: Number(row.user_id),
-
-        employee_number: row.employee_number,
-
-        faculty_name: row.faculty_name,
-
-        first_name: row.first_name,
-
-        middle_name: row.middle_name,
-
-        last_name: row.last_name,
-
-        email: row.email,
-
-        department_id: Number(row.department_id),
-
-        department_name: row.department_name,
-
-        employment_status: row.employment_status,
-
-        username: row.username,
-
-        role_id: Number(row.role_id),
-
-        role_name: row.role_name,
-
-        is_active: Number(row.is_active) === 1,
-
-        is_verified: Number(row.is_verified) === 1,
-      }));
+      faculty = rows;
     }
+
     // =================================================
     // ROOMS
     // =================================================
@@ -3151,7 +3091,6 @@ async function findCreateOfferingScheduleConflicts(
 
   return conflicts;
 }
-
 // =====================================================
 // CREATE SUBJECT OFFERING
 //
@@ -3184,99 +3123,283 @@ async function findCreateOfferingScheduleConflicts(
 //
 // Client does not separately supply those IDs.
 // =====================================================
+
 router.post("/subject-offerings", async (req, res) => {
+  // ===================================================
+  // AUTHENTICATED REGISTRAR
+  // ===================================================
+
   const actor = getRegistrarActor(req, res);
 
   if (!actor) {
     return;
   }
 
-  // Registrar only selects the section subject and assigns the teaching user.
-  // Scheduling belongs to the assigned Faculty / Program Head.
+  // ===================================================
+  // REQUEST DATA
+  //
+  // NOTE:
+  // status is intentionally NOT read from req.body.
+  //
+  // Backend will calculate Open / Closed automatically.
+  // ===================================================
+
   const sectionSubjectId = toPositiveInt(req.body?.section_subject_id);
-  const facultyId = toPositiveInt(req.body?.faculty_id);
+
+  const facultyId =
+    req.body?.faculty_id === undefined ||
+    req.body?.faculty_id === null ||
+    req.body?.faculty_id === ""
+      ? null
+      : toPositiveInt(req.body.faculty_id);
+
+  const roomId =
+    req.body?.room_id === undefined ||
+    req.body?.room_id === null ||
+    req.body?.room_id === ""
+      ? null
+      : toPositiveInt(req.body.room_id);
+
+  const scheduleDays =
+    typeof req.body?.schedule_days === "string"
+      ? req.body.schedule_days.trim()
+      : "";
+
+  const scheduleTime =
+    typeof req.body?.schedule_time === "string"
+      ? req.body.schedule_time.trim()
+      : "";
+
+  let maxStudents = null;
+
+  if (
+    req.body?.max_students !== undefined &&
+    req.body?.max_students !== null &&
+    req.body?.max_students !== ""
+  ) {
+    maxStudents = toPositiveInt(req.body.max_students);
+
+    if (!maxStudents) {
+      return res.status(400).json({
+        success: false,
+
+        message: "max_students must be a positive integer.",
+      });
+    }
+  }
+
+  // ===================================================
+  // BASIC VALIDATION
+  // ===================================================
 
   if (!sectionSubjectId) {
     return res.status(400).json({
       success: false,
+
       message: "A valid section_subject_id is required.",
     });
   }
 
-  if (!facultyId) {
+  // ===================================================
+  // FACULTY ID VALIDATION
+  // ===================================================
+
+  if (
+    req.body?.faculty_id !== undefined &&
+    req.body?.faculty_id !== null &&
+    req.body?.faculty_id !== "" &&
+    !facultyId
+  ) {
     return res.status(400).json({
       success: false,
-      message: "A valid faculty_id is required.",
+
+      message: "faculty_id must be a positive integer.",
     });
   }
+
+  // ===================================================
+  // ROOM ID VALIDATION
+  //
+  // Room remains optional.
+  //
+  // Room is NOT part of schedule conflict validation.
+  // ===================================================
+
+  if (
+    req.body?.room_id !== undefined &&
+    req.body?.room_id !== null &&
+    req.body?.room_id !== "" &&
+    !roomId
+  ) {
+    return res.status(400).json({
+      success: false,
+
+      message: "room_id must be a positive integer.",
+    });
+  }
+
+  // ===================================================
+  // SCHEDULE PAIR VALIDATION
+  //
+  // Both schedule fields must exist together.
+  //
+  // Empty + empty:
+  //     allowed → planning / Closed
+  //
+  // days + time:
+  //     allowed → validate schedule
+  //
+  // only one:
+  //     invalid
+  // ===================================================
+
+  const hasScheduleDays = Boolean(scheduleDays);
+
+  const hasScheduleTime = Boolean(scheduleTime);
+
+  if (hasScheduleDays !== hasScheduleTime) {
+    return res.status(400).json({
+      success: false,
+
+      message:
+        "schedule_days and schedule_time must either both be provided or both be empty.",
+    });
+  }
+
+  // ===================================================
+  // SCHEDULE FORMAT VALIDATION
+  // ===================================================
+
+  if (scheduleDays && scheduleTime) {
+    const parsedDays = parseOfferingScheduleDays(scheduleDays);
+
+    if (parsedDays.length === 0) {
+      return res.status(400).json({
+        success: false,
+
+        message: "Invalid schedule_days format.",
+
+        examples: ["Monday", "Monday, Wednesday", "Tuesday, Thursday"],
+      });
+    }
+
+    const parsedTime = parseOfferingScheduleTimeRange(scheduleTime);
+
+    if (!parsedTime) {
+      return res.status(400).json({
+        success: false,
+
+        message: "Invalid schedule_time format.",
+
+        examples: ["8:00 AM - 10:00 AM", "1:00 PM - 3:00 PM", "13:00 - 15:00"],
+      });
+    }
+  }
+
+  // ===================================================
+  // DATABASE TRANSACTION
+  // ===================================================
 
   let connection;
 
   try {
     connection = await db.getConnection();
+
     await connection.beginTransaction();
 
     // =================================================
     // GET SECTION SUBJECT
+    //
+    // section_subject determines:
+    //
+    // - section
+    // - subject
+    // - AY
+    // - semester
     // =================================================
 
     const [sectionSubjectRows] = await connection.execute(
       `
-        SELECT
-            ss.section_subject_id,
-            ss.section_id,
-            ss.subject_id,
-            ss.academic_year_id,
-            ss.semester_id,
-            ss.max_students,
-            ss.status AS section_subject_status,
+          SELECT
+              ss.section_subject_id,
 
-            sec.section_name,
-            sec.course_id,
-            sec.year_level,
-            sec.max_students AS section_max_students,
+              ss.section_id,
 
-            c.course_code,
-            c.course_name,
-            c.department_id,
+              ss.subject_id,
 
-            sub.subject_code,
-            sub.subject_name,
-            sub.units,
+              ss.academic_year_id,
 
-            ay.academic_year,
-            sem.semester_name
+              ss.semester_id,
 
-        FROM section_subjects ss
+              ss.max_students,
 
-        INNER JOIN sections sec
-            ON sec.section_id = ss.section_id
+              ss.status
+                  AS section_subject_status,
 
-        INNER JOIN courses c
-            ON c.course_id = sec.course_id
+              sec.section_name,
 
-        INNER JOIN subjects sub
-            ON sub.subject_id = ss.subject_id
+              sec.course_id,
 
-        INNER JOIN academic_years ay
-            ON ay.academic_year_id = ss.academic_year_id
+              sec.year_level,
 
-        INNER JOIN semesters sem
-            ON sem.semester_id = ss.semester_id
+              sec.max_students
+                  AS section_max_students,
 
-        WHERE ss.section_subject_id = ?
+              c.course_code,
 
-        LIMIT 1
-        FOR UPDATE
-      `,
+              c.course_name,
+
+              sub.subject_code,
+
+              sub.subject_name,
+
+              sub.units,
+
+              ay.academic_year,
+
+              sem.semester_name
+
+          FROM section_subjects ss
+
+          INNER JOIN sections sec
+              ON sec.section_id =
+                 ss.section_id
+
+          INNER JOIN courses c
+              ON c.course_id =
+                 sec.course_id
+
+          INNER JOIN subjects sub
+              ON sub.subject_id =
+                 ss.subject_id
+
+          INNER JOIN academic_years ay
+              ON ay.academic_year_id =
+                 ss.academic_year_id
+
+          INNER JOIN semesters sem
+              ON sem.semester_id =
+                 ss.semester_id
+
+          WHERE ss.section_subject_id = ?
+
+          LIMIT 1
+
+          FOR UPDATE
+        `,
       [sectionSubjectId],
     );
+
+    // =================================================
+    // SECTION SUBJECT NOT FOUND
+    // =================================================
 
     if (sectionSubjectRows.length === 0) {
       await connection.rollback();
 
       return res.status(404).json({
         success: false,
+
         message: "Section subject not found.",
       });
     }
@@ -3285,6 +3408,9 @@ router.post("/subject-offerings", async (req, res) => {
 
     // =================================================
     // CANCELLED SECTION SUBJECT
+    //
+    // A cancelled academic subject cannot receive
+    // another offering.
     // =================================================
 
     if (sectionSubject.section_subject_status === "Cancelled") {
@@ -3292,6 +3418,7 @@ router.post("/subject-offerings", async (req, res) => {
 
       return res.status(409).json({
         success: false,
+
         message: "Cannot create an offering for a cancelled section subject.",
       });
     }
@@ -3299,30 +3426,39 @@ router.post("/subject-offerings", async (req, res) => {
     // =================================================
     // CHECK EXISTING OFFERING
     //
-    // One normal offering per:
+    // Current business rule:
+    //
+    // one normal offering for:
     // subject + section + AY + semester
     // =================================================
 
     const [existingRows] = await connection.execute(
       `
-        SELECT
-            offering_id,
-            status
+          SELECT
+              offering_id,
+              status
 
-        FROM subject_offerings
+          FROM subject_offerings
 
-        WHERE subject_id = ?
-          AND section_id = ?
-          AND academic_year_id = ?
-          AND semester_id = ?
+          WHERE subject_id = ?
 
-        LIMIT 1
-        FOR UPDATE
-      `,
+            AND section_id = ?
+
+            AND academic_year_id = ?
+
+            AND semester_id = ?
+
+          LIMIT 1
+
+          FOR UPDATE
+        `,
       [
         Number(sectionSubject.subject_id),
+
         Number(sectionSubject.section_id),
+
         Number(sectionSubject.academic_year_id),
+
         Number(sectionSubject.semester_id),
       ],
     );
@@ -3332,198 +3468,321 @@ router.post("/subject-offerings", async (req, res) => {
 
       return res.status(409).json({
         success: false,
+
         message: "A subject offering already exists for this section subject.",
+
         existing_offering: {
           offering_id: Number(existingRows[0].offering_id),
+
           status: existingRows[0].status,
         },
       });
     }
 
     // =================================================
-    // VALIDATE ASSIGNED INSTRUCTOR
+    // VALIDATE FACULTY
+    // =================================================
+
+    let faculty = null;
+
+    if (facultyId) {
+      const [facultyRows] = await connection.execute(
+        `
+            SELECT
+                faculty_id,
+
+                user_id,
+
+                employee_number,
+
+                first_name,
+
+                middle_name,
+
+                last_name,
+
+                CONCAT_WS(
+                  ' ',
+                  first_name,
+                  NULLIF(
+                    middle_name,
+                    ''
+                  ),
+                  last_name
+                ) AS faculty_name,
+
+                department_id,
+
+                employment_status
+
+            FROM faculty
+
+            WHERE faculty_id = ?
+
+            LIMIT 1
+          `,
+        [facultyId],
+      );
+
+      if (facultyRows.length === 0) {
+        await connection.rollback();
+
+        return res.status(404).json({
+          success: false,
+
+          message: "Faculty record not found.",
+        });
+      }
+
+      faculty = facultyRows[0];
+    }
+
+    // =================================================
+    // VALIDATE ROOM IF PROVIDED
     //
-    // Faculty and Program Head both have faculty records.
-    // faculty_id remains the teaching assignment.
-    // =================================================
-
-    const [facultyRows] = await connection.execute(
-      `
-        SELECT
-            f.faculty_id,
-            f.user_id,
-            f.employee_number,
-            f.first_name,
-            f.middle_name,
-            f.last_name,
-
-            CONCAT_WS(
-              ' ',
-              f.first_name,
-              NULLIF(f.middle_name, ''),
-              f.last_name
-            ) AS faculty_name,
-
-            f.department_id,
-            f.employment_status,
-
-            u.username,
-            u.is_verified,
-            u.is_active,
-
-            r.role_name
-
-        FROM faculty f
-
-        INNER JOIN users u
-            ON u.user_id = f.user_id
-
-        INNER JOIN roles r
-            ON r.role_id = u.role_id
-
-        WHERE f.faculty_id = ?
-
-        LIMIT 1
-      `,
-      [facultyId],
-    );
-
-    if (facultyRows.length === 0) {
-      await connection.rollback();
-
-      return res.status(404).json({
-        success: false,
-        message: "Faculty record not found.",
-      });
-    }
-
-    const faculty = facultyRows[0];
-
-    // =================================================
-    // ROLE VALIDATION
-    // =================================================
-
-    if (!["Faculty", "Program Head"].includes(faculty.role_name)) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-        message: "The selected user is not a Faculty or Program Head account.",
-      });
-    }
-
-    // =================================================
-    // ACCOUNT STATUS VALIDATION
-    // =================================================
-
-    if (Number(faculty.is_active) !== 1) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-        message: "The selected teaching account is inactive.",
-      });
-    }
-
-    if (Number(faculty.is_verified) !== 1) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-        message: "The selected teaching account is not verified.",
-      });
-    }
-
-    // =================================================
-    // DEPARTMENT VALIDATION
+    // Room is optional.
     //
-    // Prevent Registrar from assigning an instructor
-    // belonging to another department.
+    // IMPORTANT:
+    // Room does NOT participate in schedule conflicts.
     // =================================================
 
-    if (
-      Number(faculty.department_id) !== Number(sectionSubject.department_id)
-    ) {
-      await connection.rollback();
+    let room = null;
 
-      return res.status(409).json({
-        success: false,
-        message:
-          "The selected instructor does not belong to this course department.",
-      });
+    if (roomId) {
+      const [roomRows] = await connection.execute(
+        `
+            SELECT
+                room_id,
+
+                building_id,
+
+                room_code,
+
+                room_name,
+
+                capacity
+
+            FROM rooms
+
+            WHERE room_id = ?
+
+            LIMIT 1
+          `,
+        [roomId],
+      );
+
+      if (roomRows.length === 0) {
+        await connection.rollback();
+
+        return res.status(404).json({
+          success: false,
+
+          message: "Room not found.",
+        });
+      }
+
+      room = roomRows[0];
     }
 
     // =================================================
-    // DETERMINE CAPACITY
-    //
-    // Registrar no longer manually enters max_students.
-    //
-    // Priority:
-    // 1. section_subject capacity
-    // 2. section capacity
-    // 3. fallback 50
+    // DETERMINE OFFERING CAPACITY
     // =================================================
 
     const sectionSubjectCapacity = Number(sectionSubject.max_students || 0);
 
     const sectionCapacity = Number(sectionSubject.section_max_students || 0);
+
     const finalMaxStudents =
-      sectionSubjectCapacity > 0
+      maxStudents ||
+      (sectionSubjectCapacity > 0
         ? sectionSubjectCapacity
         : sectionCapacity > 0
           ? sectionCapacity
-          : 50;
+          : 50);
+
+    // =================================================
+    // ROOM CAPACITY
+    //
+    // This is NOT schedule-conflict validation.
+    //
+    // It only prevents assigning 50 students to
+    // a room that physically supports fewer students.
+    // =================================================
+
+    if (room && room.capacity !== null) {
+      const roomCapacity = Number(room.capacity);
+
+      if (roomCapacity > 0 && finalMaxStudents > roomCapacity) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+
+          message: "Offering capacity exceeds the selected room capacity.",
+
+          capacity: {
+            offering_max_students: finalMaxStudents,
+
+            room_capacity: roomCapacity,
+          },
+        });
+      }
+    }
+
+    // =================================================
+    // AUTHORITATIVE SCHEDULE CONFLICT CHECK
+    //
+    // Conflict dimensions:
+    //
+    // SECTION
+    // FACULTY
+    //
+    // Room is NOT checked.
+    //
+    // Both Open and Closed scheduled offerings
+    // participate in conflict checking.
+    // =================================================
+
+    if (scheduleDays && scheduleTime) {
+      const conflicts = await findCreateOfferingScheduleConflicts(connection, {
+        academicYearId: Number(sectionSubject.academic_year_id),
+
+        semesterId: Number(sectionSubject.semester_id),
+
+        sectionId: Number(sectionSubject.section_id),
+
+        facultyId,
+
+        scheduleDays,
+
+        scheduleTime,
+      });
+
+      if (conflicts.length > 0) {
+        await connection.rollback();
+
+        const conflictTypes = [
+          ...new Set(conflicts.map((conflict) => conflict.type)),
+        ];
+
+        return res.status(409).json({
+          success: false,
+
+          message:
+            "Schedule conflict detected. The class offering was not created.",
+
+          conflict_count: conflicts.length,
+
+          conflict_types: conflictTypes,
+
+          conflicts,
+        });
+      }
+    }
+
+    // =================================================
+    // DETERMINE CONFIGURATION COMPLETENESS
+    //
+    // Required to automatically become Open:
+    //
+    // ✓ section subject is Open
+    // ✓ faculty assigned
+    // ✓ schedule days assigned
+    // ✓ schedule time assigned
+    // ✓ valid capacity
+    //
+    // Room is optional.
+    //
+    // Schedule conflict has already been validated above.
+    // =================================================
+
+    const configurationComplete =
+      sectionSubject.section_subject_status === "Open" &&
+      Boolean(facultyId) &&
+      Boolean(scheduleDays) &&
+      Boolean(scheduleTime) &&
+      finalMaxStudents > 0;
+
+    // =================================================
+    // AUTOMATIC INITIAL STATUS
+    //
+    // Complete:
+    //     → Open
+    //     → READY
+    //
+    // Incomplete:
+    //     → Closed
+    //     → Registrar can finish configuration later
+    // =================================================
+
+    const finalStatus = configurationComplete ? "Open" : "Closed";
 
     // =================================================
     // CREATE OFFERING
-    //
-    // Registrar only assigns the instructor.
-    // Scheduling will be completed later by the
-    // assigned Faculty / Program Head.
     // =================================================
 
     const [insertResult] = await connection.execute(
       `
-        INSERT INTO subject_offerings (
-            section_subject_id,
-            subject_id,
-            section_id,
-            faculty_id,
-            room_id,
-            academic_year_id,
-            semester_id,
-            schedule_days,
-            schedule_time,
-            schedule_start_time,
-            schedule_end_time,
-            max_students,
-            status
-        )
+          INSERT INTO subject_offerings (
+              section_subject_id,
 
-        VALUES (
-            ?,
-            ?,
-            ?,
-            ?,
-            NULL,
-            ?,
-            ?,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            ?,
-            'Closed'
-        )
-      `,
+              subject_id,
+
+              section_id,
+
+              faculty_id,
+
+              room_id,
+
+              academic_year_id,
+
+              semester_id,
+
+              schedule_days,
+
+              schedule_time,
+
+              max_students,
+
+              status
+          )
+
+          VALUES (
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?
+          )
+        `,
       [
         sectionSubjectId,
+
         Number(sectionSubject.subject_id),
+
         Number(sectionSubject.section_id),
+
         facultyId,
+
+        roomId,
+
         Number(sectionSubject.academic_year_id),
+
         Number(sectionSubject.semester_id),
+
+        scheduleDays || null,
+
+        scheduleTime || null,
+
         finalMaxStudents,
+
+        finalStatus,
       ],
     );
 
@@ -3537,10 +3796,15 @@ router.post("/subject-offerings", async (req, res) => {
       `
         INSERT INTO audit_trail (
             user_id,
+
             table_name,
+
             record_id,
+
             action,
+
             old_values,
+
             new_values
         )
 
@@ -3555,6 +3819,7 @@ router.post("/subject-offerings", async (req, res) => {
       `,
       [
         actor.user_id,
+
         offeringId,
 
         JSON.stringify({
@@ -3568,27 +3833,21 @@ router.post("/subject-offerings", async (req, res) => {
 
           faculty_id: facultyId,
 
-          room_id: null,
+          room_id: roomId,
 
           academic_year_id: Number(sectionSubject.academic_year_id),
 
           semester_id: Number(sectionSubject.semester_id),
 
-          schedule_days: null,
+          schedule_days: scheduleDays || null,
 
-          schedule_time: null,
-
-          schedule_start_time: null,
-
-          schedule_end_time: null,
+          schedule_time: scheduleTime || null,
 
           max_students: finalMaxStudents,
 
-          status: "Closed",
+          status: finalStatus,
 
-          configuration_complete: false,
-
-          ready_for_enrollment: false,
+          configuration_complete: configurationComplete,
         }),
       ],
     );
@@ -3600,23 +3859,21 @@ router.post("/subject-offerings", async (req, res) => {
     await connection.commit();
 
     // =================================================
-    // SUCCESS RESPONSE
+    // RESPONSE
     // =================================================
 
     return res.status(201).json({
       success: true,
 
       message:
-        "Instructor assigned successfully. The assigned Faculty or Program Head must set the class schedule before the offering can open.",
+        finalStatus === "Open"
+          ? "Subject offering created and opened successfully."
+          : "Subject offering created as Closed because its configuration is incomplete.",
 
       offering: {
         offering_id: offeringId,
 
         section_subject_id: sectionSubjectId,
-
-        // =============================================
-        // SUBJECT
-        // =============================================
 
         subject: {
           subject_id: Number(sectionSubject.subject_id),
@@ -3627,10 +3884,6 @@ router.post("/subject-offerings", async (req, res) => {
 
           units: Number(sectionSubject.units || 0),
         },
-
-        // =============================================
-        // SECTION
-        // =============================================
 
         section: {
           section_id: Number(sectionSubject.section_id),
@@ -3646,10 +3899,6 @@ router.post("/subject-offerings", async (req, res) => {
           year_level: Number(sectionSubject.year_level),
         },
 
-        // =============================================
-        // ACADEMIC PERIOD
-        // =============================================
-
         academic_period: {
           academic_year_id: Number(sectionSubject.academic_year_id),
 
@@ -3660,41 +3909,33 @@ router.post("/subject-offerings", async (req, res) => {
           semester_name: sectionSubject.semester_name,
         },
 
-        // =============================================
-        // ASSIGNED TEACHING USER
-        // =============================================
+        faculty: faculty
+          ? {
+              faculty_id: Number(faculty.faculty_id),
 
-        faculty: {
-          faculty_id: Number(faculty.faculty_id),
+              employee_number: faculty.employee_number,
 
-          user_id: Number(faculty.user_id),
+              faculty_name: faculty.faculty_name,
 
-          employee_number: faculty.employee_number,
+              employment_status: faculty.employment_status,
+            }
+          : null,
 
-          faculty_name: faculty.faculty_name,
+        room: room
+          ? {
+              room_id: Number(room.room_id),
 
-          employment_status: faculty.employment_status,
+              room_code: room.room_code,
 
-          role_name: faculty.role_name,
-        },
+              room_name: room.room_name,
 
-        // =============================================
-        // SCHEDULE
-        // =============================================
+              capacity: room.capacity !== null ? Number(room.capacity) : null,
+            }
+          : null,
 
-        room: null,
+        schedule_days: scheduleDays || null,
 
-        schedule_days: null,
-
-        schedule_time: null,
-
-        schedule_start_time: null,
-
-        schedule_end_time: null,
-
-        // =============================================
-        // CAPACITY
-        // =============================================
+        schedule_time: scheduleTime || null,
 
         max_students: finalMaxStudents,
 
@@ -3702,17 +3943,11 @@ router.post("/subject-offerings", async (req, res) => {
 
         available_slots: finalMaxStudents,
 
-        // =============================================
-        // STATUS
-        // =============================================
+        status: finalStatus,
 
-        status: "Closed",
+        configuration_complete: configurationComplete,
 
-        configuration_complete: false,
-
-        ready_for_enrollment: false,
-
-        schedule_status: "Pending instructor schedule",
+        ready_for_enrollment: finalStatus === "Open",
       },
 
       actor,
@@ -3733,7 +3968,7 @@ router.post("/subject-offerings", async (req, res) => {
     console.error("CREATE SUBJECT OFFERING ERROR:", error);
 
     // =================================================
-    // DUPLICATE OFFERING
+    // DUPLICATE
     // =================================================
 
     if (error?.code === "ER_DUP_ENTRY") {
@@ -3768,28 +4003,635 @@ router.post("/subject-offerings", async (req, res) => {
 });
 
 // =====================================================
-// REASSIGN SUBJECT OFFERING INSTRUCTOR
+// GET SUBJECT OFFERINGS
 //
-// PUT
-// /api/registrar/offerings/subject-offerings/:id
+// GET /api/registrar/offerings/subject-offerings
 //
-// Registrar responsibility:
-// - Assign / reassign Faculty or Program Head only.
+// Optional filters:
 //
-// Registrar may NOT change:
-// - schedule day
-// - schedule time
-// - start/end time
-// - capacity
+// ?academic_year_id=2
+// &semester_id=2
+// &course_id=1
+// &year_level=2
+// &section_id=2
+// &subject_id=37
+// &faculty_id=5
+// &room_id=3
+// &status=Closed
 //
-// When instructor changes:
-// - existing schedule is cleared
-// - offering becomes Closed
-// - new instructor must submit a new schedule
+// PURPOSE:
 //
-// Grade safety:
-// - offerings with existing grade records cannot
-//   be reassigned.
+// - Registrar management list
+// - Shows Open / Closed / Cancelled offerings
+// - Shows section
+// - Shows subject
+// - Shows faculty
+// - Shows room
+// - Shows schedule
+// - Shows capacity
+// - Shows enrolled count
+// - Shows remaining slots
+// - Shows readiness for enrollment
+//
+// IMPORTANT:
+//
+// Unlike the Student-placement available-offerings route,
+// this management route includes Closed offerings.
+// =====================================================
+
+router.get("/subject-offerings", async (req, res) => {
+  const actor = getRegistrarActor(req, res);
+
+  if (!actor) {
+    return;
+  }
+
+  try {
+    // =================================================
+    // OPTIONAL FILTERS
+    // =================================================
+
+    const academicYearId =
+      req.query.academic_year_id === undefined
+        ? null
+        : toPositiveInt(req.query.academic_year_id);
+
+    const semesterId =
+      req.query.semester_id === undefined
+        ? null
+        : toPositiveInt(req.query.semester_id);
+
+    const courseId =
+      req.query.course_id === undefined
+        ? null
+        : toPositiveInt(req.query.course_id);
+
+    const yearLevel =
+      req.query.year_level === undefined
+        ? null
+        : toPositiveInt(req.query.year_level);
+
+    const sectionId =
+      req.query.section_id === undefined
+        ? null
+        : toPositiveInt(req.query.section_id);
+
+    const subjectId =
+      req.query.subject_id === undefined
+        ? null
+        : toPositiveInt(req.query.subject_id);
+
+    const facultyId =
+      req.query.faculty_id === undefined
+        ? null
+        : toPositiveInt(req.query.faculty_id);
+
+    const roomId =
+      req.query.room_id === undefined ? null : toPositiveInt(req.query.room_id);
+
+    const status =
+      typeof req.query.status === "string" ? req.query.status.trim() : null;
+
+    // =================================================
+    // VALIDATE NUMERIC FILTERS
+    // =================================================
+
+    if (req.query.academic_year_id !== undefined && !academicYearId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid academic_year_id.",
+      });
+    }
+
+    if (req.query.semester_id !== undefined && !semesterId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid semester_id.",
+      });
+    }
+
+    if (req.query.course_id !== undefined && !courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course_id.",
+      });
+    }
+
+    if (req.query.year_level !== undefined && !yearLevel) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid year_level.",
+      });
+    }
+
+    if (req.query.section_id !== undefined && !sectionId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid section_id.",
+      });
+    }
+
+    if (req.query.subject_id !== undefined && !subjectId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid subject_id.",
+      });
+    }
+
+    if (req.query.faculty_id !== undefined && !facultyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid faculty_id.",
+      });
+    }
+
+    if (req.query.room_id !== undefined && !roomId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid room_id.",
+      });
+    }
+
+    // =================================================
+    // STATUS VALIDATION
+    // =================================================
+
+    const allowedStatuses = ["Open", "Closed", "Cancelled"];
+
+    if (status && !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+
+        message: "Invalid subject offering status.",
+
+        allowed_statuses: allowedStatuses,
+      });
+    }
+
+    // =================================================
+    // BUILD CONDITIONS
+    // =================================================
+
+    const conditions = [];
+    const params = [];
+
+    if (academicYearId) {
+      conditions.push("so.academic_year_id = ?");
+
+      params.push(academicYearId);
+    }
+
+    if (semesterId) {
+      conditions.push("so.semester_id = ?");
+
+      params.push(semesterId);
+    }
+
+    if (courseId) {
+      conditions.push("sec.course_id = ?");
+
+      params.push(courseId);
+    }
+
+    if (yearLevel) {
+      conditions.push("sec.year_level = ?");
+
+      params.push(yearLevel);
+    }
+
+    if (sectionId) {
+      conditions.push("so.section_id = ?");
+
+      params.push(sectionId);
+    }
+
+    if (subjectId) {
+      conditions.push("so.subject_id = ?");
+
+      params.push(subjectId);
+    }
+
+    if (facultyId) {
+      conditions.push("so.faculty_id = ?");
+
+      params.push(facultyId);
+    }
+
+    if (roomId) {
+      conditions.push("so.room_id = ?");
+
+      params.push(roomId);
+    }
+
+    if (status) {
+      conditions.push("so.status = ?");
+
+      params.push(status);
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    // =================================================
+    // LOAD OFFERINGS
+    // =================================================
+
+    const [rows] = await db.execute(
+      `
+      SELECT
+          so.offering_id,
+
+          so.section_subject_id,
+
+          ss.status
+              AS section_subject_status,
+
+          so.subject_id,
+          sub.subject_code,
+          sub.subject_name,
+          sub.units,
+          sub.lecture_hours,
+          sub.laboratory_hours,
+
+          so.section_id,
+          sec.section_name,
+          sec.course_id,
+          sec.year_level,
+          sec.max_students
+              AS section_max_students,
+
+          c.course_code,
+          c.course_name,
+
+          so.faculty_id,
+
+          f.employee_number,
+
+          CONCAT_WS(
+            ' ',
+            f.first_name,
+            NULLIF(f.middle_name, ''),
+            f.last_name
+          ) AS faculty_name,
+
+          f.employment_status,
+
+          so.room_id,
+          r.room_code,
+          r.room_name,
+          r.capacity
+              AS room_capacity,
+
+          b.building_name,
+
+          so.academic_year_id,
+          ay.academic_year,
+
+          so.semester_id,
+          sem.semester_name,
+
+          so.schedule_days,
+          so.schedule_time,
+
+          so.max_students,
+          so.status,
+          so.created_at,
+
+          (
+            SELECT COUNT(*)
+
+            FROM enrollment_subjects es_count
+
+            INNER JOIN enrollments e_count
+                ON e_count.enrollment_id =
+                   es_count.enrollment_id
+
+            WHERE es_count.offering_id =
+                  so.offering_id
+
+              AND es_count.status =
+                  'Enrolled'
+
+              AND e_count.enrollment_status
+                  IN (
+                    'Pending',
+                    'Approved'
+                  )
+          ) AS enrolled_count
+
+      FROM subject_offerings so
+
+      INNER JOIN section_subjects ss
+          ON ss.section_subject_id =
+             so.section_subject_id
+
+      INNER JOIN subjects sub
+          ON sub.subject_id =
+             so.subject_id
+
+      INNER JOIN sections sec
+          ON sec.section_id =
+             so.section_id
+
+      INNER JOIN courses c
+          ON c.course_id =
+             sec.course_id
+
+      INNER JOIN academic_years ay
+          ON ay.academic_year_id =
+             so.academic_year_id
+
+      INNER JOIN semesters sem
+          ON sem.semester_id =
+             so.semester_id
+
+      LEFT JOIN faculty f
+          ON f.faculty_id =
+             so.faculty_id
+
+      LEFT JOIN rooms r
+          ON r.room_id =
+             so.room_id
+
+      LEFT JOIN buildings b
+          ON b.building_id =
+             r.building_id
+
+      ${whereClause}
+
+      ORDER BY
+          ay.academic_year_id DESC,
+          sem.semester_id ASC,
+          c.course_code ASC,
+          sec.year_level ASC,
+          sec.section_name ASC,
+          sub.subject_code ASC
+      `,
+      params,
+    );
+
+    // =================================================
+    // FORMAT
+    // =================================================
+
+    const offerings = rows.map((row) => {
+      const maxStudents = Number(row.max_students || 0);
+
+      const enrolledCount = Number(row.enrolled_count || 0);
+
+      const availableSlots =
+        maxStudents > 0 ? Math.max(0, maxStudents - enrolledCount) : null;
+
+      // =============================================
+      // READINESS
+      //
+      // Must satisfy the same basic requirements
+      // needed before changing status to Open.
+      // =============================================
+
+      const missingFields = [];
+
+      if (!row.faculty_id) {
+        missingFields.push("faculty_id");
+      }
+
+      if (!row.schedule_days || !String(row.schedule_days).trim()) {
+        missingFields.push("schedule_days");
+      }
+
+      if (!row.schedule_time || !String(row.schedule_time).trim()) {
+        missingFields.push("schedule_time");
+      }
+
+      if (row.section_subject_status !== "Open") {
+        missingFields.push("section_subject_open");
+      }
+
+      const configurationComplete = missingFields.length === 0;
+
+      const readyForEnrollment =
+        row.status === "Open" &&
+        configurationComplete &&
+        (availableSlots === null || availableSlots > 0);
+
+      return {
+        offering_id: Number(row.offering_id),
+
+        section_subject_id: Number(row.section_subject_id),
+
+        section_subject_status: row.section_subject_status,
+
+        subject: {
+          subject_id: Number(row.subject_id),
+
+          subject_code: row.subject_code,
+
+          subject_name: row.subject_name,
+
+          units: Number(row.units || 0),
+
+          lecture_hours: Number(row.lecture_hours || 0),
+
+          laboratory_hours: Number(row.laboratory_hours || 0),
+        },
+
+        section: {
+          section_id: Number(row.section_id),
+
+          section_name: row.section_name,
+
+          course_id: Number(row.course_id),
+
+          course_code: row.course_code,
+
+          course_name: row.course_name,
+
+          year_level: Number(row.year_level),
+
+          max_students: Number(row.section_max_students || 0),
+        },
+
+        academic_period: {
+          academic_year_id: Number(row.academic_year_id),
+
+          academic_year: row.academic_year,
+
+          semester_id: Number(row.semester_id),
+
+          semester_name: row.semester_name,
+        },
+
+        faculty:
+          row.faculty_id !== null
+            ? {
+                faculty_id: Number(row.faculty_id),
+
+                employee_number: row.employee_number,
+
+                faculty_name: row.faculty_name,
+
+                employment_status: row.employment_status,
+              }
+            : null,
+
+        room:
+          row.room_id !== null
+            ? {
+                room_id: Number(row.room_id),
+
+                room_code: row.room_code,
+
+                room_name: row.room_name,
+
+                building_name: row.building_name,
+
+                capacity:
+                  row.room_capacity !== null ? Number(row.room_capacity) : null,
+              }
+            : null,
+
+        schedule_days: row.schedule_days || null,
+
+        schedule_time: row.schedule_time || null,
+
+        max_students: maxStudents,
+
+        enrolled_count: enrolledCount,
+
+        available_slots: availableSlots,
+
+        status: row.status,
+
+        configuration_complete: configurationComplete,
+
+        missing_configuration: missingFields,
+
+        ready_for_enrollment: readyForEnrollment,
+
+        created_at: row.created_at,
+      };
+    });
+
+    // =================================================
+    // SUMMARY
+    // =================================================
+
+    const openCount = offerings.filter(
+      (offering) => offering.status === "Open",
+    ).length;
+
+    const closedCount = offerings.filter(
+      (offering) => offering.status === "Closed",
+    ).length;
+
+    const cancelledCount = offerings.filter(
+      (offering) => offering.status === "Cancelled",
+    ).length;
+
+    const completeCount = offerings.filter(
+      (offering) => offering.configuration_complete,
+    ).length;
+
+    const incompleteCount = offerings.length - completeCount;
+
+    const readyCount = offerings.filter(
+      (offering) => offering.ready_for_enrollment,
+    ).length;
+
+    // =================================================
+    // RESPONSE
+    // =================================================
+
+    return res.status(200).json({
+      success: true,
+
+      filters: {
+        academic_year_id: academicYearId,
+
+        semester_id: semesterId,
+
+        course_id: courseId,
+
+        year_level: yearLevel,
+
+        section_id: sectionId,
+
+        subject_id: subjectId,
+
+        faculty_id: facultyId,
+
+        room_id: roomId,
+
+        status: status || null,
+      },
+
+      count: offerings.length,
+
+      summary: {
+        total: offerings.length,
+
+        open: openCount,
+
+        closed: closedCount,
+
+        cancelled: cancelledCount,
+
+        configuration_complete: completeCount,
+
+        configuration_incomplete: incompleteCount,
+
+        ready_for_enrollment: readyCount,
+      },
+
+      offerings,
+
+      actor,
+    });
+  } catch (error) {
+    console.error("GET SUBJECT OFFERINGS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+
+      message: "Failed to load subject offerings.",
+
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+// =====================================================
+// UPDATE SUBJECT OFFERING
+//
+// PUT /api/registrar/offerings/subject-offerings/:id
+//
+// Editable fields:
+//
+// faculty_id
+// room_id
+// schedule_days
+// schedule_time
+// max_students
+//
+// RULES:
+//
+// - Missing field = keep current value.
+// - faculty_id: null = clear faculty.
+// - room_id: null = clear room.
+// - schedule_days: null/"" = clear days.
+// - schedule_time: null/"" = clear time.
+// - Cannot edit a Cancelled offering.
+// - Capacity cannot be below currently assigned
+//   Pending/Approved students.
+// - Assigned room capacity cannot be smaller than
+//   offering max_students.
+// - Open offerings must remain fully configured.
+// - Schedule conflicts are blocked for:
+//     SECTION
+//     FACULTY
+//     ROOM
+//
+// Status is NOT changed here.
+// Use the dedicated status route.
 // =====================================================
 
 router.put("/subject-offerings/:id", async (req, res) => {
@@ -3801,8 +4643,6 @@ router.put("/subject-offerings/:id", async (req, res) => {
 
   const offeringId = toPositiveInt(req.params.id);
 
-  const facultyId = toPositiveInt(req.body?.faculty_id);
-
   if (!offeringId) {
     return res.status(400).json({
       success: false,
@@ -3810,10 +4650,49 @@ router.put("/subject-offerings/:id", async (req, res) => {
     });
   }
 
-  if (!facultyId) {
+  const body = req.body || {};
+
+  const hasFacultyField = Object.prototype.hasOwnProperty.call(
+    body,
+    "faculty_id",
+  );
+
+  const hasRoomField = Object.prototype.hasOwnProperty.call(body, "room_id");
+
+  const hasScheduleDaysField = Object.prototype.hasOwnProperty.call(
+    body,
+    "schedule_days",
+  );
+
+  const hasScheduleTimeField = Object.prototype.hasOwnProperty.call(
+    body,
+    "schedule_time",
+  );
+
+  const hasMaxStudentsField = Object.prototype.hasOwnProperty.call(
+    body,
+    "max_students",
+  );
+
+  if (
+    !hasFacultyField &&
+    !hasRoomField &&
+    !hasScheduleDaysField &&
+    !hasScheduleTimeField &&
+    !hasMaxStudentsField
+  ) {
     return res.status(400).json({
       success: false,
-      message: "A valid faculty_id is required.",
+
+      message: "No editable subject offering fields were provided.",
+
+      editable_fields: [
+        "faculty_id",
+        "room_id",
+        "schedule_days",
+        "schedule_time",
+        "max_students",
+      ],
     });
   }
 
@@ -3839,12 +4718,8 @@ router.put("/subject-offerings/:id", async (req, res) => {
               so.room_id,
               so.academic_year_id,
               so.semester_id,
-
               so.schedule_days,
               so.schedule_time,
-              so.schedule_start_time,
-              so.schedule_end_time,
-
               so.max_students,
               so.status,
 
@@ -3861,14 +4736,9 @@ router.put("/subject-offerings/:id", async (req, res) => {
 
               c.course_code,
               c.course_name,
-              c.department_id,
 
               ay.academic_year,
-
-              sem.semester_name,
-
-              r.room_code,
-              r.room_name
+              sem.semester_name
 
           FROM subject_offerings so
 
@@ -3896,16 +4766,12 @@ router.put("/subject-offerings/:id", async (req, res) => {
               ON sem.semester_id =
                  so.semester_id
 
-          LEFT JOIN rooms r
-              ON r.room_id =
-                 so.room_id
-
           WHERE so.offering_id = ?
 
           LIMIT 1
 
           FOR UPDATE
-        `,
+          `,
       [offeringId],
     );
 
@@ -3921,7 +4787,7 @@ router.put("/subject-offerings/:id", async (req, res) => {
     const current = currentRows[0];
 
     // =================================================
-    // CANCELLED OFFERING
+    // CANCELLED OFFERINGS ARE TERMINAL
     // =================================================
 
     if (current.status === "Cancelled") {
@@ -3929,147 +4795,522 @@ router.put("/subject-offerings/:id", async (req, res) => {
 
       return res.status(409).json({
         success: false,
-        message: "A cancelled subject offering cannot be reassigned.",
+
+        message: "A cancelled subject offering cannot be edited.",
       });
     }
 
     // =================================================
-    // LOAD NEW TEACHING USER
-    //
-    // Program Head also has a faculty record,
-    // therefore faculty_id remains authoritative.
+    // RESOLVE FINAL FACULTY
     // =================================================
 
-    const [facultyRows] = await connection.execute(
+    let finalFacultyId =
+      current.faculty_id !== null ? Number(current.faculty_id) : null;
+
+    if (hasFacultyField) {
+      if (body.faculty_id === null || body.faculty_id === "") {
+        finalFacultyId = null;
+      } else {
+        finalFacultyId = toPositiveInt(body.faculty_id);
+
+        if (!finalFacultyId) {
+          await connection.rollback();
+
+          return res.status(400).json({
+            success: false,
+            message: "Invalid faculty_id.",
+          });
+        }
+      }
+    }
+
+    // =================================================
+    // RESOLVE FINAL ROOM
+    // =================================================
+
+    let finalRoomId = current.room_id !== null ? Number(current.room_id) : null;
+
+    if (hasRoomField) {
+      if (body.room_id === null || body.room_id === "") {
+        finalRoomId = null;
+      } else {
+        finalRoomId = toPositiveInt(body.room_id);
+
+        if (!finalRoomId) {
+          await connection.rollback();
+
+          return res.status(400).json({
+            success: false,
+            message: "Invalid room_id.",
+          });
+        }
+      }
+    }
+
+    // =================================================
+    // RESOLVE FINAL SCHEDULE DAYS
+    // =================================================
+
+    let finalScheduleDays = current.schedule_days;
+
+    if (hasScheduleDaysField) {
+      if (body.schedule_days === null || body.schedule_days === "") {
+        finalScheduleDays = null;
+      } else if (typeof body.schedule_days === "string") {
+        finalScheduleDays = body.schedule_days.trim() || null;
+      } else {
+        await connection.rollback();
+
+        return res.status(400).json({
+          success: false,
+
+          message: "schedule_days must be a string or null.",
+        });
+      }
+    }
+
+    // =================================================
+    // RESOLVE FINAL SCHEDULE TIME
+    // =================================================
+
+    let finalScheduleTime = current.schedule_time;
+
+    if (hasScheduleTimeField) {
+      if (body.schedule_time === null || body.schedule_time === "") {
+        finalScheduleTime = null;
+      } else if (typeof body.schedule_time === "string") {
+        finalScheduleTime = body.schedule_time.trim() || null;
+      } else {
+        await connection.rollback();
+
+        return res.status(400).json({
+          success: false,
+
+          message: "schedule_time must be a string or null.",
+        });
+      }
+    }
+
+    // =================================================
+    // RESOLVE FINAL CAPACITY
+    // =================================================
+
+    let finalMaxStudents = Number(current.max_students);
+
+    if (hasMaxStudentsField) {
+      finalMaxStudents = toPositiveInt(body.max_students);
+
+      if (!finalMaxStudents) {
+        await connection.rollback();
+
+        return res.status(400).json({
+          success: false,
+
+          message: "max_students must be a positive integer.",
+        });
+      }
+    }
+
+    // =================================================
+    // VALIDATE FACULTY
+    // =================================================
+
+    let facultyRecord = null;
+
+    if (finalFacultyId !== null) {
+      const [facultyRows] = await connection.execute(
+        `
+            SELECT
+                faculty_id,
+                user_id,
+                employee_number,
+                first_name,
+                middle_name,
+                last_name,
+                department_id,
+                employment_status
+
+            FROM faculty
+
+            WHERE faculty_id = ?
+
+            LIMIT 1
+            `,
+        [finalFacultyId],
+      );
+
+      if (facultyRows.length === 0) {
+        await connection.rollback();
+
+        return res.status(404).json({
+          success: false,
+          message: "Faculty record not found.",
+        });
+      }
+
+      facultyRecord = facultyRows[0];
+    }
+
+    // =================================================
+    // VALIDATE ROOM
+    // =================================================
+
+    let roomRecord = null;
+
+    if (finalRoomId !== null) {
+      const [roomRows] = await connection.execute(
+        `
+            SELECT
+                room_id,
+                room_code,
+                room_name,
+                capacity
+
+            FROM rooms
+
+            WHERE room_id = ?
+
+            LIMIT 1
+            `,
+        [finalRoomId],
+      );
+
+      if (roomRows.length === 0) {
+        await connection.rollback();
+
+        return res.status(404).json({
+          success: false,
+          message: "Room not found.",
+        });
+      }
+
+      roomRecord = roomRows[0];
+
+      const roomCapacity = Number(roomRecord.capacity || 0);
+
+      if (roomCapacity > 0 && finalMaxStudents > roomCapacity) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+
+          message: "Offering capacity exceeds the assigned room capacity.",
+
+          offering_capacity: finalMaxStudents,
+
+          room: {
+            room_id: Number(roomRecord.room_id),
+
+            room_code: roomRecord.room_code,
+
+            room_name: roomRecord.room_name,
+
+            capacity: roomCapacity,
+          },
+        });
+      }
+    }
+
+    // =================================================
+    // CURRENT ACTIVE ENROLLMENT COUNT
+    //
+    // Pending + Approved enrollment assignments
+    // consume offering capacity.
+    // =================================================
+
+    const [countRows] = await connection.execute(
       `
           SELECT
-              f.faculty_id,
-              f.user_id,
-              f.employee_number,
-              f.first_name,
-              f.middle_name,
-              f.last_name,
+              COUNT(*) AS enrolled_count
 
-              CONCAT_WS(
-                ' ',
-                f.first_name,
-                NULLIF(
-                  f.middle_name,
-                  ''
-                ),
-                f.last_name
-              ) AS faculty_name,
+          FROM enrollment_subjects es
 
-              f.department_id,
+          INNER JOIN enrollments e
+              ON e.enrollment_id =
+                 es.enrollment_id
 
-              f.employment_status,
+          WHERE es.offering_id = ?
 
-              u.username,
-              u.is_active,
-              u.is_verified,
+            AND es.status = 'Enrolled'
 
-              roles.role_id,
-              roles.role_name
-
-          FROM faculty f
-
-          INNER JOIN users u
-              ON u.user_id =
-                 f.user_id
-
-          INNER JOIN roles
-              ON roles.role_id =
-                 u.role_id
-
-          WHERE f.faculty_id = ?
-
-          LIMIT 1
-        `,
-      [facultyId],
+            AND e.enrollment_status
+                IN (
+                  'Pending',
+                  'Approved'
+                )
+          `,
+      [offeringId],
     );
 
-    if (facultyRows.length === 0) {
-      await connection.rollback();
-
-      return res.status(404).json({
-        success: false,
-        message: "Faculty record not found.",
-      });
-    }
-
-    const faculty = facultyRows[0];
+    const enrolledCount = Number(countRows[0]?.enrolled_count || 0);
 
     // =================================================
-    // ROLE VALIDATION
+    // CAPACITY CANNOT DROP BELOW ASSIGNED STUDENTS
     // =================================================
 
-    if (!["Faculty", "Program Head"].includes(faculty.role_name)) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-
-        message: "The selected user is not a Faculty or Program Head account.",
-      });
-    }
-
-    // =================================================
-    // ACCOUNT VALIDATION
-    // =================================================
-
-    if (Number(faculty.is_active) !== 1) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-
-        message: "The selected teaching account is inactive.",
-      });
-    }
-
-    if (Number(faculty.is_verified) !== 1) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-
-        message: "The selected teaching account is not verified.",
-      });
-    }
-
-    // =================================================
-    // DEPARTMENT VALIDATION
-    // =================================================
-
-    if (Number(faculty.department_id) !== Number(current.department_id)) {
+    if (finalMaxStudents < enrolledCount) {
       await connection.rollback();
 
       return res.status(409).json({
         success: false,
 
         message:
-          "The selected instructor does not belong to this course department.",
+          "Offering capacity cannot be lower than the number of currently assigned students.",
+
+        max_students: finalMaxStudents,
+
+        enrolled_count: enrolledCount,
       });
     }
 
     // =================================================
-    // CURRENT INSTRUCTOR
+    // VALIDATE SCHEDULE FORMAT
+    //
+    // A partially configured Closed offering may have
+    // neither days nor time.
+    //
+    // But if one schedule field exists, both must exist.
     // =================================================
+
+    const hasScheduleDays = Boolean(
+      finalScheduleDays && String(finalScheduleDays).trim(),
+    );
+
+    const hasScheduleTime = Boolean(
+      finalScheduleTime && String(finalScheduleTime).trim(),
+    );
+
+    if (hasScheduleDays !== hasScheduleTime) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+
+        message:
+          "schedule_days and schedule_time must either both be provided or both be empty.",
+      });
+    }
+
+    const hasSchedule = hasScheduleDays && hasScheduleTime;
+
+    if (hasSchedule) {
+      const parsedDays = parseScheduleDays(finalScheduleDays);
+
+      if (parsedDays.length === 0) {
+        await connection.rollback();
+
+        return res.status(400).json({
+          success: false,
+
+          message: "Invalid schedule_days value.",
+
+          examples: ["Monday", "Monday, Wednesday", "Tuesday, Thursday"],
+        });
+      }
+
+      const parsedTime = parseScheduleTimeRange(finalScheduleTime);
+
+      if (!parsedTime) {
+        await connection.rollback();
+
+        return res.status(400).json({
+          success: false,
+
+          message: "Invalid schedule_time range.",
+
+          examples: [
+            "8:00 AM - 10:00 AM",
+            "10:00 AM - 12:00 PM",
+            "13:00 - 15:00",
+          ],
+        });
+      }
+    }
+
+    // =================================================
+    // AUTHORITATIVE SCHEDULE CONFLICT CHECK
+    //
+    // IMPORTANT:
+    //
+    // Uses FINAL resolved values, not only req.body.
+    //
+    // This means partial PUT requests cannot bypass
+    // conflict protection.
+    // =================================================
+
+    if (hasSchedule) {
+      const scheduleConflicts = await findOfferingScheduleConflicts(
+        connection,
+        {
+          offeringId,
+
+          academicYearId: Number(current.academic_year_id),
+
+          semesterId: Number(current.semester_id),
+
+          sectionId: Number(current.section_id),
+
+          facultyId: finalFacultyId !== null ? Number(finalFacultyId) : null,
+
+          roomId: finalRoomId !== null ? Number(finalRoomId) : null,
+
+          scheduleDays: finalScheduleDays,
+
+          scheduleTime: finalScheduleTime,
+        },
+      );
+
+      if (scheduleConflicts.length > 0) {
+        const facultyConflicts = scheduleConflicts.filter((conflict) =>
+          conflict.conflict_types.includes("FACULTY"),
+        ).length;
+
+        const sectionConflicts = scheduleConflicts.filter((conflict) =>
+          conflict.conflict_types.includes("SECTION"),
+        ).length;
+
+        const roomConflicts = scheduleConflicts.filter((conflict) =>
+          conflict.conflict_types.includes("ROOM"),
+        ).length;
+
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+
+          message:
+            "Subject offering schedule conflicts with an existing offering.",
+
+          conflict: true,
+
+          proposed_schedule: {
+            faculty_id: finalFacultyId,
+
+            room_id: finalRoomId,
+
+            schedule_days: finalScheduleDays,
+
+            schedule_time: finalScheduleTime,
+          },
+
+          summary: {
+            total_conflicts: scheduleConflicts.length,
+
+            faculty_conflicts: facultyConflicts,
+
+            section_conflicts: sectionConflicts,
+
+            room_conflicts: roomConflicts,
+          },
+
+          conflicts: scheduleConflicts,
+        });
+      }
+    }
+
+    // =================================================
+    // OPEN OFFERING MUST REMAIN COMPLETE
+    //
+    // room_id is intentionally optional.
+    // =================================================
+
+    if (current.status === "Open") {
+      const missingConfiguration = [];
+
+      if (!finalFacultyId) {
+        missingConfiguration.push("faculty_id");
+      }
+
+      if (!hasScheduleDays) {
+        missingConfiguration.push("schedule_days");
+      }
+
+      if (!hasScheduleTime) {
+        missingConfiguration.push("schedule_time");
+      }
+
+      if (finalMaxStudents <= 0) {
+        missingConfiguration.push("max_students");
+      }
+
+      if (current.section_subject_status !== "Open") {
+        missingConfiguration.push("section_subject_open");
+      }
+
+      if (missingConfiguration.length > 0) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+
+          message: "An Open subject offering must remain fully configured.",
+
+          missing_configuration: missingConfiguration,
+        });
+      }
+    }
+
+    // =================================================
+    // DETERMINE CHANGES
+    // =================================================
+
+    const changedFields = [];
 
     const currentFacultyId =
       current.faculty_id !== null ? Number(current.faculty_id) : null;
 
+    const currentRoomId =
+      current.room_id !== null ? Number(current.room_id) : null;
+
+    const currentScheduleDays = current.schedule_days || null;
+
+    const currentScheduleTime = current.schedule_time || null;
+
+    const currentMaxStudents = Number(current.max_students || 0);
+
+    if (currentFacultyId !== finalFacultyId) {
+      changedFields.push("faculty_id");
+    }
+
+    if (currentRoomId !== finalRoomId) {
+      changedFields.push("room_id");
+    }
+
+    if (currentScheduleDays !== finalScheduleDays) {
+      changedFields.push("schedule_days");
+    }
+
+    if (currentScheduleTime !== finalScheduleTime) {
+      changedFields.push("schedule_time");
+    }
+
+    if (currentMaxStudents !== finalMaxStudents) {
+      changedFields.push("max_students");
+    }
+
     // =================================================
-    // SAME INSTRUCTOR
+    // NO CHANGES
     // =================================================
 
-    if (currentFacultyId === facultyId) {
+    if (changedFields.length === 0) {
       await connection.rollback();
+
+      const configurationComplete =
+        Boolean(finalFacultyId) &&
+        hasScheduleDays &&
+        hasScheduleTime &&
+        finalMaxStudents > 0;
+
+      const readyForEnrollment =
+        configurationComplete &&
+        current.status === "Open" &&
+        current.section_subject_status === "Open" &&
+        enrolledCount < finalMaxStudents;
 
       return res.status(200).json({
         success: true,
 
-        message: "This instructor is already assigned to the offering.",
+        message: "No offering changes were necessary.",
 
         changed: false,
 
@@ -4078,9 +5319,41 @@ router.put("/subject-offerings/:id", async (req, res) => {
         offering: {
           offering_id: offeringId,
 
-          faculty_id: currentFacultyId,
+          section_subject_id: Number(current.section_subject_id),
+
+          subject: {
+            subject_id: Number(current.subject_id),
+
+            subject_code: current.subject_code,
+
+            subject_name: current.subject_name,
+          },
+
+          section: {
+            section_id: Number(current.section_id),
+
+            section_name: current.section_name,
+          },
+
+          faculty_id: finalFacultyId,
+
+          room_id: finalRoomId,
+
+          schedule_days: finalScheduleDays,
+
+          schedule_time: finalScheduleTime,
+
+          max_students: finalMaxStudents,
+
+          enrolled_count: enrolledCount,
+
+          available_slots: Math.max(0, finalMaxStudents - enrolledCount),
 
           status: current.status,
+
+          configuration_complete: configurationComplete,
+
+          ready_for_enrollment: readyForEnrollment,
         },
 
         actor,
@@ -4088,85 +5361,7 @@ router.put("/subject-offerings/:id", async (req, res) => {
     }
 
     // =================================================
-    // GRADE SAFETY
-    //
-    // grades.faculty_id must match
-    // subject_offerings.faculty_id.
-    //
-    // Therefore we do NOT allow Registrar to
-    // reassign an offering once grade records exist.
-    // =================================================
-
-    const [gradeRows] = await connection.execute(
-      `
-          SELECT
-              COUNT(*) AS grade_count
-
-          FROM grades g
-
-          INNER JOIN enrollment_subjects es
-              ON es.enrollment_subject_id =
-                 g.enrollment_subject_id
-
-          WHERE es.offering_id = ?
-        `,
-      [offeringId],
-    );
-
-    const gradeCount = Number(gradeRows[0]?.grade_count || 0);
-
-    if (gradeCount > 0) {
-      await connection.rollback();
-
-      return res.status(409).json({
-        success: false,
-
-        message:
-          "This offering cannot be reassigned because grade records already exist.",
-
-        grade_count: gradeCount,
-      });
-    }
-    // =================================================
-    // CAPTURE OLD VALUES FOR AUDIT
-    // =================================================
-
-    const oldValues = {
-      offering_id: offeringId,
-
-      faculty_id: currentFacultyId,
-
-      room_id: current.room_id !== null ? Number(current.room_id) : null,
-
-      schedule_days: current.schedule_days,
-
-      schedule_time: current.schedule_time,
-
-      schedule_start_time: current.schedule_start_time,
-
-      schedule_end_time: current.schedule_end_time,
-
-      max_students: Number(current.max_students || 0),
-
-      status: current.status,
-    };
-
-    // =================================================
-    // REASSIGN INSTRUCTOR
-    //
-    // IMPORTANT:
-    //
-    // The old instructor's schedule must NOT follow
-    // the offering to the new instructor.
-    //
-    // Therefore:
-    // - faculty_id changes
-    // - room is cleared
-    // - all schedule fields are cleared
-    // - offering becomes Closed
-    //
-    // The new Faculty / Program Head must create
-    // their own schedule.
+    // UPDATE OFFERING
     // =================================================
 
     await connection.execute(
@@ -4175,56 +5370,25 @@ router.put("/subject-offerings/:id", async (req, res) => {
 
         SET
             faculty_id = ?,
-
-            room_id = NULL,
-
-            schedule_days = NULL,
-
-            schedule_time = NULL,
-
-            schedule_start_time = NULL,
-
-            schedule_end_time = NULL,
-
-            status = 'Closed'
+            room_id = ?,
+            schedule_days = ?,
+            schedule_time = ?,
+            max_students = ?
 
         WHERE offering_id = ?
-      `,
-      [facultyId, offeringId],
+        `,
+      [
+        finalFacultyId,
+        finalRoomId,
+        finalScheduleDays,
+        finalScheduleTime,
+        finalMaxStudents,
+        offeringId,
+      ],
     );
 
     // =================================================
-    // NEW VALUES FOR AUDIT
-    // =================================================
-
-    const newValues = {
-      offering_id: offeringId,
-
-      faculty_id: facultyId,
-
-      room_id: null,
-
-      schedule_days: null,
-
-      schedule_time: null,
-
-      schedule_start_time: null,
-
-      schedule_end_time: null,
-
-      max_students: Number(current.max_students || 0),
-
-      status: "Closed",
-
-      configuration_complete: false,
-
-      ready_for_enrollment: false,
-
-      schedule_status: "Pending instructor schedule",
-    };
-
-    // =================================================
-    // AUDIT TRAIL
+    // AUDIT
     // =================================================
 
     await connection.execute(
@@ -4246,54 +5410,79 @@ router.put("/subject-offerings/:id", async (req, res) => {
             ?,
             ?
         )
-      `,
+        `,
       [
         actor.user_id,
 
         offeringId,
 
-        JSON.stringify(oldValues),
+        JSON.stringify({
+          faculty_id: currentFacultyId,
 
-        JSON.stringify(newValues),
+          room_id: currentRoomId,
+
+          schedule_days: currentScheduleDays,
+
+          schedule_time: currentScheduleTime,
+
+          max_students: currentMaxStudents,
+
+          status: current.status,
+        }),
+
+        JSON.stringify({
+          faculty_id: finalFacultyId,
+
+          room_id: finalRoomId,
+
+          schedule_days: finalScheduleDays,
+
+          schedule_time: finalScheduleTime,
+
+          max_students: finalMaxStudents,
+
+          status: current.status,
+
+          changed_fields: changedFields,
+
+          changed_by: actor.user_id,
+        }),
       ],
     );
 
     // =================================================
-    // COMMIT
+    // FINAL CONFIGURATION STATE
     // =================================================
+
+    const configurationComplete =
+      Boolean(finalFacultyId) &&
+      hasScheduleDays &&
+      hasScheduleTime &&
+      finalMaxStudents > 0;
+
+    const readyForEnrollment =
+      configurationComplete &&
+      current.status === "Open" &&
+      current.section_subject_status === "Open" &&
+      enrolledCount < finalMaxStudents;
+
+    const availableSlots = Math.max(0, finalMaxStudents - enrolledCount);
 
     await connection.commit();
-
-    // =================================================
-    // SUCCESS RESPONSE
-    // =================================================
 
     return res.status(200).json({
       success: true,
 
-      message:
-        "Instructor reassigned successfully. The previous schedule was cleared, and the new instructor must set the class schedule before the offering can open.",
+      message: "Subject offering updated successfully.",
 
       changed: true,
 
-      changed_fields: [
-        "faculty_id",
-        "room_id",
-        "schedule_days",
-        "schedule_time",
-        "schedule_start_time",
-        "schedule_end_time",
-        "status",
-      ],
+      changed_fields: changedFields,
 
       offering: {
         offering_id: offeringId,
 
         section_subject_id: Number(current.section_subject_id),
-
-        // =============================================
-        // SUBJECT
-        // =============================================
 
         subject: {
           subject_id: Number(current.subject_id),
@@ -4304,10 +5493,6 @@ router.put("/subject-offerings/:id", async (req, res) => {
 
           units: Number(current.units || 0),
         },
-
-        // =============================================
-        // SECTION
-        // =============================================
 
         section: {
           section_id: Number(current.section_id),
@@ -4323,10 +5508,6 @@ router.put("/subject-offerings/:id", async (req, res) => {
           year_level: Number(current.year_level),
         },
 
-        // =============================================
-        // ACADEMIC PERIOD
-        // =============================================
-
         academic_period: {
           academic_year_id: Number(current.academic_year_id),
 
@@ -4337,97 +5518,72 @@ router.put("/subject-offerings/:id", async (req, res) => {
           semester_name: current.semester_name,
         },
 
-        // =============================================
-        // NEW ASSIGNED INSTRUCTOR
-        // =============================================
+        faculty:
+          finalFacultyId !== null
+            ? {
+                faculty_id: finalFacultyId,
 
-        faculty: {
-          faculty_id: Number(faculty.faculty_id),
+                faculty_name: facultyRecord
+                  ? [
+                      facultyRecord.first_name,
+                      facultyRecord.middle_name,
+                      facultyRecord.last_name,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
+                  : null,
+              }
+            : null,
 
-          user_id: Number(faculty.user_id),
+        room:
+          finalRoomId !== null
+            ? {
+                room_id: finalRoomId,
 
-          employee_number: faculty.employee_number,
+                room_code: roomRecord?.room_code || null,
 
-          faculty_name: faculty.faculty_name,
+                room_name: roomRecord?.room_name || null,
+              }
+            : null,
 
-          employment_status: faculty.employment_status,
+        schedule_days: finalScheduleDays,
 
-          role_id: Number(faculty.role_id),
+        schedule_time: finalScheduleTime,
 
-          role_name: faculty.role_name,
+        max_students: finalMaxStudents,
 
-          username: faculty.username,
-        },
+        enrolled_count: enrolledCount,
 
-        // =============================================
-        // CLEARED SCHEDULE
-        // =============================================
+        available_slots: availableSlots,
 
-        room: null,
+        status: current.status,
 
-        schedule_days: null,
+        configuration_complete: configurationComplete,
 
-        schedule_time: null,
-
-        schedule_start_time: null,
-
-        schedule_end_time: null,
-
-        // =============================================
-        // CAPACITY
-        // =============================================
-
-        max_students: Number(current.max_students || 0),
-
-        // =============================================
-        // STATUS
-        // =============================================
-
-        status: "Closed",
-
-        configuration_complete: false,
-
-        ready_for_enrollment: false,
-
-        schedule_status: "Pending instructor schedule",
+        ready_for_enrollment: readyForEnrollment,
       },
 
       actor,
     });
   } catch (error) {
-    // =================================================
-    // ROLLBACK
-    // =================================================
-
     if (connection) {
       try {
         await connection.rollback();
       } catch (rollbackError) {
-        console.error(
-          "REASSIGN SUBJECT OFFERING ROLLBACK ERROR:",
-          rollbackError,
-        );
+        console.error("UPDATE OFFERING ROLLBACK ERROR:", rollbackError);
       }
     }
 
-    console.error("REASSIGN SUBJECT OFFERING ERROR:", error);
-
-    // =================================================
-    // SERVER ERROR
-    // =================================================
+    console.error("UPDATE SUBJECT OFFERING ERROR:", error);
 
     return res.status(500).json({
       success: false,
 
-      message: "Failed to reassign subject offering instructor.",
+      message: "Failed to update subject offering.",
 
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   } finally {
-    // =================================================
-    // RELEASE CONNECTION
-    // =================================================
-
     if (connection) {
       connection.release();
     }
@@ -6591,1519 +7747,4 @@ router.patch("/section-subjects/:id/status", async (req, res) => {
   }
 });
 
-// =====================================================
-// GET SUBJECT OFFERINGS
-//
-// GET /api/registrar/offerings/subject-offerings
-//
-// Optional filters:
-//
-// ?academic_year_id=2
-// &semester_id=2
-// &course_id=1
-// &year_level=2
-// &section_id=2
-// &subject_id=37
-// &faculty_id=5
-// &room_id=3
-// &status=Closed
-//
-// PURPOSE:
-//
-// - Registrar management list
-// - Shows Open / Closed / Cancelled offerings
-// - Shows section
-// - Shows subject
-// - Shows assigned teaching user
-// - Identifies Faculty vs Program Head
-// - Shows room
-// - Shows schedule
-// - Shows structured start/end time
-// - Shows capacity
-// - Shows enrolled count
-// - Shows remaining slots
-// - Shows readiness for enrollment
-//
-// IMPORTANT:
-//
-// This route includes both:
-// - Faculty teaching assignments
-// - Program Head teaching assignments
-//
-// The frontend can separate them using:
-//
-// faculty.role_name === "Faculty"
-// faculty.role_name === "Program Head"
-//
-// Unlike the Student-placement available-offerings route,
-// this management route includes Closed offerings.
-// =====================================================
-
-router.get("/subject-offerings", async (req, res) => {
-  const actor = getRegistrarActor(req, res);
-
-  if (!actor) {
-    return;
-  }
-
-  try {
-    // =================================================
-    // OPTIONAL FILTERS
-    // =================================================
-
-    const academicYearId =
-      req.query.academic_year_id === undefined
-        ? null
-        : toPositiveInt(req.query.academic_year_id);
-
-    const semesterId =
-      req.query.semester_id === undefined
-        ? null
-        : toPositiveInt(req.query.semester_id);
-
-    const courseId =
-      req.query.course_id === undefined
-        ? null
-        : toPositiveInt(req.query.course_id);
-
-    const yearLevel =
-      req.query.year_level === undefined
-        ? null
-        : toPositiveInt(req.query.year_level);
-
-    const sectionId =
-      req.query.section_id === undefined
-        ? null
-        : toPositiveInt(req.query.section_id);
-
-    const subjectId =
-      req.query.subject_id === undefined
-        ? null
-        : toPositiveInt(req.query.subject_id);
-
-    const facultyId =
-      req.query.faculty_id === undefined
-        ? null
-        : toPositiveInt(req.query.faculty_id);
-
-    const roomId =
-      req.query.room_id === undefined ? null : toPositiveInt(req.query.room_id);
-
-    const status =
-      typeof req.query.status === "string" ? req.query.status.trim() : null;
-
-    // =================================================
-    // VALIDATE NUMERIC FILTERS
-    // =================================================
-
-    if (req.query.academic_year_id !== undefined && !academicYearId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid academic_year_id.",
-      });
-    }
-
-    if (req.query.semester_id !== undefined && !semesterId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid semester_id.",
-      });
-    }
-
-    if (req.query.course_id !== undefined && !courseId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid course_id.",
-      });
-    }
-
-    if (req.query.year_level !== undefined && !yearLevel) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid year_level.",
-      });
-    }
-
-    if (req.query.section_id !== undefined && !sectionId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid section_id.",
-      });
-    }
-
-    if (req.query.subject_id !== undefined && !subjectId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid subject_id.",
-      });
-    }
-
-    if (req.query.faculty_id !== undefined && !facultyId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid faculty_id.",
-      });
-    }
-
-    if (req.query.room_id !== undefined && !roomId) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid room_id.",
-      });
-    }
-
-    // =================================================
-    // STATUS VALIDATION
-    // =================================================
-
-    const allowedStatuses = ["Open", "Closed", "Cancelled"];
-
-    if (status && !allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-
-        message: "Invalid subject offering status.",
-
-        allowed_statuses: allowedStatuses,
-      });
-    }
-
-    // =================================================
-    // BUILD CONDITIONS
-    // =================================================
-
-    const conditions = [];
-    const params = [];
-
-    if (academicYearId) {
-      conditions.push("so.academic_year_id = ?");
-
-      params.push(academicYearId);
-    }
-
-    if (semesterId) {
-      conditions.push("so.semester_id = ?");
-
-      params.push(semesterId);
-    }
-
-    if (courseId) {
-      conditions.push("sec.course_id = ?");
-
-      params.push(courseId);
-    }
-
-    if (yearLevel) {
-      conditions.push("sec.year_level = ?");
-
-      params.push(yearLevel);
-    }
-
-    if (sectionId) {
-      conditions.push("so.section_id = ?");
-
-      params.push(sectionId);
-    }
-
-    if (subjectId) {
-      conditions.push("so.subject_id = ?");
-
-      params.push(subjectId);
-    }
-
-    if (facultyId) {
-      conditions.push("so.faculty_id = ?");
-
-      params.push(facultyId);
-    }
-
-    if (roomId) {
-      conditions.push("so.room_id = ?");
-
-      params.push(roomId);
-    }
-
-    if (status) {
-      conditions.push("so.status = ?");
-
-      params.push(status);
-    }
-
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-    // =================================================
-    // LOAD OFFERINGS
-    // =================================================
-
-    const [rows] = await db.execute(
-      `
-        SELECT
-            so.offering_id,
-
-            so.section_subject_id,
-
-            ss.status
-                AS section_subject_status,
-
-            -- =========================================
-            -- SUBJECT
-            -- =========================================
-
-            so.subject_id,
-
-            sub.subject_code,
-            sub.subject_name,
-            sub.units,
-            sub.lecture_hours,
-            sub.laboratory_hours,
-
-            -- =========================================
-            -- SECTION
-            -- =========================================
-
-            so.section_id,
-
-            sec.section_name,
-            sec.course_id,
-            sec.year_level,
-
-            sec.max_students
-                AS section_max_students,
-
-            c.course_code,
-            c.course_name,
-
-            -- =========================================
-            -- ASSIGNED TEACHING USER
-            -- =========================================
-
-            so.faculty_id,
-
-            f.user_id
-                AS faculty_user_id,
-
-            f.employee_number,
-
-            CONCAT_WS(
-              ' ',
-              f.first_name,
-              NULLIF(
-                f.middle_name,
-                ''
-              ),
-              f.last_name
-            ) AS faculty_name,
-
-            f.email
-                AS faculty_email,
-
-            f.department_id
-                AS faculty_department_id,
-
-            f.employment_status,
-
-            u.username
-                AS faculty_username,
-
-            rl.role_id
-                AS faculty_role_id,
-
-            rl.role_name
-                AS faculty_role_name,
-
-            -- =========================================
-            -- ROOM
-            -- =========================================
-
-            so.room_id,
-
-            r.room_code,
-            r.room_name,
-
-            r.capacity
-                AS room_capacity,
-
-            b.building_name,
-
-            -- =========================================
-            -- ACADEMIC PERIOD
-            -- =========================================
-
-            so.academic_year_id,
-
-            ay.academic_year,
-
-            so.semester_id,
-
-            sem.semester_name,
-
-            -- =========================================
-            -- SCHEDULE
-            -- =========================================
-
-            so.schedule_days,
-            so.schedule_time,
-
-            so.schedule_start_time,
-            so.schedule_end_time,
-
-            -- =========================================
-            -- OFFERING
-            -- =========================================
-
-            so.max_students,
-            so.status,
-            so.created_at,
-
-            -- =========================================
-            -- OFFICIAL / ACTIVE ENROLLMENT COUNT
-            -- =========================================
-
-            (
-              SELECT COUNT(*)
-
-              FROM enrollment_subjects es_count
-
-              INNER JOIN enrollments e_count
-                  ON e_count.enrollment_id =
-                     es_count.enrollment_id
-
-              WHERE es_count.offering_id =
-                    so.offering_id
-
-                AND es_count.status =
-                    'Enrolled'
-
-                AND e_count.enrollment_status
-                    IN (
-                      'Pending',
-                      'Approved'
-                    )
-            ) AS enrolled_count
-
-        FROM subject_offerings so
-
-        INNER JOIN section_subjects ss
-            ON ss.section_subject_id =
-               so.section_subject_id
-
-        INNER JOIN subjects sub
-            ON sub.subject_id =
-               so.subject_id
-
-        INNER JOIN sections sec
-            ON sec.section_id =
-               so.section_id
-
-        INNER JOIN courses c
-            ON c.course_id =
-               sec.course_id
-
-        INNER JOIN academic_years ay
-            ON ay.academic_year_id =
-               so.academic_year_id
-
-        INNER JOIN semesters sem
-            ON sem.semester_id =
-               so.semester_id
-
-        -- ===========================================
-        -- ASSIGNED FACULTY RECORD
-        -- ===========================================
-
-        LEFT JOIN faculty f
-            ON f.faculty_id =
-               so.faculty_id
-
-        -- ===========================================
-        -- USER ACCOUNT OF TEACHING USER
-        -- ===========================================
-
-        LEFT JOIN users u
-            ON u.user_id =
-               f.user_id
-
-        -- ===========================================
-        -- ROLE
-        --
-        -- Allows Registrar frontend to distinguish:
-        --
-        -- Faculty
-        -- Program Head
-        -- ===========================================
-
-        LEFT JOIN roles rl
-            ON rl.role_id =
-               u.role_id
-
-        -- ===========================================
-        -- ROOM
-        -- ===========================================
-
-        LEFT JOIN rooms r
-            ON r.room_id =
-               so.room_id
-
-        LEFT JOIN buildings b
-            ON b.building_id =
-               r.building_id
-
-        ${whereClause}
-
-        ORDER BY
-            ay.academic_year_id DESC,
-            sem.semester_id ASC,
-            c.course_code ASC,
-            sec.year_level ASC,
-            sec.section_name ASC,
-            sub.subject_code ASC
-        `,
-      params,
-    );
-
-    // =================================================
-    // FORMAT RESPONSE
-    // =================================================
-
-    const offerings = rows.map((row) => {
-      const maxStudents = Number(row.max_students || 0);
-
-      const enrolledCount = Number(row.enrolled_count || 0);
-
-      const availableSlots =
-        maxStudents > 0 ? Math.max(0, maxStudents - enrolledCount) : null;
-
-      // =============================================
-      // READINESS
-      //
-      // Offering must have:
-      //
-      // - assigned teaching user
-      // - schedule day
-      // - schedule time
-      // - Open section subject
-      // =============================================
-
-      const missingFields = [];
-
-      if (!row.faculty_id) {
-        missingFields.push("faculty_id");
-      }
-
-      if (!row.schedule_days || !String(row.schedule_days).trim()) {
-        missingFields.push("schedule_days");
-      }
-
-      if (!row.schedule_time || !String(row.schedule_time).trim()) {
-        missingFields.push("schedule_time");
-      }
-
-      if (row.section_subject_status !== "Open") {
-        missingFields.push("section_subject_open");
-      }
-
-      const configurationComplete = missingFields.length === 0;
-
-      const readyForEnrollment =
-        row.status === "Open" &&
-        configurationComplete &&
-        (availableSlots === null || availableSlots > 0);
-
-      // =============================================
-      // SCHEDULE STATUS
-      // =============================================
-
-      const hasSchedule =
-        Boolean(row.schedule_days && String(row.schedule_days).trim()) &&
-        Boolean(row.schedule_time && String(row.schedule_time).trim());
-
-      // =============================================
-      // RESPONSE OBJECT
-      // =============================================
-
-      return {
-        offering_id: Number(row.offering_id),
-
-        section_subject_id: Number(row.section_subject_id),
-
-        section_subject_status: row.section_subject_status,
-
-        // ===========================================
-        // SUBJECT
-        // ===========================================
-
-        subject: {
-          subject_id: Number(row.subject_id),
-
-          subject_code: row.subject_code,
-
-          subject_name: row.subject_name,
-
-          units: Number(row.units || 0),
-
-          lecture_hours: Number(row.lecture_hours || 0),
-
-          laboratory_hours: Number(row.laboratory_hours || 0),
-        },
-
-        // ===========================================
-        // SECTION
-        // ===========================================
-
-        section: {
-          section_id: Number(row.section_id),
-
-          section_name: row.section_name,
-
-          course_id: Number(row.course_id),
-
-          course_code: row.course_code,
-
-          course_name: row.course_name,
-
-          year_level: Number(row.year_level),
-
-          max_students: Number(row.section_max_students || 0),
-        },
-
-        // ===========================================
-        // ACADEMIC PERIOD
-        // ===========================================
-
-        academic_period: {
-          academic_year_id: Number(row.academic_year_id),
-
-          academic_year: row.academic_year,
-
-          semester_id: Number(row.semester_id),
-
-          semester_name: row.semester_name,
-        },
-
-        // ===========================================
-        // ASSIGNED TEACHING USER
-        //
-        // IMPORTANT:
-        //
-        // role_name tells Registrar whether this is:
-        //
-        // Faculty
-        // Program Head
-        // ===========================================
-
-        faculty:
-          row.faculty_id !== null
-            ? {
-                faculty_id: Number(row.faculty_id),
-
-                user_id:
-                  row.faculty_user_id !== null
-                    ? Number(row.faculty_user_id)
-                    : null,
-
-                employee_number: row.employee_number,
-
-                faculty_name: row.faculty_name,
-
-                email: row.faculty_email,
-
-                department_id:
-                  row.faculty_department_id !== null
-                    ? Number(row.faculty_department_id)
-                    : null,
-
-                employment_status: row.employment_status,
-
-                username: row.faculty_username,
-
-                role_id:
-                  row.faculty_role_id !== null
-                    ? Number(row.faculty_role_id)
-                    : null,
-
-                role_name: row.faculty_role_name,
-              }
-            : null,
-
-        // ===========================================
-        // ROOM
-        // ===========================================
-
-        room:
-          row.room_id !== null
-            ? {
-                room_id: Number(row.room_id),
-
-                room_code: row.room_code,
-
-                room_name: row.room_name,
-
-                building_name: row.building_name,
-
-                capacity:
-                  row.room_capacity !== null ? Number(row.room_capacity) : null,
-              }
-            : null,
-
-        // ===========================================
-        // SCHEDULE
-        //
-        // Keep existing top-level properties so
-        // current Registrar frontend does not break.
-        // ===========================================
-
-        schedule_days: row.schedule_days || null,
-
-        schedule_time: row.schedule_time || null,
-
-        schedule_start_time: row.schedule_start_time || null,
-
-        schedule_end_time: row.schedule_end_time || null,
-
-        schedule_status: hasSchedule
-          ? "Scheduled"
-          : "Pending Instructor Schedule",
-
-        // ===========================================
-        // CAPACITY
-        // ===========================================
-
-        max_students: maxStudents,
-
-        enrolled_count: enrolledCount,
-
-        available_slots: availableSlots,
-
-        // ===========================================
-        // OFFERING STATUS
-        // ===========================================
-
-        status: row.status,
-
-        configuration_complete: configurationComplete,
-
-        missing_configuration: missingFields,
-
-        ready_for_enrollment: readyForEnrollment,
-
-        created_at: row.created_at,
-      };
-    });
-
-    // =================================================
-    // SUMMARY
-    // =================================================
-
-    const openCount = offerings.filter(
-      (offering) => offering.status === "Open",
-    ).length;
-
-    const closedCount = offerings.filter(
-      (offering) => offering.status === "Closed",
-    ).length;
-
-    const cancelledCount = offerings.filter(
-      (offering) => offering.status === "Cancelled",
-    ).length;
-
-    const completeCount = offerings.filter(
-      (offering) => offering.configuration_complete,
-    ).length;
-
-    const incompleteCount = offerings.length - completeCount;
-
-    const readyCount = offerings.filter(
-      (offering) => offering.ready_for_enrollment,
-    ).length;
-
-    // =================================================
-    // ROLE SUMMARY
-    //
-    // Helpful for Registrar schedule pages.
-    // =================================================
-
-    const facultyOfferingCount = offerings.filter(
-      (offering) => offering.faculty?.role_name === "Faculty",
-    ).length;
-
-    const programHeadOfferingCount = offerings.filter(
-      (offering) => offering.faculty?.role_name === "Program Head",
-    ).length;
-
-    // =================================================
-    // RESPONSE
-    // =================================================
-
-    return res.status(200).json({
-      success: true,
-
-      filters: {
-        academic_year_id: academicYearId,
-
-        semester_id: semesterId,
-
-        course_id: courseId,
-
-        year_level: yearLevel,
-
-        section_id: sectionId,
-
-        subject_id: subjectId,
-
-        faculty_id: facultyId,
-
-        room_id: roomId,
-
-        status: status || null,
-      },
-
-      count: offerings.length,
-
-      summary: {
-        total: offerings.length,
-
-        open: openCount,
-
-        closed: closedCount,
-
-        cancelled: cancelledCount,
-
-        configuration_complete: completeCount,
-
-        configuration_incomplete: incompleteCount,
-
-        ready_for_enrollment: readyCount,
-
-        faculty_offerings: facultyOfferingCount,
-
-        program_head_offerings: programHeadOfferingCount,
-      },
-
-      offerings,
-
-      actor,
-    });
-  } catch (error) {
-    console.error("GET SUBJECT OFFERINGS ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-
-      message: "Failed to load subject offerings.",
-
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-});
-
-// =====================================================
-// GET TEACHING SCHEDULES
-//
-// GET /api/registrar/offerings/teaching-schedules
-//
-// Optional:
-//
-// ?role=Faculty
-// ?role=Program Head
-//
-// PURPOSE:
-//
-// Registrar can view teaching schedules for:
-//
-// - Faculty
-// - Program Head
-//
-// This route is VIEW ONLY.
-// Registrar does not modify schedules here.
-// =====================================================
-
-router.get("/teaching-schedules", async (req, res) => {
-  const actor = getRegistrarActor(req, res);
-
-  if (!actor) {
-    return;
-  }
-
-  try {
-    // =================================================
-    // OPTIONAL ROLE FILTER
-    // =================================================
-
-    const requestedRole =
-      typeof req.query.role === "string" ? req.query.role.trim() : null;
-
-    const allowedRoles = ["Faculty", "Program Head"];
-
-    if (requestedRole && !allowedRoles.includes(requestedRole)) {
-      return res.status(400).json({
-        success: false,
-
-        message: "Invalid teaching role.",
-
-        allowed_roles: allowedRoles,
-      });
-    }
-
-    // =================================================
-    // CONDITIONS
-    // =================================================
-
-    const conditions = [
-      "so.status <> 'Cancelled'",
-      "rl.role_name IN ('Faculty', 'Program Head')",
-    ];
-
-    const params = [];
-
-    if (requestedRole) {
-      conditions.push("rl.role_name = ?");
-
-      params.push(requestedRole);
-    }
-
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
-
-    // =================================================
-    // LOAD TEACHING SCHEDULES
-    // =================================================
-
-    const [rows] = await db.execute(
-      `
-        SELECT
-            -- =========================================
-            -- OFFERING
-            -- =========================================
-
-            so.offering_id,
-            so.section_subject_id,
-            so.subject_id,
-            so.section_id,
-            so.faculty_id,
-            so.room_id,
-
-            so.academic_year_id,
-            so.semester_id,
-
-            so.schedule_days,
-            so.schedule_time,
-            so.schedule_start_time,
-            so.schedule_end_time,
-
-            so.max_students,
-            so.status,
-
-            so.created_at,
-            so.updated_at,
-
-            -- =========================================
-            -- SECTION SUBJECT
-            -- =========================================
-
-            ss.status
-                AS section_subject_status,
-
-            -- =========================================
-            -- SUBJECT
-            -- =========================================
-
-            sub.subject_code,
-            sub.subject_name,
-            sub.units,
-            sub.lecture_hours,
-            sub.laboratory_hours,
-
-            -- =========================================
-            -- SECTION
-            -- =========================================
-
-            sec.section_name,
-            sec.year_level,
-            sec.course_id,
-
-            sec.max_students
-                AS section_max_students,
-
-            -- =========================================
-            -- COURSE
-            -- =========================================
-
-            c.course_code,
-            c.course_name,
-            c.department_id
-                AS course_department_id,
-
-            -- =========================================
-            -- DEPARTMENT
-            -- =========================================
-
-            d.department_code,
-            d.department_name,
-
-            -- =========================================
-            -- ACADEMIC PERIOD
-            -- =========================================
-
-            ay.academic_year,
-
-            sem.semester_name,
-
-            -- =========================================
-            -- TEACHING USER
-            -- =========================================
-
-            f.user_id
-                AS teaching_user_id,
-
-            f.employee_number,
-
-            f.first_name,
-            f.middle_name,
-            f.last_name,
-
-            CONCAT_WS(
-              ' ',
-              f.first_name,
-              NULLIF(
-                f.middle_name,
-                ''
-              ),
-              f.last_name
-            ) AS teaching_user_name,
-
-            f.email
-                AS teaching_user_email,
-
-            f.department_id
-                AS teaching_department_id,
-
-            f.employment_status,
-
-            -- =========================================
-            -- USER ACCOUNT
-            -- =========================================
-
-            u.username
-                AS teaching_username,
-
-            u.is_active
-                AS teaching_user_active,
-
-            u.is_verified
-                AS teaching_user_verified,
-
-            -- =========================================
-            -- ROLE
-            -- =========================================
-
-            rl.role_id
-                AS teaching_role_id,
-
-            rl.role_name
-                AS teaching_role_name,
-
-            -- =========================================
-            -- ROOM
-            -- =========================================
-
-            r.room_code,
-            r.room_name,
-
-            r.capacity
-                AS room_capacity,
-
-            b.building_name,
-
-            -- =========================================
-            -- ENROLLED STUDENTS
-            -- =========================================
-
-            (
-              SELECT COUNT(*)
-
-              FROM enrollment_subjects es_count
-
-              INNER JOIN enrollments e_count
-                  ON e_count.enrollment_id =
-                     es_count.enrollment_id
-
-              WHERE es_count.offering_id =
-                    so.offering_id
-
-                AND es_count.status =
-                    'Enrolled'
-
-                AND e_count.enrollment_status
-                    IN (
-                      'Pending',
-                      'Approved'
-                    )
-            ) AS enrolled_count
-
-        FROM subject_offerings so
-
-        INNER JOIN section_subjects ss
-            ON ss.section_subject_id =
-               so.section_subject_id
-
-        INNER JOIN subjects sub
-            ON sub.subject_id =
-               so.subject_id
-
-        INNER JOIN sections sec
-            ON sec.section_id =
-               so.section_id
-
-        INNER JOIN courses c
-            ON c.course_id =
-               sec.course_id
-
-        LEFT JOIN departments d
-            ON d.department_id =
-               c.department_id
-
-        INNER JOIN academic_years ay
-            ON ay.academic_year_id =
-               so.academic_year_id
-
-        INNER JOIN semesters sem
-            ON sem.semester_id =
-               so.semester_id
-
-        -- ===========================================
-        -- FACULTY PROFILE
-        --
-        -- Program Head also has a faculty profile.
-        -- ===========================================
-
-        INNER JOIN faculty f
-            ON f.faculty_id =
-               so.faculty_id
-
-        -- ===========================================
-        -- USER ACCOUNT
-        -- ===========================================
-
-        INNER JOIN users u
-            ON u.user_id =
-               f.user_id
-
-        -- ===========================================
-        -- ROLE
-        --
-        -- Faculty      = role 4
-        -- Program Head = role 3
-        -- ===========================================
-
-        INNER JOIN roles rl
-            ON rl.role_id =
-               u.role_id
-
-        -- ===========================================
-        -- ROOM
-        -- ===========================================
-
-        LEFT JOIN rooms r
-            ON r.room_id =
-               so.room_id
-
-        LEFT JOIN buildings b
-            ON b.building_id =
-               r.building_id
-
-        ${whereClause}
-
-        ORDER BY
-            rl.role_name ASC,
-
-            f.last_name ASC,
-            f.first_name ASC,
-
-            ay.academic_year_id DESC,
-            sem.semester_id ASC,
-
-            sec.section_name ASC,
-
-            sub.subject_code ASC
-        `,
-      params,
-    );
-
-    // =================================================
-    // FORMAT OFFERINGS
-    // =================================================
-
-    const offerings = rows.map((row) => {
-      const maxStudents = Number(row.max_students || 0);
-
-      const enrolledCount = Number(row.enrolled_count || 0);
-
-      const availableSlots =
-        maxStudents > 0 ? Math.max(0, maxStudents - enrolledCount) : null;
-
-      const hasDays = Boolean(
-        row.schedule_days && String(row.schedule_days).trim(),
-      );
-
-      const hasTime = Boolean(
-        row.schedule_time && String(row.schedule_time).trim(),
-      );
-
-      const hasSchedule = hasDays && hasTime;
-
-      return {
-        // ===========================================
-        // OFFERING
-        // ===========================================
-
-        offering_id: Number(row.offering_id),
-
-        section_subject_id: Number(row.section_subject_id),
-
-        section_subject_status: row.section_subject_status,
-
-        status: row.status,
-
-        created_at: row.created_at,
-
-        updated_at: row.updated_at,
-
-        // ===========================================
-        // SUBJECT
-        // ===========================================
-
-        subject: {
-          subject_id: Number(row.subject_id),
-
-          subject_code: row.subject_code,
-
-          subject_name: row.subject_name,
-
-          units: Number(row.units || 0),
-
-          lecture_hours: Number(row.lecture_hours || 0),
-
-          laboratory_hours: Number(row.laboratory_hours || 0),
-        },
-
-        // ===========================================
-        // SECTION
-        // ===========================================
-
-        section: {
-          section_id: Number(row.section_id),
-
-          section_name: row.section_name,
-
-          year_level: Number(row.year_level),
-
-          max_students: Number(row.section_max_students || 0),
-
-          course: {
-            course_id: Number(row.course_id),
-
-            course_code: row.course_code,
-
-            course_name: row.course_name,
-          },
-        },
-
-        // ===========================================
-        // DEPARTMENT
-        // ===========================================
-
-        department: {
-          department_id:
-            row.course_department_id !== null
-              ? Number(row.course_department_id)
-              : null,
-
-          department_code: row.department_code,
-
-          department_name: row.department_name,
-        },
-
-        // ===========================================
-        // ACADEMIC PERIOD
-        // ===========================================
-
-        academic_period: {
-          academic_year_id: Number(row.academic_year_id),
-
-          academic_year: row.academic_year,
-
-          semester_id: Number(row.semester_id),
-
-          semester_name: row.semester_name,
-        },
-
-        // ===========================================
-        // TEACHING USER
-        //
-        // Can be:
-        //
-        // Faculty
-        // Program Head
-        // ===========================================
-
-        teaching_user: {
-          faculty_id: Number(row.faculty_id),
-
-          user_id: Number(row.teaching_user_id),
-
-          employee_number: row.employee_number,
-
-          first_name: row.first_name,
-
-          middle_name: row.middle_name,
-
-          last_name: row.last_name,
-
-          name: row.teaching_user_name,
-
-          email: row.teaching_user_email,
-
-          username: row.teaching_username,
-
-          department_id:
-            row.teaching_department_id !== null
-              ? Number(row.teaching_department_id)
-              : null,
-
-          employment_status: row.employment_status,
-
-          role_id: Number(row.teaching_role_id),
-
-          role_name: row.teaching_role_name,
-
-          is_active: Number(row.teaching_user_active) === 1,
-
-          is_verified: Number(row.teaching_user_verified) === 1,
-        },
-
-        // ===========================================
-        // KEEP FACULTY ALIAS
-        //
-        // This allows our existing frontend shape
-        // to continue working while we migrate.
-        // ===========================================
-
-        faculty: {
-          faculty_id: Number(row.faculty_id),
-
-          user_id: Number(row.teaching_user_id),
-
-          employee_number: row.employee_number,
-
-          faculty_name: row.teaching_user_name,
-
-          email: row.teaching_user_email,
-
-          department_id:
-            row.teaching_department_id !== null
-              ? Number(row.teaching_department_id)
-              : null,
-
-          employment_status: row.employment_status,
-
-          username: row.teaching_username,
-
-          role_id: Number(row.teaching_role_id),
-
-          role_name: row.teaching_role_name,
-        },
-
-        // ===========================================
-        // SCHEDULE
-        // ===========================================
-
-        schedule: {
-          days: row.schedule_days || null,
-
-          time: row.schedule_time || null,
-
-          start_time: row.schedule_start_time || null,
-
-          end_time: row.schedule_end_time || null,
-
-          status: hasSchedule ? "Scheduled" : "Pending Instructor Schedule",
-        },
-
-        // ===========================================
-        // TOP LEVEL SCHEDULE FIELDS
-        //
-        // Keep compatibility with existing frontend.
-        // ===========================================
-
-        schedule_days: row.schedule_days || null,
-
-        schedule_time: row.schedule_time || null,
-
-        schedule_start_time: row.schedule_start_time || null,
-
-        schedule_end_time: row.schedule_end_time || null,
-
-        schedule_status: hasSchedule
-          ? "Scheduled"
-          : "Pending Instructor Schedule",
-
-        // ===========================================
-        // ROOM
-        // ===========================================
-
-        room:
-          row.room_id !== null
-            ? {
-                room_id: Number(row.room_id),
-
-                room_code: row.room_code,
-
-                room_name: row.room_name,
-
-                building_name: row.building_name,
-
-                capacity:
-                  row.room_capacity !== null ? Number(row.room_capacity) : null,
-              }
-            : null,
-
-        // ===========================================
-        // CAPACITY
-        // ===========================================
-
-        capacity: {
-          max_students: maxStudents,
-
-          enrolled_students: enrolledCount,
-
-          available_slots: availableSlots,
-        },
-
-        max_students: maxStudents,
-
-        enrolled_count: enrolledCount,
-
-        available_slots: availableSlots,
-      };
-    });
-
-    // =================================================
-    // TEACHING USERS
-    //
-    // Unique Faculty / Program Head users.
-    // =================================================
-
-    const teachingUsersMap = new Map();
-
-    for (const offering of offerings) {
-      const user = offering.teaching_user;
-
-      if (!teachingUsersMap.has(user.faculty_id)) {
-        teachingUsersMap.set(user.faculty_id, {
-          ...user,
-
-          department: offering.department,
-
-          total_classes: 0,
-
-          scheduled_classes: 0,
-
-          unscheduled_classes: 0,
-        });
-      }
-
-      const summary = teachingUsersMap.get(user.faculty_id);
-
-      summary.total_classes += 1;
-
-      if (offering.schedule_status === "Scheduled") {
-        summary.scheduled_classes += 1;
-      } else {
-        summary.unscheduled_classes += 1;
-      }
-    }
-
-    const teachingUsers = Array.from(teachingUsersMap.values()).sort((a, b) => {
-      if (a.role_name !== b.role_name) {
-        return String(a.role_name).localeCompare(String(b.role_name));
-      }
-
-      return String(a.name).localeCompare(String(b.name));
-    });
-
-    // =================================================
-    // SUMMARY
-    // =================================================
-
-    const facultyOfferings = offerings.filter(
-      (item) => item.teaching_user.role_name === "Faculty",
-    );
-
-    const programHeadOfferings = offerings.filter(
-      (item) => item.teaching_user.role_name === "Program Head",
-    );
-
-    const facultyUsers = teachingUsers.filter(
-      (item) => item.role_name === "Faculty",
-    );
-
-    const programHeadUsers = teachingUsers.filter(
-      (item) => item.role_name === "Program Head",
-    );
-
-    const scheduledCount = offerings.filter(
-      (item) => item.schedule_status === "Scheduled",
-    ).length;
-
-    const unscheduledCount = offerings.length - scheduledCount;
-
-    // =================================================
-    // RESPONSE
-    // =================================================
-
-    return res.status(200).json({
-      success: true,
-
-      role_filter: requestedRole || null,
-
-      allowed_roles: allowedRoles,
-
-      summary: {
-        total_teaching_users: teachingUsers.length,
-
-        faculty_users: facultyUsers.length,
-
-        program_head_users: programHeadUsers.length,
-
-        total_offerings: offerings.length,
-
-        faculty_offerings: facultyOfferings.length,
-
-        program_head_offerings: programHeadOfferings.length,
-
-        scheduled: scheduledCount,
-
-        unscheduled: unscheduledCount,
-      },
-
-      teaching_users: teachingUsers,
-
-      count: offerings.length,
-
-      offerings,
-
-      actor,
-    });
-  } catch (error) {
-    console.error("GET REGISTRAR TEACHING SCHEDULES ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-
-      message: "Failed to load teaching schedules.",
-
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-});
 export default router;

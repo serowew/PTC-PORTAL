@@ -1,104 +1,349 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  CircleAlert,
-  Eye,
-  EyeOff,
-  KeyRound,
-  LoaderCircle,
-  Mail,
-  ShieldCheck,
-  UserPlus,
-  UserRound,
-} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-import "../../../styles/AdminCreateUser.css";
+
+import "../../../styles/createuser.css";
 
 const API_BASE_URL = "http://localhost:3000/api/users";
+
+const DEPARTMENT_OPTIONS_URL = `${API_BASE_URL}/departments/options`;
+
+/*
+|--------------------------------------------------------------------------
+| TYPES
+|--------------------------------------------------------------------------
+*/
 
 interface CreateUserResponse {
   success?: boolean;
   user_id?: number;
+  faculty_id?: number | null;
+  employee_number?: string | null;
   message?: string;
   error?: string;
 }
+
+interface Department {
+  department_id: number;
+  department_code: string;
+  department_name: string;
+}
+
+interface DepartmentResponse {
+  success?: boolean;
+  departments?: Department[];
+  message?: string;
+  error?: string;
+}
+
+/*
+|--------------------------------------------------------------------------
+| ROLES
+|--------------------------------------------------------------------------
+*/
 
 const USER_ROLES = [
   "Admin",
   "Registrar",
   "Faculty",
   "Program Head",
-  "Finance",
   "Student",
 ] as const;
+
+type UserRoleOption = (typeof USER_ROLES)[number];
+
+/*
+|--------------------------------------------------------------------------
+| COMPONENT
+|--------------------------------------------------------------------------
+*/
 
 export default function CreateUser() {
   const navigate = useNavigate();
 
+  /*
+  |--------------------------------------------------------------------------
+  | AUTH
+  |--------------------------------------------------------------------------
+  */
+
   const session = authService.getSession();
   const token = authService.getToken();
+
   const userRole = session?.role;
   const authenticated = Boolean(session && token);
+
+  /*
+  |--------------------------------------------------------------------------
+  | FORM STATE
+  |--------------------------------------------------------------------------
+  */
 
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+
+    role: "",
+    department_id: "",
+
     password: "",
     confirmPassword: "",
-    role: "",
   });
 
+  const [departments, setDepartments] = useState<Department[]>([]);
+
   const [loading, setLoading] = useState(false);
+
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
+
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  /*
+  |--------------------------------------------------------------------------
+  | DERIVED
+  |--------------------------------------------------------------------------
+  */
+
+  const requiresFacultyProfile =
+    formData.role === "Faculty" || formData.role === "Program Head";
+
+  /*
+  |--------------------------------------------------------------------------
+  | AUTHORIZATION
+  |--------------------------------------------------------------------------
+  */
 
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-      navigate("/login", { replace: true });
+
+      navigate("/login", {
+        replace: true,
+      });
+
       return;
     }
 
     if (userRole !== "Admin") {
       if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), { replace: true });
+        navigate(authService.getDashboardRoute(userRole), {
+          replace: true,
+        });
       } else {
-        navigate("/login", { replace: true });
+        navigate("/login", {
+          replace: true,
+        });
       }
     }
   }, [authenticated, userRole, navigate]);
 
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD DEPARTMENTS
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    if (!authenticated || userRole !== "Admin") {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadDepartments = async () => {
+      try {
+        setDepartmentsLoading(true);
+
+        const response = await authService.authFetch(DEPARTMENT_OPTIONS_URL, {
+          method: "GET",
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+
+        let data: DepartmentResponse | null = null;
+
+        if (contentType.includes("application/json")) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+
+          throw new Error(
+            `Server returned a non-JSON response (${response.status}): ${text.slice(
+              0,
+              200,
+            )}`,
+          );
+        }
+
+        if (response.status === 401) {
+          authService.logout();
+
+          navigate("/login", {
+            replace: true,
+          });
+
+          return;
+        }
+
+        if (response.status === 403) {
+          throw new Error(
+            data?.message ||
+              data?.error ||
+              "You are not authorized to load departments.",
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              data?.error ||
+              `Failed to load departments (${response.status}).`,
+          );
+        }
+
+        setDepartments(
+          Array.isArray(data?.departments) ? data.departments : [],
+        );
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+
+        console.error("LOAD DEPARTMENTS ERROR:", err);
+
+        setError(
+          err instanceof Error ? err.message : "Failed to load departments.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setDepartmentsLoading(false);
+        }
+      }
+    };
+
+    void loadDepartments();
+
+    return () => {
+      controller.abort();
+    };
+  }, [authenticated, userRole, navigate]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | INPUT CHANGE
+  |--------------------------------------------------------------------------
+  */
+
   const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = event.target;
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE CHANGE
+    |--------------------------------------------------------------------------
+    |
+    | If Admin selects a role that does not use a
+    | faculty profile, remove department/person fields.
+    |
+    */
+
+    if (name === "role") {
+      const newRole = value;
+
+      const needsFacultyProfile =
+        newRole === "Faculty" || newRole === "Program Head";
+
+      setFormData((previous) => ({
+        ...previous,
+        role: newRole,
+
+        ...(needsFacultyProfile
+          ? {}
+          : {
+              first_name: "",
+              middle_name: "",
+              last_name: "",
+              department_id: "",
+            }),
+      }));
+
+      setError("");
+
+      return;
+    }
 
     setFormData((previous) => ({
       ...previous,
       [name]: value,
     }));
+
+    setError("");
   };
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  /*
+  |--------------------------------------------------------------------------
+  | SUBMIT
+  |--------------------------------------------------------------------------
+  */
+
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+
     setError("");
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTH
+    |--------------------------------------------------------------------------
+    */
 
     if (!authenticated || userRole !== "Admin") {
       setError(
         "Your session has expired or you are not authorized to create users.",
       );
+
       return;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAN VALUES
+    |--------------------------------------------------------------------------
+    */
+
     const username = formData.username.trim().toUpperCase();
+
     const email = formData.email.trim().toLowerCase();
-    const password = formData.password;
-    const confirmPassword = formData.confirmPassword;
+
     const role = formData.role.trim();
+
+    const firstName = formData.first_name.trim();
+
+    const middleName = formData.middle_name.trim();
+
+    const lastName = formData.last_name.trim();
+
+    const password = formData.password;
+
+    const confirmPassword = formData.confirmPassword;
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION
+    |--------------------------------------------------------------------------
+    */
 
     if (!username) {
       setError("Username is required.");
@@ -112,10 +357,11 @@ export default function CreateUser() {
 
     if (!role) {
       setError("Please select a user role.");
+
       return;
     }
 
-    if (!USER_ROLES.includes(role as (typeof USER_ROLES)[number])) {
+    if (!USER_ROLES.includes(role as UserRoleOption)) {
       setError("Invalid user role.");
       return;
     }
@@ -124,27 +370,91 @@ export default function CreateUser() {
 
     if (!emailPattern.test(email)) {
       setError("Please enter a valid email address.");
+
       return;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | FACULTY / PROGRAM HEAD VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    if (requiresFacultyProfile) {
+      if (!firstName) {
+        setError("First name is required for Faculty and Program Head.");
+
+        return;
+      }
+
+      if (!lastName) {
+        setError("Last name is required for Faculty and Program Head.");
+
+        return;
+      }
+
+      if (!formData.department_id) {
+        setError("Please select a department.");
+
+        return;
+      }
+
+      const departmentId = Number(formData.department_id);
+
+      if (!Number.isInteger(departmentId) || departmentId <= 0) {
+        setError("Please select a valid department.");
+
+        return;
+      }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PASSWORD
+    |--------------------------------------------------------------------------
+    */
+
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+
       return;
     }
 
     try {
       setLoading(true);
 
+      /*
+      |--------------------------------------------------------------------------
+      | PAYLOAD
+      |--------------------------------------------------------------------------
+      |
+      | Do NOT send role_id.
+      |
+      | Backend resolves role_id using role name.
+      |
+      */
+
       const payload = {
         username,
         email,
         password,
         role,
+
+        first_name: requiresFacultyProfile ? firstName : null,
+
+        middle_name: requiresFacultyProfile && middleName ? middleName : null,
+
+        last_name: requiresFacultyProfile ? lastName : null,
+
+        department_id: requiresFacultyProfile
+          ? Number(formData.department_id)
+          : null,
       };
 
       const response = await authService.authFetch(API_BASE_URL, {
@@ -153,6 +463,7 @@ export default function CreateUser() {
       });
 
       const contentType = response.headers.get("content-type") || "";
+
       let data: CreateUserResponse | null = null;
 
       if (contentType.includes("application/json")) {
@@ -168,9 +479,19 @@ export default function CreateUser() {
         );
       }
 
+      /*
+      |--------------------------------------------------------------------------
+      | AUTH ERRORS
+      |--------------------------------------------------------------------------
+      */
+
       if (response.status === 401) {
         authService.logout();
-        navigate("/login", { replace: true });
+
+        navigate("/login", {
+          replace: true,
+        });
+
         return;
       }
 
@@ -182,6 +503,12 @@ export default function CreateUser() {
         );
       }
 
+      /*
+      |--------------------------------------------------------------------------
+      | HTTP ERROR
+      |--------------------------------------------------------------------------
+      */
+
       if (!response.ok) {
         throw new Error(
           data?.message ||
@@ -190,7 +517,20 @@ export default function CreateUser() {
         );
       }
 
-      window.alert(data?.message || "User created successfully.");
+      /*
+      |--------------------------------------------------------------------------
+      | SUCCESS
+      |--------------------------------------------------------------------------
+      */
+
+      let successMessage = data?.message || "User created successfully.";
+
+      if (data?.employee_number) {
+        successMessage += `\nEmployee Number: ${data.employee_number}`;
+      }
+
+      window.alert(successMessage);
+
       navigate("/admin/user/list");
     } catch (err) {
       console.error("CREATE USER ERROR:", err);
@@ -199,6 +539,7 @@ export default function CreateUser() {
         setError(
           "Unable to connect to the user server. Make sure the backend is running on port 3000.",
         );
+
         return;
       }
 
@@ -208,264 +549,218 @@ export default function CreateUser() {
     }
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | AUTH GUARD
+  |--------------------------------------------------------------------------
+  */
+
   if (!authenticated || !session || userRole !== "Admin") {
     return null;
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | RENDER
+  |--------------------------------------------------------------------------
+  */
+
   return (
     <DashboardLayout>
-      <main className="admin-create-user">
-        <div className="admin-create-user__toolbar">
-          <button
-            type="button"
-            className="admin-create-user__back"
-            onClick={() => navigate("/admin/user/list")}
-            disabled={loading}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to User List
-          </button>
-        </div>
+      <div className="create-user">
+        <h1>Create User</h1>
 
-        <section className="admin-create-user__hero">
-          <div className="admin-create-user__hero-copy">
-            <div className="admin-create-user__eyebrow">
-              <span>
-                <UserPlus size={16} aria-hidden="true" />
-              </span>
-              Admin · User Management
-            </div>
+        <form onSubmit={handleSubmit}>
+          {/* USERNAME */}
 
-            <h1>Create User</h1>
+          <div className="form-group">
+            <label htmlFor="create-user-username">Username</label>
 
-            <p>
-              Create a new portal account, assign the appropriate role, and set
-              a temporary password for first-time access.
-            </p>
+            <input
+              id="create-user-username"
+              type="text"
+              name="username"
+              placeholder="Enter username (e.g. FACULTY01)"
+              value={formData.username}
+              onChange={handleChange}
+              disabled={loading}
+              required
+            />
           </div>
 
-          <div className="admin-create-user__hero-note">
-            <span className="admin-create-user__hero-note-icon">
-              <ShieldCheck size={18} aria-hidden="true" />
-            </span>
+          {/* EMAIL */}
 
-            <div>
-              <small>Account Setup</small>
-              <strong>Admin-authorized creation</strong>
-            </div>
+          <div className="form-group">
+            <label htmlFor="create-user-email">Email</label>
+
+            <input
+              id="create-user-email"
+              type="email"
+              name="email"
+              placeholder="Enter PTC email"
+              value={formData.email}
+              onChange={handleChange}
+              disabled={loading}
+              required
+            />
           </div>
-        </section>
 
-        {error && (
-          <div className="admin-create-user__error" role="alert">
-            <CircleAlert size={18} aria-hidden="true" />
-            <span>{error}</span>
+          {/* ROLE */}
+
+          <div className="form-group">
+            <label htmlFor="create-user-role">Role</label>
+
+            <select
+              id="create-user-role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              disabled={loading}
+              required
+            >
+              <option value="" disabled>
+                Select user role
+              </option>
+
+              {USER_ROLES.map((roleOption) => (
+                <option key={roleOption} value={roleOption}>
+                  {roleOption}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
 
-        <form className="admin-create-user__form" onSubmit={handleSubmit}>
-          <section className="admin-create-user__section">
-            <header className="admin-create-user__section-header">
-              <span className="admin-create-user__section-icon">
-                <UserRound size={18} aria-hidden="true" />
-              </span>
+          {/* FACULTY / PROGRAM HEAD INFORMATION */}
 
-              <div>
-                <span>Account Details</span>
-                <h2>User Information</h2>
-                <p>Enter the basic information used for the portal account.</p>
+          {requiresFacultyProfile && (
+            <>
+              <div className="form-group">
+                <label htmlFor="create-user-first-name">First Name</label>
+
+                <input
+                  id="create-user-first-name"
+                  type="text"
+                  name="first_name"
+                  placeholder="Enter first name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                />
               </div>
-            </header>
 
-            <div className="admin-create-user__fields">
-              <label className="admin-create-user__field">
-                <span>
-                  Username <em>*</em>
-                </span>
+              <div className="form-group">
+                <label htmlFor="create-user-middle-name">Middle Name</label>
 
-                <div className="admin-create-user__input-with-icon">
-                  <UserRound size={15} aria-hidden="true" />
+                <input
+                  id="create-user-middle-name"
+                  type="text"
+                  name="middle_name"
+                  placeholder="Enter middle name (optional)"
+                  value={formData.middle_name}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+              </div>
 
-                  <input
-                    id="create-user-username"
-                    type="text"
-                    name="username"
-                    placeholder="Enter username (e.g. FACULTY01)"
-                    value={formData.username}
-                    onChange={handleChange}
-                    disabled={loading}
-                    required
-                  />
-                </div>
+              <div className="form-group">
+                <label htmlFor="create-user-last-name">Last Name</label>
 
-                <small>The username will be saved in uppercase.</small>
-              </label>
+                <input
+                  id="create-user-last-name"
+                  type="text"
+                  name="last_name"
+                  placeholder="Enter last name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                />
+              </div>
 
-              <label className="admin-create-user__field">
-                <span>
-                  Email <em>*</em>
-                </span>
+              <div className="form-group">
+                <label htmlFor="create-user-department">Department</label>
 
-                <div className="admin-create-user__input-with-icon">
-                  <Mail size={15} aria-hidden="true" />
+                <select
+                  id="create-user-department"
+                  name="department_id"
+                  value={formData.department_id}
+                  onChange={handleChange}
+                  disabled={loading || departmentsLoading}
+                  required
+                >
+                  <option value="" disabled>
+                    {departmentsLoading
+                      ? "Loading departments..."
+                      : "Select department"}
+                  </option>
 
-                  <input
-                    id="create-user-email"
-                    type="email"
-                    name="email"
-                    placeholder="Enter PTC email (e.g. faculty01@ptc.edu.ph)"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={loading}
-                    required
-                  />
-                </div>
-              </label>
-
-              <label className="admin-create-user__field admin-create-user__field--wide">
-                <span>
-                  Role <em>*</em>
-                </span>
-
-                <div className="admin-create-user__select-with-icon">
-                  <ShieldCheck size={15} aria-hidden="true" />
-
-                  <select
-                    id="create-user-role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    disabled={loading}
-                    required
-                  >
-                    <option value="" disabled>
-                      Select user role
+                  {departments.map((department) => (
+                    <option
+                      key={department.department_id}
+                      value={department.department_id}
+                    >
+                      {department.department_code} -{" "}
+                      {department.department_name}
                     </option>
-
-                    {USER_ROLES.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <small>
-                  The backend resolves the selected role name to the correct
-                  role record.
-                </small>
-              </label>
-            </div>
-          </section>
-
-          <section className="admin-create-user__section">
-            <header className="admin-create-user__section-header">
-              <span className="admin-create-user__section-icon">
-                <KeyRound size={18} aria-hidden="true" />
-              </span>
-
-              <div>
-                <span>Credentials</span>
-                <h2>Temporary Password</h2>
-                <p>Create the initial password for this account.</p>
+                  ))}
+                </select>
               </div>
-            </header>
+            </>
+          )}
 
-            <div className="admin-create-user__fields">
-              <label className="admin-create-user__field">
-                <span>
-                  Password <em>*</em>
-                </span>
+          {/* PASSWORD */}
 
-                <div className="admin-create-user__password">
-                  <KeyRound size={15} aria-hidden="true" />
+          <div className="form-group">
+            <label htmlFor="create-user-password">Password</label>
 
-                  <input
-                    id="create-user-password"
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Create a temporary password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={loading}
-                    minLength={8}
-                    required
-                  />
+            <input
+              id="create-user-password"
+              type="password"
+              name="password"
+              placeholder="Create a temporary password"
+              value={formData.password}
+              onChange={handleChange}
+              disabled={loading}
+              minLength={8}
+              required
+            />
+          </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((current) => !current)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff size={15} aria-hidden="true" />
-                    ) : (
-                      <Eye size={15} aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
+          {/* CONFIRM PASSWORD */}
 
-                <small>Use at least 8 characters.</small>
-              </label>
+          <div className="form-group">
+            <label htmlFor="create-user-confirm-password">
+              Confirm Password
+            </label>
 
-              <label className="admin-create-user__field">
-                <span>
-                  Confirm Password <em>*</em>
-                </span>
+            <input
+              id="create-user-confirm-password"
+              type="password"
+              name="confirmPassword"
+              placeholder="Re-enter the temporary password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              disabled={loading}
+              minLength={8}
+              required
+            />
+          </div>
 
-                <div className="admin-create-user__password">
-                  <KeyRound size={15} aria-hidden="true" />
+          <small className="form-hint">
+            The user should change this password after their first login.
+          </small>
 
-                  <input
-                    id="create-user-confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder="Re-enter the temporary password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    disabled={loading}
-                    minLength={8}
-                    required
-                  />
+          {/* ERROR */}
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowConfirmPassword((current) => !current)
-                    }
-                    aria-label={
-                      showConfirmPassword
-                        ? "Hide confirm password"
-                        : "Show confirm password"
-                    }
-                    disabled={loading}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff size={15} aria-hidden="true" />
-                    ) : (
-                      <Eye size={15} aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
-              </label>
-            </div>
+          {error && <p className="error-message">{error}</p>}
 
-            <div className="admin-create-user__credential-note">
-              <ShieldCheck size={17} aria-hidden="true" />
-              <div>
-                <strong>Temporary credential</strong>
-                <p>
-                  The user should change this password after their first login.
-                </p>
-              </div>
-            </div>
-          </section>
+          {/* ACTIONS */}
 
-          <footer className="admin-create-user__actions">
+          <div className="button-group">
             <button
               type="button"
-              className="admin-create-user__cancel"
+              className="btn btn-secondary"
               onClick={() => navigate("/admin/user/list")}
               disabled={loading}
             >
@@ -474,24 +769,19 @@ export default function CreateUser() {
 
             <button
               type="submit"
-              className="admin-create-user__submit"
-              disabled={loading || !authenticated || userRole !== "Admin"}
+              className="btn btn-primary"
+              disabled={
+                loading ||
+                departmentsLoading ||
+                !authenticated ||
+                userRole !== "Admin"
+              }
             >
-              {loading ? (
-                <LoaderCircle
-                  size={16}
-                  className="admin-create-user__spinner"
-                  aria-hidden="true"
-                />
-              ) : (
-                <UserPlus size={16} aria-hidden="true" />
-              )}
-
               {loading ? "Creating..." : "Create User"}
             </button>
-          </footer>
+          </div>
         </form>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

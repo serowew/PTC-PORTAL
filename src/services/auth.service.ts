@@ -9,7 +9,6 @@ export type UserRole =
   | "Registrar"
   | "Program Head"
   | "Faculty"
-  | "Finance"
   | "Student";
 
 // ======================
@@ -31,14 +30,6 @@ export interface User {
 export interface LoginResponse {
   message: string;
 }
-
-export interface ResendOtpResponse {
-  success?: boolean;
-  message: string;
-  cooldown_seconds?: number;
-  retry_after?: number;
-}
-
 
 // ======================
 // Backend Auth User
@@ -87,7 +78,6 @@ const VALID_ROLES: UserRole[] = [
   "Registrar",
   "Program Head",
   "Faculty",
-  "Finance",
   "Student",
 ];
 
@@ -130,48 +120,6 @@ function mapBackendUser(user: BackendUser): User {
   };
 }
 
-
-const LOGIN_COOLDOWN_UNTIL_KEY = "login_cooldown_until";
-
-function saveLoginCooldownState(lockedUntil: number): void {
-  sessionStorage.setItem(
-    LOGIN_COOLDOWN_UNTIL_KEY,
-    String(Math.max(0, Math.floor(lockedUntil))),
-  );
-}
-
-function getLoginCooldownRemainingState(): number {
-  const storedUntil =
-    sessionStorage.getItem(LOGIN_COOLDOWN_UNTIL_KEY);
-
-  if (!storedUntil) {
-    return 0;
-  }
-
-  const lockedUntil = Number(storedUntil);
-
-  if (!Number.isFinite(lockedUntil) || lockedUntil <= 0) {
-    sessionStorage.removeItem(LOGIN_COOLDOWN_UNTIL_KEY);
-    return 0;
-  }
-
-  const remaining = Math.max(
-    0,
-    Math.ceil((lockedUntil - Date.now()) / 1000),
-  );
-
-  if (remaining <= 0) {
-    sessionStorage.removeItem(LOGIN_COOLDOWN_UNTIL_KEY);
-    return 0;
-  }
-
-  return remaining;
-}
-
-function clearLoginCooldownState(): void {
-  sessionStorage.removeItem(LOGIN_COOLDOWN_UNTIL_KEY);
-}
-
 // ======================
 // Authentication Service
 // ======================
@@ -203,7 +151,6 @@ export const authService = {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("pending_username");
-    sessionStorage.removeItem("otp_resend_available_at");
 
     // =====================================================
     // NORMALIZE USERNAME
@@ -244,9 +191,6 @@ export const authService = {
     const data: LoginResponse & {
       error?: string;
       success?: boolean;
-      locked?: boolean;
-      retry_after?: number;
-      attempts_remaining?: number;
     } = await response.json();
 
     // =====================================================
@@ -254,25 +198,7 @@ export const authService = {
     // =====================================================
 
     if (!response.ok) {
-      const message =
-        data.error || data.message || "Login failed.";
-
-      const retryAfter =
-        Number.isFinite(Number(data.retry_after)) &&
-        Number(data.retry_after) > 0
-          ? Number(data.retry_after)
-          : 0;
-
-      if (
-        (response.status === 429 || data.locked === true) &&
-        retryAfter > 0
-      ) {
-        saveLoginCooldownState(
-          Date.now() + retryAfter * 1000,
-        );
-      }
-
-      throw new Error(message);
+      throw new Error(data.error || data.message || "Login failed.");
     }
 
     // =====================================================
@@ -281,72 +207,7 @@ export const authService = {
     // Save ONLY the username currently waiting for OTP.
     // =====================================================
 
-    clearLoginCooldownState();
     this.savePendingUsername(cleanUsername);
-    this.saveOtpResendAvailableAt(Date.now() + 60_000);
-
-    return data;
-  },
-
-  // =====================================================
-  // RESEND OTP
-  //
-  // POST /auth/resend-otp
-  //
-  // The backend enforces the real 60-second cooldown.
-  // =====================================================
-
-  async resendOtp(username: string): Promise<ResendOtpResponse> {
-    const cleanUsername = username.trim();
-
-    if (!cleanUsername) {
-      throw new Error("Username is required.");
-    }
-
-    const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-
-      body: JSON.stringify({
-        username: cleanUsername,
-      }),
-    });
-
-    const data: ResendOtpResponse & {
-      error?: string;
-    } = await response.json();
-
-    if (!response.ok) {
-      if (
-        response.status === 429 &&
-        Number.isFinite(Number(data.retry_after)) &&
-        Number(data.retry_after) > 0
-      ) {
-        this.saveOtpResendAvailableAt(
-          Date.now() + Number(data.retry_after) * 1000,
-        );
-      }
-
-      throw new Error(
-        data.error || data.message || "Unable to resend OTP.",
-      );
-    }
-
-    this.savePendingUsername(cleanUsername);
-
-    const cooldownSeconds =
-      Number.isFinite(Number(data.cooldown_seconds)) &&
-      Number(data.cooldown_seconds) > 0
-        ? Number(data.cooldown_seconds)
-        : 60;
-
-    this.saveOtpResendAvailableAt(
-      Date.now() + cooldownSeconds * 1000,
-    );
 
     return data;
   },
@@ -465,7 +326,6 @@ export const authService = {
     // =====================================================
 
     this.clearPendingUsername();
-    this.clearOtpResendAvailableAt();
 
     return user;
   },
@@ -490,7 +350,6 @@ export const authService = {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("pending_username");
-    sessionStorage.removeItem("otp_resend_available_at");
 
     const cleanUsername = username.trim();
 
@@ -712,61 +571,6 @@ export const authService = {
   },
 
   // =====================================================
-  // LOGIN COOLDOWN
-  //
-  // GLOBAL for this browser tab/session.
-  // It is not tied to a username.
-  // =====================================================
-
-  saveLoginCooldown(lockedUntil: number): void {
-    saveLoginCooldownState(lockedUntil);
-  },
-
-  getLoginCooldownRemaining(): number {
-    return getLoginCooldownRemainingState();
-  },
-
-  clearLoginCooldown(): void {
-    clearLoginCooldownState();
-  },
-
-  // =====================================================
-  // OTP RESEND COOLDOWN
-  //
-  // Stores the exact timestamp when Resend OTP becomes
-  // available again. This keeps the countdown accurate
-  // even if the OTP page re-renders or refreshes.
-  // =====================================================
-
-  saveOtpResendAvailableAt(timestamp: number): void {
-    sessionStorage.setItem(
-      "otp_resend_available_at",
-      String(Math.max(0, Math.floor(timestamp))),
-    );
-  },
-
-  getOtpResendAvailableAt(): number | null {
-    const stored = sessionStorage.getItem("otp_resend_available_at");
-
-    if (!stored) {
-      return null;
-    }
-
-    const timestamp = Number(stored);
-
-    if (!Number.isFinite(timestamp) || timestamp <= 0) {
-      sessionStorage.removeItem("otp_resend_available_at");
-      return null;
-    }
-
-    return timestamp;
-  },
-
-  clearOtpResendAvailableAt(): void {
-    sessionStorage.removeItem("otp_resend_available_at");
-  },
-
-  // =====================================================
   // FRONTEND USER SESSION
   //
   // Used for:
@@ -832,10 +636,6 @@ export const authService = {
     sessionStorage.removeItem("access_token");
 
     sessionStorage.removeItem("pending_username");
-
-    sessionStorage.removeItem("otp_resend_available_at");
-
-    clearLoginCooldownState();
   },
 
   // =====================================================
@@ -865,8 +665,6 @@ export const authService = {
       "Program Head": "/programhead/dashboard",
 
       Faculty: "/faculty/dashboard",
-
-      Finance: "/finance/dashboard",
 
       Student: "/student/dashboard",
     };

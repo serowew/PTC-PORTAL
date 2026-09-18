@@ -23,7 +23,6 @@ import programHeadRouter from "./routes/programhead/index.js";
 
 import authenticate from "./middleware/authenticate.js";
 import requireRole from "./middleware/requireRole.js";
-import financeRouter from "./routes/finance/index.js";
 
 const app = express();
 
@@ -141,16 +140,14 @@ app.use(
 );
 
 // =====================================================
+// TEMPORARY STUDENT ROUTE DEBUG
+// =====================================================
+
+// =====================================================
 // STUDENT ROUTES
 // =====================================================
 
 app.use("/api/student", authenticate, requireRole("Student"), studentRoutes);
-
-// =====================================================
-// FINANCE ROUTES
-// =====================================================
-
-app.use("/api/finance", authenticate, requireRole("Finance"), financeRouter);
 // =====================================================
 // SHARED AUTHENTICATED FILE ROUTES
 // =====================================================

@@ -1,4 +1,11 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -34,7 +41,6 @@ import logo from "../../assets/ptclogo.jpg";
 import { studentNavGroups, studentSoloLinks } from "../../config/studentNav";
 import { adminNavGroups, adminSoloLinks } from "../../config/adminNav";
 import { facultyNavGroups, facultySoloLinks } from "../../config/facultyNav";
-import { financeNavGroups, financeSoloLinks } from "../../config/financeNav";
 import {
   registrarNavGroups,
   registrarSoloLinks,
@@ -91,8 +97,6 @@ function getNavByRole(role: string) {
       return { groups: facultyNavGroups, soloLinks: facultySoloLinks };
     case "Admin":
       return { groups: adminNavGroups, soloLinks: adminSoloLinks };
-    case "Finance":
-      return { groups: financeNavGroups, soloLinks: financeSoloLinks };
     case "Registrar":
       return { groups: registrarNavGroups, soloLinks: registrarSoloLinks };
     case "Program Head":
@@ -153,7 +157,11 @@ function normalizeRoutePath(pathname: string) {
   return normalized || "/";
 }
 
-function routeMatches(pathname: string, itemPath: string, exactMatch: boolean) {
+function routeMatches(
+  pathname: string,
+  itemPath: string,
+  exactMatch: boolean,
+) {
   const currentPath = normalizeRoutePath(pathname);
   const targetPath = normalizeRoutePath(itemPath);
 
@@ -181,7 +189,10 @@ function findOpenChain(
         nextTrail,
       );
       if (found) return found;
-    } else if (item.path && routeMatches(pathname, item.path, exactMatch)) {
+    } else if (
+      item.path &&
+      routeMatches(pathname, item.path, exactMatch)
+    ) {
       return nextTrail;
     }
   }
@@ -214,12 +225,6 @@ function getRoleMeta(role: string) {
         shortLabel: "Faculty",
         description: "Teaching Workspace",
         icon: <School size={15} strokeWidth={2.2} />,
-      };
-    case "Finance":
-      return {
-        shortLabel: "Finance",
-        description: "Transaction Processing",
-        icon: <FileCheck2 size={15} strokeWidth={2.2} />,
       };
     case "Student":
       return {
@@ -461,40 +466,38 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
   const navGroups = groups ?? roleNav.groups;
   const navSoloLinks = soloLinks ?? roleNav.soloLinks;
 
-  // buildNavTree is inexpensive. Computing it directly avoids React Compiler
-  // preserve-manual-memoization warnings caused by potentially mutable arrays.
-  const navItems = buildNavTree(navSoloLinks, navGroups);
+  const navItems = useMemo(
+    () => buildNavTree(navSoloLinks, navGroups),
+    [navSoloLinks, navGroups],
+  );
 
   const facultyUsesExactActiveRoute = user?.role === "Faculty";
 
-  // The route-derived folder chain does not need an effect or synchronized state.
-  // Manual folder choices are scoped to the current pathname, so a route change
-  // automatically falls back to the chain for the new route.
-  const routeChain = findOpenChain(
-    navItems,
-    location.pathname,
-    facultyUsesExactActiveRoute,
-  );
-  const routeActivePath = routeChain ? routeChain.slice(0, -1) : [];
-
-  const [manualActivePath, setManualActivePath] = useState<{
-    pathname: string;
-    items: NavItem[];
-  } | null>(null);
-
-  const activePath =
-    manualActivePath?.pathname === location.pathname
-      ? manualActivePath.items
-      : routeActivePath;
-
-  // Store the pathname on which the mobile menu was opened. A route change
-  // therefore closes the menu without calling setState synchronously in an effect.
-  const [mobileMenu, setMobileMenu] = useState({
-    open: false,
-    pathname: location.pathname,
+  const [activePath, setActivePath] = useState<NavItem[]>(() => {
+    const chain = findOpenChain(
+      navItems,
+      location.pathname,
+      facultyUsesExactActiveRoute,
+    );
+    return chain ? chain.slice(0, -1) : [];
   });
-  const mobileOpen =
-    mobileMenu.open && mobileMenu.pathname === location.pathname;
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [syncedPathname, setSyncedPathname] = useState(location.pathname);
+
+  if (location.pathname !== syncedPathname) {
+    setSyncedPathname(location.pathname);
+    const chain = findOpenChain(
+      navItems,
+      location.pathname,
+      facultyUsesExactActiveRoute,
+    );
+    if (chain) setActivePath(chain.slice(0, -1));
+  }
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -503,9 +506,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
     document.body.style.overflow = "hidden";
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMobileMenu({ open: false, pathname: location.pathname });
-      }
+      if (event.key === "Escape") setMobileOpen(false);
     };
 
     window.addEventListener("keydown", handleEscape);
@@ -514,35 +515,27 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [mobileOpen, location.pathname]);
+  }, [mobileOpen]);
 
-  function handleToggleFolder(levelIndex: number, item?: NavItem) {
-    setManualActivePath((previous) => {
-      const baseItems =
-        previous?.pathname === location.pathname
-          ? previous.items
-          : routeActivePath;
+  const handleToggleFolder = useCallback(
+    (levelIndex: number, item?: NavItem) => {
+      setActivePath((previous) =>
+        item
+          ? [...previous.slice(0, levelIndex), item]
+          : previous.slice(0, levelIndex),
+      );
+    },
+    [],
+  );
 
-      return {
-        pathname: location.pathname,
-        items: item
-          ? [...baseItems.slice(0, levelIndex), item]
-          : baseItems.slice(0, levelIndex),
-      };
-    });
-  }
-
-  function closeMobileMenu() {
-    setMobileMenu({ open: false, pathname: location.pathname });
-  }
-
-  function handleNavigatePage(item: NavItem) {
-    if (!item.path) return;
-
-    closeMobileMenu();
-    setManualActivePath(null);
-    navigate(item.path);
-  }
+  const handleNavigatePage = useCallback(
+    (item: NavItem) => {
+      if (!item.path) return;
+      navigate(item.path);
+      setMobileOpen(false);
+    },
+    [navigate],
+  );
 
   if (!user) return null;
 
@@ -551,7 +544,11 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
   function isActive(path?: string) {
     if (!path) return false;
 
-    return routeMatches(location.pathname, path, facultyUsesExactActiveRoute);
+    return routeMatches(
+      location.pathname,
+      path,
+      facultyUsesExactActiveRoute,
+    );
   }
 
   return (
@@ -559,9 +556,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
       <button
         type="button"
         className="sidebar-mobile-toggle"
-        onClick={() =>
-          setMobileMenu({ open: true, pathname: location.pathname })
-        }
+        onClick={() => setMobileOpen(true)}
         aria-label="Open navigation menu"
         aria-expanded={mobileOpen}
       >
@@ -571,7 +566,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
       <button
         type="button"
         className={`sidebar-overlay ${mobileOpen ? "is-visible" : ""}`}
-        onClick={closeMobileMenu}
+        onClick={() => setMobileOpen(false)}
         aria-label="Close navigation menu"
         tabIndex={mobileOpen ? 0 : -1}
       />
@@ -594,7 +589,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
             <button
               type="button"
               className="sidebar-mobile-close"
-              onClick={closeMobileMenu}
+              onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
             >
               <X size={18} strokeWidth={2.2} />

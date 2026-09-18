@@ -10,141 +10,6 @@ import { logActivity } from "../utils/activityLogger.js";
 
 const router = express.Router();
 
-const OTP_EXPIRY_MS = 5 * 60 * 1000;
-const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
-
-// =======================
-// LOGIN ATTEMPT SECURITY
-// =======================
-
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_COOLDOWN_MS = 2 * 60 * 1000;
-
-// Stores failed attempts while the Node server is running.
-const loginAttempts = new Map();
-
-function getLoginAttemptKey(req) {
-  const ip =
-    req.ip ||
-    req.socket?.remoteAddress ||
-    "unknown";
-
-  // IMPORTANT:
-  // The cooldown is intentionally NOT tied to a username.
-  // After 5 failed normal-login attempts from this client/IP,
-  // every username is blocked for 2 minutes.
-  return String(ip);
-}
-
-function formatCooldown(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-
-  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
-}
-
-function checkLoginCooldown(req) {
-  const key = getLoginAttemptKey(req);
-
-  const entry = loginAttempts.get(key);
-
-  if (!entry) {
-    return {
-      locked: false,
-      retryAfter: 0,
-    };
-  }
-
-  if (entry.lockedUntil) {
-    const remainingMs =
-      entry.lockedUntil - Date.now();
-
-    if (remainingMs > 0) {
-      return {
-        locked: true,
-
-        retryAfter: Math.max(
-          1,
-          Math.ceil(remainingMs / 1000),
-        ),
-      };
-    }
-
-    // Cooldown finished.
-    loginAttempts.delete(key);
-
-    return {
-      locked: false,
-      retryAfter: 0,
-    };
-  }
-
-  return {
-    locked: false,
-    retryAfter: 0,
-  };
-}
-
-function registerFailedLogin(req) {
-  const key = getLoginAttemptKey(req);
-
-  const existing =
-    loginAttempts.get(key) || {
-      attempts: 0,
-      lockedUntil: null,
-    };
-
-  const attempts =
-    existing.attempts + 1;
-
-  // =============================
-  // FIFTH FAILED ATTEMPT
-  // =============================
-
-  if (attempts >= MAX_LOGIN_ATTEMPTS) {
-    const lockedUntil =
-      Date.now() + LOGIN_COOLDOWN_MS;
-
-    loginAttempts.set(key, {
-      attempts: MAX_LOGIN_ATTEMPTS,
-      lockedUntil,
-    });
-
-    return {
-      locked: true,
-      retryAfter: Math.ceil(
-        LOGIN_COOLDOWN_MS / 1000,
-      ),
-      attemptsRemaining: 0,
-    };
-  }
-
-  // =============================
-  // ATTEMPTS 1 - 4
-  // =============================
-
-  loginAttempts.set(key, {
-    attempts,
-    lockedUntil: null,
-  });
-
-  return {
-    locked: false,
-    retryAfter: 0,
-
-    attemptsRemaining:
-      MAX_LOGIN_ATTEMPTS - attempts,
-  };
-}
-
-function clearFailedLogins(req) {
-  const key = getLoginAttemptKey(req);
-
-  loginAttempts.delete(key);
-}
-
-console.log("✅ AUTH ROUTER LOADED - RESEND OTP ENABLED");
-
 // =======================
 // Nodemailer
 // =======================
@@ -175,28 +40,7 @@ router.post("/login", async (req, res) => {
       error: "Username and password are required.",
     });
   }
-// ==========================================
-// CHECK LOGIN COOLDOWN BEFORE AUTHENTICATING
-// ==========================================
 
-const cooldown =
-  checkLoginCooldown(req);
-
-if (cooldown.locked) {
-  return res.status(429).json({
-    success: false,
-
-    error:
-      `Too many failed login attempts. ` +
-      `Try again in ${formatCooldown(
-        cooldown.retryAfter,
-      )}.`,
-
-    retry_after: cooldown.retryAfter,
-
-    locked: true,
-  });
-}
   try {
     const [rows] = await db.execute(
       `
@@ -219,119 +63,27 @@ if (cooldown.locked) {
 
     // Username does not exist
     if (rows.length === 0) {
-  const failed =
-    registerFailedLogin(req);
-
-  // =============================
-  // ACCOUNT NOW TEMPORARILY LOCKED
-  // =============================
-
-  if (failed.locked) {
-    return res.status(429).json({
-      success: false,
-
-      error:
-        `Too many failed login attempts. ` +
-        `Try again in ${formatCooldown(
-          failed.retryAfter,
-        )}.`,
-
-      retry_after: failed.retryAfter,
-
-      locked: true,
-
-      attempts_remaining: 0,
-    });
-  }
-
-  // =============================
-  // STILL HAS ATTEMPTS
-  // =============================
-
-  return res.status(401).json({
-    success: false,
-
-    error:
-      `Invalid username or password. ` +
-      `${failed.attemptsRemaining} ` +
-      `attempt${
-        failed.attemptsRemaining === 1
-          ? ""
-          : "s"
-      } remaining.`,
-
-    attempts_remaining:
-      failed.attemptsRemaining,
-  });
-}
+      return res.status(401).json({
+        error: "Invalid username or password.",
+      });
+    }
 
     const user = rows[0];
 
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (!match) {
-  const failed =
-    registerFailedLogin(req);
+      await logActivity(
+        user.user_id,
+        "FAILED LOGIN",
+        "Authentication",
+        `${user.username} entered an incorrect password.`,
+      );
 
-  await logActivity(
-    user.user_id,
-    "FAILED LOGIN",
-    "Authentication",
-    `${user.username} entered an incorrect password.`,
-  );
-
-  // =============================
-  // FIFTH FAILURE
-  // =============================
-
-  if (failed.locked) {
-    await logActivity(
-      user.user_id,
-      "LOGIN COOLDOWN",
-      "Authentication",
-      `${user.username} reached the shared 5-attempt login limit and this client was temporarily blocked for 2 minutes.`,
-    );
-
-    return res.status(429).json({
-      success: false,
-
-      error:
-        `Too many failed login attempts. ` +
-        `Try again in ${formatCooldown(
-          failed.retryAfter,
-        )}.`,
-
-      retry_after: failed.retryAfter,
-
-      locked: true,
-
-      attempts_remaining: 0,
-    });
-  }
-
-  // =============================
-  // ATTEMPTS 1 - 4
-  // =============================
-
-  return res.status(401).json({
-    success: false,
-
-    error:
-      `Invalid username or password. ` +
-      `${failed.attemptsRemaining} ` +
-      `attempt${
-        failed.attemptsRemaining === 1
-          ? ""
-          : "s"
-      } remaining.`,
-
-    attempts_remaining:
-      failed.attemptsRemaining,
-  });
-}
-
-    // Correct password: reset previous failed attempts.
-    clearFailedLogins(req);
+      return res.status(401).json({
+        error: "Invalid username or password.",
+      });
+    }
 
     // Account inactive
     if (!user.is_active) {
@@ -353,7 +105,7 @@ if (cooldown.locked) {
     // Remove any existing OTP for this user
     await db.execute("DELETE FROM otp_codes WHERE user_id = ?", [user.user_id]);
 
-    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     await db.execute(
       `
@@ -382,182 +134,6 @@ if (cooldown.locked) {
 
     res.status(500).json({
       error: "Server Error",
-    });
-  }
-});
-
-// =======================
-// RESEND OTP
-// =======================
-//
-// This route is available only while an OTP record already
-// exists for the username. It does NOT create a new login
-// session by itself.
-//
-// Cooldown is enforced on the backend using the OTP expiry
-// timestamp, so refreshing the frontend cannot bypass it.
-//
-router.post(["/resend-otp", "/auth/resend-otp"], async (req, res) => {
-  const username =
-    typeof req.body.username === "string" ? req.body.username.trim() : "";
-
-  console.log("RESEND OTP REQUEST RECEIVED:", {
-    originalUrl: req.originalUrl,
-    baseUrl: req.baseUrl,
-    path: req.path,
-    username,
-  });
-
-  if (!username) {
-    return res.status(400).json({
-      success: false,
-      error: "Username is required.",
-    });
-  }
-
-  try {
-    // ==========================================
-    // 1. Find the account
-    // ==========================================
-
-    const [users] = await db.execute(
-      `
-      SELECT
-        user_id,
-        username,
-        email,
-        is_active
-      FROM users
-      WHERE username = ?
-      LIMIT 1
-      `,
-      [username],
-    );
-
-    if (users.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Your OTP session is unavailable. Please login again.",
-      });
-    }
-
-    const user = users[0];
-
-    if (!user.is_active) {
-      return res.status(403).json({
-        success: false,
-        error: "Your account has been deactivated.",
-      });
-    }
-
-    // ==========================================
-    // 2. Existing OTP is required
-    //
-    // This prevents /resend-otp from being used
-    // to start an OTP flow without a real login.
-    // ==========================================
-
-    const [otpRows] = await db.execute(
-      `
-      SELECT
-        expires_at
-      FROM otp_codes
-      WHERE user_id = ?
-      LIMIT 1
-      `,
-      [user.user_id],
-    );
-
-    if (otpRows.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Your OTP session has expired. Please login again.",
-      });
-    }
-
-    // ==========================================
-    // 3. Enforce 60-second resend cooldown
-    //
-    // Every OTP lives for OTP_EXPIRY_MS.
-    // Therefore:
-    //
-    // issued_at = expires_at - OTP_EXPIRY_MS
-    // ==========================================
-
-    const expiresAtMs = new Date(otpRows[0].expires_at).getTime();
-
-    if (!Number.isFinite(expiresAtMs)) {
-      return res.status(500).json({
-        success: false,
-        error: "Unable to validate the OTP cooldown.",
-      });
-    }
-
-    const issuedAtMs = expiresAtMs - OTP_EXPIRY_MS;
-    const nextAllowedAtMs = issuedAtMs + OTP_RESEND_COOLDOWN_MS;
-    const remainingMs = nextAllowedAtMs - Date.now();
-
-    if (remainingMs > 0) {
-      const retryAfter = Math.max(
-        1,
-        Math.ceil(remainingMs / 1000),
-      );
-
-      return res.status(429).json({
-        success: false,
-        error: `Please wait ${retryAfter} second${
-          retryAfter === 1 ? "" : "s"
-        } before requesting another OTP.`,
-        retry_after: retryAfter,
-      });
-    }
-
-    // ==========================================
-    // 4. Create a fresh OTP
-    // ==========================================
-
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const newExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
-
-    await db.execute(
-      `
-      UPDATE otp_codes
-      SET
-        otp_code = ?,
-        expires_at = ?
-      WHERE user_id = ?
-      `,
-      [otp, newExpiresAt, user.user_id],
-    );
-
-    // ==========================================
-    // 5. Send the new OTP
-    // ==========================================
-
-    const info = await transporter.sendMail({
-      from: '"PTC Portal" <noreply@ptc.edu.ph>',
-      to: user.email,
-      subject: "PTC Portal OTP",
-      text: `Your new OTP is ${otp}.`,
-      html: `...`,
-    });
-
-    console.log(
-      "RESEND OTP PREVIEW URL:",
-      nodemailer.getTestMessageUrl(info),
-    );
-
-    return res.json({
-      success: true,
-      message: "A new OTP has been sent successfully.",
-      cooldown_seconds: 60,
-    });
-  } catch (err) {
-    console.error("RESEND OTP ERROR:", err);
-
-    return res.status(500).json({
-      success: false,
-      error: "Unable to resend OTP.",
     });
   }
 });

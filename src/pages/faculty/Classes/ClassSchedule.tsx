@@ -10,13 +10,10 @@ import {
   Filter,
   GraduationCap,
   MapPin,
-  PencilLine,
   RefreshCw,
-  Save,
   RotateCcw,
   Search,
   UsersRound,
-  X,
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
@@ -99,24 +96,6 @@ interface FacultyClassesResponse {
   classes?: FacultyClass[];
   message?: string;
   error?: string;
-}
-
-interface ScheduleConflict {
-  offering_id: number;
-  subject_code?: string;
-  subject_name?: string;
-  section_name?: string;
-  overlapping_days?: string[];
-  schedule_days?: string | null;
-  schedule_time?: string | null;
-  conflict_types?: string[];
-}
-
-interface UpdateScheduleResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-  conflicts?: ScheduleConflict[];
 }
 
 const DAY_ALIASES: Record<string, WeekDay> = {
@@ -234,37 +213,6 @@ function getScheduleStartMinutes(value: string | null) {
   return parseClockValue(firstPart) ?? Number.MAX_SAFE_INTEGER;
 }
 
-function minutesToInputValue(totalMinutes: number | null) {
-  if (totalMinutes === null || !Number.isFinite(totalMinutes)) {
-    return "";
-  }
-
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
-
-function parseScheduleRange(value: string | null) {
-  if (!value) {
-    return { start: "", end: "" };
-  }
-
-  const parts = value
-    .trim()
-    .replace(/[–—]/g, "-")
-    .split(/\s*-\s*/);
-
-  if (parts.length !== 2) {
-    return { start: "", end: "" };
-  }
-
-  return {
-    start: minutesToInputValue(parseClockValue(parts[0])),
-    end: minutesToInputValue(parseClockValue(parts[1])),
-  };
-}
-
 function getRoomLabel(room: FacultyClass["room"]) {
   if (!room) {
     return "Not assigned";
@@ -294,16 +242,6 @@ export default function ClassSchedule() {
   const [academicYear, setAcademicYear] = useState("All");
   const [semester, setSemester] = useState("All");
   const [section, setSection] = useState("All");
-
-  const [scheduleClass, setScheduleClass] = useState<FacultyClass | null>(null);
-  const [scheduleDays, setScheduleDays] = useState<WeekDay[]>([]);
-  const [scheduleStartTime, setScheduleStartTime] = useState("");
-  const [scheduleEndTime, setScheduleEndTime] = useState("");
-  const [scheduleSaving, setScheduleSaving] = useState(false);
-  const [scheduleError, setScheduleError] = useState("");
-  const [scheduleConflicts, setScheduleConflicts] = useState<
-    ScheduleConflict[]
-  >([]);
 
   useEffect(() => {
     if (!authenticated) {
@@ -366,7 +304,9 @@ export default function ClassSchedule() {
         setFaculty(data.faculty || null);
 
         const loadedClasses = Array.isArray(data.classes)
-          ? data.classes.filter((item) => item.offering_status !== "Cancelled")
+          ? data.classes.filter(
+              (item) => item.offering_status !== "Cancelled",
+            )
           : [];
 
         setClasses(loadedClasses);
@@ -544,120 +484,6 @@ export default function ClassSchedule() {
     navigate(`/faculty/classes/students?offering_id=${item.offering_id}`);
   };
 
-  const openScheduleEditor = (item: FacultyClass) => {
-    const parsedRange = parseScheduleRange(item.schedule.time);
-
-    setScheduleClass(item);
-    setScheduleDays(parseScheduleDays(item.schedule.days));
-    setScheduleStartTime(parsedRange.start);
-    setScheduleEndTime(parsedRange.end);
-    setScheduleError("");
-    setScheduleConflicts([]);
-  };
-
-  const closeScheduleEditor = () => {
-    if (scheduleSaving) {
-      return;
-    }
-
-    setScheduleClass(null);
-    setScheduleDays([]);
-    setScheduleStartTime("");
-    setScheduleEndTime("");
-    setScheduleError("");
-    setScheduleConflicts([]);
-  };
-
-  const toggleScheduleDay = (day: WeekDay) => {
-    setScheduleDays((current) =>
-      current.includes(day)
-        ? current.filter((item) => item !== day)
-        : WEEK_DAYS.filter((item) => item === day || current.includes(item)),
-    );
-
-    setScheduleError("");
-    setScheduleConflicts([]);
-  };
-
-  const saveSchedule = async () => {
-    if (!scheduleClass) {
-      return;
-    }
-
-    if (scheduleDays.length === 0) {
-      setScheduleError("Select at least one class day.");
-      return;
-    }
-
-    if (!scheduleStartTime) {
-      setScheduleError("Select a start time.");
-      return;
-    }
-
-    if (!scheduleEndTime) {
-      setScheduleError("Select an end time.");
-      return;
-    }
-
-    if (scheduleStartTime >= scheduleEndTime) {
-      setScheduleError("End time must be later than the start time.");
-      return;
-    }
-
-    try {
-      setScheduleSaving(true);
-      setScheduleError("");
-      setScheduleConflicts([]);
-
-      const response = await authService.authFetch(
-        `${API_BASE_URL}/${scheduleClass.offering_id}/schedule`,
-        {
-          method: "PUT",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            schedule_days: scheduleDays.join(", "),
-            schedule_start_time: `${scheduleStartTime}:00`,
-            schedule_end_time: `${scheduleEndTime}:00`,
-          }),
-        },
-      );
-
-      const data = await readJsonResponse<UpdateScheduleResponse>(response);
-
-      if (response.status === 401) {
-        authService.logout();
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      if (response.status === 409 && Array.isArray(data.conflicts)) {
-        setScheduleConflicts(data.conflicts);
-      }
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || data.error || "Unable to save the class schedule.",
-        );
-      }
-
-      closeScheduleEditor();
-      setRefreshKey((current) => current + 1);
-    } catch (requestError) {
-      console.error("SAVE FACULTY CLASS SCHEDULE ERROR:", requestError);
-
-      setScheduleError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to save the class schedule.",
-      );
-    } finally {
-      setScheduleSaving(false);
-    }
-  };
-
   if (!authenticated || userRole !== "Faculty") {
     return null;
   }
@@ -677,8 +503,8 @@ export default function ClassSchedule() {
             <h1>Class Schedule</h1>
 
             <p>
-              Review your Registrar-assigned classes and set or update your own
-              teaching day and time.
+              Review your Registrar-assigned teaching schedule by day, time,
+              section, room, and academic period.
             </p>
           </div>
 
@@ -688,7 +514,10 @@ export default function ClassSchedule() {
             onClick={() => setRefreshKey((current) => current + 1)}
             disabled={loading}
           >
-            <RefreshCw size={16} className={loading ? "is-spinning" : ""} />
+            <RefreshCw
+              size={16}
+              className={loading ? "is-spinning" : ""}
+            />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </section>
@@ -926,8 +755,8 @@ export default function ClassSchedule() {
                   <span>Weekly Timetable</span>
                   <h2>Your Teaching Schedule</h2>
                   <p>
-                    Classes are grouped by your saved teaching days and sorted
-                    by starting time.
+                    Classes are grouped by their Registrar-assigned schedule
+                    days and sorted by starting time.
                   </p>
                 </div>
 
@@ -1014,14 +843,6 @@ export default function ClassSchedule() {
 
                                 <button
                                   type="button"
-                                  onClick={() => openScheduleEditor(item)}
-                                >
-                                  <PencilLine size={14} />
-                                  Edit Schedule
-                                </button>
-
-                                <button
-                                  type="button"
                                   onClick={() => openClass(item)}
                                 >
                                   View Class
@@ -1045,8 +866,8 @@ export default function ClassSchedule() {
                     <span>Needs Scheduling</span>
                     <h2>Unscheduled Classes</h2>
                     <p>
-                      These Registrar-assigned classes are waiting for you to
-                      enter a teaching day and time.
+                      These assigned classes are missing a complete schedule day
+                      or time.
                     </p>
                   </div>
 
@@ -1071,191 +892,19 @@ export default function ClassSchedule() {
                         </small>
                       </div>
 
-                      <div className="faculty-schedule-page__unscheduled-actions">
-                        <button
-                          type="button"
-                          onClick={() => openScheduleEditor(item)}
-                        >
-                          <CalendarDays size={14} />
-                          Set Schedule
-                        </button>
-
-                        <button type="button" onClick={() => openClass(item)}>
-                          View Class
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openClass(item)}
+                      >
+                        View Class
+                        <ChevronRight size={14} />
+                      </button>
                     </article>
                   ))}
                 </div>
               </section>
             )}
           </>
-        )}
-
-        {scheduleClass && (
-          <div
-            className="faculty-schedule-modal-backdrop"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                closeScheduleEditor();
-              }
-            }}
-          >
-            <section
-              className="faculty-schedule-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="faculty-schedule-modal-title"
-            >
-              <header className="faculty-schedule-modal__header">
-                <div>
-                  <span>Teaching Schedule</span>
-                  <h2 id="faculty-schedule-modal-title">
-                    {scheduleClass.schedule.days && scheduleClass.schedule.time
-                      ? "Edit Class Schedule"
-                      : "Set Class Schedule"}
-                  </h2>
-                  <p>
-                    {scheduleClass.subject.subject_code} ·{" "}
-                    {scheduleClass.section.section_name}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  aria-label="Close schedule editor"
-                  disabled={scheduleSaving}
-                  onClick={closeScheduleEditor}
-                >
-                  <X size={18} />
-                </button>
-              </header>
-
-              <div className="faculty-schedule-modal__body">
-                <div className="faculty-schedule-modal__class">
-                  <strong>{scheduleClass.subject.subject_name}</strong>
-                  <span>
-                    {scheduleClass.section.course.course_code} ·{" "}
-                    {scheduleClass.academic_period.academic_year} ·{" "}
-                    {scheduleClass.academic_period.semester_name}
-                  </span>
-                </div>
-
-                {scheduleError && (
-                  <div className="faculty-schedule-modal__error" role="alert">
-                    <AlertCircle size={17} />
-                    <span>{scheduleError}</span>
-                  </div>
-                )}
-
-                {scheduleConflicts.length > 0 && (
-                  <div className="faculty-schedule-modal__conflicts">
-                    <strong>Conflicting classes</strong>
-
-                    {scheduleConflicts.map((conflict) => (
-                      <div key={conflict.offering_id}>
-                        <span>
-                          {conflict.subject_code || "Class"}
-                          {conflict.section_name
-                            ? ` · ${conflict.section_name}`
-                            : ""}
-                        </span>
-                        <small>
-                          {[
-                            conflict.schedule_days,
-                            conflict.schedule_time,
-                            conflict.conflict_types?.join(" / "),
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </small>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <fieldset className="faculty-schedule-modal__days">
-                  <legend>Class Day</legend>
-
-                  <div>
-                    {WEEK_DAYS.map((day) => (
-                      <label key={day}>
-                        <input
-                          type="checkbox"
-                          checked={scheduleDays.includes(day)}
-                          disabled={scheduleSaving}
-                          onChange={() => toggleScheduleDay(day)}
-                        />
-                        <span>{day}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className="faculty-schedule-modal__time-grid">
-                  <label>
-                    <span>Start Time</span>
-                    <input
-                      type="time"
-                      value={scheduleStartTime}
-                      disabled={scheduleSaving}
-                      onChange={(event) => {
-                        setScheduleStartTime(event.target.value);
-                        setScheduleError("");
-                        setScheduleConflicts([]);
-                      }}
-                    />
-                  </label>
-
-                  <label>
-                    <span>End Time</span>
-                    <input
-                      type="time"
-                      value={scheduleEndTime}
-                      disabled={scheduleSaving}
-                      onChange={(event) => {
-                        setScheduleEndTime(event.target.value);
-                        setScheduleError("");
-                        setScheduleConflicts([]);
-                      }}
-                    />
-                  </label>
-                </div>
-
-                <p className="faculty-schedule-modal__note">
-                  The system checks instructor and section conflicts before
-                  saving. If the schedule passes validation, the offering
-                  becomes Open.
-                </p>
-              </div>
-
-              <footer className="faculty-schedule-modal__footer">
-                <button
-                  type="button"
-                  disabled={scheduleSaving}
-                  onClick={closeScheduleEditor}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  disabled={
-                    scheduleSaving ||
-                    scheduleDays.length === 0 ||
-                    !scheduleStartTime ||
-                    !scheduleEndTime
-                  }
-                  onClick={() => void saveSchedule()}
-                >
-                  <Save size={15} />
-                  {scheduleSaving ? "Saving..." : "Save Schedule"}
-                </button>
-              </footer>
-            </section>
-          </div>
         )}
       </main>
     </DashboardLayout>
