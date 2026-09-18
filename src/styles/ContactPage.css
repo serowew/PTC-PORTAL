@@ -12,18 +12,28 @@
   --contact-text-500: #76827b;
   --contact-border: #dfe8e2;
   --contact-surface: #ffffff;
-  --contact-bg: #f5f8f6;
+  --contact-bg: #020805;
 
   min-height: calc(100vh - 64px);
   padding: 42px 40px 58px;
   color: var(--contact-text-950);
   background:
     radial-gradient(
-      circle at 92% 8%,
-      rgba(21, 148, 82, 0.08),
-      transparent 26%
+      circle at 12% 14%,
+      rgba(20, 255, 120, 0.2) 0%,
+      rgba(13, 125, 66, 0.1) 24%,
+      transparent 46%
     ),
-    var(--contact-bg);
+    radial-gradient(
+      circle at 88% 74%,
+      rgba(0, 201, 92, 0.18) 0%,
+      rgba(5, 91, 45, 0.08) 27%,
+      transparent 50%
+    ),
+    linear-gradient(135deg, #010302 0%, #06170d 45%, #020805 72%, #000000 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
   font-family:
     Inter,
     "Helvetica Neue",
@@ -231,7 +241,7 @@
 .ptc-contact-section-kicker {
   display: inline-block;
   margin-bottom: 7px;
-  color: var(--contact-green-700);
+  color: #42f58d;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.085em;
@@ -241,7 +251,7 @@
 .ptc-contact-section-heading h2,
 .ptc-contact-support__intro h2 {
   margin: 0;
-  color: var(--contact-text-950);
+  color: #f4fff8;
   font-size: clamp(27px, 3vw, 38px);
   font-weight: 770;
   line-height: 1.14;
@@ -251,7 +261,7 @@
 .ptc-contact-section-heading p,
 .ptc-contact-support__intro > p {
   margin: 10px 0 0;
-  color: var(--contact-text-600);
+  color: rgba(226, 244, 233, 0.76);
   font-size: 14px;
   line-height: 1.65;
 }

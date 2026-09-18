@@ -9,7 +9,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import classroomImage from "../../assets/classrooms.webp";
+import classroomImage from "../../assets/uniforms.png";
 import "../../styles/ProgramsPage.css";
 
 const programs = [

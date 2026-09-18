@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { authService } from "../../../../services/auth.service";
 
 import type { OfferingTableSubject } from "../components/OfferingTable";
+import ConflictAlert, {
+  type OfferingConflict,
+} from "../components/ConflictAlert";
 
 // =====================================================
 // API
@@ -17,8 +20,6 @@ const API_BASE_URL = "http://localhost:3000/api/registrar/offerings";
 interface FacultyOption {
   faculty_id: number;
 
-  user_id?: number;
-
   employee_number?: string;
 
   faculty_name?: string;
@@ -28,22 +29,16 @@ interface FacultyOption {
   middle_name?: string | null;
 
   last_name?: string;
+}
 
-  department_id?: number | null;
+interface RoomOption {
+  room_id: number;
 
-  department_name?: string;
+  room_name: string;
 
-  employment_status?: string;
+  room_code?: string;
 
-  username?: string;
-
-  role_id?: number;
-
-  role_name?: "Faculty" | "Program Head" | string;
-
-  is_active?: boolean;
-
-  is_verified?: boolean;
+  capacity?: number | null;
 }
 
 // =====================================================
@@ -57,10 +52,20 @@ interface CreateOfferingResponse {
 
   error?: string;
 
+  conflict?: boolean;
+
+  conflict_count?: number;
+
+  conflict_types?: string[];
+
+  conflicts?: OfferingConflict[];
+
+  configuration_complete?: boolean;
+
+  ready_for_enrollment?: boolean;
+
   offering?: {
     offering_id?: number;
-
-    section_subject_id?: number;
 
     status?: "Open" | "Closed" | "Cancelled";
 
@@ -68,15 +73,7 @@ interface CreateOfferingResponse {
 
     ready_for_enrollment?: boolean;
 
-    schedule_status?: string;
-
-    faculty?: {
-      faculty_id?: number;
-
-      faculty_name?: string;
-
-      role_name?: string;
-    } | null;
+    [key: string]: unknown;
   } | null;
 }
 
@@ -90,6 +87,8 @@ interface AddOfferingModalProps {
   subject: OfferingTableSubject | null;
 
   faculty: FacultyOption[];
+
+  rooms: RoomOption[];
 
   onClose: () => void;
 
@@ -120,10 +119,10 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 }
 
 // =====================================================
-// INSTRUCTOR NAME
+// FACULTY NAME
 // =====================================================
 
-function getInstructorName(item: FacultyOption) {
+function getFacultyName(item: FacultyOption) {
   if (item.faculty_name) {
     return item.faculty_name;
   }
@@ -136,23 +135,7 @@ function getInstructorName(item: FacultyOption) {
     return fullName;
   }
 
-  return `Instructor #${item.faculty_id}`;
-}
-
-// =====================================================
-// INSTRUCTOR LABEL
-// =====================================================
-
-function getInstructorLabel(item: FacultyOption) {
-  const name = getInstructorName(item);
-
-  const role = item.role_name || "Faculty";
-
-  const employeeNumber = item.employee_number
-    ? ` (${item.employee_number})`
-    : "";
-
-  return `${name} — ${role}${employeeNumber}`;
+  return `Faculty #${item.faculty_id}`;
 }
 
 // =====================================================
@@ -166,6 +149,8 @@ export default function AddOfferingModal({
 
   faculty,
 
+  rooms,
+
   onClose,
 
   onSuccess,
@@ -173,23 +158,31 @@ export default function AddOfferingModal({
   onUnauthorized,
 }: AddOfferingModalProps) {
   // =====================================================
-  // FORM
+  // FORM STATE
   // =====================================================
 
   const [facultyId, setFacultyId] = useState("");
 
+  const [roomId, setRoomId] = useState("");
+
+  const [scheduleDays, setScheduleDays] = useState("");
+
+  const [scheduleTime, setScheduleTime] = useState("");
+
+  const [maxStudents, setMaxStudents] = useState("");
+
   // =====================================================
-  // UI
+  // UI STATE
   // =====================================================
 
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
 
-  const [successMessage, setSuccessMessage] = useState("");
+  const [conflicts, setConflicts] = useState<OfferingConflict[]>([]);
 
   // =====================================================
-  // RESET
+  // RESET FORM
   // =====================================================
 
   useEffect(() => {
@@ -199,11 +192,19 @@ export default function AddOfferingModal({
 
     setFacultyId("");
 
+    setRoomId("");
+
+    setScheduleDays("");
+
+    setScheduleTime("");
+
+    setMaxStudents(String(subject.section_subject?.max_students ?? 50));
+
     setLoading(false);
 
     setError("");
 
-    setSuccessMessage("");
+    setConflicts([]);
   }, [open, subject]);
 
   // =====================================================
@@ -216,6 +217,8 @@ export default function AddOfferingModal({
 
   const sectionSubjectStatus = sectionSubject?.status || null;
 
+  const sectionSubjectOpen = sectionSubjectStatus === "Open";
+
   const sectionSubjectCancelled = sectionSubjectStatus === "Cancelled";
 
   const subjectCode = subject?.subject.subject_code || "";
@@ -225,11 +228,93 @@ export default function AddOfferingModal({
   const units = subject?.subject.units || 0;
 
   // =====================================================
-  // SELECTED INSTRUCTOR
+  // SELECTED ROOM
   // =====================================================
 
-  const selectedInstructor =
-    faculty.find((item) => String(item.faculty_id) === facultyId) || null;
+  const selectedRoom = useMemo(() => {
+    if (!roomId) {
+      return null;
+    }
+
+    return rooms.find((room) => String(room.room_id) === roomId) || null;
+  }, [rooms, roomId]);
+
+  // =====================================================
+  // NUMERIC CAPACITY
+  // =====================================================
+
+  const numericCapacity = Number(maxStudents);
+
+  const validCapacity =
+    Number.isInteger(numericCapacity) && numericCapacity > 0;
+
+  // =====================================================
+  // BACKEND AUTO-OPEN PREVIEW
+  //
+  // POST /subject-offerings does NOT accept a client-
+  // controlled status.
+  //
+  // The backend automatically creates:
+  //
+  // OPEN when:
+  // ✓ section_subject is Open
+  // ✓ faculty is assigned
+  // ✓ schedule days are assigned
+  // ✓ schedule time is assigned
+  // ✓ capacity > 0
+  //
+  // CLOSED otherwise.
+  //
+  // Room remains optional.
+  // =====================================================
+
+  const willOpenAutomatically =
+    sectionSubjectOpen &&
+    Boolean(facultyId) &&
+    Boolean(scheduleDays.trim()) &&
+    Boolean(scheduleTime.trim()) &&
+    validCapacity;
+
+  // =====================================================
+  // ROOM CAPACITY STATE
+  // =====================================================
+
+  const roomCapacityExceeded = Boolean(
+    selectedRoom?.capacity &&
+    Number(selectedRoom.capacity) > 0 &&
+    validCapacity &&
+    numericCapacity > Number(selectedRoom.capacity),
+  );
+
+  // =====================================================
+  // VALIDATE CAPACITY
+  // =====================================================
+
+  const validateCapacity = () => {
+    if (!validCapacity) {
+      throw new Error("Capacity must be a whole number greater than 0.");
+    }
+
+    if (
+      selectedRoom?.capacity &&
+      Number(selectedRoom.capacity) > 0 &&
+      numericCapacity > Number(selectedRoom.capacity)
+    ) {
+      throw new Error(
+        `Capacity cannot exceed the selected room capacity of ${selectedRoom.capacity}.`,
+      );
+    }
+  };
+
+  // =====================================================
+  // CLEAR SERVER FEEDBACK
+  // =====================================================
+
+  const clearFeedback = () => {
+    setError("");
+
+    setConflicts([]);
+  };
 
   // =====================================================
   // CLOSE
@@ -240,9 +325,7 @@ export default function AddOfferingModal({
       return;
     }
 
-    setError("");
-
-    setSuccessMessage("");
+    clearFeedback();
 
     onClose();
   };
@@ -252,21 +335,17 @@ export default function AddOfferingModal({
   // =====================================================
 
   const createOffering = async () => {
-    // ===============================================
-    // SECTION SUBJECT
-    // ===============================================
-
     if (!subject || !sectionSubjectId) {
+      setConflicts([]);
+
       setError("This subject does not have a valid section subject.");
 
       return;
     }
 
-    // ===============================================
-    // CANCELLED
-    // ===============================================
-
     if (sectionSubjectCancelled) {
+      setConflicts([]);
+
       setError(
         "A class offering cannot be created for a cancelled section subject.",
       );
@@ -274,24 +353,10 @@ export default function AddOfferingModal({
       return;
     }
 
-    // ===============================================
-    // ALREADY HAS OFFERING
-    // ===============================================
-
     if (subject.has_offering || subject.offering) {
+      setConflicts([]);
+
       setError("This section subject already has a class offering.");
-
-      return;
-    }
-
-    // ===============================================
-    // INSTRUCTOR REQUIRED
-    // ===============================================
-
-    if (!facultyId) {
-      setError(
-        "Please select a Faculty or Program Head to teach this subject.",
-      );
 
       return;
     }
@@ -299,33 +364,77 @@ export default function AddOfferingModal({
     try {
       setLoading(true);
 
-      setError("");
+      clearFeedback();
 
-      setSuccessMessage("");
+      // =================================================
+      // CAPACITY VALIDATION
+      // =================================================
 
-      // =============================================
+      validateCapacity();
+
+      // =================================================
       // REQUEST BODY
       //
-      // Registrar sends ONLY:
+      // IMPORTANT:
       //
-      // section_subject_id
-      // faculty_id
+      // Do NOT send status.
       //
-      // No room.
-      // No schedule.
-      // No capacity.
-      // No status.
-      // =============================================
+      // Backend determines Open / Closed automatically.
+      // =================================================
 
-      const payload = {
+      const payload: {
+        section_subject_id: number;
+
+        faculty_id?: number;
+
+        room_id?: number;
+
+        schedule_days?: string;
+
+        schedule_time?: string;
+
+        max_students: number;
+      } = {
         section_subject_id: sectionSubjectId,
 
-        faculty_id: Number(facultyId),
+        max_students: numericCapacity,
       };
 
-      // =============================================
+      // =================================================
+      // OPTIONAL FACULTY
+      // =================================================
+
+      if (facultyId) {
+        payload.faculty_id = Number(facultyId);
+      }
+
+      // =================================================
+      // OPTIONAL ROOM
+      // =================================================
+
+      if (roomId) {
+        payload.room_id = Number(roomId);
+      }
+
+      // =================================================
+      // OPTIONAL SCHEDULE DAYS
+      // =================================================
+
+      if (scheduleDays.trim()) {
+        payload.schedule_days = scheduleDays.trim();
+      }
+
+      // =================================================
+      // OPTIONAL SCHEDULE TIME
+      // =================================================
+
+      if (scheduleTime.trim()) {
+        payload.schedule_time = scheduleTime.trim();
+      }
+
+      // =================================================
       // REQUEST
-      // =============================================
+      // =================================================
 
       const response = await authService.authFetch(
         `${API_BASE_URL}/subject-offerings`,
@@ -344,9 +453,9 @@ export default function AddOfferingModal({
 
       const data = await readJsonResponse<CreateOfferingResponse>(response);
 
-      // =============================================
+      // =================================================
       // UNAUTHORIZED
-      // =============================================
+      // =================================================
 
       if (response.status === 401) {
         onUnauthorized();
@@ -354,9 +463,9 @@ export default function AddOfferingModal({
         return;
       }
 
-      // =============================================
+      // =================================================
       // FORBIDDEN
-      // =============================================
+      // =================================================
 
       if (response.status === 403) {
         throw new Error(
@@ -366,33 +475,49 @@ export default function AddOfferingModal({
         );
       }
 
-      // =============================================
+      // =================================================
       // NOT FOUND
-      // =============================================
+      // =================================================
 
       if (response.status === 404) {
         throw new Error(
           data.message ||
             data.error ||
-            "The section subject or instructor could not be found.",
+            "The section subject, faculty, or room could not be found.",
         );
       }
 
-      // =============================================
-      // BUSINESS RULE CONFLICT
-      // =============================================
+      // =================================================
+      // CONFLICT
+      //
+      // Backend remains authoritative for:
+      // - duplicate offering
+      // - cancelled section subject
+      // - room capacity
+      // - schedule conflicts
+      //
+      // Structured schedule conflicts are rendered using
+      // the same ConflictAlert used by EditOfferingModal.
+      // Other 409 business-rule errors remain plain errors.
+      // =================================================
 
       if (response.status === 409) {
+        const backendConflicts = Array.isArray(data.conflicts)
+          ? data.conflicts
+          : [];
+
+        setConflicts(backendConflicts);
+
         throw new Error(
           data.message ||
             data.error ||
-            "The class offering could not be created.",
+            "The class offering could not be created because of a conflict.",
         );
       }
 
-      // =============================================
-      // GENERAL ERROR
-      // =============================================
+      // =================================================
+      // VALIDATION / API ERROR
+      // =================================================
 
       if (!response.ok || !data.success) {
         throw new Error(
@@ -400,11 +525,9 @@ export default function AddOfferingModal({
         );
       }
 
-      // =============================================
+      // =================================================
       // SUCCESS
-      // =============================================
-
-      setSuccessMessage(data.message || "Instructor assigned successfully.");
+      // =================================================
 
       onSuccess();
 
@@ -450,17 +573,15 @@ export default function AddOfferingModal({
         aria-modal="true"
         aria-labelledby="add-offering-title"
       >
-        {/* ============================================= */}
+        {/* ================================================= */}
         {/* HEADER */}
-        {/* ============================================= */}
+        {/* ================================================= */}
 
         <div className="class-offering-modal-header">
           <div>
-            <h2 id="add-offering-title">Assign Instructor</h2>
+            <h2 id="add-offering-title">Create Class Offering</h2>
 
-            <p>
-              Assign a Faculty member or Program Head to teach this subject.
-            </p>
+            <p>Configure the class implementation for this section subject.</p>
           </div>
 
           <button
@@ -473,9 +594,9 @@ export default function AddOfferingModal({
           </button>
         </div>
 
-        {/* ============================================= */}
+        {/* ================================================= */}
         {/* SUBJECT */}
-        {/* ============================================= */}
+        {/* ================================================= */}
 
         <div className="class-offering-modal-subject">
           <div>
@@ -493,47 +614,40 @@ export default function AddOfferingModal({
           </small>
         </div>
 
-        {/* ============================================= */}
+        {/* ================================================= */}
         {/* ERROR */}
-        {/* ============================================= */}
+        {/* ================================================= */}
 
-        {error && <div className="class-offering-error">{error}</div>}
-
-        {/* ============================================= */}
-        {/* SUCCESS */}
-        {/* ============================================= */}
-
-        {successMessage && (
-          <div className="class-offering-success">{successMessage}</div>
+        {error && conflicts.length === 0 && (
+          <div className="class-offering-error">{error}</div>
         )}
 
-        {/* ============================================= */}
-        {/* BODY */}
-        {/* ============================================= */}
+        {/* ================================================= */}
+        {/* SCHEDULE CONFLICT DISPLAY */}
+        {/* ================================================= */}
+
+        <ConflictAlert conflicts={conflicts} message={error} />
+
+        {/* ================================================= */}
+        {/* FORM */}
+        {/* ================================================= */}
 
         <div className="class-offering-modal-body">
-          {/* =========================================== */}
-          {/* SECTION SUBJECT */}
-          {/* =========================================== */}
+          {/* =============================================== */}
+          {/* SECTION SUBJECT STATUS */}
+          {/* =============================================== */}
 
           <div className="class-offering-open-requirements">
-            <h3>Subject Offering</h3>
+            <h3>Section Subject</h3>
 
             <ul>
-              <li>
-                Section Subject Status: {sectionSubjectStatus || "Unavailable"}
-              </li>
-
-              <li>Initial Offering Status: Closed</li>
-
-              <li>Schedule: Pending Instructor Schedule</li>
+              <li>Status: {sectionSubjectStatus || "Unavailable"}</li>
             </ul>
 
             {sectionSubjectStatus === "Closed" && (
               <small>
-                The instructor can be assigned, but the offering remains Closed
-                until the section subject is Open and the assigned instructor
-                sets the schedule.
+                The offering can still be created, but it will remain Closed
+                until the section subject is opened.
               </small>
             )}
 
@@ -544,13 +658,13 @@ export default function AddOfferingModal({
             )}
           </div>
 
-          {/* =========================================== */}
-          {/* INSTRUCTOR */}
-          {/* =========================================== */}
-
           <div className="class-offering-form-grid">
+            {/* ============================================= */}
+            {/* FACULTY */}
+            {/* ============================================= */}
+
             <div className="class-offering-field">
-              <label htmlFor="add-offering-faculty">Assigned Instructor</label>
+              <label htmlFor="add-offering-faculty">Faculty</label>
 
               <select
                 id="add-offering-faculty"
@@ -559,81 +673,182 @@ export default function AddOfferingModal({
                 onChange={(event) => {
                   setFacultyId(event.target.value);
 
-                  setError("");
-
-                  setSuccessMessage("");
+                  clearFeedback();
                 }}
               >
-                <option value="">Select Faculty or Program Head</option>
+                <option value="">Not Assigned</option>
 
                 {faculty.map((item) => (
                   <option key={item.faculty_id} value={String(item.faculty_id)}>
-                    {getInstructorLabel(item)}
+                    {getFacultyName(item)}
+                  </option>
+                ))}
+              </select>
+
+              <small>Required for the offering to open automatically.</small>
+            </div>
+
+            {/* ============================================= */}
+            {/* ROOM */}
+            {/* ============================================= */}
+
+            <div className="class-offering-field">
+              <label htmlFor="add-offering-room">Room</label>
+
+              <select
+                id="add-offering-room"
+                value={roomId}
+                disabled={loading || sectionSubjectCancelled}
+                onChange={(event) => {
+                  setRoomId(event.target.value);
+
+                  clearFeedback();
+                }}
+              >
+                <option value="">No Room Assigned</option>
+
+                {rooms.map((room) => (
+                  <option key={room.room_id} value={String(room.room_id)}>
+                    {room.room_code ? `${room.room_code} — ` : ""}
+                    {room.room_name}
+                    {room.capacity ? ` (${room.capacity})` : ""}
                   </option>
                 ))}
               </select>
 
               <small>
-                Required. Both Faculty and Program Head accounts may be assigned
-                to teach.
+                Optional. Room capacity is validated when a room is assigned.
               </small>
+            </div>
+
+            {/* ============================================= */}
+            {/* SCHEDULE DAYS */}
+            {/* ============================================= */}
+
+            <div className="class-offering-field">
+              <label htmlFor="add-offering-days">Schedule Days</label>
+
+              <input
+                id="add-offering-days"
+                type="text"
+                value={scheduleDays}
+                disabled={loading || sectionSubjectCancelled}
+                placeholder="Example: Monday, Wednesday"
+                onChange={(event) => {
+                  setScheduleDays(event.target.value);
+
+                  clearFeedback();
+                }}
+              />
+
+              <small>Required for the offering to open automatically.</small>
+            </div>
+
+            {/* ============================================= */}
+            {/* SCHEDULE TIME */}
+            {/* ============================================= */}
+
+            <div className="class-offering-field">
+              <label htmlFor="add-offering-time">Schedule Time</label>
+
+              <input
+                id="add-offering-time"
+                type="text"
+                value={scheduleTime}
+                disabled={loading || sectionSubjectCancelled}
+                placeholder="Example: 8:00 AM - 10:00 AM"
+                onChange={(event) => {
+                  setScheduleTime(event.target.value);
+
+                  clearFeedback();
+                }}
+              />
+
+              <small>Required for the offering to open automatically.</small>
+            </div>
+
+            {/* ============================================= */}
+            {/* CAPACITY */}
+            {/* ============================================= */}
+
+            <div className="class-offering-field">
+              <label htmlFor="add-offering-capacity">Maximum Students</label>
+
+              <input
+                id="add-offering-capacity"
+                type="number"
+                min={1}
+                value={maxStudents}
+                disabled={loading || sectionSubjectCancelled}
+                onChange={(event) => {
+                  setMaxStudents(event.target.value);
+
+                  clearFeedback();
+                }}
+              />
+
+              {roomCapacityExceeded ? (
+                <small>
+                  Capacity exceeds the selected room limit of{" "}
+                  {selectedRoom?.capacity}.
+                </small>
+              ) : selectedRoom?.capacity ? (
+                <small>Selected room capacity: {selectedRoom.capacity}</small>
+              ) : (
+                <small>
+                  Maximum number of students allowed in this offering.
+                </small>
+              )}
             </div>
           </div>
 
-          {/* =========================================== */}
-          {/* SELECTED INSTRUCTOR */}
-          {/* =========================================== */}
-
-          {selectedInstructor && (
-            <div className="class-offering-open-requirements">
-              <h3>Instructor Assignment</h3>
-
-              <ul>
-                <li>Name: {getInstructorName(selectedInstructor)}</li>
-
-                <li>Role: {selectedInstructor.role_name || "Faculty"}</li>
-
-                {selectedInstructor.employee_number && (
-                  <li>Employee No.: {selectedInstructor.employee_number}</li>
-                )}
-
-                {selectedInstructor.department_name && (
-                  <li>Department: {selectedInstructor.department_name}</li>
-                )}
-              </ul>
-            </div>
-          )}
-
-          {/* =========================================== */}
-          {/* WORKFLOW INFORMATION */}
-          {/* =========================================== */}
+          {/* ================================================= */}
+          {/* AUTOMATIC RESULT */}
+          {/* ================================================= */}
 
           <div className="class-offering-open-requirements">
-            <h3>What Happens Next?</h3>
+            <h3>Automatic Offering Result</h3>
 
             <ul>
-              <li>Registrar assigns the teaching user.</li>
+              <li>
+                Section Subject: {sectionSubjectOpen ? "Ready" : "Not Open"}
+              </li>
 
-              <li>The offering is created as Closed.</li>
-
-              <li>Room and schedule are not assigned by the Registrar.</li>
+              <li>Faculty: {facultyId ? "Ready" : "Missing"}</li>
 
               <li>
-                The assigned Faculty or Program Head enters their own class
-                schedule.
+                Schedule Days: {scheduleDays.trim() ? "Ready" : "Missing"}
               </li>
 
               <li>
-                After schedule validation, the offering becomes Open and ready
-                for enrollment.
+                Schedule Time: {scheduleTime.trim() ? "Ready" : "Missing"}
               </li>
+
+              <li>Capacity: {validCapacity ? "Ready" : "Invalid"}</li>
+
+              <li>Room: Optional</li>
             </ul>
+
+            <p>
+              <strong>
+                {willOpenAutomatically
+                  ? "Result: OPEN / READY"
+                  : "Result: CLOSED / NOT READY"}
+              </strong>
+            </p>
+
+            <small>
+              The backend chooses the initial offering status automatically. A
+              fully configured offering under an Open section subject becomes
+              Open; otherwise it is created Closed so the Registrar can finish
+              it later.
+            </small>
           </div>
         </div>
 
-        {/* ============================================= */}
+        {/* ================================================= */}
         {/* FOOTER */}
-        {/* ============================================= */}
+        {/* ================================================= */}
 
         <div className="class-offering-modal-footer">
           <button type="button" disabled={loading} onClick={handleClose}>
@@ -646,12 +861,17 @@ export default function AddOfferingModal({
               loading ||
               sectionSubjectCancelled ||
               !sectionSubjectId ||
-              !facultyId ||
+              !validCapacity ||
+              roomCapacityExceeded ||
               subject.has_offering
             }
             onClick={createOffering}
           >
-            {loading ? "Assigning..." : "Assign Instructor"}
+            {loading
+              ? "Creating..."
+              : willOpenAutomatically
+                ? "Create Offering — Opens Automatically"
+                : "Create Offering — Starts Closed"}
           </button>
         </div>
       </div>

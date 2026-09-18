@@ -1,4 +1,5 @@
 /* ── Root ─────────────────────────────────────────── */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,8 +7,10 @@
 }
 
 .root {
-  font-family: "Georgia", "Times New Roman", serif;
+  width: 100%;
   height: calc(100vh - 64px);
+  min-height: calc(100vh - 64px);
+  font-family: "Georgia", "Times New Roman", serif;
   background: #0a0404;
   display: flex;
   flex-direction: column;
@@ -15,6 +18,7 @@
 }
 
 /* ── Header ──────────────────────────────────────── */
+
 .header {
   height: 64px;
   min-height: 64px;
@@ -134,28 +138,32 @@
 }
 
 /* ── Main Layout ─────────────────────────────────── */
+
 .main {
+  width: 100%;
   height: 100%;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   overflow: hidden;
 }
 
-/* ── Left Panel ──────────────────────────────────── */
+/* ── Full-Screen Panel ───────────────────────────── */
+
 .leftPanel {
+  width: 100%;
+  height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 64px 56px;
+  padding: 64px 8%;
   background:
     linear-gradient(
-      135deg,
-      rgba(10, 9, 22, 0.9),
-      rgba(29, 182, 50, 0.9)
+      90deg,
+      rgba(10, 9, 22, 0.95) 0%,
+      rgba(10, 9, 22, 0.75) 45%,
+      rgba(29, 182, 49, 0.2) 100%
     ),
-    url("../assets/BG.png") no-repeat center/cover;
+    url("../assets/ptc home.png") no-repeat center center / cover;
 }
 
 .greeting {
@@ -168,7 +176,7 @@
 }
 
 .headline {
-  font-size: clamp(38px, 4vw, 62px);
+  font-size: clamp(44px, 6vw, 84px);
   color: #fff;
   line-height: 1.08;
   letter-spacing: -1.5px;
@@ -182,158 +190,37 @@
 
 .tagline {
   font-size: 17px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
   line-height: 1.75;
   font-family: "Helvetica Neue", sans-serif;
-  max-width: 380px;
-}
-
-/* ── Right Panel — Automatic Image Slideshow ─────── */
-
-.rightPanel {
-  height: 100%;
-  min-height: 0;
-  position: relative;
-  overflow: hidden;
-  background: #000;
-}
-
-.gallery {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-.galleryItem {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-
-  opacity: 0;
-  visibility: hidden;
-
-  transition:
-    opacity 1s ease,
-    visibility 1s ease;
-}
-
-.galleryItem.active {
-  opacity: 1;
-  visibility: visible;
-  z-index: 2;
-}
-
-.galleryItem img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-
-  transform: scale(1);
-
-  transition: transform 5s ease;
-}
-
-.galleryItem.active img {
-  transform: scale(1.12);
-}
-
-/* ── Caption ─────────────────────────────────────── */
-
-.galleryCaption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  padding: 80px 32px 30px;
-
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.75),
-    rgba(0, 0, 0, 0)
-  );
-
-  color: #fff;
-
-  font-size: 16px;
-  font-family: "Helvetica Neue", sans-serif;
-  letter-spacing: 0.5px;
-
-  opacity: 1;
-
-  z-index: 3;
-}
-
-/* ── Image Indicators ────────────────────────────── */
-
-.galleryIndicators {
-  position: absolute;
-
-  bottom: 25px;
-  right: 30px;
-
-  display: flex;
-  gap: 8px;
-
-  z-index: 10;
-}
-
-.indicator {
-  width: 8px;
-  height: 8px;
-
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.45);
-
-  cursor: pointer;
-
-  transition:
-    width 0.3s ease,
-    background 0.3s ease;
-}
-
-.indicator.active {
-  width: 28px;
-  border-radius: 10px;
-  background: #ffffff;
-}
-
-.indicator:hover {
-  background: #e8c06a;
+  max-width: 520px;
 }
 
 /* ── Responsive ──────────────────────────────────── */
 
 @media (max-width: 768px) {
   .root {
-    height: auto;
+    height: calc(100vh - 64px);
     min-height: calc(100vh - 64px);
-    overflow: visible;
   }
 
   .main {
-    height: auto;
-    min-height: calc(100vh - 64px);
-    grid-template-columns: 1fr;
-    overflow: visible;
-  }
-
-  .rightPanel {
-    height: 60vh;
-    min-height: 400px;
-    position: relative;
+    height: 100%;
   }
 
   .leftPanel {
+    width: 100%;
+    height: 100%;
     padding: 48px 28px;
-    min-height: 50vh;
+    background-position: center;
+  }
+
+  .headline {
+    font-size: clamp(40px, 12vw, 62px);
+  }
+
+  .tagline {
+    font-size: 16px;
   }
 
   .nav {

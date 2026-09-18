@@ -16,20 +16,6 @@ export default function OtpForm() {
 
   const [loading, setLoading] = useState(false);
 
-  const [resendLoading, setResendLoading] = useState(false);
-
-  const [resendMessage, setResendMessage] = useState("");
-
-  const [resendSeconds, setResendSeconds] = useState(() => {
-    const availableAt = authService.getOtpResendAvailableAt();
-
-    if (!availableAt) {
-      return 60;
-    }
-
-    return Math.max(0, Math.ceil((availableAt - Date.now()) / 1000));
-  });
-
   // =====================================================
   // ROUTER
   // =====================================================
@@ -73,36 +59,6 @@ export default function OtpForm() {
       });
     }
   }, [username, navigate]);
-
-  // =====================================================
-  // RESEND OTP COUNTDOWN
-  // =====================================================
-
-  useEffect(() => {
-    if (!username || resendSeconds <= 0) {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      const availableAt = authService.getOtpResendAvailableAt();
-
-      if (!availableAt) {
-        setResendSeconds(0);
-        return;
-      }
-
-      const remaining = Math.max(
-        0,
-        Math.ceil((availableAt - Date.now()) / 1000),
-      );
-
-      setResendSeconds(remaining);
-    }, 1000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, [username, resendSeconds]);
 
   // =====================================================
   // NO PENDING LOGIN
@@ -356,66 +312,6 @@ export default function OtpForm() {
   }
 
   // =====================================================
-  // RESEND OTP
-  // =====================================================
-
-  async function handleResendOtp() {
-    if (loading || resendLoading || resendSeconds > 0) {
-      return;
-    }
-
-    setError("");
-    setResendMessage("");
-    setResendLoading(true);
-
-    try {
-      const currentPendingUsername = authService.getPendingUsername();
-
-      if (!currentPendingUsername || currentPendingUsername !== username) {
-        throw new Error(
-          "Your OTP session has expired. Please login again.",
-        );
-      }
-
-      const result = await authService.resendOtp(username);
-
-      setOtp("");
-      setResendMessage(result.message || "A new OTP has been sent.");
-
-      const availableAt = authService.getOtpResendAvailableAt();
-
-      setResendSeconds(
-        availableAt
-          ? Math.max(0, Math.ceil((availableAt - Date.now()) / 1000))
-          : 60,
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to resend OTP. Please try again.",
-      );
-
-      const availableAt = authService.getOtpResendAvailableAt();
-
-      if (availableAt) {
-        setResendSeconds(
-          Math.max(0, Math.ceil((availableAt - Date.now()) / 1000)),
-        );
-      }
-    } finally {
-      setResendLoading(false);
-    }
-  }
-
-  function formatCountdown(totalSeconds: number) {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    return `${minutes}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  // =====================================================
   // BACK TO LOGIN
   // =====================================================
 
@@ -429,7 +325,6 @@ export default function OtpForm() {
     // =====================================================
 
     authService.clearPendingUsername();
-    authService.clearOtpResendAvailableAt();
 
     navigate("/login", {
       replace: true,
@@ -457,8 +352,7 @@ export default function OtpForm() {
   // =====================================================
 
   return (
-    <div className={styles.authPage}>
-      <div className={styles.authcard}>
+    <div className={styles.authcard}>
       {/* ========================================
           LEFT SIDE
       ======================================== */}
@@ -495,7 +389,7 @@ export default function OtpForm() {
               maxLength={6}
               value={otp}
               onChange={handleOtpChange}
-              disabled={loading || resendLoading}
+              disabled={loading}
               required
               autoFocus
             />
@@ -515,7 +409,7 @@ export default function OtpForm() {
 
           <button
             type="submit"
-            disabled={loading || resendLoading || otp.length !== 6}
+            disabled={loading || otp.length !== 6}
             className={`${styles.submitBtn} ${loading ? styles.loading : ""}`}
           >
             {loading ? "Verifying..." : "Verify OTP"}
@@ -523,93 +417,13 @@ export default function OtpForm() {
         </form>
 
         {/* ======================================
-            RESEND OTP
-        ====================================== */}
-
-        <div
-          style={{
-            width: "100%",
-            marginTop: "18px",
-            padding: "14px 16px",
-            border: "1px solid #d7e6dc",
-            borderRadius: "10px",
-            background: "#f8fcf9",
-            textAlign: "center",
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              color: "#24352a",
-              fontSize: "13px",
-              fontWeight: 600,
-            }}
-          >
-            Didn't receive the code?
-          </p>
-
-          {resendSeconds > 0 ? (
-            <p
-              style={{
-                margin: "7px 0 0",
-                color: "#718078",
-                fontSize: "13px",
-                fontWeight: 600,
-              }}
-            >
-              Resend OTP in {formatCountdown(resendSeconds)}
-            </p>
-          ) : (
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={loading || resendLoading}
-              style={{
-                marginTop: "8px",
-                padding: 0,
-                border: 0,
-                background: "transparent",
-                color: "#15803d",
-                fontSize: "13px",
-                fontWeight: 800,
-                cursor:
-                  loading || resendLoading ? "not-allowed" : "pointer",
-                textDecoration: "underline",
-                textUnderlineOffset: "3px",
-                opacity: loading || resendLoading ? 0.6 : 1,
-              }}
-            >
-              {resendLoading ? "Sending new OTP..." : "Resend OTP"}
-            </button>
-          )}
-
-          {resendMessage && (
-            <p
-              style={{
-                margin: "7px 0 0",
-                color: "#15803d",
-                fontSize: "12px",
-                fontWeight: 700,
-              }}
-            >
-              {resendMessage}
-            </p>
-          )}
-        </div>
-
-        {/* ======================================
             BACK TO LOGIN
         ====================================== */}
 
         <div className={styles.authlinks}>
-          <button
-            type="button"
-            onClick={handleBackToLogin}
-            disabled={loading || resendLoading}
-          >
+          <button type="button" onClick={handleBackToLogin} disabled={loading}>
             Back to Login
           </button>
-        </div>
         </div>
       </div>
     </div>

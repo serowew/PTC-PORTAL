@@ -123,9 +123,6 @@ import AcademicRecordsR from "../pages/registrar/StudentRecord/AcademicRecordsR"
 import StudentDocumentsR from "../pages/registrar/StudentRecord/StudentCOGR";
 import TranscriptPreviewR from "../pages/registrar/StudentRecord/TranscriptPreviewR";
 
-//Finance
-import FinanceDashboard from "../pages/finance/Dashboard";
-
 //This is the last one
 
 import type { ReactElement } from "react";
@@ -140,12 +137,6 @@ import EnrollmentPeriodMR from "../pages/registrar/Enrollment/EnrollmentPeriodMR
 import ClassOfferingManagementR from "../pages/registrar/ClassOffering.tsx/ClassOfferingManagementR";
 import ClassPROG from "../pages/programhead/Classmanagement/ClassPROG";
 import TransferEvaluationR from "../pages/registrar/StudentRecord/TransferEvaluationR";
-import ScheduleList from "../pages/programhead/ScheduleVerification/ScheduleList";
-import FacultySchedules from "../pages/programhead/ScheduleVerification/FacultySchedules";
-import FacultySchedulesR from "../pages/registrar/Schedules/FacultySchedulesR";
-import DocumentRequest from "../pages/registrar/Documents/DocumentRequests";
-import StudentCORR from "../pages/registrar/StudentRecord/StudentCORR";
-import FinanceTicketProcessing from "../pages/finance/FinanceTicketProcessing";
 
 // ─── Role guard ───────────────────────────────────────────────
 function ProtectedRoute({
@@ -167,7 +158,6 @@ function ProtectedRoute({
       Registrar: "/registrar/dashboard",
       Student: "/student/dashboard",
       Faculty: "/faculty/dashboard",
-      Finance: "/finance/dashboard",
       "Program Head": "/programhead/dashboard",
     };
 
@@ -196,11 +186,6 @@ function ProgramHeadRoute({ element }: { element: ReactElement }) {
 function RegistrarRoute({ element }: { element: ReactElement }) {
   return <ProtectedRoute allowedRole="Registrar">{element}</ProtectedRoute>;
 }
-
-function FinanceRoute({ element }: { element: ReactElement }) {
-  return <ProtectedRoute allowedRole="Finance">{element}</ProtectedRoute>;
-}
-
 // ─── Routes ───────────────────────────────────────────────────
 export default function AppRoutes() {
   return (
@@ -535,15 +520,6 @@ export default function AppRoutes() {
           element={<ProgramHeadRoute element={<ClassPROG />} />}
         />
 
-        <Route
-          path="/programhead/class/schedule"
-          element={<ProgramHeadRoute element={<ScheduleList />} />}
-        />
-        <Route
-          path="/programhead/class/faculty-schedules"
-          element={<ProgramHeadRoute element={<FacultySchedules />} />}
-        />
-
         {/* ── Registrar ── */}
         <Route
           path="/registrar/dashboard"
@@ -570,11 +546,6 @@ export default function AppRoutes() {
         <Route
           path="/registrar/student/:id/DocumentsR"
           element={<RegistrarRoute element={<StudentDocumentsR />} />}
-        />
-
-        <Route
-          path="/registrar/student/:id/CORR"
-          element={<RegistrarRoute element={<StudentCORR />} />}
         />
 
         <Route
@@ -633,10 +604,6 @@ export default function AppRoutes() {
           element={<RegistrarRoute element={<ClassOfferingManagementR />} />}
         />
 
-        <Route
-          path="/registrar/schedules/faculty"
-          element={<RegistrarRoute element={<FacultySchedulesR />} />}
-        />
         {/* ── Registrar Announcements ── */}
         <Route
           path="/registrar/announcement/listR"
@@ -655,21 +622,6 @@ export default function AppRoutes() {
         <Route
           path="/registrar/announcement/createR"
           element={<RegistrarRoute element={<AnnouncementCreateR />} />}
-        />
-        {/* ── Registrar Documents── */}
-        <Route
-          path="/registrar/document-requests"
-          element={<RegistrarRoute element={<DocumentRequest />} />}
-        />
-        {/* ── Finance ── */}
-        <Route
-          path="/finance/dashboard"
-          element={<FinanceRoute element={<FinanceDashboard />} />}
-        />
-
-        <Route
-          path="/finance/tickets"
-          element={<FinanceRoute element={<FinanceTicketProcessing />} />}
         />
 
         {/* Catch-all */}

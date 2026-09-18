@@ -8,9 +8,9 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import campusImage from "../../assets/campus.webp";
-import classroomImage from "../../assets/classrooms.webp";
-import studentCommunityImage from "../../assets/BG.png";
+import campusImage from "../../assets/studentactivities.png";
+import classroomImage from "../../assets/school.png";
+import studentCommunityImage from "../../assets/GROUP 6-2.jpg";
 
 import "../../styles/AboutPage.css";
 

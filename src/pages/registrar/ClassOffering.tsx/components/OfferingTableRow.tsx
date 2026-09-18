@@ -2,6 +2,7 @@ import {
   BookOpen,
   Clock3,
   Edit3,
+  MapPin,
   Power,
   ShieldCheck,
   UserRound,
@@ -104,6 +105,31 @@ function getStatusClassName(status: string) {
 }
 
 // =====================================================
+// ROOM
+// =====================================================
+
+function getRoomDisplay(
+  room:
+    | {
+        room_id: number;
+        room_name: string;
+        room_code?: string | null;
+      }
+    | null
+    | undefined,
+) {
+  if (!room) {
+    return "Room not assigned";
+  }
+
+  if (room.room_code && room.room_name) {
+    return `${room.room_code} — ${room.room_name}`;
+  }
+
+  return room.room_code || room.room_name || "Room not assigned";
+}
+
+// =====================================================
 // COMPONENT
 // =====================================================
 
@@ -144,13 +170,11 @@ export default function OfferingTableRow({
 
   const facultyName = offering?.faculty?.faculty_name || "Not assigned";
 
-  const facultyRole = offering?.faculty?.role_name || null;
+  const scheduleDays = offering?.schedule?.days?.trim() || "Days not assigned";
 
-  const scheduleDays = offering?.schedule?.days?.trim() || null;
+  const scheduleTime = offering?.schedule?.time?.trim() || "Time not assigned";
 
-  const scheduleTime = offering?.schedule?.time?.trim() || null;
-
-  const hasSchedule = Boolean(scheduleDays) && Boolean(scheduleTime);
+  const roomDisplay = getRoomDisplay(offering?.room);
 
   // =====================================================
   // CAPACITY
@@ -205,48 +229,34 @@ export default function OfferingTableRow({
         </div>
       </td>
 
-      {/* INSTRUCTOR */}
+      {/* FACULTY */}
 
       <td>
         <div className="class-offering-meta-line">
           <UserRound size={15} aria-hidden="true" />
 
-          <span>
-            <strong>{facultyName}</strong>
-
-            {facultyRole && <small>{facultyRole}</small>}
-          </span>
+          <span>{facultyName}</span>
         </div>
       </td>
 
-      {/* SCHEDULE */}
+      {/* SCHEDULE + ROOM */}
 
       <td>
         <div className="class-offering-schedule-cell">
           <div className="class-offering-meta-line">
             <Clock3 size={15} aria-hidden="true" />
 
-            {hasSchedule ? (
-              <span>
-                <strong>{scheduleDays}</strong>
+            <span>
+              <strong>{scheduleDays}</strong>
 
-                <small>{scheduleTime}</small>
-              </span>
-            ) : offering?.faculty ? (
-              <span>
-                <strong>Pending Instructor Schedule</strong>
+              <small>{scheduleTime}</small>
+            </span>
+          </div>
 
-                <small>
-                  Assigned instructor must set the class day and time.
-                </small>
-              </span>
-            ) : (
-              <span>
-                <strong>No Schedule</strong>
+          <div className="class-offering-meta-line class-offering-meta-line--muted">
+            <MapPin size={15} aria-hidden="true" />
 
-                <small>Assign an instructor first.</small>
-              </span>
-            )}
+            <span>{roomDisplay}</span>
           </div>
         </div>
       </td>
@@ -357,7 +367,7 @@ export default function OfferingTableRow({
               onClick={() => onEditOffering(item)}
             >
               <Edit3 size={14} aria-hidden="true" />
-              Reassign
+              Edit
             </button>
 
             <button

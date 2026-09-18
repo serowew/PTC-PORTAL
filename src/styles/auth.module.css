@@ -1,1116 +1,352 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
 
-:root {
-  --primary-green: #15803d;
-  --primary-green-dark: #14532d;
-  --primary-green-bright: #22c55e;
-  --primary-green-soft: #f0fdf4;
-  --primary-green-border: #bbf7d0;
-}
-
-html,
-body,
-#root {
-  width: 100%;
-  min-width: 100%;
-  height: 100%;
-  min-height: 100%;
-  margin: 0;
-}
-
-body {
-  overflow: hidden;
-}
-
 .authcard,
 .authcard * {
   font-family: "Poppins", sans-serif;
   box-sizing: border-box;
 }
 
-/* =========================================================
-   FULL VIEWPORT OTP PAGE
-   This forces the OTP screen to use the whole browser window,
-   regardless of any parent/container width.
-   ========================================================= */
+/* PAGE BACKGROUND (behind the auth card) */
 .authPage {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-
-  width: 100vw;
-  height: 100vh;
-  min-width: 100vw;
   min-height: 100vh;
-
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 24px;
-
-  overflow: auto;
-
-  background:
-    linear-gradient(rgba(6, 61, 26, 0.42), rgba(6, 61, 26, 0.42)),
-    url("../assets/loginbg.png") no-repeat center center / cover;
+  background: url("../assets/loginbg.png") no-repeat center center / cover;
+  background-attachment: fixed;
+  position: relative;
 }
 
-/* subtle page overlay */
+/* optional dark/tint overlay so the card pops */
 .authPage::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(255, 255, 255, 0.12),
-      rgba(0, 0, 0, 0.13)
-    );
-
-  pointer-events: none;
-}
-
-/* =========================================================
-   AUTH CARD
-   Fills the viewport nicely without touching screen edges.
-   ========================================================= */
-.authcard {
-  position: relative;
-  z-index: 1;
-
-  width: min(1120px, calc(100vw - 48px));
-  height: min(640px, calc(100vh - 48px));
-
-  min-height: 500px;
-  max-height: 720px;
-
-  display: flex;
-
-  overflow: hidden;
-
-  border: 1px solid rgba(187, 247, 208, 0.82);
-  border-radius: 24px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.28),
-    0 8px 24px rgba(20, 83, 45, 0.15);
-}
-
-/* remove old overlay that washed out the whole card */
-.authcard::before {
-  display: none;
-}
-
-/* =========================================================
-   LEFT PANEL
-   ========================================================= */
-.authleft {
-  position: relative;
-
-  flex: 0 0 38%;
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  padding: clamp(34px, 4vw, 58px);
-
-  color: #ffffff;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(18, 166, 56, 0.9),
-      rgba(7, 77, 31, 0.94)
-    ),
-    url("../assets/ptcbackground.jpg") no-repeat center center / cover;
-}
-
-.authleft::before {
   content: "";
   position: absolute;
   inset: 0;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.03),
-      rgba(0, 0, 0, 0.2)
-    );
-
-  pointer-events: none;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 0;
 }
 
-.authleft > * {
+.authcard {
+  width: 900px;
+  height: 580px;
+  background: rgb(241, 243, 240);
+  border-radius: 22px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
   position: relative;
   z-index: 1;
 }
 
-.authleft h2 {
-  margin: 0 0 14px;
-
-  color: #ffffff;
-
-  font-size: clamp(34px, 3.2vw, 48px);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -1px;
+/* Background overlay for extra depth */
+.authcard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #79be67 0%, #f4f5f1 100%);
 }
 
-.authleft p {
-  max-width: 340px;
-
-  margin: 0;
-
-  color: rgba(255, 255, 255, 0.9);
-
-  font-size: clamp(14px, 1.25vw, 17px);
-  line-height: 1.7;
+.authcard > * {
+  position: relative;
+  z-index: 1;
 }
 
-.authleft strong {
-  color: #ffffff;
-  font-weight: 800;
-}
-
-/* =========================================================
-   RIGHT PANEL
-   ========================================================= */
-.authright {
-  flex: 1 1 62%;
-  min-width: 0;
-
+/* LEFT PANEL */
+.authleft {
+  flex-basis: 35%;
+  flex: 1;
+  background:
+    linear-gradient(135deg, rgba(1, 175, 7, 0.863), rgba(3, 43, 8, 0.9)),
+    url("../assets/ptcbackground.jpg") no-repeat center/cover;
+  color: #dde4dd;
+  padding: 50px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+.authleft h2 {
+  font-size: 2.3rem;
+  margin-bottom: 10px;
+}
+.authleft p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
 
-  padding: clamp(38px, 5vw, 72px);
-
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      rgba(34, 197, 94, 0.1),
-      transparent 34%
-    ),
-    linear-gradient(
-      180deg,
-      #ffffff 0%,
-      #fbfefc 100%
-    );
+/* RIGHT PANEL */
+.authright {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 50px;
+  width: 65%;
+  background: #ffffff36;
 }
 
 .authright h2 {
-  margin: 0 0 10px;
-
-  color: #163d24;
-
-  font-size: clamp(28px, 2.5vw, 36px);
-  font-weight: 800;
-  line-height: 1.15;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #244223;
+  margin-bottom: 8px;
 }
 
-.authright > p {
-  max-width: 520px;
-
-  margin: 0 0 28px;
-
-  color: #66756b;
-
-  font-size: 14px;
-  line-height: 1.65;
-  text-align: left;
+.authright p {
+  font-size: 0.95rem;
+  color: #888;
+  margin-bottom: 28px;
+  text-align: center;
 }
 
 .authright form {
-  width: 100%;
-  max-width: 560px;
-
   display: flex;
   flex-direction: column;
-
-  gap: 18px;
+  gap: 14px;
+  width: 100%;
 }
 
-/* =========================================================
-   FLOATING OTP INPUT
-   input must appear before label in JSX
-   ========================================================= */
+/* ============================
+   Floating-label inputs
+   NOTE: requires <input> BEFORE <label> in the JSX — see note below
+   ============================ */
 .inputgroup {
   position: relative;
-  width: 100%;
-  margin: 2px 0 0;
+  margin: 12px 0;
 }
 
 .inputgroup input {
   width: 100%;
-  height: 56px;
-
-  padding: 0 17px;
-
-  border: 1.5px solid #7db88d;
-  border-radius: 11px;
-
+  height: 50px;
+  background: transparent;
+  border: 1.5px solid #027c2b;
   outline: none;
-
-  background: #ffffff;
-
-  color: #17201b;
-
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 3px;
-
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.inputgroup input:hover {
-  border-color: #4e9e67;
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #000000;
+  padding: 0 16px;
+  transition: 0.3s ease;
 }
 
 .inputgroup input:focus,
 .inputgroup input:valid {
-  border-color: var(--primary-green);
-
-  box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.12);
+  border-color: var(--primary-green, #00ad17);
+  box-shadow: 0 0 0 3px rgba(0, 173, 23, 0.15);
 }
 
 .inputgroup label {
   position: absolute;
-
   top: 50%;
-  left: 14px;
-
+  left: 16px;
   transform: translateY(-50%);
-
-  padding: 0 6px;
-
-  background: #ffffff;
-
-  color: #66756b;
-
-  font-size: 13px;
-  font-weight: 600;
-
+  font-size: 0.9rem;
+  color: #020101;
   pointer-events: none;
-
-  transition:
-    top 0.18s ease,
-    color 0.18s ease,
-    font-size 0.18s ease;
+  transition: 0.3s ease;
+  background: transparent;
 }
 
 .inputgroup input:focus ~ label,
 .inputgroup input:valid ~ label {
   top: 0;
+  font-size: 0.75rem;
 
-  color: var(--primary-green);
-
-  font-size: 11px;
-  font-weight: 700;
+  background: #8fd87d;
+  padding: 0 6px;
+  color: var(--primary-green, #000000);
 }
 
-/* =========================================================
-   VERIFY BUTTON
-   ========================================================= */
-.authright button[type="submit"],
-.submitBtn {
+/* BUTTON */
+.authright button[type="submit"] {
   width: 100%;
-  max-width: 560px;
-  min-height: 52px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  padding: 0 18px;
-
-  border: 1px solid #126e35;
-  border-radius: 10px;
-
+  padding: 14px;
+  margin-top: 6px;
   background: linear-gradient(
     135deg,
-    #1aa94b,
-    var(--primary-green),
-    var(--primary-green-dark)
+    var(--accent-purple, #6c5ce7),
+    var(--primary-green, #00ad17)
   );
-
-  color: #ffffff;
-
-  font-size: 14px;
-  font-weight: 750;
-
+  color: #000;
+  border: 1.5px solid #00000052;
+  border-radius: 10px;
   cursor: pointer;
-
-  box-shadow: 0 8px 18px rgba(21, 128, 61, 0.2);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    filter 0.18s ease;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: opacity 0.2s;
 }
 
-.authright button[type="submit"]:hover,
-.submitBtn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-  box-shadow: 0 11px 24px rgba(21, 128, 61, 0.25);
+.authright button[type="submit"]:hover {
+  opacity: 0.9;
 }
 
-.authright button[type="submit"]:disabled,
-.submitBtn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* =========================================================
-   BACK TO LOGIN
-   ========================================================= */
+/* LINKS ROW */
 .authlinks {
-  width: 100%;
-  max-width: 560px;
-
+  margin-top: 20px;
   display: flex;
-  justify-content: flex-start;
-
-  margin-top: 2px;
+  justify-content: space-between;
+  font-size: 0.875rem;
 }
 
-.authlinks a,
-.backBtn {
-  display: inline-flex;
+.authlinks a {
+  text-decoration: none;
+  color: var(--accent-purple, #6c5ce7);
+  font-weight: 500;
+}
+
+.authlinks a:hover {
+  text-decoration: underline;
+}
+
+/* ===================
+   Animations
+   =================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes animateBlink {
+  0% {
+    background: #0ef;
+  }
+  25% {
+    background: #2c4766;
+  }
+}
+
+.fadeIn {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.errorMsg {
+  color: #d92d20;
+  font-size: 13px;
+  margin-bottom: 8px;
+  animation: shake 0.35s ease-in-out;
+}
+
+/* Submit button loading state */
+.submitBtn {
+  position: relative;
+  display: flex;
   align-items: center;
   justify-content: center;
-
-  min-height: 40px;
-
-  padding: 0 14px;
-
-  border: 1px solid #cbd9cf;
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  color: var(--primary-green-dark);
-
-  text-decoration: none;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.18s ease;
+  gap: 8px;
 }
 
-.authlinks a:hover,
-.backBtn:hover {
-  border-color: var(--primary-green-border);
-  background: var(--primary-green-soft);
-  transform: translateY(-1px);
-}
-
-/* =========================================================
-   ERROR
-   ========================================================= */
-.errorMsg {
-  width: 100%;
-  max-width: 560px;
-
-  margin: 0;
-
-  padding: 10px 12px;
-
-  border: 1px solid #fecaca;
-  border-radius: 9px;
-
-  background: #fef2f2;
-
-  color: #b42318;
-
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* =========================================================
-   OPTIONAL DEV BUTTONS
-   ========================================================= */
+/* Dev access buttons */
 .devButtons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-
   margin-top: 10px;
 }
 
 .devBtn {
-  min-height: 36px;
-
-  padding: 0 13px;
-
-  border: 1px solid #d5ded8;
-  border-radius: 8px;
-
-  background: #f8fbf9;
-
-  color: #17201b;
-
-  font-size: 12px;
-  font-weight: 600;
-
+  padding: 8px 14px;
+  border: 1px solid #585757;
+  border-radius: 6px;
+  background: #f4f5f7;
+  font-size: 13px;
   cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
-/* =========================================================
-   LOADER
-   ========================================================= */
+.devBtn:hover {
+  background: #6cbd3e;
+  border-color: #d3d8df;
+  transform: translateY(-2px);
+}
+
+/* ============================
+   Radial "loading clock" spinner
+   NOTE: needs 50 <span> elements in JSX with inline --i var — see note below
+   ============================ */
 .loaderContainer {
   position: relative;
-
-  width: 72px;
-  height: 72px;
-
+  width: 96px;
+  height: 96px;
   display: flex;
-  align-items: center;
   justify-content: center;
-
+  align-items: center;
   margin: 0 auto;
 }
 
 .loaderContainer span {
   position: absolute;
   left: 0;
-
-  width: 9px;
+  width: 12px;
   height: 3px;
-
+  background: #2c4766;
   border-radius: 8px;
-
-  background: #b8c9bd;
-
-  transform-origin: 36px;
+  transform-origin: 48px;
   transform: rotate(calc(var(--i) * (360deg / 50)));
-
-  animation: animateBlink 2.4s linear infinite;
-  animation-delay: calc(var(--i) * (2.4s / 50));
+  animation: animateBlink 3s linear infinite;
+  animation-delay: calc(var(--i) * (3s / 50));
 }
 
-@keyframes animateBlink {
-  0%,
-  100% {
-    background: var(--primary-green);
-  }
-
-  50% {
-    background: #c8d7cc;
-  }
-}
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-@media (max-width: 900px) {
-  .authPage {
-    padding: 18px;
-  }
-
-  .authcard {
-    width: calc(100vw - 36px);
-    height: calc(100vh - 36px);
-    min-height: 480px;
-  }
-
-  .authleft {
-    flex-basis: 36%;
-    padding: 34px 28px;
-  }
-
-  .authright {
-    padding: 38px 34px;
-  }
-}
-
-@media (max-width: 700px) {
-  body {
-    overflow: auto;
-  }
-
-  .authPage {
-    position: fixed;
-    align-items: flex-start;
-
-    padding: 12px;
-
-    overflow-y: auto;
-  }
-
-  .authcard {
-    width: 100%;
-    height: auto;
-    min-height: calc(100vh - 24px);
-
-    flex-direction: column;
-
-    border-radius: 18px;
-  }
-
-  .authleft {
-    flex: none;
-    width: 100%;
-
-    padding: 26px 22px;
-  }
-
-  .authleft h2 {
-    font-size: 28px;
-  }
-
-  .authleft p {
-    max-width: none;
-  }
-
-  .authright {
-    width: 100%;
-
-    padding: 32px 22px 36px;
-  }
-
-  .authright form,
-  .authright button[type="submit"],
-  .submitBtn,
-  .authlinks,
-  .errorMsg {
-    max-width: none;
-  }
-}
-
-@media (max-height: 650px) and (min-width: 701px) {
-  .authPage {
-    padding: 14px;
-  }
-
-  .authcard {
-    height: calc(100vh - 28px);
-    min-height: 0;
-  }
-
-  .authleft {
-    padding-top: 28px;
-    padding-bottom: 28px;
-  }
-
-  .authright {
-    padding-top: 28px;
-    padding-bottom: 28px;
-  }
-}
-
-/* =========================================================
-   FORCE OTP PAGE TO USE THE ENTIRE BROWSER VIEWPORT
-   PUT THIS AT THE VERY BOTTOM OF THE CSS FILE
-   ========================================================= */
-
-html,
-body,
-#root {
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 100% !important;
-  min-height: 100% !important;
-  max-width: none !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-body {
-  display: block !important;
-  place-items: initial !important;
-
-  width: 100vw !important;
-  min-width: 100vw !important;
-  min-height: 100vh !important;
-
-  overflow: hidden !important;
-}
-
-#root {
-  position: relative !important;
-
-  width: 100vw !important;
-  height: 100vh !important;
-
-  max-width: none !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  text-align: initial !important;
-}
-
-/* FULL SCREEN WRAPPER */
-.authPage {
-  position: fixed !important;
-
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-
-  width: 100vw !important;
-  height: 100dvh !important;
-
-  min-width: 100vw !important;
-  min-height: 100dvh !important;
-
-  max-width: none !important;
-  max-height: none !important;
-
-  margin: 0 !important;
-
-  padding: 32px !important;
-
-  display: grid !important;
-  place-items: center !important;
-
-  box-sizing: border-box !important;
-
-  overflow: hidden !important;
-}
-
-/* CENTERED OTP CARD */
-.authcard {
-  position: relative !important;
-
-  width: min(1120px, calc(100vw - 64px)) !important;
-  height: min(640px, calc(100dvh - 64px)) !important;
-
-  max-width: 1120px !important;
-  max-height: 640px !important;
-
-  min-width: 0 !important;
-  min-height: 520px !important;
-
-  margin: 0 !important;
-
-  display: flex !important;
-
-  border-radius: 24px !important;
-  overflow: hidden !important;
-
-  flex-shrink: 0 !important;
-}
-
-/* LEFT SIDE */
-.authleft {
-  flex: 0 0 38% !important;
-  width: 38% !important;
-}
-
-/* RIGHT SIDE */
-.authright {
-  flex: 1 1 62% !important;
-  width: 62% !important;
-}
-
-/* TABLET */
-@media (max-width: 900px) {
-  .authPage {
-    padding: 20px !important;
-  }
-
-  .authcard {
-    width: calc(100vw - 40px) !important;
-    height: calc(100dvh - 40px) !important;
-  }
-}
-
-/* MOBILE */
-@media (max-width: 700px) {
-  body {
-    overflow-y: auto !important;
-  }
-
-  .authPage {
-    position: fixed !important;
-    padding: 12px !important;
-
-    overflow-y: auto !important;
-  }
-
-  .authcard {
-    width: 100% !important;
-    height: auto !important;
-    min-height: calc(100dvh - 24px) !important;
-    max-height: none !important;
-
-    flex-direction: column !important;
-  }
-
-  .authleft,
-  .authright {
-    width: 100% !important;
-    flex: none !important;
-  }
-}
-
-/* =========================================================
-   OTP JSX FIX SUPPORT
-   OtpForm renders a <button> inside .authlinks, not an <a>.
-   ========================================================= */
-.authlinks button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-height: 40px;
-  padding: 0 14px;
-
-  border: 1px solid #cbd9cf;
-  border-radius: 9px;
-
-  background: #ffffff;
-  color: var(--primary-green-dark);
-
-  font-family: "Poppins", sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.authlinks button:hover:not(:disabled) {
-  border-color: var(--primary-green-border);
-  background: var(--primary-green-soft);
-  color: var(--primary-green);
-  transform: translateY(-1px);
-}
-
-.authlinks button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* =========================================================
-   BACK BUTTON POSITION FIX
-   Remove it from the authcard flex layout and float it
-   over the upper-left corner instead.
-   ========================================================= */
-.authcard {
-  position: relative !important;
-}
-
+/* Back button */
 .backBtn {
-  position: absolute !important;
-  top: 18px !important;
-  left: 18px !important;
-  z-index: 30 !important;
-
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
-  min-height: 34px !important;
-
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  flex: none !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  border: 1px solid rgba(255, 255, 255, 0.55) !important;
-  border-radius: 9px !important;
-
-  background: rgba(255, 255, 255, 0.9) !important;
-  color: #14532d !important;
-
-  font-family: "Poppins", sans-serif !important;
-  font-size: 17px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
-
-  cursor: pointer !important;
-
-  box-shadow: 0 4px 12px rgba(15, 61, 36, 0.14) !important;
-
-  backdrop-filter: blur(6px);
-
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease !important;
-}
-
-.backBtn:hover:not(:disabled) {
-  background: #ffffff !important;
-  color: #15803d !important;
-
-  transform: translateX(-2px) !important;
-
-  box-shadow: 0 6px 16px rgba(15, 61, 36, 0.2) !important;
-}
-
-.backBtn:disabled {
-  opacity: 0.55 !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-}
-
-@media (max-width: 700px) {
-  .backBtn {
-    top: 12px !important;
-    left: 12px !important;
-
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
-
-    font-size: 16px !important;
-  }
-}
-
-/* =========================================================
-   LOGIN LOADING OVERLAY
-   ========================================================= */
-
-.loginLoadingOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-
-  width: 100vw;
-  height: 100dvh;
-
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  padding: 24px;
-
-  background: rgba(4, 55, 28, 0.92);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  animation: ptcLoginOverlayFade 0.16s ease-out;
-}
-
-.loginLoadingPanel {
-  width: min(370px, calc(100vw - 40px));
-  min-height: 78px;
-
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  padding: 18px 22px;
-
-  border: 1px solid rgba(187, 247, 208, 0.85);
-  border-radius: 14px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.32),
-    0 6px 18px rgba(15, 61, 36, 0.18);
-}
-
-.loginLoadingSpinner {
-  width: 38px;
-  height: 38px;
-
-  flex: 0 0 38px;
-
-  border: 4px solid #dcfce7;
-  border-top-color: #15803d;
-  border-right-color: #22c55e;
-
-  border-radius: 50%;
-
-  animation: ptcLoginSpinner 0.75s linear infinite;
-}
-
-.loginLoadingText {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
   gap: 4px;
-}
-
-.loginLoadingText strong {
-  color: #0f3d24;
-
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.loginLoadingText span {
-  color: #66756b;
-
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.45;
-}
-
-/* =========================================================
-   LOGIN LOADING ANIMATIONS
-   ========================================================= */
-
-@keyframes ptcLoginSpinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes ptcLoginOverlayFade {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .loginLoadingOverlay {
-    padding: 16px;
-  }
-
-  .loginLoadingPanel {
-    width: 100%;
-    padding: 16px 18px;
-  }
-
-  .loginLoadingSpinner {
-    width: 34px;
-    height: 34px;
-
-    flex-basis: 34px;
-  }
-}
-
-/* =========================================================
-   OTP RESEND AREA
-   Used by OtpForm.tsx
-   ========================================================= */
-
-.otpResendBox {
-  width: 100%;
-  max-width: 560px;
-
-  margin-top: 18px;
-  padding: 14px 16px;
-
-  border: 1px solid #d7e6dc;
-  border-radius: 10px;
-
-  background: #f8fcf9;
-
-  text-align: center;
-}
-
-.otpResendPrompt {
-  margin: 0;
-
-  color: #24352a;
-
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.otpResendCountdown {
-  margin: 7px 0 0;
-
-  color: #718078;
-
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.otpResendButton {
-  margin-top: 8px;
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-
-  color: var(--primary-green);
-
-  font-family: "Poppins", sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-
+  background: rgb(156, 204, 152);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  font-weight: 1000;
+  color: #1a1a1a;
   cursor: pointer;
-
-  text-decoration: underline;
-  text-underline-offset: 3px;
-
+  backdrop-filter: blur(4px);
   transition:
-    color 0.18s ease,
-    opacity 0.18s ease,
-    transform 0.18s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
-.otpResendButton:hover:not(:disabled) {
-  color: var(--primary-green-dark);
-  transform: translateY(-1px);
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(-2px);
 }
-
-.otpResendButton:focus-visible {
-  outline: 2px solid var(--primary-green-bright);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-.otpResendButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.otpResendSuccess {
-  margin: 7px 0 0;
-
-  color: var(--primary-green);
-
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-@media (max-width: 700px) {
-  .otpResendBox {
-    max-width: none;
-  }
-}
-
