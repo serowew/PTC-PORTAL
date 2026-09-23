@@ -1,32 +1,13 @@
+import { gradePolicyFields } from "../../services/gradingPolicy.service.js";
 import express from "express";
 import db from "../../db.js";
 
-
 const router = express.Router();
-
-// =====================================================
-// GET AUTHENTICATED PROGRAM HEAD
-// =====================================================
-//
-// JWT user_id
-//      ↓
-// faculty.user_id
-//      ↓
-// program_heads.faculty_id
-//      ↓
-// department_id
-//
-// The frontend NEVER supplies program_head_id,
-// faculty_id, or department_id.
-// =====================================================
 
 async function getAuthenticatedProgramHead(req, res) {
   const userId = Number(req.user?.user_id);
 
-  if (
-    !Number.isInteger(userId) ||
-    userId <= 0
-  ) {
+  if (!Number.isInteger(userId) || userId <= 0) {
     res.status(401).json({
       success: false,
       message: "Invalid authenticated user.",
@@ -44,48 +25,33 @@ async function getAuthenticatedProgramHead(req, res) {
         ph.start_date,
         ph.end_date,
         ph.is_active,
-
         f.user_id,
         f.employee_number,
         f.first_name,
         f.middle_name,
         f.last_name,
         f.email,
-
         u.username,
-
         d.department_code,
         d.department_name
-
     FROM program_heads ph
-
     INNER JOIN faculty f
-        ON f.faculty_id =
-           ph.faculty_id
-
+        ON f.faculty_id = ph.faculty_id
     INNER JOIN users u
-        ON u.user_id =
-           f.user_id
-
+        ON u.user_id = f.user_id
     INNER JOIN departments d
-        ON d.department_id =
-           ph.department_id
-
+        ON d.department_id = ph.department_id
     WHERE
         f.user_id = ?
-
         AND ph.is_active = 1
-
         AND (
             ph.start_date IS NULL
             OR ph.start_date <= CURDATE()
         )
-
         AND (
             ph.end_date IS NULL
             OR ph.end_date >= CURDATE()
         )
-
     LIMIT 1
     `,
     [userId],
@@ -94,8 +60,7 @@ async function getAuthenticatedProgramHead(req, res) {
   if (rows.length === 0) {
     res.status(403).json({
       success: false,
-      message:
-        "No active Program Head assignment was found for this account.",
+      message: "No active Program Head assignment was found for this account.",
     });
 
     return null;
@@ -104,261 +69,123 @@ async function getAuthenticatedProgramHead(req, res) {
   const row = rows[0];
 
   return {
-    program_head_id:
-      row.program_head_id,
+    program_head_id: row.program_head_id,
+    faculty_id: row.faculty_id,
+    user_id: row.user_id,
+    employee_number: row.employee_number,
+    username: row.username,
+    first_name: row.first_name,
+    middle_name: row.middle_name,
+    last_name: row.last_name,
 
-    faculty_id:
-      row.faculty_id,
-
-    user_id:
-      row.user_id,
-
-    employee_number:
-      row.employee_number,
-
-    username:
-      row.username,
-
-    first_name:
-      row.first_name,
-
-    middle_name:
-      row.middle_name,
-
-    last_name:
-      row.last_name,
-
-    program_head_name: [
-      row.first_name,
-      row.middle_name,
-      row.last_name,
-    ]
+    program_head_name: [row.first_name, row.middle_name, row.last_name]
       .filter(Boolean)
       .join(" "),
 
-    email:
-      row.email,
-
-    department_id:
-      row.department_id,
-
-    department_code:
-      row.department_code,
-
-    department_name:
-      row.department_name,
-
-    start_date:
-      row.start_date,
-
-    end_date:
-      row.end_date,
+    email: row.email,
+    department_id: row.department_id,
+    department_code: row.department_code,
+    department_name: row.department_name,
+    start_date: row.start_date,
+    end_date: row.end_date,
   };
 }
 
-// =====================================================
-// GET SUBMITTED GRADES FOR PROGRAM HEAD REVIEW
-// =====================================================
-//
-// GET /api/program-head/grades/submitted
-//
-// Optional:
-// ?academic_year_id=2
-// ?semester_id=2
-//
-// SECURITY:
-//
-// Program Head may only see grades belonging to
-// sections/courses under their own department.
-//
-// Example:
-//
-// Program Head department = CCS
-//        ↓
-// courses.department_id = CCS
-//        ↓
-// BSIT / BSCS submitted grades
-//
-// =====================================================
-
 router.get("/submitted", async (req, res) => {
   try {
-    // =================================================
-    // AUTHENTICATED PROGRAM HEAD
-    // =================================================
-
-    const programHead =
-      await getAuthenticatedProgramHead(
-        req,
-        res,
-      );
+    const programHead = await getAuthenticatedProgramHead(req, res);
 
     if (!programHead) {
       return;
     }
 
-    // =================================================
-    // OPTIONAL FILTERS
-    // =================================================
+    const academicYearIdRaw = req.query.academic_year_id;
 
-    const academicYearIdRaw =
-      req.query.academic_year_id;
-
-    const semesterIdRaw =
-      req.query.semester_id;
+    const semesterIdRaw = req.query.semester_id;
 
     let academicYearId = null;
     let semesterId = null;
 
-    if (
-      academicYearIdRaw !== undefined &&
-      academicYearIdRaw !== ""
-    ) {
-      academicYearId = Number(
-        academicYearIdRaw,
-      );
+    if (academicYearIdRaw !== undefined && academicYearIdRaw !== "") {
+      academicYearId = Number(academicYearIdRaw);
 
-      if (
-        !Number.isInteger(academicYearId) ||
-        academicYearId <= 0
-      ) {
+      if (!Number.isInteger(academicYearId) || academicYearId <= 0) {
         return res.status(400).json({
           success: false,
-          message:
-            "Invalid academic_year_id.",
+          message: "Invalid academic_year_id.",
         });
       }
     }
 
-    if (
-      semesterIdRaw !== undefined &&
-      semesterIdRaw !== ""
-    ) {
-      semesterId = Number(
-        semesterIdRaw,
-      );
+    if (semesterIdRaw !== undefined && semesterIdRaw !== "") {
+      semesterId = Number(semesterIdRaw);
 
-      if (
-        !Number.isInteger(semesterId) ||
-        semesterId <= 0
-      ) {
+      if (!Number.isInteger(semesterId) || semesterId <= 0) {
         return res.status(400).json({
           success: false,
-          message:
-            "Invalid semester_id.",
+          message: "Invalid semester_id.",
         });
       }
     }
 
-    // =================================================
-    // BUILD CONDITIONS
-    // =================================================
+    const conditions = ["g.grade_status = 'Submitted'", "c.department_id = ?"];
 
-    const conditions = [
-      "g.grade_status = 'Submitted'",
-      "c.department_id = ?",
-    ];
-
-    const params = [
-      programHead.department_id,
-    ];
+    const params = [programHead.department_id];
 
     if (academicYearId !== null) {
-      conditions.push(
-        "so.academic_year_id = ?",
-      );
+      conditions.push("so.academic_year_id = ?");
 
       params.push(academicYearId);
     }
 
     if (semesterId !== null) {
-      conditions.push(
-        "so.semester_id = ?",
-      );
+      conditions.push("so.semester_id = ?");
 
       params.push(semesterId);
     }
 
-    // =================================================
-    // GET SUBMITTED GRADES
-    // =================================================
-
     const [rows] = await db.execute(
       `
       SELECT
-          -- ===========================================
-          -- GRADE
-          -- ===========================================
-
           g.grade_id,
           g.enrollment_subject_id,
           g.faculty_id,
-
-          g.prelim_grade,
           g.midterm_grade,
           g.final_grade,
           g.final_rating,
-
+          g.grading_policy,
+          g.grading_outcome,
+          g.outcome_reason,
+          g.overall_percentage,
           g.remarks,
           g.grade_status,
-
           g.submitted_at,
-
           g.reviewed_by,
           g.reviewed_at,
           g.review_remarks,
-
           g.created_at AS grade_created_at,
           g.updated_at AS grade_updated_at,
 
-          -- ===========================================
-          -- ENROLLMENT SUBJECT
-          -- ===========================================
-
           es.enrollment_id,
-
-          es.status
-              AS enrollment_subject_status,
-
-          -- ===========================================
-          -- STUDENT
-          -- ===========================================
+          es.status AS enrollment_subject_status,
 
           e.student_id,
           e.enrollment_status,
 
           s.student_number,
-          s.first_name
-              AS student_first_name,
-          s.middle_name
-              AS student_middle_name,
-          s.last_name
-              AS student_last_name,
-
-          -- ===========================================
-          -- CLASS / OFFERING
-          -- ===========================================
+          s.first_name AS student_first_name,
+          s.middle_name AS student_middle_name,
+          s.last_name AS student_last_name,
 
           so.offering_id,
-
-          so.status
-              AS offering_status,
-
+          so.status AS offering_status,
           so.schedule_days,
           so.schedule_time,
-
-          -- ===========================================
-          -- SUBJECT
-          -- ===========================================
 
           sub.subject_id,
           sub.subject_code,
           sub.subject_name,
           sub.units,
-
-          -- ===========================================
-          -- SECTION / COURSE
-          -- ===========================================
 
           sec.section_id,
           sec.section_name,
@@ -369,82 +196,56 @@ router.get("/submitted", async (req, res) => {
           c.course_name,
           c.department_id,
 
-          -- ===========================================
-          -- ACADEMIC PERIOD
-          -- ===========================================
-
           ay.academic_year_id,
           ay.academic_year,
-          ay.is_current
-              AS academic_year_is_current,
+          ay.is_current AS academic_year_is_current,
 
           sem.semester_id,
           sem.semester_name,
 
-          -- ===========================================
-          -- FACULTY WHO SUBMITTED THE GRADE
-          -- ===========================================
-
           gf.employee_number
               AS faculty_employee_number,
-
           gf.first_name
               AS faculty_first_name,
-
           gf.middle_name
               AS faculty_middle_name,
-
           gf.last_name
               AS faculty_last_name,
-
           gf.email
               AS faculty_email
-
       FROM grades g
-
       INNER JOIN enrollment_subjects es
           ON es.enrollment_subject_id =
              g.enrollment_subject_id
-
       INNER JOIN enrollments e
           ON e.enrollment_id =
              es.enrollment_id
-
       INNER JOIN students s
           ON s.student_id =
              e.student_id
-
       INNER JOIN subject_offerings so
           ON so.offering_id =
              es.offering_id
-
       INNER JOIN subjects sub
           ON sub.subject_id =
              es.subject_id
-
       INNER JOIN sections sec
           ON sec.section_id =
              es.section_id
-
       INNER JOIN courses c
           ON c.course_id =
              sec.course_id
-
       INNER JOIN academic_years ay
           ON ay.academic_year_id =
              so.academic_year_id
-
       INNER JOIN semesters sem
           ON sem.semester_id =
              so.semester_id
-
       INNER JOIN faculty gf
           ON gf.faculty_id =
              g.faculty_id
-
       WHERE
           ${conditions.join("\n          AND ")}
-
       ORDER BY
           g.submitted_at ASC,
           c.course_code ASC,
@@ -458,60 +259,33 @@ router.get("/submitted", async (req, res) => {
       params,
     );
 
-    // =================================================
-    // FORMAT RESULTS
-    // =================================================
-
     const grades = rows.map((row) => ({
-      grade_id:
-        row.grade_id,
+      grade_id: row.grade_id,
 
-      enrollment_subject_id:
-        row.enrollment_subject_id,
+      enrollment_subject_id: row.enrollment_subject_id,
 
-      grade_status:
-        row.grade_status,
+      grade_status: row.grade_status,
 
       grades: {
-        prelim_grade:
-          row.prelim_grade !== null
-            ? Number(row.prelim_grade)
-            : null,
-
         midterm_grade:
-          row.midterm_grade !== null
-            ? Number(row.midterm_grade)
-            : null,
+          row.midterm_grade !== null ? Number(row.midterm_grade) : null,
 
-        final_grade:
-          row.final_grade !== null
-            ? Number(row.final_grade)
-            : null,
+        final_grade: row.final_grade !== null ? Number(row.final_grade) : null,
+
+        ...gradePolicyFields(row),
 
         final_rating:
-          row.final_rating !== null
-            ? Number(row.final_rating)
-            : null,
+          row.final_rating !== null ? Number(row.final_rating) : null,
 
-        remarks:
-          row.remarks,
+        remarks: row.remarks,
       },
 
       student: {
-        student_id:
-          row.student_id,
-
-        student_number:
-          row.student_number,
-
-        first_name:
-          row.student_first_name,
-
-        middle_name:
-          row.student_middle_name,
-
-        last_name:
-          row.student_last_name,
+        student_id: row.student_id,
+        student_number: row.student_number,
+        first_name: row.student_first_name,
+        middle_name: row.student_middle_name,
+        last_name: row.student_last_name,
 
         full_name: [
           row.student_first_name,
@@ -521,31 +295,22 @@ router.get("/submitted", async (req, res) => {
           .filter(Boolean)
           .join(" "),
 
-        enrollment_id:
-          row.enrollment_id,
+        enrollment_id: row.enrollment_id,
+        enrollment_status: row.enrollment_status,
 
-        enrollment_status:
-          row.enrollment_status,
-
-        subject_status:
-          row.enrollment_subject_status,
+        subject_status: row.enrollment_subject_status,
       },
 
       faculty: {
-        faculty_id:
-          row.faculty_id,
+        faculty_id: row.faculty_id,
 
-        employee_number:
-          row.faculty_employee_number,
+        employee_number: row.faculty_employee_number,
 
-        first_name:
-          row.faculty_first_name,
+        first_name: row.faculty_first_name,
 
-        middle_name:
-          row.faculty_middle_name,
+        middle_name: row.faculty_middle_name,
 
-        last_name:
-          row.faculty_last_name,
+        last_name: row.faculty_last_name,
 
         faculty_name: [
           row.faculty_first_name,
@@ -555,233 +320,124 @@ router.get("/submitted", async (req, res) => {
           .filter(Boolean)
           .join(" "),
 
-        email:
-          row.faculty_email,
+        email: row.faculty_email,
       },
 
       class: {
-        offering_id:
-          row.offering_id,
-
-        offering_status:
-          row.offering_status,
+        offering_id: row.offering_id,
+        offering_status: row.offering_status,
 
         subject: {
-          subject_id:
-            row.subject_id,
-
-          subject_code:
-            row.subject_code,
-
-          subject_name:
-            row.subject_name,
-
-          units:
-            Number(row.units),
+          subject_id: row.subject_id,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name,
+          units: Number(row.units),
         },
 
         section: {
-          section_id:
-            row.section_id,
-
-          section_name:
-            row.section_name,
-
-          year_level:
-            row.year_level,
+          section_id: row.section_id,
+          section_name: row.section_name,
+          year_level: row.year_level,
 
           course: {
-            course_id:
-              row.course_id,
-
-            course_code:
-              row.course_code,
-
-            course_name:
-              row.course_name,
+            course_id: row.course_id,
+            course_code: row.course_code,
+            course_name: row.course_name,
           },
         },
 
         academic_period: {
-          academic_year_id:
-            row.academic_year_id,
+          academic_year_id: row.academic_year_id,
 
-          academic_year:
-            row.academic_year,
+          academic_year: row.academic_year,
 
-          is_current_academic_year:
-            Boolean(
-              row.academic_year_is_current,
-            ),
+          is_current_academic_year: Boolean(row.academic_year_is_current),
 
-          semester_id:
-            row.semester_id,
+          semester_id: row.semester_id,
 
-          semester_name:
-            row.semester_name,
+          semester_name: row.semester_name,
         },
 
         schedule: {
-          days:
-            row.schedule_days,
-
-          time:
-            row.schedule_time,
+          days: row.schedule_days,
+          time: row.schedule_time,
         },
       },
 
-      submitted_at:
-        row.submitted_at,
+      submitted_at: row.submitted_at,
 
       review: {
-        reviewed_by:
-          row.reviewed_by,
-
-        reviewed_at:
-          row.reviewed_at,
-
-        review_remarks:
-          row.review_remarks,
+        reviewed_by: row.reviewed_by,
+        reviewed_at: row.reviewed_at,
+        review_remarks: row.review_remarks,
       },
 
-      created_at:
-        row.grade_created_at,
-
-      updated_at:
-        row.grade_updated_at,
+      created_at: row.grade_created_at,
+      updated_at: row.grade_updated_at,
     }));
-
-    // =================================================
-    // RESPONSE
-    // =================================================
 
     return res.status(200).json({
       success: true,
 
       program_head: {
-        program_head_id:
-          programHead.program_head_id,
+        program_head_id: programHead.program_head_id,
 
-        faculty_id:
-          programHead.faculty_id,
+        faculty_id: programHead.faculty_id,
 
-        user_id:
-          programHead.user_id,
+        user_id: programHead.user_id,
 
-        employee_number:
-          programHead.employee_number,
+        employee_number: programHead.employee_number,
 
-        username:
-          programHead.username,
+        username: programHead.username,
 
-        program_head_name:
-          programHead.program_head_name,
+        program_head_name: programHead.program_head_name,
 
         department: {
-          department_id:
-            programHead.department_id,
+          department_id: programHead.department_id,
 
-          department_code:
-            programHead.department_code,
+          department_code: programHead.department_code,
 
-          department_name:
-            programHead.department_name,
+          department_name: programHead.department_name,
         },
       },
 
       filters: {
-        academic_year_id:
-          academicYearId,
-
-        semester_id:
-          semesterId,
+        academic_year_id: academicYearId,
+        semester_id: semesterId,
       },
 
       summary: {
-        total_submitted:
-          grades.length,
+        total_submitted: grades.length,
       },
 
       grades,
     });
   } catch (error) {
-    console.error(
-      "GET /api/program-head/grades/submitted error:",
-      error,
-    );
+    console.error("GET /api/program-head/grades/submitted error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to retrieve submitted grades.",
+      message: "Failed to retrieve submitted grades.",
     });
   }
 });
 
-
-// =====================================================
-// RETURN SUBMITTED GRADE TO FACULTY
-// =====================================================
-//
-// PATCH /api/program-head/grades/:gradeId/return
-//
-// Body:
-//
-// {
-//   "review_remarks": "Please verify the final rating."
-// }
-//
-// Rules:
-//
-// Submitted -> Returned
-//
-// Program Head:
-// - must be active
-// - must own the department
-// - must provide a return reason
-//
-// reviewed_by comes from authenticated JWT user.
-// Never accept reviewed_by from frontend.
-//
-// =====================================================
-
 router.patch("/:gradeId/return", async (req, res) => {
   try {
-    // =================================================
-    // AUTHENTICATED PROGRAM HEAD
-    // =================================================
-
-    const programHead =
-      await getAuthenticatedProgramHead(
-        req,
-        res,
-      );
+    const programHead = await getAuthenticatedProgramHead(req, res);
 
     if (!programHead) {
       return;
     }
 
-    // =================================================
-    // VALIDATE GRADE ID
-    // =================================================
+    const gradeId = Number(req.params.gradeId);
 
-    const gradeId = Number(
-      req.params.gradeId,
-    );
-
-    if (
-      !Number.isInteger(gradeId) ||
-      gradeId <= 0
-    ) {
+    if (!Number.isInteger(gradeId) || gradeId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid grade ID.",
       });
     }
-
-    // =================================================
-    // RETURN REASON
-    // =================================================
 
     const reviewRemarks =
       typeof req.body?.review_remarks === "string"
@@ -791,130 +447,104 @@ router.patch("/:gradeId/return", async (req, res) => {
     if (!reviewRemarks) {
       return res.status(400).json({
         success: false,
-        message:
-          "A return reason is required.",
+        message: "A return reason is required.",
       });
     }
 
     if (reviewRemarks.length > 500) {
       return res.status(400).json({
         success: false,
-        message:
-          "Return reason cannot exceed 500 characters.",
+        message: "Return reason cannot exceed 500 characters.",
       });
     }
 
-    // =================================================
-    // FIND GRADE + VERIFY DEPARTMENT AUTHORITY
-    // =================================================
-
     const [rows] = await db.execute(
       `
-      SELECT
-          g.grade_id,
-          g.enrollment_subject_id,
-          g.faculty_id,
+        SELECT
+            g.grade_id,
+            g.enrollment_subject_id,
+            g.faculty_id,
+            g.midterm_grade,
+            g.final_grade,
+            g.final_rating,
+            g.grading_policy,
+            g.grading_outcome,
+            g.outcome_reason,
+            g.overall_percentage,
+            g.remarks,
+            g.grade_status,
+            g.submitted_at,
 
-          g.prelim_grade,
-          g.midterm_grade,
-          g.final_grade,
-          g.final_rating,
+            es.enrollment_id,
+            es.status AS enrollment_subject_status,
 
-          g.remarks,
-          g.grade_status,
-          g.submitted_at,
+            e.student_id,
+            e.enrollment_status,
 
-          es.enrollment_id,
-          es.status
-              AS enrollment_subject_status,
+            s.student_number,
+            s.first_name
+                AS student_first_name,
+            s.middle_name
+                AS student_middle_name,
+            s.last_name
+                AS student_last_name,
 
-          e.student_id,
-          e.enrollment_status,
+            so.offering_id,
+            so.status AS offering_status,
 
-          s.student_number,
-          s.first_name
-              AS student_first_name,
-          s.middle_name
-              AS student_middle_name,
-          s.last_name
-              AS student_last_name,
+            sub.subject_id,
+            sub.subject_code,
+            sub.subject_name,
 
-          so.offering_id,
-          so.status
-              AS offering_status,
+            sec.section_id,
+            sec.section_name,
+            sec.year_level,
 
-          sub.subject_id,
-          sub.subject_code,
-          sub.subject_name,
+            c.course_id,
+            c.course_code,
+            c.course_name,
+            c.department_id,
 
-          sec.section_id,
-          sec.section_name,
-          sec.year_level,
-
-          c.course_id,
-          c.course_code,
-          c.course_name,
-          c.department_id,
-
-          f.employee_number
-              AS faculty_employee_number,
-          f.first_name
-              AS faculty_first_name,
-          f.middle_name
-              AS faculty_middle_name,
-          f.last_name
-              AS faculty_last_name
-
-      FROM grades g
-
-      INNER JOIN enrollment_subjects es
-          ON es.enrollment_subject_id =
-             g.enrollment_subject_id
-
-      INNER JOIN enrollments e
-          ON e.enrollment_id =
-             es.enrollment_id
-
-      INNER JOIN students s
-          ON s.student_id =
-             e.student_id
-
-      INNER JOIN subject_offerings so
-          ON so.offering_id =
-             es.offering_id
-
-      INNER JOIN subjects sub
-          ON sub.subject_id =
-             es.subject_id
-
-      INNER JOIN sections sec
-          ON sec.section_id =
-             es.section_id
-
-      INNER JOIN courses c
-          ON c.course_id =
-             sec.course_id
-
-      INNER JOIN faculty f
-          ON f.faculty_id =
-             g.faculty_id
-
-      WHERE
-          g.grade_id = ?
-
-          AND c.department_id = ?
-
-      LIMIT 1
-      `,
-      [
-        gradeId,
-        programHead.department_id,
-      ],
+            f.employee_number
+                AS faculty_employee_number,
+            f.first_name
+                AS faculty_first_name,
+            f.middle_name
+                AS faculty_middle_name,
+            f.last_name
+                AS faculty_last_name
+        FROM grades g
+        INNER JOIN enrollment_subjects es
+            ON es.enrollment_subject_id =
+               g.enrollment_subject_id
+        INNER JOIN enrollments e
+            ON e.enrollment_id =
+               es.enrollment_id
+        INNER JOIN students s
+            ON s.student_id =
+               e.student_id
+        INNER JOIN subject_offerings so
+            ON so.offering_id =
+               es.offering_id
+        INNER JOIN subjects sub
+            ON sub.subject_id =
+               es.subject_id
+        INNER JOIN sections sec
+            ON sec.section_id =
+               es.section_id
+        INNER JOIN courses c
+            ON c.course_id =
+               sec.course_id
+        INNER JOIN faculty f
+            ON f.faculty_id =
+               g.faculty_id
+        WHERE
+            g.grade_id = ?
+            AND c.department_id = ?
+        LIMIT 1
+        `,
+      [gradeId, programHead.department_id],
     );
-
-    // =================================================
-    // NOT FOUND / OUTSIDE DEPARTMENT
-    // =================================================
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -926,130 +556,89 @@ router.patch("/:gradeId/return", async (req, res) => {
 
     const grade = rows[0];
 
-    // =================================================
-    // MUST BE SUBMITTED
-    // =================================================
-
-    if (
-      grade.grade_status !== "Submitted"
-    ) {
+    if (grade.grade_status !== "Submitted") {
       return res.status(409).json({
         success: false,
-        message:
-          `Only Submitted grades may be returned. Current status: ${grade.grade_status}.`,
+        message: `Only Submitted grades may be returned. Current status: ${grade.grade_status}.`,
       });
     }
 
-    // =================================================
-    // RETURN GRADE
-    // =================================================
-    //
-    // Database trigger will verify:
-    //
-    // Submitted -> Returned
-    // reviewed_by is required
-    // review_remarks is required
-    // reviewed_at is automatically populated
-    //
-    // =================================================
-
-    await db.execute(
+    const [returnResult] = await db.execute(
       `
-      UPDATE grades
-
-      SET
-          grade_status = 'Returned',
-          reviewed_by = ?,
-          review_remarks = ?
-
-      WHERE grade_id = ?
-      `,
-      [
-        programHead.user_id,
-        reviewRemarks,
-        grade.grade_id,
-      ],
+        UPDATE grades
+        SET
+            grade_status = 'Returned',
+            reviewed_by = ?,
+            review_remarks = ?
+        WHERE grade_id = ?
+          AND grade_status = 'Submitted'
+        `,
+      [programHead.user_id, reviewRemarks, grade.grade_id],
     );
 
-    // =================================================
-    // GET UPDATED GRADE
-    // =================================================
+    if (returnResult.affectedRows !== 1) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "The grade is no longer available for return. Refresh and try again.",
+      });
+    }
 
-    const [updatedRows] =
-      await db.execute(
-        `
-        SELECT
-            grade_id,
-            enrollment_subject_id,
-            faculty_id,
+    const [updatedRows] = await db.execute(
+      `
+          SELECT
+              grade_id,
+              enrollment_subject_id,
+              faculty_id,
+              midterm_grade,
+              final_grade,
+              final_rating,
+              grading_policy,
+              grading_outcome,
+              outcome_reason,
+              overall_percentage,
+              remarks,
+              grade_status,
+              submitted_at,
+              reviewed_by,
+              reviewed_at,
+              review_remarks,
+              created_at,
+              updated_at
+          FROM grades
+          WHERE grade_id = ?
+          LIMIT 1
+          `,
+      [grade.grade_id],
+    );
 
-            prelim_grade,
-            midterm_grade,
-            final_grade,
-            final_rating,
-
-            remarks,
-            grade_status,
-
-            submitted_at,
-
-            reviewed_by,
-            reviewed_at,
-            review_remarks,
-
-            created_at,
-            updated_at
-
-        FROM grades
-
-        WHERE grade_id = ?
-
-        LIMIT 1
-        `,
-        [grade.grade_id],
-      );
-
-    const returned =
-      updatedRows[0];
-
-    // =================================================
-    // RESPONSE
-    // =================================================
+    const returned = updatedRows[0];
 
     return res.status(200).json({
       success: true,
 
-      message:
-        "Grade returned to Faculty successfully.",
+      message: "Grade returned to Faculty successfully.",
 
       program_head: {
-        program_head_id:
-          programHead.program_head_id,
+        program_head_id: programHead.program_head_id,
 
-        user_id:
-          programHead.user_id,
+        user_id: programHead.user_id,
 
-        program_head_name:
-          programHead.program_head_name,
+        program_head_name: programHead.program_head_name,
 
         department: {
-          department_id:
-            programHead.department_id,
+          department_id: programHead.department_id,
 
-          department_code:
-            programHead.department_code,
+          department_code: programHead.department_code,
 
-          department_name:
-            programHead.department_name,
+          department_name: programHead.department_name,
         },
       },
 
       student: {
-        student_id:
-          grade.student_id,
+        student_id: grade.student_id,
 
-        student_number:
-          grade.student_number,
+        student_number: grade.student_number,
 
         full_name: [
           grade.student_first_name,
@@ -1061,11 +650,9 @@ router.patch("/:gradeId/return", async (req, res) => {
       },
 
       faculty: {
-        faculty_id:
-          grade.faculty_id,
+        faculty_id: grade.faculty_id,
 
-        employee_number:
-          grade.faculty_employee_number,
+        employee_number: grade.faculty_employee_number,
 
         faculty_name: [
           grade.faculty_first_name,
@@ -1077,57 +664,33 @@ router.patch("/:gradeId/return", async (req, res) => {
       },
 
       class: {
-        offering_id:
-          grade.offering_id,
+        offering_id: grade.offering_id,
 
         subject: {
-          subject_id:
-            grade.subject_id,
-
-          subject_code:
-            grade.subject_code,
-
-          subject_name:
-            grade.subject_name,
+          subject_id: grade.subject_id,
+          subject_code: grade.subject_code,
+          subject_name: grade.subject_name,
         },
 
         section: {
-          section_id:
-            grade.section_id,
-
-          section_name:
-            grade.section_name,
-
-          year_level:
-            grade.year_level,
+          section_id: grade.section_id,
+          section_name: grade.section_name,
+          year_level: grade.year_level,
 
           course: {
-            course_id:
-              grade.course_id,
-
-            course_code:
-              grade.course_code,
-
-            course_name:
-              grade.course_name,
+            course_id: grade.course_id,
+            course_code: grade.course_code,
+            course_name: grade.course_name,
           },
         },
       },
 
       grade: {
-        grade_id:
-          returned.grade_id,
+        grade_id: returned.grade_id,
 
-        enrollment_subject_id:
-          returned.enrollment_subject_id,
+        enrollment_subject_id: returned.enrollment_subject_id,
 
-        faculty_id:
-          returned.faculty_id,
-
-        prelim_grade:
-          returned.prelim_grade !== null
-            ? Number(returned.prelim_grade)
-            : null,
+        faculty_id: returned.faculty_id,
 
         midterm_grade:
           returned.midterm_grade !== null
@@ -1135,38 +698,23 @@ router.patch("/:gradeId/return", async (req, res) => {
             : null,
 
         final_grade:
-          returned.final_grade !== null
-            ? Number(returned.final_grade)
-            : null,
+          returned.final_grade !== null ? Number(returned.final_grade) : null,
+
+        ...gradePolicyFields(returned),
 
         final_rating:
-          returned.final_rating !== null
-            ? Number(returned.final_rating)
-            : null,
+          returned.final_rating !== null ? Number(returned.final_rating) : null,
 
-        remarks:
-          returned.remarks,
+        remarks: returned.remarks,
+        grade_status: returned.grade_status,
+        submitted_at: returned.submitted_at,
+        reviewed_by: returned.reviewed_by,
+        reviewed_at: returned.reviewed_at,
 
-        grade_status:
-          returned.grade_status,
+        review_remarks: returned.review_remarks,
 
-        submitted_at:
-          returned.submitted_at,
-
-        reviewed_by:
-          returned.reviewed_by,
-
-        reviewed_at:
-          returned.reviewed_at,
-
-        review_remarks:
-          returned.review_remarks,
-
-        created_at:
-          returned.created_at,
-
-        updated_at:
-          returned.updated_at,
+        created_at: returned.created_at,
+        updated_at: returned.updated_at,
       },
     });
   } catch (error) {
@@ -1175,14 +723,7 @@ router.patch("/:gradeId/return", async (req, res) => {
       error,
     );
 
-    // =================================================
-    // DATABASE BUSINESS RULE
-    // =================================================
-
-    if (
-      error?.errno === 1644 ||
-      error?.sqlState === "45000"
-    ) {
+    if (error?.errno === 1644 || error?.sqlState === "45000") {
       return res.status(409).json({
         success: false,
 
@@ -1195,196 +736,130 @@ router.patch("/:gradeId/return", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to return grade.",
+      message: "Failed to return grade.",
     });
   }
 });
 
-
-// =====================================================
-// APPROVE SUBMITTED GRADE
-// =====================================================
-//
-// PATCH /api/program-head/grades/:gradeId/approve
-//
-// No request body required.
-//
-// Rules:
-//
-// Submitted -> Approved
-//
-// - Program Head must be active.
-// - Grade must belong to Program Head's department.
-// - reviewed_by comes from authenticated JWT user.
-// - Approved grades become permanently locked.
-// - DB trigger updates enrollment_subject status.
-//
-// =====================================================
-
 router.patch("/:gradeId/approve", async (req, res) => {
   try {
-    // =================================================
-    // AUTHENTICATED PROGRAM HEAD
-    // =================================================
-
-    const programHead =
-      await getAuthenticatedProgramHead(
-        req,
-        res,
-      );
+    const programHead = await getAuthenticatedProgramHead(req, res);
 
     if (!programHead) {
       return;
     }
 
-    // =================================================
-    // VALIDATE GRADE ID
-    // =================================================
+    const gradeId = Number(req.params.gradeId);
 
-    const gradeId = Number(
-      req.params.gradeId,
-    );
-
-    if (
-      !Number.isInteger(gradeId) ||
-      gradeId <= 0
-    ) {
+    if (!Number.isInteger(gradeId) || gradeId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid grade ID.",
       });
     }
 
-    // =================================================
-    // FIND GRADE + VERIFY PROGRAM HEAD DEPARTMENT
-    // =================================================
-
     const [rows] = await db.execute(
       `
-      SELECT
-          g.grade_id,
-          g.enrollment_subject_id,
-          g.faculty_id,
+        SELECT
+            g.grade_id,
+            g.enrollment_subject_id,
+            g.faculty_id,
+            g.midterm_grade,
+            g.final_grade,
+            g.final_rating,
+            g.grading_policy,
+            g.grading_outcome,
+            g.outcome_reason,
+            g.overall_percentage,
+            g.remarks,
+            g.grade_status,
+            g.submitted_at,
+            g.reviewed_by,
+            g.reviewed_at,
+            g.review_remarks,
 
-          g.prelim_grade,
-          g.midterm_grade,
-          g.final_grade,
-          g.final_rating,
+            es.enrollment_id,
+            es.status AS enrollment_subject_status,
 
-          g.remarks,
-          g.grade_status,
-          g.submitted_at,
+            e.student_id,
+            e.enrollment_status,
 
-          g.reviewed_by,
-          g.reviewed_at,
-          g.review_remarks,
+            s.student_number,
+            s.first_name
+                AS student_first_name,
+            s.middle_name
+                AS student_middle_name,
+            s.last_name
+                AS student_last_name,
 
-          es.enrollment_id,
-          es.status
-              AS enrollment_subject_status,
+            so.offering_id,
+            so.status AS offering_status,
 
-          e.student_id,
-          e.enrollment_status,
+            sub.subject_id,
+            sub.subject_code,
+            sub.subject_name,
 
-          s.student_number,
-          s.first_name
-              AS student_first_name,
-          s.middle_name
-              AS student_middle_name,
-          s.last_name
-              AS student_last_name,
+            sec.section_id,
+            sec.section_name,
+            sec.year_level,
 
-          so.offering_id,
-          so.status
-              AS offering_status,
+            c.course_id,
+            c.course_code,
+            c.course_name,
+            c.department_id,
 
-          sub.subject_id,
-          sub.subject_code,
-          sub.subject_name,
+            ay.academic_year_id,
+            ay.academic_year,
 
-          sec.section_id,
-          sec.section_name,
-          sec.year_level,
+            sem.semester_id,
+            sem.semester_name,
 
-          c.course_id,
-          c.course_code,
-          c.course_name,
-          c.department_id,
-
-          ay.academic_year_id,
-          ay.academic_year,
-
-          sem.semester_id,
-          sem.semester_name,
-
-          f.employee_number
-              AS faculty_employee_number,
-          f.first_name
-              AS faculty_first_name,
-          f.middle_name
-              AS faculty_middle_name,
-          f.last_name
-              AS faculty_last_name
-
-      FROM grades g
-
-      INNER JOIN enrollment_subjects es
-          ON es.enrollment_subject_id =
-             g.enrollment_subject_id
-
-      INNER JOIN enrollments e
-          ON e.enrollment_id =
-             es.enrollment_id
-
-      INNER JOIN students s
-          ON s.student_id =
-             e.student_id
-
-      INNER JOIN subject_offerings so
-          ON so.offering_id =
-             es.offering_id
-
-      INNER JOIN subjects sub
-          ON sub.subject_id =
-             es.subject_id
-
-      INNER JOIN sections sec
-          ON sec.section_id =
-             es.section_id
-
-      INNER JOIN courses c
-          ON c.course_id =
-             sec.course_id
-
-      INNER JOIN academic_years ay
-          ON ay.academic_year_id =
-             so.academic_year_id
-
-      INNER JOIN semesters sem
-          ON sem.semester_id =
-             so.semester_id
-
-      INNER JOIN faculty f
-          ON f.faculty_id =
-             g.faculty_id
-
-      WHERE
-          g.grade_id = ?
-
-          AND c.department_id = ?
-
-      LIMIT 1
-      `,
-      [
-        gradeId,
-        programHead.department_id,
-      ],
+            f.employee_number
+                AS faculty_employee_number,
+            f.first_name
+                AS faculty_first_name,
+            f.middle_name
+                AS faculty_middle_name,
+            f.last_name
+                AS faculty_last_name
+        FROM grades g
+        INNER JOIN enrollment_subjects es
+            ON es.enrollment_subject_id =
+               g.enrollment_subject_id
+        INNER JOIN enrollments e
+            ON e.enrollment_id =
+               es.enrollment_id
+        INNER JOIN students s
+            ON s.student_id =
+               e.student_id
+        INNER JOIN subject_offerings so
+            ON so.offering_id =
+               es.offering_id
+        INNER JOIN subjects sub
+            ON sub.subject_id =
+               es.subject_id
+        INNER JOIN sections sec
+            ON sec.section_id =
+               es.section_id
+        INNER JOIN courses c
+            ON c.course_id =
+               sec.course_id
+        INNER JOIN academic_years ay
+            ON ay.academic_year_id =
+               so.academic_year_id
+        INNER JOIN semesters sem
+            ON sem.semester_id =
+               so.semester_id
+        INNER JOIN faculty f
+            ON f.faculty_id =
+               g.faculty_id
+        WHERE
+            g.grade_id = ?
+            AND c.department_id = ?
+        LIMIT 1
+        `,
+      [gradeId, programHead.department_id],
     );
-
-    // =================================================
-    // NOT FOUND / OUTSIDE DEPARTMENT
-    // =================================================
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -1396,77 +871,43 @@ router.patch("/:gradeId/approve", async (req, res) => {
 
     const grade = rows[0];
 
-    // =================================================
-    // MUST BE SUBMITTED
-    // =================================================
-
     if (grade.grade_status !== "Submitted") {
       return res.status(409).json({
         success: false,
-        message:
-          `Only Submitted grades may be approved. Current status: ${grade.grade_status}.`,
+        message: `Only Submitted grades may be approved. Current status: ${grade.grade_status}.`,
       });
     }
 
-    // =================================================
-    // ENROLLMENT MUST STILL BE OFFICIAL
-    // =================================================
-
-    if (
-      grade.enrollment_status !== "Approved"
-    ) {
+    if (grade.enrollment_status !== "Approved") {
       return res.status(409).json({
         success: false,
-        message:
-          "This student's enrollment is no longer approved.",
+        message: "This student's enrollment is no longer approved.",
       });
     }
 
-    // =================================================
-    // SUBJECT MUST STILL BE ACTIVE
-    // =================================================
-
-    if (
-      grade.enrollment_subject_status !==
-      "Enrolled"
-    ) {
+    if (grade.enrollment_subject_status !== "Enrolled") {
       return res.status(409).json({
         success: false,
-        message:
-          "This subject is no longer actively enrolled.",
+        message: "This subject is no longer actively enrolled.",
       });
     }
 
-    // =================================================
-    // OFFERING MUST NOT BE CANCELLED
-    // =================================================
-
-    if (
-      grade.offering_status === "Cancelled"
-    ) {
+    if (grade.offering_status === "Cancelled") {
       return res.status(409).json({
         success: false,
-        message:
-          "A grade from a cancelled class cannot be approved.",
+        message: "A grade from a cancelled class cannot be approved.",
       });
     }
-
-    // =================================================
-    // GRADE COMPLETENESS
-    // =================================================
 
     if (!grade.remarks) {
       return res.status(409).json({
         success: false,
-        message:
-          "Grade remarks are missing.",
+        message: "Grade remarks are missing.",
       });
     }
 
     if (
-      ["Passed", "Failed"].includes(
-        grade.remarks,
-      ) &&
+      ["Passed", "Failed"].includes(grade.remarks) &&
       grade.final_rating === null
     ) {
       return res.status(409).json({
@@ -1475,155 +916,90 @@ router.patch("/:gradeId/approve", async (req, res) => {
           "A final rating is required before this grade can be approved.",
       });
     }
-
-    // =================================================
-    // APPROVE
-    // =================================================
-    //
-    // reviewed_by MUST be req.user.user_id.
-    //
-    // For Program Head Test:
-    //
-    // user_id = 3
-    //
-    // Database trigger will automatically:
-    //
-    // - validate Submitted -> Approved
-    // - require reviewed_by
-    // - set reviewed_at
-    //
-    // AFTER UPDATE trigger will then synchronize:
-    //
-    // Passed     -> enrollment_subject = Completed
-    // Failed     -> enrollment_subject = Failed
-    // Incomplete -> enrollment_subject = Incomplete
-    //
-    // =================================================
-
-    const [updateResult] =
-      await db.execute(
-        `
-        UPDATE grades
-
-        SET
-            grade_status = 'Approved',
-            reviewed_by = ?
-
-        WHERE
-            grade_id = ?
-            AND grade_status = 'Submitted'
-        `,
-        [
-          programHead.user_id,
-          grade.grade_id,
-        ],
-      );
+    const [updateResult] = await db.execute(
+      `
+  UPDATE grades
+  SET
+      grade_status = 'Approved',
+      reviewed_by = ?,
+      reviewed_at = CURRENT_TIMESTAMP,
+      review_remarks = NULL
+  WHERE grade_id = ?
+    AND grade_status = 'Submitted'
+  `,
+      [programHead.user_id, grade.grade_id],
+    );
 
     if (updateResult.affectedRows !== 1) {
       return res.status(409).json({
         success: false,
         message:
-          "The grade is no longer available for approval. Refresh the review queue and try again.",
+          "The grade is no longer available for return. Refresh and try again.",
       });
     }
 
-    // =================================================
-    // READ FINAL APPROVED RESULT
-    // =================================================
-    //
-    // We join enrollment_subjects again because its
-    // status should now have been synchronized by the
-    // AFTER UPDATE database trigger.
-    //
-    // =================================================
+    const [approvedRows] = await db.execute(
+      `
+          SELECT
+              g.grade_id,
+              g.enrollment_subject_id,
+              g.faculty_id,
+              g.midterm_grade,
+              g.final_grade,
+              g.final_rating,
+              g.grading_policy,
+              g.grading_outcome,
+              g.outcome_reason,
+              g.overall_percentage,
+              g.remarks,
+              g.grade_status,
+              g.submitted_at,
+              g.reviewed_by,
+              g.reviewed_at,
+              g.review_remarks,
+              g.created_at,
+              g.updated_at,
+              es.status
+                  AS enrollment_subject_status
+          FROM grades g
+          INNER JOIN enrollment_subjects es
+              ON es.enrollment_subject_id =
+                 g.enrollment_subject_id
+          WHERE g.grade_id = ?
+          LIMIT 1
+          `,
+      [grade.grade_id],
+    );
 
-    const [approvedRows] =
-      await db.execute(
-        `
-        SELECT
-            g.grade_id,
-            g.enrollment_subject_id,
-            g.faculty_id,
-
-            g.prelim_grade,
-            g.midterm_grade,
-            g.final_grade,
-            g.final_rating,
-
-            g.remarks,
-            g.grade_status,
-
-            g.submitted_at,
-            g.reviewed_by,
-            g.reviewed_at,
-            g.review_remarks,
-
-            g.created_at,
-            g.updated_at,
-
-            es.status
-                AS enrollment_subject_status
-
-        FROM grades g
-
-        INNER JOIN enrollment_subjects es
-            ON es.enrollment_subject_id =
-               g.enrollment_subject_id
-
-        WHERE g.grade_id = ?
-
-        LIMIT 1
-        `,
-        [grade.grade_id],
-      );
-
-    const approved =
-      approvedRows[0];
-
-    // =================================================
-    // RESPONSE
-    // =================================================
+    const approved = approvedRows[0];
 
     return res.status(200).json({
       success: true,
-
-      message:
-        "Grade approved successfully.",
+      message: "Grade approved successfully.",
 
       program_head: {
-        program_head_id:
-          programHead.program_head_id,
+        program_head_id: programHead.program_head_id,
 
-        user_id:
-          programHead.user_id,
+        user_id: programHead.user_id,
 
-        program_head_name:
-          programHead.program_head_name,
+        program_head_name: programHead.program_head_name,
 
         department: {
-          department_id:
-            programHead.department_id,
+          department_id: programHead.department_id,
 
-          department_code:
-            programHead.department_code,
+          department_code: programHead.department_code,
 
-          department_name:
-            programHead.department_name,
+          department_name: programHead.department_name,
         },
       },
 
       student: {
-        enrollment_subject_id:
-          grade.enrollment_subject_id,
+        enrollment_subject_id: grade.enrollment_subject_id,
 
-        enrollment_id:
-          grade.enrollment_id,
+        enrollment_id: grade.enrollment_id,
+        student_id: grade.student_id,
 
-        student_id:
-          grade.student_id,
-
-        student_number:
-          grade.student_number,
+        student_number: grade.student_number,
 
         full_name: [
           grade.student_first_name,
@@ -1635,11 +1011,9 @@ router.patch("/:gradeId/approve", async (req, res) => {
       },
 
       faculty: {
-        faculty_id:
-          grade.faculty_id,
+        faculty_id: grade.faculty_id,
 
-        employee_number:
-          grade.faculty_employee_number,
+        employee_number: grade.faculty_employee_number,
 
         faculty_name: [
           grade.faculty_first_name,
@@ -1651,71 +1025,43 @@ router.patch("/:gradeId/approve", async (req, res) => {
       },
 
       class: {
-        offering_id:
-          grade.offering_id,
+        offering_id: grade.offering_id,
 
         subject: {
-          subject_id:
-            grade.subject_id,
-
-          subject_code:
-            grade.subject_code,
-
-          subject_name:
-            grade.subject_name,
+          subject_id: grade.subject_id,
+          subject_code: grade.subject_code,
+          subject_name: grade.subject_name,
         },
 
         section: {
-          section_id:
-            grade.section_id,
-
-          section_name:
-            grade.section_name,
-
-          year_level:
-            grade.year_level,
+          section_id: grade.section_id,
+          section_name: grade.section_name,
+          year_level: grade.year_level,
 
           course: {
-            course_id:
-              grade.course_id,
-
-            course_code:
-              grade.course_code,
-
-            course_name:
-              grade.course_name,
+            course_id: grade.course_id,
+            course_code: grade.course_code,
+            course_name: grade.course_name,
           },
         },
 
         academic_period: {
-          academic_year_id:
-            grade.academic_year_id,
+          academic_year_id: grade.academic_year_id,
 
-          academic_year:
-            grade.academic_year,
+          academic_year: grade.academic_year,
 
-          semester_id:
-            grade.semester_id,
+          semester_id: grade.semester_id,
 
-          semester_name:
-            grade.semester_name,
+          semester_name: grade.semester_name,
         },
       },
 
       grade: {
-        grade_id:
-          approved.grade_id,
+        grade_id: approved.grade_id,
 
-        enrollment_subject_id:
-          approved.enrollment_subject_id,
+        enrollment_subject_id: approved.enrollment_subject_id,
 
-        faculty_id:
-          approved.faculty_id,
-
-        prelim_grade:
-          approved.prelim_grade !== null
-            ? Number(approved.prelim_grade)
-            : null,
+        faculty_id: approved.faculty_id,
 
         midterm_grade:
           approved.midterm_grade !== null
@@ -1723,41 +1069,29 @@ router.patch("/:gradeId/approve", async (req, res) => {
             : null,
 
         final_grade:
-          approved.final_grade !== null
-            ? Number(approved.final_grade)
-            : null,
+          approved.final_grade !== null ? Number(approved.final_grade) : null,
+
+        ...gradePolicyFields(approved),
 
         final_rating:
-          approved.final_rating !== null
-            ? Number(approved.final_rating)
-            : null,
+          approved.final_rating !== null ? Number(approved.final_rating) : null,
 
-        remarks:
-          approved.remarks,
+        remarks: approved.remarks,
 
-        grade_status:
-          approved.grade_status,
+        grade_status: approved.grade_status,
 
-        submitted_at:
-          approved.submitted_at,
+        submitted_at: approved.submitted_at,
 
-        reviewed_by:
-          approved.reviewed_by,
+        reviewed_by: approved.reviewed_by,
 
-        reviewed_at:
-          approved.reviewed_at,
+        reviewed_at: approved.reviewed_at,
 
-        review_remarks:
-          approved.review_remarks,
+        review_remarks: approved.review_remarks,
 
-        enrollment_subject_status:
-          approved.enrollment_subject_status,
+        enrollment_subject_status: approved.enrollment_subject_status,
 
-        created_at:
-          approved.created_at,
-
-        updated_at:
-          approved.updated_at,
+        created_at: approved.created_at,
+        updated_at: approved.updated_at,
       },
     });
   } catch (error) {
@@ -1766,10 +1100,7 @@ router.patch("/:gradeId/approve", async (req, res) => {
       error,
     );
 
-    if (
-      error?.errno === 1644 ||
-      error?.sqlState === "45000"
-    ) {
+    if (error?.errno === 1644 || error?.sqlState === "45000") {
       return res.status(409).json({
         success: false,
 
@@ -1782,8 +1113,7 @@ router.patch("/:gradeId/approve", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to approve grade.",
+      message: "Failed to approve grade.",
     });
   }
 });

@@ -27,16 +27,255 @@ import "../../../styles/announcementStudent.css";
 
 const API_BASE_URL = "http://localhost:3000";
 
+interface AnnouncementRecipient {
+  role_id?: number;
+  role_name?: string;
+}
+
 interface Announcement {
   announcement_id: number;
   title: string;
   content: string;
-  created_by: string;
+  created_by: string | null;
   publish_date: string;
   expiry_date: string | null;
   is_active: number;
   created_at: string;
-  attachments: string | null;
+  recipients?:
+    | string
+    | string[]
+    | AnnouncementRecipient[]
+    | null;
+  attachments?: string | null;
+}
+
+type AnnouncementListResponse =
+  | Announcement[]
+  | {
+      success?: boolean;
+      announcements?: Announcement[];
+      data?: Announcement[];
+      message?: string;
+      error?: string;
+    };
+
+type AnnouncementCategory =
+  | "All"
+  | "Grades"
+  | "Faculty"
+  | "Enrollment"
+  | "Academic"
+  | "General";
+
+function formatDate(value: string | null | undefined) {
+  if (!value) {
+    return "Date unavailable";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatAuthor(value: string | null | undefined) {
+  return value?.trim() || "PTC Administration";
+}
+
+function getPreview(value: string) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+
+  if (normalized.length <= 190) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, 190).trimEnd()}…`;
+}
+
+function getAnnouncementCategory(
+  announcement: Announcement,
+): Exclude<AnnouncementCategory, "All"> {
+  const value =
+    `${announcement.title} ${announcement.content}`.toLowerCase();
+
+  if (
+    value.includes("grade") ||
+    value.includes("grading") ||
+    value.includes("prelim") ||
+    value.includes("midterm") ||
+    value.includes("final rating")
+  ) {
+    return "Grades";
+  }
+
+  if (
+    value.includes("faculty") ||
+    value.includes("instructor") ||
+    value.includes("evaluation")
+  ) {
+    return "Faculty";
+  }
+
+  if (
+    value.includes("enrollment") ||
+    value.includes("enrolment") ||
+    value.includes("registration") ||
+    value.includes("admission")
+  ) {
+    return "Enrollment";
+  }
+
+  if (
+    value.includes("academic") ||
+    value.includes("semester") ||
+    value.includes("curriculum") ||
+    value.includes("schedule") ||
+    value.includes("subject") ||
+    value.includes("section") ||
+    value.includes("class")
+  ) {
+    return "Academic";
+  }
+
+  return "General";
+}
+
+function isExpiringSoon(announcement: Announcement) {
+  if (!announcement.expiry_date) {
+    return false;
+  }
+
+  const expiryDate = new Date(announcement.expiry_date);
+
+  if (Number.isNaN(expiryDate.getTime())) {
+    return false;
+  }
+
+  const difference = expiryDate.getTime() - Date.now();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+  return difference >= 0 && difference <= sevenDays;
+}
+
+function isCurrentlyAvailable(announcement: Announcement) {
+  if (Number(announcement.is_active) !== 1) {
+    return false;
+  }
+
+  const now = Date.now();
+  const publishDate = new Date(announcement.publish_date);
+
+  if (
+    !Number.isNaN(publishDate.getTime()) &&
+    publishDate.getTime() > now
+  ) {
+    return false;
+  }
+
+  if (announcement.expiry_date) {
+    const expiryDate = new Date(announcement.expiry_date);
+
+    if (
+      !Number.isNaN(expiryDate.getTime()) &&
+      expiryDate.getTime() < now
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isProgramHeadAudience(
+  recipients: Announcement["recipients"],
+) {
+  if (recipients === null || recipients === undefined) {
+    return true;
+  }
+
+  if (typeof recipients === "string") {
+    return recipients
+      .split(",")
+      .map((role) => role.trim().toLowerCase())
+      .includes("program head");
+  }
+
+  if (Array.isArray(recipients)) {
+    return recipients.some((recipient) => {
+      if (typeof recipient === "string") {
+        return recipient.trim().toLowerCase() === "program head";
+      }
+
+      return (
+        String(recipient.role_name || "")
+          .trim()
+          .toLowerCase() === "program head"
+      );
+    });
+  }
+
+  return true;
+}
+
+function needsProgramHeadAttention(
+  announcement: Announcement,
+) {
+  const value =
+    `${announcement.title} ${announcement.content}`.toLowerCase();
+
+  const keywords = [
+    "urgent",
+    "important",
+    "deadline",
+    "required",
+    "requirement",
+    "submit",
+    "submission",
+    "approval",
+    "approve",
+    "grade",
+    "faculty",
+    "evaluation",
+    "meeting",
+    "enrollment",
+    "registration",
+    "compliance",
+    "reminder",
+    "action required",
+  ];
+
+  return (
+    isExpiringSoon(announcement) ||
+    keywords.some((keyword) => value.includes(keyword))
+  );
+}
+
+function getCategoryIcon(
+  category: Exclude<AnnouncementCategory, "All">,
+) {
+  switch (category) {
+    case "Grades":
+      return <ClipboardCheck size={17} />;
+
+    case "Faculty":
+      return <UsersRound size={17} />;
+
+    case "Enrollment":
+      return <GraduationCap size={17} />;
+
+    case "Academic":
+      return <BookOpenCheck size={17} />;
+
+    default:
+      return <Megaphone size={17} />;
+  }
 }
 
 interface AnnouncementResponse {
@@ -277,6 +516,20 @@ export default function AnnouncementProg() {
             replace: true,
           });
 
+        const response = await authService.authFetch(
+          `${API_BASE_URL}/api/announcements`,
+          {
+            method: "GET",
+            signal: controller.signal,
+            headers: {
+              Accept: "application/json",
+            },
+          },
+        );
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
           return;
         }
 
@@ -402,7 +655,75 @@ export default function AnnouncementProg() {
           setLoading(false);
         }
       }
-    }
+    };
+
+    void loadAnnouncements();
+
+    return () => controller.abort();
+  }, [
+    authenticated,
+    userRole,
+    navigate,
+    refreshKey,
+  ]);
+
+  const summary = useMemo(() => {
+    return {
+      total: announcements.length,
+      attention: announcements.filter(
+        needsProgramHeadAttention,
+      ).length,
+      grades: announcements.filter(
+        (announcement) =>
+          getAnnouncementCategory(announcement) === "Grades",
+      ).length,
+      expiring: announcements.filter(isExpiringSoon).length,
+    };
+  }, [announcements]);
+
+  const filteredAnnouncements = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return announcements
+      .filter((announcement) => {
+        const announcementCategory =
+          getAnnouncementCategory(announcement);
+
+        const matchesCategory =
+          category === "All" ||
+          category === announcementCategory;
+
+        const matchesAttention =
+          !attentionOnly ||
+          needsProgramHeadAttention(announcement);
+
+        const matchesSearch =
+          !normalizedSearch ||
+          announcement.title
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          announcement.content
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          String(announcement.created_by || "")
+            .toLowerCase()
+            .includes(normalizedSearch);
+
+        return (
+          matchesCategory &&
+          matchesAttention &&
+          matchesSearch
+        );
+      })
+      .sort((a, b) => {
+        const aAttention =
+          needsProgramHeadAttention(a) ? 1 : 0;
+        const bAttention =
+          needsProgramHeadAttention(b) ? 1 : 0;
+
+        if (aAttention !== bAttention) {
+          return bAttention - aAttention;
+        }
 
     void loadAnnouncements();
 
@@ -874,6 +1195,7 @@ export default function AnnouncementProg() {
                   at the top.
                 </p>
               </div>
+            </div>
 
               <strong>
                 {

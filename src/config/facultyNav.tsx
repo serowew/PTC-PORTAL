@@ -5,8 +5,7 @@ export const facultyNavGroups = [
     icon: "",
     children: [
       { label: "My Classes", path: "/faculty/classes" },
-      { label: "Class Schedule", path: "/faculty/classes/schedule" },
-      { label: "Student List", path: "/faculty/classes/students" },
+      { label: "Teaching Schedule ", path: "/faculty/classes/schedule" },
     ],
   },
 

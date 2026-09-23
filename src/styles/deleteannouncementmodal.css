@@ -1,245 +1,314 @@
-/* =====================================================
-   DELETE ANNOUNCEMENT MODAL
-===================================================== */
-
 .delete-announcement-modal-overlay {
   position: fixed;
   inset: 0;
-
   z-index: 9999;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 24px;
+  width: 100vw;
+  min-height: 100dvh;
+  padding: 20px;
 
-  background: rgba(15, 23, 42, 0.58);
+  background: rgba(9, 20, 13, 0.62);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-
-  animation: deleteAnnouncementFadeIn 0.18s ease;
+  animation: deleteAnnouncementOverlayIn 160ms ease both;
 }
-
-/* =====================================================
-   MODAL BOX
-===================================================== */
 
 .delete-announcement-modal {
-  width: 100%;
-  max-width: 470px;
+  --dam-green-900: #0a4b2d;
+  --dam-green-700: #0f7a45;
+  --dam-text-950: #17201b;
+  --dam-text-800: #28352d;
+  --dam-text-600: #5e6b63;
+  --dam-text-500: #76827b;
+  --dam-border: #dfe8e2;
+  --dam-danger: #b42318;
+  --dam-danger-hover: #912018;
+  --dam-danger-soft: #fff3f1;
 
+  position: relative;
+
+  width: min(100%, 430px);
+  min-width: 0;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+
+  padding: 20px;
+
+  border: 1px solid var(--dam-border);
+  border-radius: 15px;
+
+  color: var(--dam-text-950);
   background: #ffffff;
 
-  border-radius: 18px;
-
-  padding: 30px;
-
   box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.22),
-    0 8px 24px rgba(15, 23, 42, 0.12);
+    0 22px 55px rgba(8, 27, 16, 0.22),
+    0 6px 18px rgba(8, 27, 16, 0.12);
 
-  animation: deleteAnnouncementModalIn 0.2s ease;
+  animation: deleteAnnouncementModalIn 180ms ease both;
 }
 
-/* =====================================================
-   WARNING ICON
-===================================================== */
+.delete-announcement-modal *,
+.delete-announcement-modal *::before,
+.delete-announcement-modal *::after {
+  box-sizing: border-box;
+}
+
+.delete-announcement-modal button {
+  font: inherit;
+}
+
+.delete-announcement-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #e1e8e3;
+  border-radius: 8px;
+
+  color: #6d7971;
+  background: #f8faf8;
+
+  cursor: pointer;
+
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.delete-announcement-modal__close:hover:not(:disabled) {
+  color: var(--dam-text-800);
+  border-color: #ccd8d0;
+  background: #f0f4f1;
+}
+
+.delete-announcement-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding-right: 34px;
+}
 
 .delete-announcement-modal__icon {
-  width: 58px;
-  height: 58px;
-
-  margin: 0 auto 18px;
-
-  display: flex;
+  display: inline-flex;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
   align-items: center;
   justify-content: center;
 
-  border-radius: 50%;
+  border: 1px solid #efc9c5;
+  border-radius: 11px;
 
-  background: #fee2e2;
-
-  color: #dc2626;
+  color: var(--dam-danger);
+  background: var(--dam-danger-soft);
 }
 
-.delete-announcement-modal__icon span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 28px;
-  height: 28px;
-
-  border: 2px solid #dc2626;
-  border-radius: 50%;
-
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
+.delete-announcement-modal__heading {
+  min-width: 0;
 }
 
-/* =====================================================
-   CONTENT
-===================================================== */
+.delete-announcement-modal__eyebrow {
+  display: block;
 
-.delete-announcement-modal__content {
-  text-align: center;
+  margin-bottom: 2px;
+
+  color: var(--dam-green-700);
+
+  font-size: 8.8px;
+  font-weight: 760;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
 }
 
-.delete-announcement-modal__content h2 {
-  margin: 0 0 10px;
-
-  color: #111827;
-
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.delete-announcement-modal__content p {
+.delete-announcement-modal__heading h2 {
   margin: 0;
 
-  color: #64748b;
+  color: var(--dam-text-950);
 
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.3;
 }
 
-/* =====================================================
-   ANNOUNCEMENT NAME
-===================================================== */
+.delete-announcement-modal__content {
+  margin-top: 15px;
+}
+
+.delete-announcement-modal__content > p {
+  margin: 0;
+
+  color: var(--dam-text-600);
+
+  font-size: 11.5px;
+  line-height: 1.55;
+}
 
 .delete-announcement-modal__announcement {
-  margin: 16px 0;
+  display: grid;
+  gap: 3px;
 
-  padding: 12px 16px;
+  margin-top: 12px;
+  padding: 10px 11px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid #e1e8e3;
+  border-radius: 9px;
 
-  background: #f8fafc;
-
-  color: #334155;
-
-  font-size: 14px;
-  font-weight: 600;
-
-  word-break: break-word;
+  background: #f8faf8;
 }
 
-/* =====================================================
-   WARNING TEXT
-===================================================== */
+.delete-announcement-modal__announcement span {
+  color: var(--dam-text-500);
+
+  font-size: 8.7px;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.delete-announcement-modal__announcement strong {
+  overflow-wrap: anywhere;
+
+  color: var(--dam-text-800);
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+}
 
 .delete-announcement-modal__warning {
-  color: #dc2626 !important;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 
-  font-weight: 600;
+  margin-top: 10px;
+  padding: 9px 10px;
+
+  border: 1px solid #efc9c5;
+  border-radius: 9px;
+
+  color: var(--dam-danger);
+  background: var(--dam-danger-soft);
 }
 
-/* =====================================================
-   ACTIONS
-===================================================== */
+.delete-announcement-modal__warning svg {
+  flex: 0 0 auto;
+}
+
+.delete-announcement-modal__warning p {
+  margin: 0;
+
+  font-size: 10px;
+  font-weight: 680;
+  line-height: 1.45;
+}
 
 .delete-announcement-modal__actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 8px;
 
-  margin-top: 26px;
+  margin-top: 16px;
+  padding-top: 14px;
+
+  border-top: 1px solid #edf2ee;
 }
 
-/* =====================================================
-   CANCEL
-===================================================== */
+.delete-announcement-modal__cancel,
+.delete-announcement-modal__delete {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 
-.delete-announcement-modal__cancel {
-  min-width: 105px;
+  padding: 7px 11px;
 
-  padding: 10px 18px;
-
-  border: 1px solid #cbd5e1;
+  border: 1px solid;
   border-radius: 8px;
 
-  background: #ffffff;
-
-  color: #334155;
-
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 720;
 
   cursor: pointer;
 
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+    transform 150ms ease,
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.delete-announcement-modal__cancel {
+  min-width: 82px;
+
+  color: var(--dam-text-600);
+  border-color: #cfd9d2;
+  background: #ffffff;
 }
 
 .delete-announcement-modal__cancel:hover:not(:disabled) {
-  background: #f8fafc;
+  transform: translateY(-1px);
 
-  border-color: #94a3b8;
+  color: var(--dam-green-900);
+  border-color: #b8d0c0;
+  background: #f5faf7;
 }
-
-.delete-announcement-modal__cancel:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-/* =====================================================
-   DELETE BUTTON
-===================================================== */
 
 .delete-announcement-modal__delete {
-  min-width: 170px;
-
-  padding: 10px 18px;
-
-  border: none;
-  border-radius: 8px;
-
-  background: #dc2626;
+  min-width: 155px;
 
   color: #ffffff;
+  border-color: var(--dam-danger);
+  background: var(--dam-danger);
 
-  font-size: 14px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+  box-shadow: 0 4px 11px rgba(180, 35, 24, 0.14);
 }
 
 .delete-announcement-modal__delete:hover:not(:disabled) {
-  background: #b91c1c;
+  transform: translateY(-1px);
 
-  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.24);
+  border-color: var(--dam-danger-hover);
+  background: var(--dam-danger-hover);
+
+  box-shadow: 0 6px 14px rgba(180, 35, 24, 0.2);
 }
 
-.delete-announcement-modal__delete:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-/* =====================================================
-   DISABLED
-===================================================== */
-
+.delete-announcement-modal__close:disabled,
 .delete-announcement-modal__cancel:disabled,
 .delete-announcement-modal__delete:disabled {
-  opacity: 0.55;
-
   cursor: not-allowed;
+  opacity: 0.55;
 }
 
-/* =====================================================
-   ANIMATION
-===================================================== */
+.delete-announcement-modal__close:focus-visible,
+.delete-announcement-modal__cancel:focus-visible,
+.delete-announcement-modal__delete:focus-visible {
+  outline: 3px solid rgba(15, 122, 69, 0.14);
+  outline-offset: 2px;
+}
 
-@keyframes deleteAnnouncementFadeIn {
+.delete-announcement-modal__spinner {
+  animation: deleteAnnouncementSpin 0.8s linear infinite;
+}
+
+@keyframes deleteAnnouncementOverlayIn {
   from {
     opacity: 0;
   }
@@ -252,7 +321,7 @@
 @keyframes deleteAnnouncementModalIn {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(8px) scale(0.985);
   }
 
   to {
@@ -261,25 +330,41 @@
   }
 }
 
-/* =====================================================
-   MOBILE
-===================================================== */
+@keyframes deleteAnnouncementSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
-@media (max-width: 520px) {
+@media (max-width: 480px) {
   .delete-announcement-modal-overlay {
-    padding: 16px;
+    padding: 14px;
   }
 
   .delete-announcement-modal {
-    padding: 24px 20px;
+    width: 100%;
+    max-height: calc(100dvh - 28px);
+    padding: 17px;
+    border-radius: 13px;
   }
 
   .delete-announcement-modal__actions {
+    align-items: stretch;
     flex-direction: column-reverse;
   }
 
   .delete-announcement-modal__cancel,
   .delete-announcement-modal__delete {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .delete-announcement-modal-overlay,
+  .delete-announcement-modal,
+  .delete-announcement-modal * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

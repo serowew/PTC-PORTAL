@@ -1,0 +1,846 @@
+.my-transactions,
+.my-transactions * {
+  box-sizing: border-box;
+}
+
+.my-transactions {
+  --mt-green: #15803d;
+  --mt-green-dark: #14532d;
+  --mt-green-deep: #0f3d24;
+  --mt-green-soft: #f0fdf4;
+  --mt-green-border: #bbf7d0;
+  --mt-text: #0f172a;
+  --mt-muted: #64748b;
+  --mt-muted-light: #94a3b8;
+  --mt-border: #dce7df;
+  --mt-border-soft: #edf3ef;
+  --mt-surface: #ffffff;
+  --mt-surface-soft: #f8fbf9;
+
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  padding: 4px;
+  color: var(--mt-text);
+}
+
+.my-transactions__hero,
+.my-transactions__history-card,
+.my-transactions__ticket,
+.my-transactions__guide,
+.my-transactions__state-card,
+.my-transactions__summary-card {
+  border: 1px solid var(--mt-border);
+  background: var(--mt-surface);
+  box-shadow: 0 8px 24px rgba(15, 61, 36, 0.045);
+}
+
+.my-transactions__hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 18px;
+}
+
+.my-transactions__hero::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -52px;
+  top: -74px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.07);
+  pointer-events: none;
+}
+
+.my-transactions__hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.my-transactions__hero-copy {
+  min-width: 0;
+}
+
+.my-transactions__eyebrow,
+.my-transactions__section-kicker {
+  color: var(--mt-green);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.my-transactions__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.my-transactions__hero h1 {
+  margin: 0;
+  color: var(--mt-text);
+  font-size: clamp(25px, 2.1vw, 30px);
+  line-height: 1.2;
+}
+
+.my-transactions__hero-copy > p {
+  max-width: 780px;
+  margin: 8px 0 0;
+  color: var(--mt-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.my-transactions__student-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.my-transactions__student-number {
+  padding: 6px 10px;
+  border: 1px solid var(--mt-green-border);
+  border-radius: 999px;
+  background: var(--mt-green-soft);
+  color: #166534;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.my-transactions__student-name {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.my-transactions__hero-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 58px;
+  border-radius: 16px;
+  background: var(--mt-green-soft);
+  color: var(--mt-green);
+}
+
+.my-transactions__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.my-transactions__summary-card {
+  min-width: 0;
+  padding: 18px 19px;
+  border-radius: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.my-transactions__summary-card:hover {
+  transform: translateY(-1px);
+  border-color: #b9d8c2;
+  box-shadow: 0 10px 28px rgba(15, 61, 36, 0.07);
+}
+
+.my-transactions__summary-copy {
+  min-width: 0;
+}
+
+.my-transactions__summary-title,
+.my-transactions__summary-subtitle {
+  margin: 0;
+}
+
+.my-transactions__summary-title {
+  color: #53665b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.my-transactions__summary-value {
+  margin-top: 7px;
+  color: var(--mt-text);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.my-transactions__summary-subtitle {
+  margin-top: 7px;
+  color: var(--mt-muted-light);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.my-transactions__summary-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  background: var(--mt-green-soft);
+  color: var(--mt-green);
+}
+
+.my-transactions__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 15px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.my-transactions__alert svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.my-transactions__alert--error {
+  border: 1px solid #fecaca;
+  background: #fff6f6;
+  color: #991b1b;
+}
+
+.my-transactions__history-card {
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.my-transactions__history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.my-transactions__history-heading h2 {
+  margin: 3px 0 0;
+  color: var(--mt-text);
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.my-transactions__history-heading p {
+  margin: 5px 0 0;
+  color: var(--mt-muted);
+  font-size: 12px;
+}
+
+.my-transactions__refresh-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.my-transactions__refresh-button:hover:not(:disabled) {
+  border-color: #86c99b;
+  background: #f6fff8;
+  color: var(--mt-green-dark);
+  transform: translateY(-1px);
+}
+
+.my-transactions__refresh-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.my-transactions__filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(190px, 240px);
+  gap: 12px;
+}
+
+.my-transactions__search {
+  position: relative;
+  display: block;
+}
+
+.my-transactions__search svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.my-transactions__search input,
+.my-transactions__status-select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: var(--mt-text);
+  font-family: inherit;
+  font-size: 13px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.my-transactions__search input {
+  padding: 10px 12px 10px 40px;
+}
+
+.my-transactions__status-select {
+  padding: 10px 36px 10px 12px;
+  color: #334155;
+  font-weight: 650;
+}
+
+.my-transactions__search input:focus,
+.my-transactions__status-select:focus {
+  border-color: #4db56e;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.11);
+}
+
+.my-transactions__state-card {
+  min-height: 220px;
+  padding: 46px 24px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--mt-muted);
+}
+
+.my-transactions__state-content {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+}
+
+.my-transactions__state-content svg {
+  color: var(--mt-green);
+  margin-bottom: 3px;
+}
+
+.my-transactions__state-content strong,
+.my-transactions__state-card h3 {
+  color: var(--mt-text);
+}
+
+.my-transactions__state-content strong {
+  font-size: 13px;
+}
+
+.my-transactions__state-content span,
+.my-transactions__state-card p {
+  color: var(--mt-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.my-transactions__empty-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.my-transactions__state-card h3 {
+  margin: 0;
+}
+
+.my-transactions__state-card p {
+  max-width: 500px;
+  margin: 8px auto 0;
+}
+
+.my-transactions__list {
+  display: grid;
+  gap: 14px;
+}
+
+.my-transactions__ticket {
+  overflow: hidden;
+  border-radius: 16px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.my-transactions__ticket:hover {
+  border-color: #c8dfcf;
+  box-shadow: 0 10px 28px rgba(15, 61, 36, 0.06);
+}
+
+.my-transactions__ticket-main {
+  padding: 20px;
+}
+
+.my-transactions__ticket-toprow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.my-transactions__ticket-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-width: 0;
+  flex: 1 1 340px;
+}
+
+.my-transactions__ticket-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  border-radius: 12px;
+}
+
+.my-transactions__ticket-icon.is-document {
+  background: var(--mt-green-soft);
+  color: var(--mt-green);
+}
+
+.my-transactions__ticket-icon.is-finance {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.my-transactions__ticket-copy {
+  min-width: 0;
+}
+
+.my-transactions__ticket-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.my-transactions__ticket-title-row h3 {
+  margin: 0;
+  color: var(--mt-text);
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.my-transactions__workflow-badge {
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.my-transactions__ticket-number,
+.my-transactions__ticket-source {
+  margin: 0;
+}
+
+.my-transactions__ticket-number {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.my-transactions__ticket-number strong {
+  color: #334155;
+}
+
+.my-transactions__ticket-source {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.my-transactions__status-badge,
+.my-transactions__registrar-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.my-transactions__status-badge {
+  padding: 7px 10px;
+}
+
+.my-transactions__status-badge--compact,
+.my-transactions__registrar-badge {
+  padding: 5px 8px;
+}
+
+.my-transactions__status-badge.is-paid,
+.my-transactions__registrar-badge.is-done {
+  border: 1px solid #bbf7d0;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.my-transactions__status-badge.is-pending,
+.my-transactions__registrar-badge.is-pending {
+  border: 1px solid #fde68a;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.my-transactions__status-badge.is-cancelled,
+.my-transactions__registrar-badge.is-cancelled {
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.my-transactions__status-badge.is-refunded {
+  border: 1px solid #bfdbfe;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.my-transactions__registrar-badge.is-processing {
+  border: 1px solid #bfdbfe;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.my-transactions__status-badge.is-default,
+.my-transactions__registrar-badge.is-default {
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.my-transactions__main-details,
+.my-transactions__detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 16px;
+}
+
+.my-transactions__main-details {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--mt-border-soft);
+}
+
+.my-transactions__detail-item {
+  min-width: 0;
+}
+
+.my-transactions__detail-label {
+  margin-bottom: 5px;
+  color: #829188;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.my-transactions__detail-value {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.my-transactions__academic-period,
+.my-transactions__finance-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.my-transactions__academic-period {
+  width: fit-content;
+  padding: 9px 11px;
+  background: var(--mt-surface-soft);
+  color: #475569;
+  font-weight: 650;
+}
+
+.my-transactions__academic-period svg {
+  color: #64748b;
+}
+
+.my-transactions__finance-note {
+  align-items: flex-start;
+  padding: 11px 12px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.my-transactions__finance-note svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.my-transactions__details-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: var(--mt-green);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.my-transactions__details-toggle:hover {
+  color: var(--mt-green-dark);
+}
+
+.my-transactions__expanded {
+  padding: 20px;
+  border-top: 1px solid var(--mt-border);
+  background: #f9fbfa;
+}
+
+.my-transactions__expanded-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.my-transactions__detail-section--divided {
+  padding-top: 18px;
+  border-top: 1px solid var(--mt-border);
+}
+
+.my-transactions__detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 13px;
+  color: var(--mt-green);
+}
+
+.my-transactions__detail-heading strong {
+  color: var(--mt-text);
+  font-size: 14px;
+}
+
+.my-transactions__cancellation-note,
+.my-transactions__remarks-note {
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.my-transactions__cancellation-note {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.my-transactions__remarks-note {
+  border: 1px solid #dde6e0;
+  background: #fff;
+  color: #475569;
+}
+
+.my-transactions__guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px;
+  border-radius: 16px;
+}
+
+.my-transactions__guide-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  border-radius: 10px;
+  background: var(--mt-green-soft);
+  color: var(--mt-green);
+}
+
+.my-transactions__guide strong {
+  color: var(--mt-text);
+  font-size: 14px;
+}
+
+.my-transactions__guide p {
+  margin: 5px 0 0;
+  color: var(--mt-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.is-spinning {
+  animation: myTransactionsSpin 0.9s linear infinite;
+}
+
+@keyframes myTransactionsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1180px) {
+  .my-transactions__summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .my-transactions {
+    gap: 16px;
+    padding: 0;
+  }
+
+  .my-transactions__hero,
+  .my-transactions__history-card,
+  .my-transactions__ticket-main,
+  .my-transactions__expanded,
+  .my-transactions__guide {
+    padding: 18px;
+  }
+
+  .my-transactions__hero-content,
+  .my-transactions__ticket-toprow {
+    align-items: flex-start;
+  }
+
+  .my-transactions__hero-icon {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+    border-radius: 14px;
+  }
+
+  .my-transactions__summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-transactions__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .my-transactions__refresh-button {
+    width: 100%;
+  }
+
+  .my-transactions__history-heading {
+    align-items: stretch;
+  }
+
+  .my-transactions__ticket-toprow {
+    flex-direction: column;
+  }
+
+  .my-transactions__status-badge {
+    align-self: flex-start;
+  }
+
+  .my-transactions__main-details,
+  .my-transactions__detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-transactions input,
+  .my-transactions select,
+  .my-transactions button {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .my-transactions__hero-content {
+    gap: 14px;
+  }
+
+  .my-transactions__hero-icon {
+    display: none;
+  }
+
+  .my-transactions__hero h1 {
+    font-size: 25px;
+  }
+
+  .my-transactions__summary-card {
+    padding: 16px;
+  }
+
+  .my-transactions__ticket-identity {
+    gap: 11px;
+  }
+
+  .my-transactions__ticket-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .my-transactions__main-details,
+  .my-transactions__detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-transactions__academic-period {
+    width: 100%;
+  }
+}

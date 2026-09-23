@@ -1,14 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Activity,
+  CircleAlert,
+  Clock3,
+  Filter,
+  LoaderCircle,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  UsersRound,
+  X,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
+import "../../../styles/AdminUserActivity.css";
 
-import "../../../styles/activitylogger.css";
-
-
-const API_BASE_URL = "http://localhost:3000/api/activity-logs";
-
+const API_BASE_URL = apiUrl("/api/activity-logs");
 
 type ActivityLog = {
   activity_id: number;
@@ -21,7 +31,6 @@ type ActivityLog = {
   created_at: string;
 };
 
-
 interface ActivityLogResponse {
   success?: boolean;
   data?: ActivityLog[];
@@ -30,988 +39,563 @@ interface ActivityLogResponse {
   error?: string;
 }
 
-
-/* =========================================================
-   NORMALIZE ACTIVITY TYPE
-
-   Converts:
-   FAILED LOGIN
-   FAILED_LOGIN
-   failed/login
-   Failed-Login
-
-   into:
-   failed-login
-   ========================================================= */
-
-function normalizeActivityType(value: string): string {
-  return String(value ?? "")
+function normalizeBadgeClass(value: string) {
+  return String(value || "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
+function formatActivityTime(value: string) {
+  const date = new Date(value);
 
-/* =========================================================
-   SEMANTIC ACTIVITY CLASS
-
-   This prevents backend naming differences from breaking
-   the badge color.
-
-   Example:
-   USER_LOGIN_FAILED
-   LOGIN FAILED
-   FAILED LOGIN ATTEMPT
-
-   will all receive:
-   failed-login
-   ========================================================= */
-
-function getActivitySemanticClass(activityType: string): string {
-  const normalized = normalizeActivityType(activityType);
-
-  /* =======================================================
-     DEVELOPMENT LOGIN
-
-     Must come BEFORE normal login.
-     DEV LOGIN -> dev-login
-     ======================================================= */
-
-  if (
-    normalized.includes("dev-login") ||
-    normalized.includes("development-login") ||
-    (
-      normalized.includes("dev") &&
-      normalized.includes("login")
-    )
-  ) {
-    return "dev-login";
+  if (Number.isNaN(date.getTime())) {
+    return {
+      date: "Unknown date",
+      time: "",
+    };
   }
 
-
-  /* =======================================================
-     BLOCKED LOGIN
-
-     Must come before normal login.
-     ======================================================= */
-
-  if (
-    normalized.includes("login") &&
-    (
-      normalized.includes("blocked") ||
-      normalized.includes("disabled") ||
-      normalized.includes("inactive") ||
-      normalized.includes("denied")
-    )
-  ) {
-    return "login-blocked";
-  }
-
-
-  /* =======================================================
-     FAILED LOGIN
-     ======================================================= */
-
-  if (
-    normalized.includes("login") &&
-    (
-      normalized.includes("fail") ||
-      normalized.includes("invalid") ||
-      normalized.includes("unsuccessful") ||
-      normalized.includes("error")
-    )
-  ) {
-    return "failed-login";
-  }
-
-
-  /* =======================================================
-     LOGOUT
-     ======================================================= */
-
-  if (
-    normalized.includes("logout") ||
-    normalized.includes("sign-out") ||
-    normalized.includes("signed-out")
-  ) {
-    return "logout";
-  }
-
-
-  /* =======================================================
-     NORMAL LOGIN
-     ======================================================= */
-
-  if (
-    normalized === "login" ||
-    normalized.includes("sign-in") ||
-    normalized.includes("signed-in")
-  ) {
-    return "login";
-  }
-
-
-  /* =======================================================
-     DOCUMENT VERIFICATION
-     ======================================================= */
-
-  if (
-    normalized.includes("document-verification") ||
-    (
-      normalized.includes("document") &&
-      normalized.includes("verif")
-    )
-  ) {
-    return "document-verification";
-  }
-
-
-  /* =======================================================
-     DELETE / REMOVE
-     ======================================================= */
-
-  if (
-    normalized.includes("delete") ||
-    normalized.includes("remove")
-  ) {
-    return "delete";
-  }
-
-
-  /* =======================================================
-     REJECT / DECLINE
-     ======================================================= */
-
-  if (
-    normalized.includes("reject") ||
-    normalized.includes("decline")
-  ) {
-    return "reject";
-  }
-
-
-  /* =======================================================
-     APPROVE
-     ======================================================= */
-
-  if (
-    normalized.includes("approve") ||
-    normalized.includes("approval")
-  ) {
-    return "approve";
-  }
-
-
-  /* =======================================================
-     PASSWORD / SECURITY
-     ======================================================= */
-
-  if (
-    normalized.includes("password") ||
-    normalized.includes("security")
-  ) {
-    return "security";
-  }
-
-
-  /* =======================================================
-     GRADES
-     ======================================================= */
-
-  if (normalized.includes("grade")) {
-    return "grade";
-  }
-
-
-  /* =======================================================
-     ENROLLMENT
-     ======================================================= */
-
-  if (normalized.includes("enroll")) {
-    return "enrollment";
-  }
-
-
-  /* =======================================================
-     ANNOUNCEMENT
-     ======================================================= */
-
-  if (
-    normalized.includes("announcement") ||
-    normalized.includes("publish") ||
-    normalized.includes("post")
-  ) {
-    return "announcement";
-  }
-
-
-  /* =======================================================
-     EXPORT / DOWNLOAD
-     ======================================================= */
-
-  if (
-    normalized.includes("export") ||
-    normalized.includes("download")
-  ) {
-    return "export";
-  }
-
-
-  /* =======================================================
-     IMPORT / UPLOAD
-     ======================================================= */
-
-  if (
-    normalized.includes("import") ||
-    normalized.includes("upload")
-  ) {
-    return "import";
-  }
-
-
-  /* =======================================================
-     ARCHIVE
-     ======================================================= */
-
-  if (normalized.includes("archive")) {
-    return "archive";
-  }
-
-
-  /* =======================================================
-     DEACTIVATE
-     Must come before activate.
-     ======================================================= */
-
-  if (
-    normalized.includes("deactivate") ||
-    normalized.includes("disable")
-  ) {
-    return "deactivate";
-  }
-
-
-  /* =======================================================
-     RESTORE / REACTIVATE
-     ======================================================= */
-
-  if (
-    normalized.includes("restore") ||
-    normalized.includes("reactivate") ||
-    normalized === "activate" ||
-    normalized === "activated"
-  ) {
-    return "restore";
-  }
-
-
-  /* =======================================================
-     ROLE CHANGE
-     ======================================================= */
-
-  if (normalized.includes("role")) {
-    return "role-change";
-  }
-
-
-  /* =======================================================
-     STATUS CHANGE
-     ======================================================= */
-
-  if (normalized.includes("status")) {
-    return "status-change";
-  }
-
-
-  /* =======================================================
-     UNASSIGN
-     Must come before assign.
-     ======================================================= */
-
-  if (normalized.includes("unassign")) {
-    return "unassign";
-  }
-
-
-  /* =======================================================
-     ASSIGN
-     ======================================================= */
-
-  if (normalized.includes("assign")) {
-    return "assign";
-  }
-
-
-  /* =======================================================
-     SCHEDULE
-     ======================================================= */
-
-  if (normalized.includes("schedule")) {
-    return "schedule";
-  }
-
-
-  /* =======================================================
-     CANCEL
-     ======================================================= */
-
-  if (normalized.includes("cancel")) {
-    return "cancel";
-  }
-
-
-  /* =======================================================
-     COMPLETE
-     ======================================================= */
-
-  if (normalized.includes("complete")) {
-    return "complete";
-  }
-
-
-  /* =======================================================
-     INVALID
-     ======================================================= */
-
-  if (normalized.includes("invalid")) {
-    return "invalid";
-  }
-
-
-  /* =======================================================
-     VERIFY / VALIDATE
-
-     "verif" catches:
-     verify
-     verified
-     verification
-     ======================================================= */
-
-  if (
-    normalized.includes("verif") ||
-    normalized.includes("validat")
-  ) {
-    return "validate";
-  }
-
-
-  /* =======================================================
-     SUBMIT
-     ======================================================= */
-
-  if (normalized.includes("submit")) {
-    return "submit";
-  }
-
-
-  /* =======================================================
-     EMAIL / SEND
-     ======================================================= */
-
-  if (
-    normalized.includes("email") ||
-    normalized.includes("notification") ||
-    normalized.includes("send") ||
-    normalized.includes("sent")
-  ) {
-    return "email";
-  }
-
-
-  /* =======================================================
-     VIEW / OPEN
-     ======================================================= */
-
-  if (
-    normalized.includes("view") ||
-    normalized.includes("open")
-  ) {
-    return "view";
-  }
-
-
-  /* =======================================================
-     USER MANAGEMENT
-     ======================================================= */
-
-  if (
-    normalized.includes("user") ||
-    normalized.includes("account")
-  ) {
-    return "user-management";
-  }
-
-
-  /* =======================================================
-     UPDATE / EDIT
-     ======================================================= */
-
-  if (
-    normalized.includes("update") ||
-    normalized.includes("edit") ||
-    normalized.includes("modify")
-  ) {
-    return "update";
-  }
-
-
-  /* =======================================================
-     CREATE / ADD
-     ======================================================= */
-
-  if (
-    normalized.includes("create") ||
-    normalized.includes("add")
-  ) {
-    return "create";
-  }
-
-
-  /* =======================================================
-     GENERAL FAILURE
-     ======================================================= */
-
-  if (
-    normalized.includes("fail") ||
-    normalized.includes("error")
-  ) {
-    return "error";
-  }
-
-
-  /* =======================================================
-     UNKNOWN
-
-     Keeps backend value as a CSS class while using
-     the neutral badge base.
-     ======================================================= */
-
-  return normalized || "unknown";
+  return {
+    date: date.toLocaleDateString("en-PH", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }),
+    time: date.toLocaleTimeString("en-PH", {
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+  };
 }
-
-
-/* =========================================================
-   ACTIVITY LOGGER
-   ========================================================= */
 
 export default function UserActivity() {
   const navigate = useNavigate();
 
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [search, setSearch] = useState("");
-
-  const [loading, setLoading] = useState(true);
-
-  const [error, setError] = useState("");
-
-
-  /* =========================================================
-     SESSION
-     ========================================================= */
-
   const session = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = session?.role;
+  const authenticated = Boolean(session && token);
 
-  const authenticated = Boolean(
-    session &&
-    token
-  );
-
-
-  /* =========================================================
-     AUTHORIZATION
-     ========================================================= */
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All");
+  const [activityFilter, setActivityFilter] = useState("All");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-
-      navigate(
-        "/login",
-        {
-          replace: true,
-        },
-      );
-
+      navigate("/login", { replace: true });
       return;
     }
-
 
     if (userRole !== "Admin") {
       if (userRole) {
-        navigate(
-          authService.getDashboardRoute(userRole),
-          {
-            replace: true,
-          },
-        );
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
       } else {
-        navigate(
-          "/login",
-          {
-            replace: true,
-          },
-        );
+        navigate("/login", { replace: true });
       }
     }
-  }, [
-    authenticated,
-    userRole,
-    navigate,
-  ]);
+  }, [authenticated, userRole, navigate]);
 
+  const loadLogs = useCallback(
+    async (isRefresh = false, signal?: AbortSignal) => {
+      if (!authenticated || userRole !== "Admin") {
+        return;
+      }
 
-  /* =========================================================
-     LOAD ACTIVITY LOGS
-     ========================================================= */
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        setError("");
+
+        const response = await authService.authFetch(API_BASE_URL, {
+          method: "GET",
+          signal,
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+        let data: ActivityLog[] | ActivityLogResponse | null = null;
+
+        if (contentType.includes("application/json")) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+
+          throw new Error(
+            `Server returned a non-JSON response (${response.status}): ${text.slice(
+              0,
+              200,
+            )}`,
+          );
+        }
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        if (response.status === 403) {
+          const responseObject = !Array.isArray(data) ? data : null;
+
+          throw new Error(
+            responseObject?.message ||
+              responseObject?.error ||
+              "You are not authorized to view activity logs.",
+          );
+        }
+
+        if (!response.ok) {
+          const responseObject = !Array.isArray(data) ? data : null;
+
+          throw new Error(
+            responseObject?.message ||
+              responseObject?.error ||
+              `Unable to load activity logs (${response.status}).`,
+          );
+        }
+
+        let loadedLogs: ActivityLog[] = [];
+
+        if (Array.isArray(data)) {
+          loadedLogs = data;
+        } else if (data && Array.isArray(data.logs)) {
+          loadedLogs = data.logs;
+        } else if (data && Array.isArray(data.data)) {
+          loadedLogs = data.data;
+        }
+
+        setLogs(loadedLogs);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+
+        console.error("LOAD ACTIVITY LOGS ERROR:", err);
+        setLogs([]);
+
+        if (err instanceof TypeError) {
+          setError(
+            "Unable to connect to the activity log server. Make sure the backend is running on port 3000.",
+          );
+          return;
+        }
+
+        setError(
+          err instanceof Error ? err.message : "Unable to load activity logs.",
+        );
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [authenticated, userRole, navigate],
+  );
 
   useEffect(() => {
-    if (
-      !authenticated ||
-      userRole !== "Admin"
-    ) {
+    if (!authenticated || userRole !== "Admin") {
       return;
     }
 
+    const controller = new AbortController();
+    void loadLogs(false, controller.signal);
 
-    const controller =
-      new AbortController();
+    return () => controller.abort();
+  }, [authenticated, userRole, loadLogs]);
 
+  const roles = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          logs.map((log) => String(log.role || "").trim()).filter(Boolean),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [logs],
+  );
 
-    const loadActivityLogs =
-      async () => {
-        try {
-          setLoading(true);
+  const activityTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          logs
+            .map((log) => String(log.activity_type || "").trim())
+            .filter(Boolean),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [logs],
+  );
 
-          setError("");
+  const filteredLogs = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
+    return logs.filter((log) => {
+      const matchesSearch =
+        !query ||
+        [
+          log.username,
+          log.role,
+          log.activity_type,
+          log.module_name,
+          log.description,
+        ].some((value) =>
+          String(value ?? "")
+            .toLowerCase()
+            .includes(query),
+        );
 
-          const response =
-            await authService.authFetch(
-              API_BASE_URL,
-              {
-                method: "GET",
+      const matchesRole = roleFilter === "All" || log.role === roleFilter;
+      const matchesActivity =
+        activityFilter === "All" || log.activity_type === activityFilter;
 
-                signal:
-                  controller.signal,
+      return matchesSearch && matchesRole && matchesActivity;
+    });
+  }, [logs, search, roleFilter, activityFilter]);
 
-                headers: {
-                  Accept:
-                    "application/json",
-                },
-              },
-            );
+  const uniqueUsers = useMemo(
+    () => new Set(logs.map((log) => log.user_id)).size,
+    [logs],
+  );
 
+  const modules = useMemo(
+    () =>
+      new Set(
+        logs.map((log) => String(log.module_name || "").trim()).filter(Boolean),
+      ).size,
+    [logs],
+  );
 
-          /* =================================================
-             SESSION EXPIRED
-             ================================================= */
+  const latestActivity = useMemo(() => {
+    if (logs.length === 0) {
+      return null;
+    }
 
-          if (
-            response.status === 401
-          ) {
-            authService.logout();
+    const latest = [...logs].sort((a, b) => {
+      const aTime = new Date(a.created_at).getTime();
+      const bTime = new Date(b.created_at).getTime();
 
-            navigate(
-              "/login",
-              {
-                replace: true,
-              },
-            );
+      if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
+      if (Number.isNaN(aTime)) return 1;
+      if (Number.isNaN(bTime)) return -1;
 
-            return;
-          }
+      return bTime - aTime;
+    })[0];
 
+    return formatActivityTime(latest.created_at);
+  }, [logs]);
 
-          /* =================================================
-             READ RESPONSE SAFELY
-             ================================================= */
+  const hasActiveFilters =
+    Boolean(search.trim()) || roleFilter !== "All" || activityFilter !== "All";
 
-          const contentType =
-            response.headers.get(
-              "content-type",
-            ) || "";
+  const clearFilters = () => {
+    setSearch("");
+    setRoleFilter("All");
+    setActivityFilter("All");
+  };
 
-
-          let payload:
-            | ActivityLogResponse
-            | ActivityLog[]
-            | null = null;
-
-
-          if (
-            contentType.includes(
-              "application/json",
-            )
-          ) {
-            payload =
-              await response.json();
-          }
-
-
-          /* =================================================
-             FORBIDDEN
-             ================================================= */
-
-          if (
-            response.status === 403
-          ) {
-            const message =
-              !Array.isArray(payload)
-                ? payload?.message ||
-                  payload?.error
-                : null;
-
-            throw new Error(
-              message ||
-                "You do not have permission to view activity logs.",
-            );
-          }
-
-
-          /* =================================================
-             OTHER HTTP ERRORS
-             ================================================= */
-
-          if (!response.ok) {
-            const message =
-              !Array.isArray(payload)
-                ? payload?.message ||
-                  payload?.error
-                : null;
-
-            throw new Error(
-              message ||
-                `Unable to load activity logs. Server returned ${response.status}.`,
-            );
-          }
-
-
-          /* =================================================
-             NORMALIZE API RESPONSE
-             ================================================= */
-
-          let activityLogs:
-            ActivityLog[] = [];
-
-
-          if (
-            Array.isArray(payload)
-          ) {
-            activityLogs = payload;
-          } else if (
-            Array.isArray(
-              payload?.logs,
-            )
-          ) {
-            activityLogs =
-              payload.logs;
-          } else if (
-            Array.isArray(
-              payload?.data,
-            )
-          ) {
-            activityLogs =
-              payload.data;
-          }
-
-
-          setLogs(
-            activityLogs,
-          );
-        } catch (err) {
-          if (
-            err instanceof DOMException &&
-            err.name === "AbortError"
-          ) {
-            return;
-          }
-
-
-          if (
-            err instanceof TypeError
-          ) {
-            setError(
-              "Unable to connect to the activity log server. Make sure the backend is running on port 3000.",
-            );
-
-            return;
-          }
-
-
-          if (
-            err instanceof Error
-          ) {
-            setError(
-              err.message,
-            );
-
-            return;
-          }
-
-
-          setError(
-            "Unable to load activity logs.",
-          );
-        } finally {
-          if (
-            !controller.signal.aborted
-          ) {
-            setLoading(false);
-          }
-        }
-      };
-
-
-    void loadActivityLogs();
-
-
-    return () => {
-      controller.abort();
-    };
-  }, [
-    authenticated,
-    userRole,
-    navigate,
-  ]);
-
-
-  /* =========================================================
-     FILTER LOGS
-     ========================================================= */
-
-  const filteredLogs =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
-
-
-      if (!query) {
-        return logs;
-      }
-
-
-      return logs.filter(
-        (log) => {
-          const values = [
-            log.username,
-            log.role,
-            log.activity_type,
-            log.module_name,
-            log.description,
-          ];
-
-
-          return values.some(
-            (value) =>
-              String(
-                value ?? "",
-              )
-                .toLowerCase()
-                .includes(
-                  query,
-                ),
-          );
-        },
-      );
-    }, [
-      logs,
-      search,
-    ]);
-
-
-  /* =========================================================
-     ACCESS GUARD
-     ========================================================= */
-
-  if (
-    !authenticated ||
-    !session ||
-    userRole !== "Admin"
-  ) {
+  if (!authenticated || !session || userRole !== "Admin") {
     return null;
   }
 
-
-  /* =========================================================
-     RENDER
-     ========================================================= */
-
   return (
     <DashboardLayout>
-      <div className="admin-activity">
+      <main className="admin-user-activity">
+        <section className="admin-user-activity__hero">
+          <div className="admin-user-activity__hero-copy">
+            <div className="admin-user-activity__eyebrow">
+              <span>
+                <Activity size={16} aria-hidden="true" />
+              </span>
+              Admin · User Management
+            </div>
 
-        <div className="admin-activity-header">
-          <h1></h1>
-        </div>
+            <h1>User Activity</h1>
 
+            <p>
+              Review account actions and system activity recorded across the PTC
+              Portal.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="admin-user-activity__refresh"
+            onClick={() => void loadLogs(true)}
+            disabled={loading || refreshing}
+          >
+            <RefreshCw
+              size={16}
+              className={refreshing ? "admin-user-activity__spinner" : ""}
+              aria-hidden="true"
+            />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+        </section>
+
+        <section
+          className="admin-user-activity__summary"
+          aria-label="Activity log overview"
+        >
+          <article>
+            <span className="admin-user-activity__summary-icon">
+              <Activity size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Loaded Logs</small>
+              <strong>{loading ? "…" : logs.length.toLocaleString()}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span className="admin-user-activity__summary-icon">
+              <UsersRound size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Users in Activity</small>
+              <strong>{loading ? "…" : uniqueUsers.toLocaleString()}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span className="admin-user-activity__summary-icon">
+              <ShieldCheck size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Modules Recorded</small>
+              <strong>{loading ? "…" : modules.toLocaleString()}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span className="admin-user-activity__summary-icon">
+              <Clock3 size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Latest Record</small>
+              <strong className="admin-user-activity__latest">
+                {loading
+                  ? "…"
+                  : latestActivity
+                    ? `${latestActivity.date} · ${latestActivity.time}`
+                    : "No activity yet"}
+              </strong>
+            </div>
+          </article>
+        </section>
 
         {error && (
-          <p className="admin-manage-students__error">
-            {error}
-          </p>
+          <div className="admin-user-activity__error" role="status">
+            <CircleAlert size={18} aria-hidden="true" />
+            <span>{error}</span>
+          </div>
         )}
 
+        <section className="admin-user-activity__workspace">
+          <header className="admin-user-activity__workspace-header">
+            <div>
+              <span className="admin-user-activity__section-kicker">
+                Audit Trail
+              </span>
+              <h2>Activity Logs</h2>
+              <p>
+                {loading
+                  ? "Loading activity records…"
+                  : `${filteredLogs.length.toLocaleString()} of ${logs.length.toLocaleString()} loaded record${
+                      logs.length === 1 ? "" : "s"
+                    } shown`}
+              </p>
+            </div>
 
-        <input
-          type="text"
-          placeholder="Search activity..."
-          className="activity-search"
-          value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value,
-            )
-          }
-        />
+            <div className="admin-user-activity__filters">
+              <label className="admin-user-activity__search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Search activity logs"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  aria-label="Search activity logs"
+                />
 
-
-        <div className="activity-table-wrapper">
-          <table className="activity-table">
-
-            <thead>
-              <tr>
-                <th>
-                  Date &amp; Time
-                </th>
-
-                <th>
-                  User
-                </th>
-
-                <th>
-                  Role
-                </th>
-
-                <th>
-                  Activity
-                </th>
-
-                <th>
-                  Module
-                </th>
-
-                <th>
-                  Description
-                </th>
-              </tr>
-            </thead>
-
-
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    style={{
-                      textAlign:
-                        "center",
-                    }}
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    aria-label="Clear search"
                   >
-                    Loading activity logs...
-                  </td>
-                </tr>
-              ) : filteredLogs.length ===
-                0 ? (
+                    <X size={14} aria-hidden="true" />
+                  </button>
+                )}
+              </label>
+
+              <label className="admin-user-activity__select">
+                <Filter size={15} aria-hidden="true" />
+                <select
+                  value={roleFilter}
+                  onChange={(event) => setRoleFilter(event.target.value)}
+                  aria-label="Filter by role"
+                >
+                  <option value="All">All roles</option>
+                  {roles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="admin-user-activity__select">
+                <Activity size={15} aria-hidden="true" />
+                <select
+                  value={activityFilter}
+                  onChange={(event) => setActivityFilter(event.target.value)}
+                  aria-label="Filter by activity"
+                >
+                  <option value="All">All activities</option>
+                  {activityTypes.map((activityType) => (
+                    <option key={activityType} value={activityType}>
+                      {activityType}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className="admin-user-activity__clear"
+                  onClick={clearFilters}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </header>
+
+          <div className="admin-user-activity__table-wrap">
+            <table className="admin-user-activity__table">
+              <thead>
                 <tr>
-                  <td
-                    colSpan={6}
-                    style={{
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    No activity found.
-                  </td>
+                  <th>Date &amp; Time</th>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Activity</th>
+                  <th>Module</th>
+                  <th>Description</th>
                 </tr>
-              ) : (
-                filteredLogs.map(
-                  (log) => {
-                    const rawClass =
-                      normalizeActivityType(
-                        log.activity_type,
-                      );
+              </thead>
 
-                    const semanticClass =
-                      getActivitySemanticClass(
-                        log.activity_type,
-                      );
-
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="admin-user-activity__table-state">
+                        <LoaderCircle
+                          size={22}
+                          className="admin-user-activity__spinner"
+                          aria-hidden="true"
+                        />
+                        <span>Loading activity logs...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="admin-user-activity__table-state">
+                        <Activity size={22} aria-hidden="true" />
+                        <strong>No activity found</strong>
+                        <span>
+                          {hasActiveFilters
+                            ? "Try changing or clearing your filters."
+                            : "Activity records will appear here when available."}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLogs.map((log) => {
+                    const timestamp = formatActivityTime(log.created_at);
+                    const initial =
+                      String(log.username || "U")
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase() || "U";
+                    const roleClass = normalizeBadgeClass(
+                      log.role || "unknown",
+                    );
+                    const activityClass = normalizeBadgeClass(
+                      log.activity_type || "activity",
+                    );
 
                     return (
-                      <tr
-                        key={
-                          log.activity_id
-                        }
-                      >
+                      <tr key={log.activity_id}>
                         <td>
-                          {log.created_at
-                            ? new Date(
-                                log.created_at,
-                              ).toLocaleString()
-                            : "—"}
+                          <div className="admin-user-activity__date">
+                            <strong>{timestamp.date}</strong>
+                            <span>{timestamp.time || "—"}</span>
+                          </div>
                         </td>
 
-
                         <td>
-                          {log.username ||
-                            "—"}
+                          <div className="admin-user-activity__user">
+                            <span className="admin-user-activity__avatar">
+                              {initial}
+                            </span>
+                            <div>
+                              <strong>{log.username || "Unknown user"}</strong>
+                              <small>User ID {log.user_id}</small>
+                            </div>
+                          </div>
                         </td>
-
-
-                        <td>
-                          {log.role ||
-                            "—"}
-                        </td>
-
 
                         <td>
                           <span
-                            className={[
-                              "activity-badge",
-                              semanticClass,
-                              rawClass,
-                            ]
-                              .filter(
-                                Boolean,
-                              )
-                              .join(
-                                " ",
-                              )}
+                            className={`admin-user-activity__role admin-user-activity__role--${roleClass}`}
                           >
-                            {log.activity_type ||
-                              "Unknown"}
+                            {log.role || "Unknown"}
                           </span>
                         </td>
 
-
                         <td>
-                          {log.module_name ||
-                            "—"}
+                          <span
+                            className={`admin-user-activity__badge admin-user-activity__badge--${activityClass}`}
+                          >
+                            {log.activity_type || "Activity"}
+                          </span>
                         </td>
 
-
                         <td>
-                          {log.description ||
-                            "—"}
+                          <span className="admin-user-activity__module">
+                            {log.module_name || "—"}
+                          </span>
+                        </td>
+
+                        <td className="admin-user-activity__description">
+                          {log.description || "—"}
                         </td>
                       </tr>
                     );
-                  },
-                )
-              )}
-            </tbody>
-
-          </table>
-        </div>
-
-      </div>
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
     </DashboardLayout>
   );
 }

@@ -11,6 +11,9 @@ import OtpAuth from "../pages/auth/Otp";
 import About from "../components/Forms/about";
 import Programs from "../components/Forms/programs";
 import Contact from "../components/Forms/contact";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import VerifyResetOtp from "../pages/auth/VerifyResetOtp";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 // Student pages
 import StudentDashboard from "../pages/student/Dashboard";
@@ -23,16 +26,7 @@ import StudentCourseHistory from "../pages/student/AcademicRecord/CourseHistory"
 import StudentRecord from "../pages/student/AcademicRecord/StudentRecord";
 
 // Student pages — Enrollment
-
-import AddDropSubjects from "../pages/student/Enrollment/AddDrop";
-
 import Enrollmentmain from "../pages/student/Enrollment/Enrollmentmain";
-
-// Student pages — Financial
-import TuitionFees from "../pages/student/Financial/Tuitionfees";
-import PaymentHistory from "../pages/student/Financial/PaymentHistory";
-import BalanceInquiry from "../pages/student/Financial/Balance";
-import OnlinePayment from "../pages/student/Financial/OnlinePayment";
 
 // Student pages — Document
 import RequestDocument from "../pages/student/Documents/RequestDocument";
@@ -113,6 +107,7 @@ import ProgramHeadDashboard from "../pages/programhead/dashboard/Dashboard";
 import AnnouncementProg from "../pages/programhead/Announcement/AnnouncementProg";
 import AnnouncementProgD from "../pages/programhead/Announcement/AnnouncementDProg";
 import PendingGrades from "../pages/programhead/GradeApproval/PendingGrades";
+import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/TransferEvaluationReview";
 
 //Registrar
 import RegistrarDashboard from "../pages/registrar/Dashboard";
@@ -131,6 +126,9 @@ import AcademicRecordsR from "../pages/registrar/StudentRecord/AcademicRecordsR"
 import StudentDocumentsR from "../pages/registrar/StudentRecord/StudentCOGR";
 import TranscriptPreviewR from "../pages/registrar/StudentRecord/TranscriptPreviewR";
 
+//Finance
+import FinanceDashboard from "../pages/finance/Dashboard";
+
 //This is the last one
 
 import type { ReactElement } from "react";
@@ -145,6 +143,17 @@ import EnrollmentPeriodMR from "../pages/registrar/Enrollment/EnrollmentPeriodMR
 import ClassOfferingManagementR from "../pages/registrar/ClassOffering.tsx/ClassOfferingManagementR";
 import ClassPROG from "../pages/programhead/Classmanagement/ClassPROG";
 import TransferEvaluationR from "../pages/registrar/StudentRecord/TransferEvaluationR";
+import ScheduleList from "../pages/programhead/ScheduleVerification/ScheduleList";
+import FacultySchedules from "../pages/programhead/ScheduleVerification/FacultySchedules";
+import FacultySchedulesR from "../pages/registrar/Schedules/FacultySchedulesR";
+import DocumentRequest from "../pages/registrar/Documents/DocumentRequests";
+import StudentCORR from "../pages/registrar/StudentRecord/StudentCORR";
+import FinanceTicketProcessing from "../pages/finance/FinanceTicketProcessing";
+import FinancePaymentHistory from "../pages/finance/FinancePaymentHistory";
+import MyTransactions from "../pages/student/Financial/MyTransactions";
+import CreateStudentTransaction from "../pages/finance/CreateStudentTransaction";
+import FinanceTransactionTypes from "../pages/finance/FinanceTransactionTypes";
+import FinanceReports from "../pages/finance/FinanceReports";
 
 // ─── Role guard ───────────────────────────────────────────────
 function ProtectedRoute({
@@ -166,6 +175,7 @@ function ProtectedRoute({
       Registrar: "/registrar/dashboard",
       Student: "/student/dashboard",
       Faculty: "/faculty/dashboard",
+      Finance: "/finance/dashboard",
       "Program Head": "/programhead/dashboard",
     };
 
@@ -194,6 +204,11 @@ function ProgramHeadRoute({ element }: { element: ReactElement }) {
 function RegistrarRoute({ element }: { element: ReactElement }) {
   return <ProtectedRoute allowedRole="Registrar">{element}</ProtectedRoute>;
 }
+
+function FinanceRoute({ element }: { element: ReactElement }) {
+  return <ProtectedRoute allowedRole="Finance">{element}</ProtectedRoute>;
+}
+
 // ─── Routes ───────────────────────────────────────────────────
 export default function AppRoutes() {
   return (
@@ -242,6 +257,20 @@ export default function AppRoutes() {
 
         <Route path="/login" element={<LoginAuth />} />
         <Route path="/otp" element={<OtpAuth />} />
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+        <Route
+          path="/forgot-password/verify"
+          element={<VerifyResetOtp />}
+        />
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
+
 
         {/* ── Student: Solo links ── */}
         <Route
@@ -284,31 +313,8 @@ export default function AppRoutes() {
         {/* ── Student: Enrollment ── */}
 
         <Route
-          path="/student/enrollment/add-drop"
-          element={<StudentRoute element={<AddDropSubjects />} />}
-        />
-
-        <Route
           path="/student/enrollment/main"
           element={<StudentRoute element={<Enrollmentmain />} />}
-        />
-
-        {/* ── Student: Financial ── */}
-        <Route
-          path="/student/financial/tuition"
-          element={<StudentRoute element={<TuitionFees />} />}
-        />
-        <Route
-          path="/student/financial/history"
-          element={<StudentRoute element={<PaymentHistory />} />}
-        />
-        <Route
-          path="/student/financial/balance"
-          element={<StudentRoute element={<BalanceInquiry />} />}
-        />
-        <Route
-          path="/student/financial/pay"
-          element={<StudentRoute element={<OnlinePayment />} />}
         />
 
         {/* ── Student: Document ── */}
@@ -321,6 +327,11 @@ export default function AppRoutes() {
           element={<StudentRoute element={<DocumentRelease />} />}
         />
 
+        {/* ── Student: Financial ── */}
+        <Route
+          path="/student/transactions"
+          element={<StudentRoute element={<MyTransactions />} />}
+        />
         {/* ── Student: Settings ── */}
         <Route
           path="/student/setting/user"
@@ -519,27 +530,45 @@ export default function AppRoutes() {
           element={<AdminRoute element={<AnnouncementDetails />} />}
         />
 
-        {/* ── programhead: Dashboard ── */}
+        {/* ── Program Head ── */}
+
         <Route
           path="/programhead/dashboard"
           element={<ProgramHeadRoute element={<ProgramHeadDashboard />} />}
         />
+
         <Route
           path="/programhead/announcementprog"
           element={<ProgramHeadRoute element={<AnnouncementProg />} />}
         />
+
         <Route
           path="/programhead/announcementprogD/:id"
           element={<ProgramHeadRoute element={<AnnouncementProgD />} />}
         />
+
         <Route
           path="/programhead/gradeapproval/pending"
           element={<ProgramHeadRoute element={<PendingGrades />} />}
         />
 
         <Route
+          path="/programhead/transfer-evaluations"
+          element={<ProgramHeadRoute element={<TransferEvaluationPROG />} />}
+        />
+
+        <Route
           path="/programhead/class/management"
           element={<ProgramHeadRoute element={<ClassPROG />} />}
+        />
+
+        <Route
+          path="/programhead/class/schedule"
+          element={<ProgramHeadRoute element={<ScheduleList />} />}
+        />
+        <Route
+          path="/programhead/class/faculty-schedules"
+          element={<ProgramHeadRoute element={<FacultySchedules />} />}
         />
 
         {/* ── Registrar ── */}
@@ -568,6 +597,11 @@ export default function AppRoutes() {
         <Route
           path="/registrar/student/:id/DocumentsR"
           element={<RegistrarRoute element={<StudentDocumentsR />} />}
+        />
+
+        <Route
+          path="/registrar/student/:id/CORR"
+          element={<RegistrarRoute element={<StudentCORR />} />}
         />
 
         <Route
@@ -626,6 +660,10 @@ export default function AppRoutes() {
           element={<RegistrarRoute element={<ClassOfferingManagementR />} />}
         />
 
+        <Route
+          path="/registrar/schedules/faculty"
+          element={<RegistrarRoute element={<FacultySchedulesR />} />}
+        />
         {/* ── Registrar Announcements ── */}
         <Route
           path="/registrar/announcement/listR"
@@ -644,6 +682,38 @@ export default function AppRoutes() {
         <Route
           path="/registrar/announcement/createR"
           element={<RegistrarRoute element={<AnnouncementCreateR />} />}
+        />
+        {/* ── Registrar Documents── */}
+        <Route
+          path="/registrar/document-requests"
+          element={<RegistrarRoute element={<DocumentRequest />} />}
+        />
+        {/* ── Finance ── */}
+        <Route
+          path="/finance/dashboard"
+          element={<FinanceRoute element={<FinanceDashboard />} />}
+        />
+
+        <Route
+          path="/finance/transactions/create"
+          element={<FinanceRoute element={<CreateStudentTransaction />} />}
+        />
+        <Route
+          path="/finance/tickets"
+          element={<FinanceRoute element={<FinanceTicketProcessing />} />}
+        />
+        <Route
+          path="/finance/transaction-types"
+          element={<FinanceRoute element={<FinanceTransactionTypes />} />}
+        />
+        <Route
+          path="/finance/reports"
+          element={<FinanceRoute element={<FinanceReports />} />}
+        />
+
+        <Route
+          path="/finance/payment-history"
+          element={<FinanceRoute element={<FinancePaymentHistory />} />}
         />
 
         {/* Catch-all */}

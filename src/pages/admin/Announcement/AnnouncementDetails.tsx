@@ -1,24 +1,28 @@
 import { useEffect, useState } from "react";
-
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CircleAlert,
+  Clock3,
+  Download,
+  FileText,
+  LoaderCircle,
+  Megaphone,
+  Paperclip,
+  Pencil,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
+import "../../../styles/AdminAnnouncementDetails.css";
 
-import "../../../styles/announcementdetails.css";
-
-// =====================================================
-// API
-// =====================================================
-
-const API_BASE_URL = "http://localhost:3000/api/announcement-management";
-
-const FILE_BASE_URL = "http://localhost:3000";
-
-// =====================================================
-// TYPES
-// =====================================================
+const API_BASE_URL = apiUrl("/api/announcement-management");
+const FILE_BASE_URL = "API_BASE_URL";
 
 type Recipient = {
   role_id: number;
@@ -35,102 +39,115 @@ type Attachment = {
 
 type Announcement = {
   announcement_id: number;
-
   title: string;
-
   content: string;
-
   created_by: string;
-
   publish_date: string;
-
   expiry_date: string | null;
-
   is_active: number;
-
   created_at: string;
-
   recipients: Recipient[];
-
   attachments: Attachment[];
 };
 
 interface AnnouncementResponse {
   success?: boolean;
-
   data?: Announcement;
-
   announcement?: Announcement;
-
   message?: string;
-
   error?: string;
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+function formatDate(value: string | null, fallback: string) {
+  if (!value) {
+    return fallback;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return fallback;
+  }
+
+  return date.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "Not available";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not available";
+  }
+
+  return date.toLocaleString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatFileSize(value: number) {
+  const bytes = Number(value);
+
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "";
+  }
+
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function buildAttachmentUrl(filePath: string) {
+  const normalizedPath = String(filePath || "").replace(/\\/g, "/");
+
+  return `${FILE_BASE_URL}/${normalizedPath.replace(/^\/+/, "")}`;
+}
 
 export default function AnnouncementDetails() {
   const navigate = useNavigate();
-
-  const { id } = useParams<{
-    id: string;
-  }>();
-
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
+  const { id } = useParams<{ id: string }>();
 
   const session = authService.getSession();
-
   const token = authService.getToken();
-
   const userRole = session?.role;
-
   const authenticated = Boolean(session && token);
 
-  // =====================================================
-  // STATE
-  // =====================================================
-
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
-  // =====================================================
-  // AUTHORIZATION
-  // =====================================================
 
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      navigate("/login", { replace: true });
       return;
     }
 
     if (userRole !== "Admin") {
       if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), {
-          replace: true,
-        });
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
       } else {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login", { replace: true });
       }
     }
   }, [authenticated, userRole, navigate]);
-
-  // =====================================================
-  // LOAD ANNOUNCEMENT
-  // =====================================================
 
   useEffect(() => {
     if (!authenticated || userRole !== "Admin") {
@@ -141,9 +158,7 @@ export default function AnnouncementDetails() {
 
     if (!Number.isInteger(announcementId) || announcementId <= 0) {
       setError("Invalid announcement ID.");
-
       setLoading(false);
-
       return;
     }
 
@@ -152,16 +167,13 @@ export default function AnnouncementDetails() {
     const loadAnnouncement = async () => {
       try {
         setLoading(true);
-
         setError("");
 
         const response = await authService.authFetch(
           `${API_BASE_URL}/${announcementId}`,
           {
             method: "GET",
-
             signal: controller.signal,
-
             headers: {
               Accept: "application/json",
             },
@@ -169,7 +181,6 @@ export default function AnnouncementDetails() {
         );
 
         const contentType = response.headers.get("content-type") || "";
-
         let data: Announcement | AnnouncementResponse | null = null;
 
         if (contentType.includes("application/json")) {
@@ -185,23 +196,11 @@ export default function AnnouncementDetails() {
           );
         }
 
-        // =================================================
-        // 401
-        // =================================================
-
         if (response.status === 401) {
           authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
+          navigate("/login", { replace: true });
           return;
         }
-
-        // =================================================
-        // 403
-        // =================================================
 
         if (response.status === 403) {
           const responseObject =
@@ -214,10 +213,6 @@ export default function AnnouncementDetails() {
           );
         }
 
-        // =================================================
-        // HTTP ERROR
-        // =================================================
-
         if (!response.ok) {
           const responseObject =
             data && !("announcement_id" in data) ? data : null;
@@ -228,10 +223,6 @@ export default function AnnouncementDetails() {
               `Unable to load announcement (${response.status}).`,
           );
         }
-
-        // =================================================
-        // NORMALIZE RESPONSE
-        // =================================================
 
         let loadedAnnouncement: Announcement | null = null;
 
@@ -247,38 +238,37 @@ export default function AnnouncementDetails() {
           throw new Error("Announcement data was not returned by the server.");
         }
 
-        const normalizedAnnouncement: Announcement = {
+        setAnnouncement({
           ...loadedAnnouncement,
-
           recipients: Array.isArray(loadedAnnouncement.recipients)
             ? loadedAnnouncement.recipients
             : [],
-
           attachments: Array.isArray(loadedAnnouncement.attachments)
             ? loadedAnnouncement.attachments
             : [],
-        };
-
-        setAnnouncement(normalizedAnnouncement);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
+        });
+      } catch (requestError) {
+        if (
+          requestError instanceof DOMException &&
+          requestError.name === "AbortError"
+        ) {
           return;
         }
 
-        console.error("LOAD ADMIN ANNOUNCEMENT DETAIL ERROR:", err);
-
+        console.error("LOAD ADMIN ANNOUNCEMENT DETAIL ERROR:", requestError);
         setAnnouncement(null);
 
-        if (err instanceof TypeError) {
+        if (requestError instanceof TypeError) {
           setError(
             "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
           );
-
           return;
         }
 
         setError(
-          err instanceof Error ? err.message : "Unable to load announcement.",
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load announcement.",
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -289,214 +279,261 @@ export default function AnnouncementDetails() {
 
     void loadAnnouncement();
 
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [id, authenticated, userRole, navigate]);
-
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
 
   if (!authenticated || !session || userRole !== "Admin") {
     return null;
   }
 
-  // =====================================================
-  // LOADING
-  // =====================================================
-
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="announcement-loading">Loading announcement...</div>
+        <main className="admin-announcement-details-view">
+          <section className="admin-announcement-details-view__state">
+            <span className="admin-announcement-details-view__state-icon">
+              <LoaderCircle
+                size={24}
+                className="admin-announcement-details-view__spinner"
+                aria-hidden="true"
+              />
+            </span>
+            <strong>Loading announcement...</strong>
+            <p>Please wait while the announcement record is retrieved.</p>
+          </section>
+        </main>
       </DashboardLayout>
     );
   }
-
-  // =====================================================
-  // ERROR
-  // =====================================================
 
   if (error || !announcement) {
     return (
       <DashboardLayout>
-        <div className="announcement-details-page">
-          <button
-            type="button"
-            className="back-btn"
-            onClick={() => navigate("/admin/announcement/list")}
-          >
-            ← Back to Announcements
-          </button>
-
-          <div className="announcement-card">
-            <p className="error-message">
-              {error || "Announcement not found."}
-            </p>
-          </div>
-        </div>
+        <main className="admin-announcement-details-view">
+          <section className="admin-announcement-details-view__state admin-announcement-details-view__state--error">
+            <span className="admin-announcement-details-view__state-icon">
+              <CircleAlert size={24} aria-hidden="true" />
+            </span>
+            <strong>Unable to open announcement</strong>
+            <p>{error || "Announcement not found."}</p>
+            <button
+              type="button"
+              className="admin-announcement-details-view__back"
+              onClick={() => navigate("/admin/announcement/list")}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Announcements
+            </button>
+          </section>
+        </main>
       </DashboardLayout>
     );
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
+  const isActive = Number(announcement.is_active) === 1;
 
   return (
     <DashboardLayout>
-      <div className="announcement-details-page">
-        {/* =================================================
-            BACK
-        ================================================= */}
+      <main className="admin-announcement-details-view">
+        <div className="admin-announcement-details-view__toolbar">
+          <button
+            type="button"
+            className="admin-announcement-details-view__back"
+            onClick={() => navigate("/admin/announcement/list")}
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to Announcements
+          </button>
 
-        <button
-          type="button"
-          className="back-btn"
-          onClick={() => navigate("/admin/announcement/list")}
-        >
-          ← Back to Announcements
-        </button>
+          <button
+            type="button"
+            className="admin-announcement-details-view__edit"
+            onClick={() =>
+              navigate(
+                `/admin/announcement/edit/${announcement.announcement_id}`,
+              )
+            }
+          >
+            <Pencil size={15} aria-hidden="true" />
+            Edit Announcement
+          </button>
+        </div>
 
-        <div className="announcement-card">
-          {/* =================================================
-              BANNER
-          ================================================= */}
-
-          <div className="announcement-banner">📢 PTC Announcement</div>
-
-          {/* =================================================
-              HEADER
-          ================================================= */}
-
-          <div className="announcement-header">
-            <h1>{announcement.title}</h1>
-
-            <span
-              className={`status-badge ${
-                Number(announcement.is_active) === 1 ? "active" : "inactive"
-              }`}
-            >
-              {Number(announcement.is_active) === 1 ? "ACTIVE" : "INACTIVE"}
-            </span>
-          </div>
-
-          {/* =================================================
-              ANNOUNCEMENT INFORMATION
-          ================================================= */}
-
-          <div className="announcement-meta">
-            <div className="meta-box">
-              <span className="meta-label">Posted By</span>
-
-              <span>{announcement.created_by || "Unknown"}</span>
+        <section className="admin-announcement-details-view__hero">
+          <div className="admin-announcement-details-view__hero-copy">
+            <div className="admin-announcement-details-view__eyebrow">
+              <span>
+                <Megaphone size={16} aria-hidden="true" />
+              </span>
+              Admin · Announcement Management
             </div>
 
-            <div className="meta-box">
-              <span className="meta-label">Recipients</span>
+            <h1>{announcement.title}</h1>
 
-              <span>
+            <p>
+              Review the announcement content, publication information,
+              recipients, and attached files.
+            </p>
+          </div>
+
+          <span
+            className={
+              isActive
+                ? "admin-announcement-details-view__status admin-announcement-details-view__status--active"
+                : "admin-announcement-details-view__status admin-announcement-details-view__status--inactive"
+            }
+          >
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        </section>
+
+        <section className="admin-announcement-details-view__summary">
+          <article>
+            <span className="admin-announcement-details-view__summary-icon">
+              <UserRound size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Posted By</small>
+              <strong>{announcement.created_by || "Unknown"}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span className="admin-announcement-details-view__summary-icon">
+              <UsersRound size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Recipients</small>
+              <strong>
                 {announcement.recipients.length > 0
                   ? announcement.recipients
                       .map((role) => role.role_name)
                       .join(", ")
                   : "None"}
-              </span>
+              </strong>
             </div>
+          </article>
 
-            <div className="meta-box">
-              <span className="meta-label">Published</span>
-
-              <span>
-                {announcement.publish_date
-                  ? new Date(announcement.publish_date).toLocaleDateString()
-                  : "No publish date"}
-              </span>
+          <article>
+            <span className="admin-announcement-details-view__summary-icon">
+              <CalendarDays size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Published</small>
+              <strong>
+                {formatDate(announcement.publish_date, "No publish date")}
+              </strong>
             </div>
+          </article>
 
-            <div className="meta-box">
-              <span className="meta-label">Expires</span>
-
-              <span>
-                {announcement.expiry_date
-                  ? new Date(announcement.expiry_date).toLocaleDateString()
-                  : "No Expiry"}
-              </span>
+          <article>
+            <span className="admin-announcement-details-view__summary-icon">
+              <Clock3 size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Expires</small>
+              <strong>
+                {formatDate(announcement.expiry_date, "No Expiry")}
+              </strong>
             </div>
-          </div>
+          </article>
+        </section>
 
-          {/* =================================================
-              CONTENT
-          ================================================= */}
+        <div className="admin-announcement-details-view__grid">
+          <section className="admin-announcement-details-view__card">
+            <header className="admin-announcement-details-view__card-header">
+              <span className="admin-announcement-details-view__section-icon">
+                <FileText size={17} aria-hidden="true" />
+              </span>
+              <div>
+                <span>Announcement</span>
+                <h2>Content</h2>
+              </div>
+            </header>
 
-          <div className="announcement-content">
-            <h2>Announcement</h2>
+            <div className="admin-announcement-details-view__content">
+              {announcement.content}
+            </div>
+          </section>
 
-            <div className="content-box">{announcement.content}</div>
-          </div>
+          <section className="admin-announcement-details-view__card">
+            <header className="admin-announcement-details-view__card-header">
+              <span className="admin-announcement-details-view__section-icon">
+                <ShieldCheck size={17} aria-hidden="true" />
+              </span>
+              <div>
+                <span>Record</span>
+                <h2>Announcement Information</h2>
+              </div>
+            </header>
 
-          {/* =================================================
-              ATTACHMENTS
-          ================================================= */}
+            <div className="admin-announcement-details-view__info-list">
+              <div>
+                <span>Announcement ID</span>
+                <strong>{announcement.announcement_id}</strong>
+              </div>
+              <div>
+                <span>Created</span>
+                <strong>{formatDateTime(announcement.created_at)}</strong>
+              </div>
+              <div>
+                <span>Status</span>
+                <strong>{isActive ? "Active" : "Inactive"}</strong>
+              </div>
+            </div>
+          </section>
 
-          <div className="announcement-content">
-            <h2>Attachments</h2>
+          <section className="admin-announcement-details-view__card admin-announcement-details-view__card--wide">
+            <header className="admin-announcement-details-view__card-header">
+              <span className="admin-announcement-details-view__section-icon">
+                <Paperclip size={17} aria-hidden="true" />
+              </span>
+              <div>
+                <span>Files</span>
+                <h2>Attachments</h2>
+              </div>
+            </header>
 
             {announcement.attachments.length === 0 ? (
-              <div className="content-box">No attachments.</div>
+              <div className="admin-announcement-details-view__empty">
+                <Paperclip size={19} aria-hidden="true" />
+                <span>No attachments.</span>
+              </div>
             ) : (
-              <div className="attachment-list">
+              <div className="admin-announcement-details-view__attachments">
                 {announcement.attachments.map((file) => {
-                  const normalizedPath = String(file.file_path || "").replace(
-                    /\\/g,
-                    "/",
-                  );
-
-                  const attachmentUrl = `${FILE_BASE_URL}/${normalizedPath.replace(
-                    /^\/+/,
-                    "",
-                  )}`;
+                  const fileSize = formatFileSize(file.file_size);
 
                   return (
-                    <div key={file.file_id} className="attachment-item">
-                      📄{" "}
-                      <a href={attachmentUrl} target="_blank" rel="noreferrer">
-                        {file.original_name}
-                      </a>
-                      {Number(file.file_size) > 0 && (
-                        <span>
-                          {" "}
-                          ({(Number(file.file_size) / 1024).toFixed(1)}
-                          {" KB)"}
-                        </span>
-                      )}
-                    </div>
+                    <a
+                      key={file.file_id}
+                      className="admin-announcement-details-view__attachment"
+                      href={buildAttachmentUrl(file.file_path)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <span className="admin-announcement-details-view__attachment-icon">
+                        <FileText size={17} aria-hidden="true" />
+                      </span>
+
+                      <span className="admin-announcement-details-view__attachment-copy">
+                        <strong>{file.original_name}</strong>
+                        <small>
+                          {[file.mime_type, fileSize]
+                            .filter(Boolean)
+                            .join(" · ") || "Attachment"}
+                        </small>
+                      </span>
+
+                      <Download size={16} aria-hidden="true" />
+                    </a>
                   );
                 })}
               </div>
             )}
-          </div>
-
-          {/* =================================================
-              FOOTER
-          ================================================= */}
-
-          <div className="announcement-footer">
-            <button
-              type="button"
-              className="edit-btn"
-              onClick={() =>
-                navigate(
-                  `/admin/announcement/edit/${announcement.announcement_id}`,
-                )
-              }
-            >
-              Edit Announcement
-            </button>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </DashboardLayout>
   );
 }

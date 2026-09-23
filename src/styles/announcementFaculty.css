@@ -1,0 +1,685 @@
+.faculty-announcements {
+  --fa-green-950: #073b24;
+  --fa-green-900: #0a4b2d;
+  --fa-green-800: #0d653b;
+  --fa-green-700: #0f7a45;
+  --fa-green-600: #159452;
+  --fa-green-100: #dcf5e6;
+  --fa-green-50: #f1fbf5;
+  --fa-text-950: #17201b;
+  --fa-text-800: #28352d;
+  --fa-text-700: #425047;
+  --fa-text-600: #5e6b63;
+  --fa-text-500: #76827b;
+  --fa-border: #dfe8e2;
+  --fa-border-strong: #cfdcd3;
+  --fa-surface: #ffffff;
+  --fa-bg: #f5f8f6;
+  --fa-danger: #b42318;
+  --fa-danger-soft: #fff3f1;
+
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 30px 38px;
+  color: var(--fa-text-950);
+  background:
+    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    var(--fa-bg);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.faculty-announcements *,
+.faculty-announcements *::before,
+.faculty-announcements *::after {
+  box-sizing: border-box;
+}
+
+.faculty-announcements button,
+.faculty-announcements input {
+  font: inherit;
+}
+
+.faculty-announcements__hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 25px 28px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(15, 122, 69, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(247, 253, 249, 0.98) 66%,
+    rgba(230, 247, 237, 0.98) 100%
+  );
+  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+}
+
+.faculty-announcements__hero::after {
+  content: "";
+  position: absolute;
+  right: -75px;
+  top: -95px;
+  width: 230px;
+  height: 230px;
+  border: 38px solid rgba(15, 122, 69, 0.055);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.faculty-announcements__hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.faculty-announcements__hero-copy {
+  min-width: 0;
+  max-width: 730px;
+}
+
+.faculty-announcements__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--fa-green-800);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.faculty-announcements__eyebrow-icon {
+  display: inline-flex;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: var(--fa-green-700);
+  background: var(--fa-green-100);
+}
+
+.faculty-announcements__hero h1 {
+  margin: 0;
+  color: var(--fa-text-950);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 760;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.faculty-announcements__hero p {
+  max-width: 680px;
+  margin: 9px 0 0;
+  color: var(--fa-text-600);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.faculty-announcements__refresh {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 41px;
+  padding: 8px 13px;
+  border: 1px solid var(--fa-green-800);
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--fa-green-800);
+  font-size: 11px;
+  font-weight: 720;
+  cursor: pointer;
+  box-shadow: 0 5px 13px rgba(13, 101, 59, 0.13);
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.faculty-announcements__refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--fa-green-900);
+  border-color: var(--fa-green-900);
+}
+
+.faculty-announcements__refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.faculty-announcements__refresh .is-spinning {
+  animation: faculty-announcements-spin 0.8s linear infinite;
+}
+
+.faculty-announcements__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.faculty-announcements__summary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 91px;
+  padding: 16px 17px;
+  border: 1px solid var(--fa-border);
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 5px 18px rgba(31, 56, 40, 0.045);
+}
+
+.faculty-announcements__summary-card--primary {
+  border-color: rgba(15, 122, 69, 0.2);
+  background: linear-gradient(120deg, #ffffff, #f6fcf8);
+}
+
+.faculty-announcements__summary-icon {
+  display: inline-flex;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #dceee2;
+  border-radius: 12px;
+  color: var(--fa-green-700);
+  background: var(--fa-green-50);
+}
+
+.faculty-announcements__summary-card--primary
+  .faculty-announcements__summary-icon {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--fa-green-700), var(--fa-green-900));
+  border-color: transparent;
+}
+
+.faculty-announcements__summary-card > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.faculty-announcements__summary-card > div > span {
+  color: var(--fa-text-600);
+  font-size: 10.5px;
+  font-weight: 680;
+}
+
+.faculty-announcements__summary-card strong {
+  color: var(--fa-text-950);
+  font-size: 22px;
+  font-weight: 780;
+  line-height: 1.08;
+}
+
+.faculty-announcements__summary-card .faculty-announcements__summary-author {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.faculty-announcements__summary-card small {
+  overflow: hidden;
+  color: var(--fa-text-500);
+  font-size: 9.5px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.faculty-announcements__panel {
+  overflow: hidden;
+  border: 1px solid var(--fa-border);
+  border-radius: 18px;
+  background: var(--fa-surface);
+  box-shadow: 0 9px 28px rgba(31, 56, 40, 0.06);
+}
+
+.faculty-announcements__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--fa-border);
+}
+
+.faculty-announcements__panel-header > div {
+  min-width: 0;
+}
+
+.faculty-announcements__panel-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--fa-green-700);
+  font-size: 9.5px;
+  font-weight: 760;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.faculty-announcements__panel-header h2 {
+  margin: 0;
+  color: var(--fa-text-950);
+  font-size: 16px;
+  font-weight: 760;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.faculty-announcements__panel-header p {
+  max-width: 650px;
+  margin: 5px 0 0;
+  color: var(--fa-text-500);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.faculty-announcements__search {
+  display: flex;
+  flex: 0 0 min(100%, 270px);
+  align-items: center;
+  gap: 8px;
+  min-height: 39px;
+  padding: 0 11px;
+  border: 1px solid var(--fa-border-strong);
+  border-radius: 10px;
+  color: var(--fa-text-500);
+  background: #ffffff;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.faculty-announcements__search:focus-within {
+  border-color: #9fceb0;
+  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.08);
+}
+
+.faculty-announcements__search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--fa-text-800);
+  background: transparent;
+  font-size: 10.5px;
+}
+
+.faculty-announcements__search input::placeholder {
+  color: #9aa49e;
+}
+
+.faculty-announcements__list {
+  display: grid;
+  gap: 0;
+}
+
+.faculty-announcements__card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr) auto;
+  gap: 0;
+  align-items: stretch;
+  min-width: 0;
+  padding: 0 18px 0 0;
+  border-bottom: 1px solid #edf2ee;
+  background: #ffffff;
+  transition:
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.faculty-announcements__card:last-child {
+  border-bottom: 0;
+}
+
+.faculty-announcements__card:hover {
+  background: #fbfdfb;
+}
+
+.faculty-announcements__card-accent {
+  background: var(--fa-green-700);
+}
+
+.faculty-announcements__card-main {
+  min-width: 0;
+  padding: 17px 18px;
+}
+
+.faculty-announcements__card-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+
+.faculty-announcements__card-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--fa-text-500);
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.faculty-announcements__new-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 3px 7px;
+  border: 1px solid #cae8d5;
+  border-radius: 999px;
+  color: var(--fa-green-800);
+  background: var(--fa-green-50);
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.faculty-announcements__card h3 {
+  margin: 0;
+  color: var(--fa-text-950);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+}
+
+.faculty-announcements__card-main > p {
+  max-width: 900px;
+  margin: 7px 0 0;
+  color: var(--fa-text-600);
+  font-size: 10.8px;
+  line-height: 1.6;
+}
+
+.faculty-announcements__card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+}
+
+.faculty-announcements__card-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--fa-text-500);
+  font-size: 9.5px;
+}
+
+.faculty-announcements__card-meta strong {
+  color: var(--fa-text-700);
+  font-weight: 700;
+}
+
+.faculty-announcements__attachment-note {
+  color: var(--fa-green-700) !important;
+  font-weight: 680;
+}
+
+.faculty-announcements__view {
+  align-self: center;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid #cfe3d6;
+  border-radius: 9px;
+  color: var(--fa-green-800);
+  background: var(--fa-green-50);
+  font-size: 9.8px;
+  font-weight: 720;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.faculty-announcements__view:hover {
+  transform: translateY(-1px);
+  color: #ffffff;
+  background: var(--fa-green-800);
+  border-color: var(--fa-green-800);
+}
+
+.faculty-announcements__loading {
+  display: grid;
+}
+
+.faculty-announcements__skeleton {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #edf2ee;
+}
+
+.faculty-announcements__skeleton:last-child {
+  border-bottom: 0;
+}
+
+.faculty-announcements__skeleton span {
+  display: block;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #edf2ef 25%,
+    #fafcfb 45%,
+    #edf2ef 65%
+  );
+  background-size: 220% 100%;
+  animation: faculty-announcements-shimmer 1.35s infinite linear;
+}
+
+.faculty-announcements__skeleton span:nth-child(1) {
+  width: 18%;
+}
+
+.faculty-announcements__skeleton span:nth-child(2) {
+  width: 45%;
+  height: 13px;
+}
+
+.faculty-announcements__skeleton span:nth-child(3) {
+  width: 88%;
+}
+
+.faculty-announcements__skeleton span:nth-child(4) {
+  width: 35%;
+}
+
+.faculty-announcements__state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+}
+
+.faculty-announcements__state--error {
+  background: #fffafa;
+}
+
+.faculty-announcements__state-icon {
+  display: inline-flex;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  color: var(--fa-green-700);
+  background: var(--fa-green-50);
+}
+
+.faculty-announcements__state--error .faculty-announcements__state-icon {
+  color: var(--fa-danger);
+  background: var(--fa-danger-soft);
+}
+
+.faculty-announcements__state > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.faculty-announcements__state strong {
+  color: var(--fa-text-800);
+  font-size: 11.5px;
+  font-weight: 740;
+}
+
+.faculty-announcements__state p {
+  margin: 4px 0 0;
+  color: var(--fa-text-500);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.faculty-announcements__state button {
+  flex: 0 0 auto;
+  min-height: 35px;
+  padding: 7px 11px;
+  border: 1px solid var(--fa-border-strong);
+  border-radius: 9px;
+  color: var(--fa-text-700);
+  background: #ffffff;
+  font-size: 9.8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.faculty-announcements button:focus-visible,
+.faculty-announcements input:focus-visible {
+  outline: 3px solid rgba(21, 148, 82, 0.17);
+  outline-offset: 2px;
+}
+
+@media (max-width: 840px) {
+  .faculty-announcements__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .faculty-announcements__panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .faculty-announcements__search {
+    flex-basis: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .faculty-announcements {
+    padding: 18px 16px 30px;
+  }
+
+  .faculty-announcements__hero {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 21px 20px;
+  }
+
+  .faculty-announcements__refresh {
+    width: 100%;
+  }
+
+  .faculty-announcements__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .faculty-announcements__card {
+    grid-template-columns: 4px minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  .faculty-announcements__view {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0 18px 17px;
+  }
+
+  .faculty-announcements__state {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .faculty-announcements__state button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-announcements {
+    padding: 14px 12px 26px;
+  }
+
+  .faculty-announcements__hero {
+    padding: 19px 17px;
+    border-radius: 15px;
+  }
+
+  .faculty-announcements__hero h1 {
+    font-size: 26px;
+  }
+
+  .faculty-announcements__panel {
+    border-radius: 15px;
+  }
+
+  .faculty-announcements__panel-header {
+    padding: 16px;
+  }
+
+  .faculty-announcements__card-main {
+    padding: 15px 14px;
+  }
+
+  .faculty-announcements__view {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+}
+
+@keyframes faculty-announcements-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes faculty-announcements-shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faculty-announcements *,
+  .faculty-announcements *::before,
+  .faculty-announcements *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

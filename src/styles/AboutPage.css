@@ -1,0 +1,553 @@
+.ptc-about-page {
+  --about-green-950: #073b24;
+  --about-green-900: #0a4b2d;
+  --about-green-800: #0d653b;
+  --about-green-700: #0f7a45;
+  --about-green-600: #159452;
+  --about-green-100: #dcf5e6;
+  --about-green-50: #f1fbf5;
+  --about-text-950: #17201b;
+  --about-text-800: #28352d;
+  --about-text-600: #5e6b63;
+  --about-text-500: #76827b;
+  --about-border: #dfe8e2;
+  --about-surface: #ffffff;
+  --about-bg: #f5f8f6;
+
+  min-height: calc(100vh - 64px);
+  padding: 42px 40px 58px;
+  color: var(--about-text-950);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(21, 148, 82, 0.08), transparent 26%),
+    var(--about-bg);
+  font-family:
+    Inter,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.ptc-about-page *,
+.ptc-about-page *::before,
+.ptc-about-page *::after {
+  box-sizing: border-box;
+}
+
+.ptc-about-hero,
+.ptc-about-intro,
+.ptc-about-experience {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.ptc-about-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  align-items: stretch;
+  min-height: 510px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(15, 122, 69, 0.18);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 14px 40px rgba(20, 55, 34, 0.08);
+}
+
+.ptc-about-hero::after {
+  content: "";
+  position: absolute;
+  top: -120px;
+  left: -110px;
+  width: 290px;
+  height: 290px;
+  border: 46px solid rgba(21, 148, 82, 0.045);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ptc-about-hero__copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 58px 54px;
+  background: linear-gradient(
+    125deg,
+    #ffffff 0%,
+    #fbfefc 65%,
+    #f1faf4 100%
+  );
+}
+
+.ptc-about-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  color: var(--about-green-800);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+}
+
+.ptc-about-eyebrow > span {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--about-green-800);
+  background: var(--about-green-100);
+}
+
+.ptc-about-hero h1 {
+  max-width: 650px;
+  margin: 0;
+  color: var(--about-text-950);
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 780;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+}
+
+.ptc-about-hero__lead {
+  max-width: 680px;
+  margin: 23px 0 0;
+  color: var(--about-text-600);
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.ptc-about-hero__principles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 28px;
+}
+
+.ptc-about-hero__principles > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid #d3e7da;
+  border-radius: 999px;
+  color: var(--about-green-800);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+.ptc-about-hero__visual {
+  position: relative;
+  min-height: 510px;
+  background: var(--about-green-950);
+}
+
+.ptc-about-hero__visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(7, 59, 36, 0.38), transparent 54%),
+    linear-gradient(to left, rgba(7, 59, 36, 0.08), transparent 55%);
+  pointer-events: none;
+}
+
+.ptc-about-hero__visual > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 510px;
+  object-fit: cover;
+}
+
+.ptc-about-hero__visual-card {
+  position: absolute;
+  z-index: 2;
+  right: 22px;
+  bottom: 22px;
+  left: 22px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 14px;
+  background: rgba(7, 59, 36, 0.78);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+}
+
+.ptc-about-hero__visual-card > span {
+  display: inline-flex;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.ptc-about-hero__visual-card div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ptc-about-hero__visual-card small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ptc-about-hero__visual-card strong {
+  font-size: 14px;
+  font-weight: 740;
+}
+
+.ptc-about-intro {
+  padding: 42px 0 18px;
+}
+
+.ptc-about-section-heading {
+  max-width: 760px;
+  margin-bottom: 22px;
+}
+
+.ptc-about-section-kicker {
+  display: inline-block;
+  margin-bottom: 7px;
+  color: var(--about-green-700);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+}
+
+.ptc-about-section-heading h2,
+.ptc-about-experience__copy h2 {
+  margin: 0;
+  color: var(--about-text-950);
+  font-size: clamp(27px, 3vw, 38px);
+  font-weight: 770;
+  line-height: 1.14;
+  letter-spacing: -0.028em;
+}
+
+.ptc-about-section-heading p,
+.ptc-about-experience__copy > p {
+  margin: 10px 0 0;
+  color: var(--about-text-600);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.ptc-about-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ptc-about-value-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  min-height: 220px;
+  padding: 22px 22px 24px;
+  border: 1px solid var(--about-border);
+  border-radius: 17px;
+  background: var(--about-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.ptc-about-value-card:hover {
+  transform: translateY(-3px);
+  border-color: #bed8c7;
+  box-shadow: 0 10px 24px rgba(20, 55, 34, 0.07);
+}
+
+.ptc-about-value-card__icon {
+  display: inline-flex;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: var(--about-green-800);
+  background: var(--about-green-100);
+}
+
+.ptc-about-value-card > div:last-child {
+  min-width: 0;
+}
+
+.ptc-about-value-card > div:last-child > span {
+  display: block;
+  margin-bottom: 14px;
+  color: #96a29a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.ptc-about-value-card h3 {
+  margin: 0;
+  color: var(--about-text-800);
+  font-size: 19px;
+  font-weight: 760;
+}
+
+.ptc-about-value-card p {
+  margin: 9px 0 0;
+  color: var(--about-text-600);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.ptc-about-experience {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  align-items: center;
+  gap: 48px;
+  padding: 52px 0 20px;
+}
+
+.ptc-about-experience__gallery {
+  position: relative;
+  min-height: 430px;
+}
+
+.ptc-about-experience__image {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid var(--about-border);
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(20, 55, 34, 0.08);
+}
+
+.ptc-about-experience__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ptc-about-experience__image--large {
+  width: 82%;
+  height: 370px;
+  border-radius: 20px;
+}
+
+.ptc-about-experience__image--small {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 42%;
+  height: 210px;
+  border: 6px solid var(--about-bg);
+  border-radius: 18px;
+}
+
+.ptc-about-experience__copy {
+  padding-right: 18px;
+}
+
+.ptc-about-experience__points {
+  display: grid;
+  gap: 11px;
+  margin-top: 24px;
+}
+
+.ptc-about-experience__points > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  padding: 13px 14px;
+  border: 1px solid var(--about-border);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.ptc-about-experience__points > div > span {
+  display: inline-flex;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--about-green-800);
+  background: var(--about-green-50);
+}
+
+.ptc-about-experience__points strong {
+  color: var(--about-text-800);
+  font-size: 13px;
+  font-weight: 740;
+}
+
+.ptc-about-experience__points p {
+  margin: 3px 0 0;
+  color: var(--about-text-500);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .ptc-about-page {
+    padding: 32px 24px 48px;
+  }
+
+  .ptc-about-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .ptc-about-hero__copy {
+    padding: 46px 38px;
+  }
+
+  .ptc-about-hero__visual,
+  .ptc-about-hero__visual > img {
+    min-height: 380px;
+  }
+
+  .ptc-about-values {
+    grid-template-columns: 1fr;
+  }
+
+  .ptc-about-value-card {
+    min-height: 0;
+  }
+
+  .ptc-about-experience {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .ptc-about-experience__copy {
+    max-width: 760px;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .ptc-about-page {
+    padding: 24px 16px 38px;
+  }
+
+  .ptc-about-hero {
+    border-radius: 18px;
+  }
+
+  .ptc-about-hero__copy {
+    padding: 36px 24px;
+  }
+
+  .ptc-about-hero h1 {
+    font-size: clamp(34px, 11vw, 48px);
+  }
+
+  .ptc-about-hero__lead {
+    font-size: 14px;
+  }
+
+  .ptc-about-hero__visual,
+  .ptc-about-hero__visual > img {
+    min-height: 310px;
+  }
+
+  .ptc-about-intro {
+    padding-top: 34px;
+  }
+
+  .ptc-about-value-card {
+    padding: 19px;
+  }
+
+  .ptc-about-experience {
+    padding-top: 40px;
+  }
+
+  .ptc-about-experience__gallery {
+    min-height: 360px;
+  }
+
+  .ptc-about-experience__image--large {
+    width: 88%;
+    height: 310px;
+  }
+
+  .ptc-about-experience__image--small {
+    width: 46%;
+    height: 170px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ptc-about-page {
+    padding: 18px 12px 32px;
+  }
+
+  .ptc-about-hero__copy {
+    padding: 30px 19px;
+  }
+
+  .ptc-about-eyebrow {
+    font-size: 10.5px;
+  }
+
+  .ptc-about-hero__principles {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ptc-about-hero__principles > span {
+    width: 100%;
+  }
+
+  .ptc-about-hero__visual-card {
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
+  }
+
+  .ptc-about-value-card {
+    grid-template-columns: 1fr;
+  }
+
+  .ptc-about-experience__gallery {
+    min-height: 310px;
+  }
+
+  .ptc-about-experience__image--large {
+    width: 100%;
+    height: 260px;
+  }
+
+  .ptc-about-experience__image--small {
+    right: 12px;
+    width: 44%;
+    height: 135px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptc-about-value-card {
+    transition: none;
+  }
+}

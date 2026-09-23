@@ -48,7 +48,6 @@ async function run() {
         INSERT INTO grades (
             enrollment_subject_id,
             faculty_id,
-            prelim_grade,
             midterm_grade,
             final_grade,
             final_rating,
@@ -58,7 +57,6 @@ async function run() {
         VALUES (
             7,
             1,
-            5.00,
             5.00,
             5.00,
             5.00,
@@ -166,20 +164,20 @@ async function run() {
 
     const [cleanupGrades] = await connection.execute(
       `
-          SELECT grade_id
-          FROM grades
-          WHERE enrollment_subject_id = 7
-        `,
+        SELECT grade_id
+        FROM grades
+        WHERE enrollment_subject_id = 7
+      `,
     );
 
     const [cleanupSubject] = await connection.execute(
       `
-          SELECT
-              enrollment_subject_id,
-              status
-          FROM enrollment_subjects
-          WHERE enrollment_subject_id = 7
-        `,
+        SELECT
+            enrollment_subject_id,
+            status
+        FROM enrollment_subjects
+        WHERE enrollment_subject_id = 7
+      `,
     );
 
     console.log("\nAFTER ROLLBACK:");

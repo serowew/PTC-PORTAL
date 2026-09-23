@@ -1,16 +1,13 @@
+import { AlertTriangle, LoaderCircle, Trash2, X } from "lucide-react";
+
 import "../../../styles/deleteannouncementmodal.css";
 
 type DeleteAnnouncementModalProps = {
   isOpen: boolean;
-
   title?: string;
-
   announcementTitle?: string;
-
   isDeleting?: boolean;
-
   onCancel: () => void;
-
   onConfirm: () => void;
 };
 
@@ -41,38 +38,48 @@ export default function DeleteAnnouncementModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-announcement-title"
+        aria-describedby="delete-announcement-description"
       >
-        {/* =============================================
-            ICON
-        ============================================= */}
+        <button
+          type="button"
+          className="delete-announcement-modal__close"
+          onClick={onCancel}
+          disabled={isDeleting}
+          aria-label="Close delete announcement confirmation"
+        >
+          <X size={16} aria-hidden="true" />
+        </button>
 
-        <div className="delete-announcement-modal__icon">
-          <span>!</span>
+        <div className="delete-announcement-modal__header">
+          <span className="delete-announcement-modal__icon" aria-hidden="true">
+            <Trash2 size={20} />
+          </span>
+
+          <div className="delete-announcement-modal__heading">
+            <span className="delete-announcement-modal__eyebrow">
+              Announcement Management
+            </span>
+            <h2 id="delete-announcement-title">{title}</h2>
+          </div>
         </div>
 
-        {/* =============================================
-            CONTENT
-        ============================================= */}
-
         <div className="delete-announcement-modal__content">
-          <h2 id="delete-announcement-title">{title}</h2>
-
-          <p>Are you sure you want to delete this announcement?</p>
+          <p id="delete-announcement-description">
+            Are you sure you want to delete this announcement?
+          </p>
 
           {announcementTitle && (
             <div className="delete-announcement-modal__announcement">
-              “{announcementTitle}”
+              <span>Selected announcement</span>
+              <strong>“{announcementTitle}”</strong>
             </div>
           )}
 
-          <p className="delete-announcement-modal__warning">
-            This action cannot be undone.
-          </p>
+          <div className="delete-announcement-modal__warning">
+            <AlertTriangle size={16} aria-hidden="true" />
+            <p>This action cannot be undone.</p>
+          </div>
         </div>
-
-        {/* =============================================
-            ACTIONS
-        ============================================= */}
 
         <div className="delete-announcement-modal__actions">
           <button
@@ -90,7 +97,21 @@ export default function DeleteAnnouncementModal({
             onClick={onConfirm}
             disabled={isDeleting}
           >
-            {isDeleting ? "Deleting..." : "Delete Announcement"}
+            {isDeleting ? (
+              <>
+                <LoaderCircle
+                  size={15}
+                  className="delete-announcement-modal__spinner"
+                  aria-hidden="true"
+                />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 size={15} aria-hidden="true" />
+                Delete Announcement
+              </>
+            )}
           </button>
         </div>
       </div>

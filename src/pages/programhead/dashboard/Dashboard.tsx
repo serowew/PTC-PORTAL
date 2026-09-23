@@ -367,7 +367,6 @@ export default function ProgramHeadDashboard() {
     if (!user || user.role !== "Program Head") {
       navigate("/login", { replace: true });
     }
-  }, [navigate, user]);
 
   const selectedConfig = useMemo(() => {
     if (!selectedTool) {

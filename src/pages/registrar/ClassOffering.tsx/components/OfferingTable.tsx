@@ -6,31 +6,26 @@ import OfferingTableRow from "./OfferingTableRow";
 
 interface OfferingFaculty {
   faculty_id: number;
-
   faculty_name: string;
+  employee_number?: string | null;
+  role_name?: string | null;
 }
 
 interface OfferingRoom {
   room_id: number;
-
   room_name: string;
-
   room_code?: string | null;
 }
 
 interface OfferingSchedule {
   days: string | null;
-
   time: string | null;
 }
 
 interface OfferingCapacity {
   max_students: number;
-
   enrolled_count: number;
-
   available_slots: number;
-
   is_full: boolean;
 }
 
@@ -75,6 +70,13 @@ interface SubjectInfo {
 }
 
 export interface OfferingTableSubject {
+  /**
+   * Normal curriculum subject:
+   * number
+   *
+   * Special / Retake subject:
+   * null
+   */
   curriculum_subject_id: number | null;
 
   subject: SubjectInfo;
@@ -111,23 +113,57 @@ interface OfferingTableProps {
 }
 
 // =====================================================
+// VALID ROW
+// =====================================================
+
+function isValidSubjectRow(
+  item: OfferingTableSubject | null | undefined,
+): item is OfferingTableSubject {
+  if (!item) {
+    return false;
+  }
+
+  if (!item.subject) {
+    return false;
+  }
+
+  const subjectId = Number(item.subject.subject_id);
+
+  return Number.isInteger(subjectId) && subjectId > 0;
+}
+
+// =====================================================
 // ROW KEY
 // =====================================================
 
-function getRowKey(item: OfferingTableSubject) {
-  if (item.curriculum_subject_id !== null) {
-    return `curriculum-${item.curriculum_subject_id}`;
+function getRowKey(item: OfferingTableSubject, index: number) {
+  const curriculumSubjectId = Number(item.curriculum_subject_id ?? 0);
+
+  if (Number.isInteger(curriculumSubjectId) && curriculumSubjectId > 0) {
+    return `curriculum-${curriculumSubjectId}`;
   }
 
-  if (item.section_subject?.section_subject_id) {
-    return `section-subject-${item.section_subject.section_subject_id}`;
+  const sectionSubjectId = Number(
+    item.section_subject?.section_subject_id ?? 0,
+  );
+
+  if (Number.isInteger(sectionSubjectId) && sectionSubjectId > 0) {
+    return `section-subject-${sectionSubjectId}`;
   }
 
-  if (item.offering?.offering_id) {
-    return `offering-${item.offering.offering_id}`;
+  const offeringId = Number(item.offering?.offering_id ?? 0);
+
+  if (Number.isInteger(offeringId) && offeringId > 0) {
+    return `offering-${offeringId}`;
   }
 
-  return `subject-${item.subject.subject_id}`;
+  const subjectId = Number(item.subject?.subject_id ?? 0);
+
+  if (Number.isInteger(subjectId) && subjectId > 0) {
+    return `subject-${subjectId}`;
+  }
+
+  return `offering-row-${index}`;
 }
 
 // =====================================================
@@ -136,30 +172,29 @@ function getRowKey(item: OfferingTableSubject) {
 
 export default function OfferingTable({
   subjects,
-
   onCreateOffering,
-
   onEditOffering,
-
   onOfferingStatus,
-
   onSectionSubjectStatus,
 }: OfferingTableProps) {
   // =====================================================
-  // TABLE MODE
-  //
-  // Special / Retake rows have curriculum_subject_id null.
-  //
-  // Their parent already renders its own heading, so this
-  // component should only render the table itself there.
+  // SAFE SUBJECT ARRAY
+  // =====================================================
+
+  const safeSubjects = Array.isArray(subjects)
+    ? subjects.filter(isValidSubjectRow)
+    : [];
+
+  // =====================================================
+  // SPECIAL / RETAKE TABLE
   // =====================================================
 
   const isSpecialTable =
-    subjects.length > 0 &&
-    subjects.every((item) => item.curriculum_subject_id === null);
+    safeSubjects.length > 0 &&
+    safeSubjects.every((item) => item.curriculum_subject_id === null);
 
   // =====================================================
-  // TABLE CONTENT
+  // TABLE
   // =====================================================
 
   const tableContent = (
@@ -167,15 +202,11 @@ export default function OfferingTable({
       <table className="class-offering-table">
         <thead>
           <tr>
-            <th>Code</th>
-
             <th>Subject</th>
 
-            <th>Faculty</th>
+            <th>Instructor</th>
 
             <th>Schedule</th>
-
-            <th>Room</th>
 
             <th>Capacity</th>
 
@@ -186,39 +217,36 @@ export default function OfferingTable({
         </thead>
 
         <tbody>
-          {/* =========================================== */}
-          {/* EMPTY */}
-          {/* =========================================== */}
-
-          {subjects.length === 0 && (
+          {safeSubjects.length === 0 ? (
             <tr>
-              <td colSpan={8}>
-                No curriculum subjects found for this academic setup.
+              <td colSpan={6}>
+                <div className="class-offering-table-empty">
+                  No class offering subjects found for this academic setup.
+                </div>
               </td>
             </tr>
+          ) : (
+            safeSubjects.map((item, index) => (
+              <OfferingTableRow
+                key={getRowKey(item, index)}
+                item={item}
+                onCreateOffering={onCreateOffering}
+                onEditOffering={onEditOffering}
+                onOfferingStatus={onOfferingStatus}
+                onSectionSubjectStatus={onSectionSubjectStatus}
+              />
+            ))
           )}
-
-          {/* =========================================== */}
-          {/* SUBJECT ROWS */}
-          {/* =========================================== */}
-
-          {subjects.map((item) => (
-            <OfferingTableRow
-              key={getRowKey(item)}
-              item={item}
-              onCreateOffering={onCreateOffering}
-              onEditOffering={onEditOffering}
-              onOfferingStatus={onOfferingStatus}
-              onSectionSubjectStatus={onSectionSubjectStatus}
-            />
-          ))}
         </tbody>
       </table>
     </div>
   );
 
   // =====================================================
-  // SPECIAL / RETAKE TABLE
+  // SPECIAL TABLE
+  //
+  // Parent page already supplies the Special / Retake
+  // section heading, so return only the table here.
   // =====================================================
 
   if (isSpecialTable) {
@@ -226,29 +254,28 @@ export default function OfferingTable({
   }
 
   // =====================================================
-  // NORMAL CURRICULUM TABLE
+  // CURRICULUM TABLE
   // =====================================================
 
   return (
     <section className="class-offering-section">
-      {/* ================================================= */}
-      {/* HEADER */}
-      {/* ================================================= */}
-
       <div className="class-offering-section-header">
         <div>
+          <div className="class-offering-section-kicker">Curriculum Plan</div>
+
           <h2>Curriculum Class Offerings</h2>
 
           <p>
             Every expected curriculum subject is shown, including subjects that
-            do not yet have an offering.
+            still need a section-subject record or a class offering.
           </p>
         </div>
-      </div>
 
-      {/* ================================================= */}
-      {/* TABLE */}
-      {/* ================================================= */}
+        <span className="class-offering-section-count">
+          {safeSubjects.length} subject
+          {safeSubjects.length === 1 ? "" : "s"}
+        </span>
+      </div>
 
       {tableContent}
     </section>

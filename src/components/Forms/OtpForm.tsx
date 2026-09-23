@@ -16,6 +16,20 @@ export default function OtpForm() {
 
   const [loading, setLoading] = useState(false);
 
+  const [resendLoading, setResendLoading] = useState(false);
+
+  const [resendMessage, setResendMessage] = useState("");
+
+  const [resendSeconds, setResendSeconds] = useState(() => {
+    const availableAt = authService.getOtpResendAvailableAt();
+
+    if (!availableAt) {
+      return 60;
+    }
+
+    return Math.max(0, Math.ceil((availableAt - Date.now()) / 1000));
+  });
+
   // =====================================================
   // ROUTER
   // =====================================================
@@ -59,6 +73,36 @@ export default function OtpForm() {
       });
     }
   }, [username, navigate]);
+
+  // =====================================================
+  // RESEND OTP COUNTDOWN
+  // =====================================================
+
+  useEffect(() => {
+    if (!username || resendSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      const availableAt = authService.getOtpResendAvailableAt();
+
+      if (!availableAt) {
+        setResendSeconds(0);
+        return;
+      }
+
+      const remaining = Math.max(
+        0,
+        Math.ceil((availableAt - Date.now()) / 1000),
+      );
+
+      setResendSeconds(remaining);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [username, resendSeconds]);
 
   // =====================================================
   // NO PENDING LOGIN
@@ -312,6 +356,66 @@ export default function OtpForm() {
   }
 
   // =====================================================
+  // RESEND OTP
+  // =====================================================
+
+  async function handleResendOtp() {
+    if (loading || resendLoading || resendSeconds > 0) {
+      return;
+    }
+
+    setError("");
+    setResendMessage("");
+    setResendLoading(true);
+
+    try {
+      const currentPendingUsername = authService.getPendingUsername();
+
+      if (!currentPendingUsername || currentPendingUsername !== username) {
+        throw new Error(
+          "Your OTP session has expired. Please login again.",
+        );
+      }
+
+      const result = await authService.resendOtp(username);
+
+      setOtp("");
+      setResendMessage(result.message || "A new OTP has been sent.");
+
+      const availableAt = authService.getOtpResendAvailableAt();
+
+      setResendSeconds(
+        availableAt
+          ? Math.max(0, Math.ceil((availableAt - Date.now()) / 1000))
+          : 60,
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to resend OTP. Please try again.",
+      );
+
+      const availableAt = authService.getOtpResendAvailableAt();
+
+      if (availableAt) {
+        setResendSeconds(
+          Math.max(0, Math.ceil((availableAt - Date.now()) / 1000)),
+        );
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  }
+
+  function formatCountdown(totalSeconds: number) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  // =====================================================
   // BACK TO LOGIN
   // =====================================================
 
@@ -325,6 +429,7 @@ export default function OtpForm() {
     // =====================================================
 
     authService.clearPendingUsername();
+    authService.clearOtpResendAvailableAt();
 
     navigate("/login", {
       replace: true,
@@ -352,7 +457,8 @@ export default function OtpForm() {
   // =====================================================
 
   return (
-    <div className={styles.authcard}>
+    <div className={styles.authPage}>
+      <div className={styles.authcard}>
       {/* ========================================
           LEFT SIDE
       ======================================== */}
@@ -389,7 +495,7 @@ export default function OtpForm() {
               maxLength={6}
               value={otp}
               onChange={handleOtpChange}
-              disabled={loading}
+              disabled={loading || resendLoading}
               required
               autoFocus
             />
@@ -409,7 +515,7 @@ export default function OtpForm() {
 
           <button
             type="submit"
-            disabled={loading || otp.length !== 6}
+            disabled={loading || resendLoading || otp.length !== 6}
             className={`${styles.submitBtn} ${loading ? styles.loading : ""}`}
           >
             {loading ? "Verifying..." : "Verify OTP"}
@@ -417,13 +523,49 @@ export default function OtpForm() {
         </form>
 
         {/* ======================================
+            RESEND OTP
+        ====================================== */}
+
+        <div className={styles.otpResendBox}>
+          <p className={styles.otpResendPrompt}>
+            Didn't receive the code?
+          </p>
+
+          {resendSeconds > 0 ? (
+            <p className={styles.otpResendCountdown}>
+              Resend OTP in {formatCountdown(resendSeconds)}
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={loading || resendLoading}
+              className={styles.otpResendButton}
+            >
+              {resendLoading ? "Sending new OTP..." : "Resend OTP"}
+            </button>
+          )}
+
+          {resendMessage && (
+            <p className={styles.otpResendSuccess}>
+              {resendMessage}
+            </p>
+          )}
+        </div>
+
+        {/* ======================================
             BACK TO LOGIN
         ====================================== */}
 
         <div className={styles.authlinks}>
-          <button type="button" onClick={handleBackToLogin} disabled={loading}>
+          <button
+            type="button"
+            onClick={handleBackToLogin}
+            disabled={loading || resendLoading}
+          >
             Back to Login
           </button>
+        </div>
         </div>
       </div>
     </div>

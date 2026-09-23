@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 
 import type { OfferingTableSubject } from "./components/OfferingTable";
 
@@ -8,7 +9,7 @@ import type { OfferingTableSubject } from "./components/OfferingTable";
 // API
 // =====================================================
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/offerings";
+const API_BASE_URL = apiUrl("/api/registrar/offerings");
 
 // =====================================================
 // TYPES

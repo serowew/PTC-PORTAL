@@ -54,7 +54,6 @@
    ========================================================= */
 
 :is(
-  .admin-dashboard,
   .admin-user-list,
   .admin-activity,
   .create-user,
@@ -145,7 +144,6 @@
    ========================================================= */
 
 :is(
-  .admin-dashboard,
   .admin-user-list,
   .admin-activity,
   .create-user,
@@ -192,7 +190,6 @@
    ========================================================= */
 
 :is(
-  .admin-dashboard,
   .admin-user-list,
   .admin-activity,
   .create-user,
@@ -332,14 +329,6 @@
    STRONGER CARDS
    ========================================================= */
 
-.admin-dashboard :is(
-  .overview-card,
-  .stat-card,
-  .dashboard-card,
-  .dashboard-section,
-  .activity-timeline
-),
-
 .user-role-container :is(
   .role-card,
   .permission-section
@@ -376,13 +365,6 @@
    CARD ANIMATION
    ========================================================= */
 
-.admin-dashboard :is(
-  .overview-card,
-  .stat-card,
-  .dashboard-card,
-  .dashboard-section
-),
-
 .user-role-container .role-card,
 
 .create-user form,
@@ -413,7 +395,6 @@
    ========================================================= */
 
 :is(
-  .admin-dashboard,
   .admin-user-list,
   .admin-activity,
   .create-user,
@@ -440,7 +421,6 @@
 }
 
 :is(
-  .admin-dashboard,
   .admin-user-list,
   .admin-activity,
   .create-user,
@@ -595,53 +575,6 @@
   .admin-addeditdrop-students .admin-manage-students__table
 ) tbody tr:nth-child(n + 4) {
   animation-delay: 0.09s;
-}
-
-
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
-
-.admin-dashboard {
-  max-width: none;
-
-  margin: 0;
-}
-
-.admin-dashboard .dashboard-header {
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.9);
-}
-
-.admin-dashboard :is(
-  .stat-card,
-  .overview-card,
-  .dashboard-card,
-  .dashboard-section
-) {
-  background: #ffffff;
-}
-
-.admin-dashboard :is(
-  .stat-card,
-  .overview-card
-) {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.admin-dashboard :is(
-  .stat-card,
-  .overview-card
-):hover {
-  transform: translateY(-2px);
-
-  border-color: #b9c5d3;
-
-  box-shadow:
-    0 3px 8px rgba(15, 23, 42, 0.06),
-    0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
 
@@ -861,7 +794,6 @@
 
 @media (max-width: 768px) {
   :is(
-    .admin-dashboard,
     .admin-user-list,
     .admin-activity,
     .create-user,
@@ -911,7 +843,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   :is(
-    .admin-dashboard,
     .admin-user-list,
     .admin-activity,
     .create-user,
@@ -949,7 +880,6 @@
     .admin-system-acadsetting
   ),
   :is(
-    .admin-dashboard,
     .admin-user-list,
     .admin-activity,
     .create-user,

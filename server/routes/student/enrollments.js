@@ -1507,6 +1507,298 @@ router.get("/current", async (req, res) => {
 });
 
 // =====================================================
+// GET STUDENT OFFICIAL SCHEDULE
+//
+// GET /api/student/enrollments/schedule
+//
+// AUTH:
+// Student JWT required.
+//
+// RULES:
+// - Student identity comes only from req.user.
+// - Only the latest Approved enrollment is authoritative.
+// - Only enrollment_subjects with status = Enrolled are official.
+// - Closed offerings remain visible to already-enrolled students.
+// - Cancelled offerings are not treated as active schedule entries.
+// - Room is intentionally ignored because Student Schedule only
+//   needs the official subject, section, faculty, day, and time.
+// =====================================================
+
+router.get("/schedule", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required.",
+      });
+    }
+
+    if (req.user.role_name !== "Student") {
+      return res.status(403).json({
+        success: false,
+        message: "Student access is required.",
+      });
+    }
+
+    const userId = Number(req.user.user_id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated Student user ID is invalid.",
+      });
+    }
+
+    const [studentRows] = await db.execute(
+      `
+        SELECT
+            s.student_id,
+            s.student_number,
+            s.first_name,
+            s.middle_name,
+            s.last_name,
+            s.course_id,
+            c.course_code,
+            c.course_name
+
+        FROM students s
+
+        INNER JOIN courses c
+            ON c.course_id = s.course_id
+
+        WHERE s.user_id = ?
+
+        LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (studentRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Student profile is connected to this account.",
+      });
+    }
+
+    const student = studentRows[0];
+    const studentId = Number(student.student_id);
+
+    // Latest Approved enrollment is the official class-membership source.
+    // This does not depend on an enrollment period still being Open, so a
+    // student can continue viewing the schedule after enrollment closes.
+    const [enrollmentRows] = await db.execute(
+      `
+        SELECT
+            e.enrollment_id,
+            e.student_id,
+            e.academic_year_id,
+            ay.academic_year,
+            e.semester_id,
+            sem.semester_name,
+            e.enrollment_status,
+            e.approved_at,
+            e.created_at
+
+        FROM enrollments e
+
+        INNER JOIN academic_years ay
+            ON ay.academic_year_id = e.academic_year_id
+
+        INNER JOIN semesters sem
+            ON sem.semester_id = e.semester_id
+
+        WHERE e.student_id = ?
+          AND e.enrollment_status = 'Approved'
+          AND e.semester_id IN (1, 2)
+
+        ORDER BY
+            COALESCE(e.approved_at, e.created_at) DESC,
+            e.enrollment_id DESC
+
+        LIMIT 1
+      `,
+      [studentId],
+    );
+
+    const studentResponse = {
+      student_id: studentId,
+      student_number: student.student_number,
+      student_name: [student.first_name, student.middle_name, student.last_name]
+        .filter(Boolean)
+        .join(" "),
+      course: {
+        course_id: Number(student.course_id),
+        course_code: student.course_code,
+        course_name: student.course_name,
+      },
+    };
+
+    if (enrollmentRows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message:
+          "No Approved enrollment is available yet. The official schedule will appear after enrollment approval.",
+        student: studentResponse,
+        enrollment: null,
+        subjects: [],
+        summary: {
+          total_enrolled_subjects: 0,
+          scheduled_subjects: 0,
+          unscheduled_subjects: 0,
+        },
+      });
+    }
+
+    const enrollment = enrollmentRows[0];
+    const enrollmentId = Number(enrollment.enrollment_id);
+
+    const [subjectRows] = await db.execute(
+      `
+        SELECT
+            es.enrollment_subject_id,
+            es.enrollment_id,
+            es.subject_id,
+            es.enrollment_type,
+            es.status AS enrollment_subject_status,
+
+            sub.subject_code,
+            sub.subject_name,
+            sub.units,
+
+            es.section_id,
+            sec.section_name,
+
+            es.section_subject_id,
+            es.offering_id,
+
+            so.status AS offering_status,
+            so.schedule_days,
+            so.schedule_time,
+
+            so.faculty_id,
+
+            TRIM(
+              CONCAT_WS(
+                ' ',
+                f.first_name,
+                NULLIF(f.middle_name, ''),
+                f.last_name
+              )
+            ) AS faculty_name
+
+        FROM enrollment_subjects es
+
+        INNER JOIN subjects sub
+            ON sub.subject_id = es.subject_id
+
+        LEFT JOIN sections sec
+            ON sec.section_id = es.section_id
+
+        LEFT JOIN subject_offerings so
+            ON so.offering_id = es.offering_id
+
+        LEFT JOIN faculty f
+            ON f.faculty_id = so.faculty_id
+
+        WHERE es.enrollment_id = ?
+          AND es.status = 'Enrolled'
+
+        ORDER BY
+            sub.subject_code ASC,
+            es.enrollment_subject_id ASC
+      `,
+      [enrollmentId],
+    );
+
+    const subjects = subjectRows.map((row) => {
+      const hasActiveOffering =
+        row.offering_id !== null &&
+        String(row.offering_status || "").trim() !== "Cancelled";
+
+      const hasSchedule =
+        hasActiveOffering &&
+        Boolean(row.schedule_days && String(row.schedule_days).trim()) &&
+        Boolean(row.schedule_time && String(row.schedule_time).trim());
+
+      return {
+        enrollment_subject_id: Number(row.enrollment_subject_id),
+        enrollment_id: Number(row.enrollment_id),
+
+        subject_id: Number(row.subject_id),
+        subject_code: row.subject_code,
+        subject_name: row.subject_name,
+        units: Number(row.units || 0),
+
+        enrollment_type: row.enrollment_type || "Regular",
+        status: row.enrollment_subject_status,
+
+        section: {
+          section_id: row.section_id !== null ? Number(row.section_id) : null,
+          section_name: row.section_name || null,
+        },
+
+        section_subject_id:
+          row.section_subject_id !== null
+            ? Number(row.section_subject_id)
+            : null,
+
+        offering: {
+          offering_id:
+            row.offering_id !== null ? Number(row.offering_id) : null,
+          status: row.offering_status || null,
+          schedule_days: row.schedule_days || null,
+          schedule_time: row.schedule_time || null,
+        },
+
+        faculty: {
+          faculty_id: row.faculty_id !== null ? Number(row.faculty_id) : null,
+          faculty_name: row.faculty_name || null,
+        },
+
+        schedule_ready: hasSchedule,
+      };
+    });
+
+    const scheduledSubjects = subjects.filter(
+      (subject) => subject.schedule_ready,
+    ).length;
+
+    return res.status(200).json({
+      success: true,
+      message: "Official Student schedule loaded successfully.",
+
+      student: studentResponse,
+
+      enrollment: {
+        enrollment_id: enrollmentId,
+        academic_year_id: Number(enrollment.academic_year_id),
+        academic_year: enrollment.academic_year,
+        semester_id: Number(enrollment.semester_id),
+        semester_name: enrollment.semester_name,
+        enrollment_status: enrollment.enrollment_status,
+        approved_at: enrollment.approved_at,
+      },
+
+      subjects,
+
+      summary: {
+        total_enrolled_subjects: subjects.length,
+        scheduled_subjects: scheduledSubjects,
+        unscheduled_subjects: subjects.length - scheduledSubjects,
+      },
+    });
+  } catch (error) {
+    console.error("GET STUDENT OFFICIAL SCHEDULE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load official Student schedule.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+
+// =====================================================
 // GET STUDENT ENROLLMENT ELIGIBLE SUBJECTS
 //
 // GET /api/student/enrollments/subjects
@@ -3256,7 +3548,6 @@ router.post("/prepare", async (req, res) => {
     // =================================================
     // 12. CARRY OVER SUBJECTS
     // =================================================
-
     const carryOverEligible = carryOverEvaluation.eligible.map((subject) => ({
       subject_id: Number(subject.subject_id),
 
@@ -3268,16 +3559,15 @@ router.post("/prepare", async (req, res) => {
 
       curriculum_subject_id: Number(subject.curriculum_subject_id),
 
-      original_year_level: Number(subject.year_level),
+      original_year_level: Number(subject.original_year_level),
 
-      original_semester_id: Number(subject.semester_id),
+      original_semester_id: Number(subject.original_semester_id),
 
       enrollment_type: "Carry Over",
 
       carry_over_reason:
         subject.carry_over_reason || "EARLIER_REQUIRED_SUBJECT_NOT_TAKEN",
     }));
-
     // =================================================
     // 13. LOAD ALL CURRICULUM SUBJECTS
     //

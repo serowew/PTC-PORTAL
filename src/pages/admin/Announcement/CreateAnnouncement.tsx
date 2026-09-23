@@ -1,148 +1,102 @@
-import { useEffect, useState } from "react";
-
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  CalendarClock,
+  CalendarDays,
+  CheckCircle2,
+  CircleAlert,
+  CircleOff,
+  FileUp,
+  LoaderCircle,
+  Megaphone,
+  Paperclip,
+  Send,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
+import "../../../styles/AdminCreateAnnouncement.css";
 
-import "../../../styles/announcementcreate.css";
-
-const ANNOUNCEMENT_API_URL =
-  "http://localhost:3000/api/announcement-management";
-
-const ROLE_API_URL = "http://localhost:3000/api/roles";
-
-const FILE_UPLOAD_URL = "http://localhost:3000/api/files/upload";
-
-// =====================================================
-// TYPES
-// =====================================================
+const ANNOUNCEMENT_API_URL = apiUrl("/api/announcement-management");
+const ROLE_API_URL = apiUrl("/api/roles");
+const FILE_UPLOAD_URL = apiUrl("/api/files/upload");
 
 type Role = {
   role_id: number;
   role_name: string;
 };
 
-interface RoleResponse {
+type RoleApiResponse =
+  | Role[]
+  | {
+      success?: boolean;
+      roles?: Role[];
+      data?: Role[];
+      error?: string;
+      message?: string;
+    };
+
+type UploadResponse = {
   success?: boolean;
-
-  data?: Role[];
-
-  roles?: Role[];
-
-  message?: string;
-
-  error?: string;
-}
-
-interface UploadResponse {
-  success?: boolean;
-
-  file_id?: number;
-
+  file_id?: number | string;
   file?: {
-    file_id?: number;
+    file_id?: number | string;
   };
-
   data?: {
-    file_id?: number;
+    file_id?: number | string;
   };
-
-  message?: string;
-
   error?: string;
-}
+  message?: string;
+};
 
-interface CreateAnnouncementResponse {
+type AnnouncementResponse = {
   success?: boolean;
-
   announcement_id?: number;
-
-  message?: string;
-
   error?: string;
-}
-
-// =====================================================
-// COMPONENT
-// =====================================================
+  message?: string;
+};
 
 export default function CreateAnnouncement() {
   const navigate = useNavigate();
 
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const session = authService.getSession();
-
-  const token = authService.getToken();
-
-  const userRole = session?.role;
-
-  const authenticated = Boolean(session && token);
-
-  // =====================================================
-  // STATE
-  // =====================================================
+  const userRole = String(session?.role ?? "");
+  const authenticated = Boolean(session);
+  const isAdmin = authenticated && userRole.toLowerCase() === "admin";
 
   const [title, setTitle] = useState("");
-
   const [content, setContent] = useState("");
 
   const [roles, setRoles] = useState<Role[]>([]);
-
   const [recipients, setRecipients] = useState<number[]>([]);
 
   const [publishDate, setPublishDate] = useState("");
-
   const [expiryDate, setExpiryDate] = useState("");
 
   const [isActive, setIsActive] = useState(true);
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [loading, setLoading] = useState(false);
-
   const [rolesLoading, setRolesLoading] = useState(true);
-
   const [error, setError] = useState("");
 
-  // =====================================================
-  // AUTHORIZATION
-  // =====================================================
+  const TITLE_MAX_LENGTH = 150;
+  const CONTENT_MAX_LENGTH = 5000;
 
   useEffect(() => {
-    if (!authenticated) {
+    if (!isAdmin) {
       authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
-      return;
-    }
-
-    if (userRole !== "Admin") {
-      if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), {
-          replace: true,
-        });
-      } else {
-        navigate("/login", {
-          replace: true,
-        });
-      }
-    }
-  }, [authenticated, userRole, navigate]);
-
-  // =====================================================
-  // LOAD ROLES
-  // =====================================================
-
-  useEffect(() => {
-    if (!authenticated || userRole !== "Admin") {
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -152,13 +106,9 @@ export default function CreateAnnouncement() {
       try {
         setRolesLoading(true);
 
-        setError("");
-
         const response = await authService.authFetch(ROLE_API_URL, {
           method: "GET",
-
           signal: controller.signal,
-
           headers: {
             Accept: "application/json",
           },
@@ -166,70 +116,62 @@ export default function CreateAnnouncement() {
 
         const contentType = response.headers.get("content-type") || "";
 
-        let data: Role[] | RoleResponse | null = null;
-
-        if (contentType.includes("application/json")) {
-          data = await response.json();
-        } else {
+        if (!contentType.includes("application/json")) {
           const text = await response.text();
 
           throw new Error(
-            `Server returned a non-JSON response (${response.status}): ${text.slice(
+            `Role server returned a non-JSON response (${response.status}): ${text.slice(
               0,
               200,
             )}`,
           );
         }
 
+        const data: RoleApiResponse = await response.json();
+
         if (response.status === 401) {
           authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
+          navigate("/login", { replace: true });
           return;
         }
 
         if (response.status === 403) {
-          const responseObject = !Array.isArray(data) ? data : null;
-
           throw new Error(
-            responseObject?.message ||
-              responseObject?.error ||
-              "You are not authorized to load roles.",
+            Array.isArray(data)
+              ? "You are not authorized to load roles."
+              : data.message ||
+                  data.error ||
+                  "You are not authorized to load roles.",
           );
         }
 
         if (!response.ok) {
-          const responseObject = !Array.isArray(data) ? data : null;
+          if (Array.isArray(data)) {
+            throw new Error("Unable to load roles.");
+          }
 
           throw new Error(
-            responseObject?.message ||
-              responseObject?.error ||
-              `Unable to load roles (${response.status}).`,
+            data.error || data.message || "Unable to load roles.",
           );
         }
 
-        let loadedRoles: Role[] = [];
+        let roleList: Role[] = [];
 
         if (Array.isArray(data)) {
-          loadedRoles = data;
-        } else if (data && Array.isArray(data.roles)) {
-          loadedRoles = data.roles;
-        } else if (data && Array.isArray(data.data)) {
-          loadedRoles = data.data;
+          roleList = data;
+        } else if (Array.isArray(data.roles)) {
+          roleList = data.roles;
+        } else if (Array.isArray(data.data)) {
+          roleList = data.data;
         }
 
-        setRoles(loadedRoles);
+        setRoles(roleList);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
 
-        console.error("LOAD ANNOUNCEMENT ROLES ERROR:", err);
-
-        setRoles([]);
+        console.error("Load roles error:", err);
 
         setError(err instanceof Error ? err.message : "Unable to load roles.");
       } finally {
@@ -241,43 +183,65 @@ export default function CreateAnnouncement() {
 
     void loadRoles();
 
-    return () => {
-      controller.abort();
-    };
-  }, [authenticated, userRole, navigate]);
+    return () => controller.abort();
+  }, [isAdmin, navigate]);
 
-  // =====================================================
-  // FILE UPLOAD
-  // =====================================================
+  const selectedRecipientNames = useMemo(
+    () =>
+      roles
+        .filter((role) => recipients.includes(role.role_id))
+        .map((role) => role.role_name),
+    [roles, recipients],
+  );
+
+  function handleRecipientChange(roleId: number, checked: boolean) {
+    if (checked) {
+      setRecipients((currentRecipients) => {
+        if (currentRecipients.includes(roleId)) {
+          return currentRecipients;
+        }
+
+        return [...currentRecipients, roleId];
+      });
+
+      if (error) {
+        setError("");
+      }
+
+      return;
+    }
+
+    setRecipients((currentRecipients) =>
+      currentRecipients.filter((id) => id !== roleId),
+    );
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+  }
 
   async function uploadFile(): Promise<number | null> {
     if (!selectedFile) {
       return null;
     }
 
-    if (!authenticated || userRole !== "Admin") {
+    if (!isAdmin) {
       throw new Error(
         "Your session has expired or you are not authorized to upload files.",
       );
     }
 
     const formData = new FormData();
-
     formData.append("file", selectedFile);
-
-    // IMPORTANT:
-    // Do not send uploaded_by.
-    // Backend should use req.user.user_id.
 
     const response = await authService.authFetch(FILE_UPLOAD_URL, {
       method: "POST",
-
       body: formData,
     });
 
     const contentType = response.headers.get("content-type") || "";
-
-    let data: UploadResponse | null = null;
+    let data: UploadResponse = {};
 
     if (contentType.includes("application/json")) {
       data = await response.json();
@@ -294,28 +258,27 @@ export default function CreateAnnouncement() {
 
     if (response.status === 401) {
       authService.logout();
+      navigate("/login", { replace: true });
 
       throw new Error("Your session has expired. Please log in again.");
     }
 
     if (response.status === 403) {
       throw new Error(
-        data?.message ||
-          data?.error ||
-          "You are not authorized to upload files.",
+        data.message || data.error || "You are not authorized to upload files.",
       );
     }
 
     if (!response.ok) {
       throw new Error(
-        data?.message ||
-          data?.error ||
+        data.message ||
+          data.error ||
           `File upload failed (${response.status}).`,
       );
     }
 
     const uploadedFileId = Number(
-      data?.file_id ?? data?.file?.file_id ?? data?.data?.file_id,
+      data.file_id ?? data.file?.file_id ?? data.data?.file_id,
     );
 
     if (!Number.isInteger(uploadedFileId) || uploadedFileId <= 0) {
@@ -327,81 +290,47 @@ export default function CreateAnnouncement() {
     return uploadedFileId;
   }
 
-  // =====================================================
-  // RECIPIENT CHANGE
-  // =====================================================
-
-  const handleRecipientChange = (roleId: number, checked: boolean) => {
-    setRecipients((current) => {
-      if (checked) {
-        if (current.includes(roleId)) {
-          return current;
-        }
-
-        return [...current, roleId];
-      }
-
-      return current.filter((id) => id !== roleId);
-    });
-  };
-
-  // =====================================================
-  // SUBMIT
-  // =====================================================
-
-  async function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setError("");
 
-    if (!authenticated || userRole !== "Admin") {
-      setError(
-        "Your session has expired or you are not authorized to create announcements.",
-      );
-
-      return;
-    }
-
     const cleanTitle = title.trim();
-
     const cleanContent = content.trim();
 
     if (!cleanTitle) {
       setError("Title is required.");
-
       return;
     }
 
     if (!cleanContent) {
       setError("Content is required.");
-
       return;
     }
 
     if (!publishDate) {
       setError("Publish date is required.");
-
       return;
     }
 
     if (recipients.length === 0) {
-      setError("Select at least one recipient.");
-
+      setError("Please select at least one recipient.");
       return;
     }
 
     if (expiryDate && expiryDate < publishDate) {
       setError("Expiry date cannot be earlier than the publish date.");
+      return;
+    }
 
+    if (!isAdmin) {
+      setError(
+        "Your session has expired or you are not authorized to create announcements.",
+      );
       return;
     }
 
     try {
       setLoading(true);
-
-      // =================================================
-      // OPTIONAL FILE UPLOAD
-      // =================================================
 
       let uploadedFileId: number | null = null;
 
@@ -409,95 +338,67 @@ export default function CreateAnnouncement() {
         uploadedFileId = await uploadFile();
       }
 
-      // =================================================
-      // PAYLOAD
-      //
-      // Do NOT send:
-      //
-      // created_by
-      // role_id
-      //
-      // Backend gets actor from req.user.
-      // =================================================
-
       const announcementData = {
         title: cleanTitle,
-
         content: cleanContent,
-
         publish_date: `${publishDate} 00:00:00`,
-
         expiry_date: expiryDate ? `${expiryDate} 23:59:59` : null,
-
         is_active: isActive ? 1 : 0,
-
         recipients,
-
         attachments: uploadedFileId ? [uploadedFileId] : [],
       };
 
       const response = await authService.authFetch(ANNOUNCEMENT_API_URL, {
         method: "POST",
-
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(announcementData),
       });
 
       const contentType = response.headers.get("content-type") || "";
-
-      let data: CreateAnnouncementResponse | null = null;
+      let data: AnnouncementResponse = {};
 
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const text = await response.text();
 
-        throw new Error(
-          `Server returned a non-JSON response (${response.status}): ${text.slice(
-            0,
-            200,
-          )}`,
-        );
+        if (!response.ok) {
+          throw new Error(
+            `Announcement server returned a non-JSON response (${response.status}): ${text.slice(
+              0,
+              200,
+            )}`,
+          );
+        }
       }
 
       if (response.status === 401) {
         authService.logout();
+        navigate("/login", { replace: true });
 
-        navigate("/login", {
-          replace: true,
-        });
-
-        return;
+        throw new Error("Your session has expired. Please log in again.");
       }
 
       if (response.status === 403) {
         throw new Error(
-          data?.message ||
-            data?.error ||
+          data.message ||
+            data.error ||
             "You are not authorized to create announcements.",
         );
       }
 
       if (!response.ok) {
         throw new Error(
-          data?.message ||
-            data?.error ||
-            `Failed to create announcement (${response.status}).`,
+          data.error || data.message || "Failed to create announcement.",
         );
       }
 
-      window.alert(data?.message || "Announcement created successfully!");
-
+      window.alert("Announcement created successfully!");
       navigate("/admin/announcement/list");
     } catch (err) {
-      console.error("CREATE ADMIN ANNOUNCEMENT ERROR:", err);
-
-      if (err instanceof TypeError) {
-        setError(
-          "Unable to connect to the server. Make sure the backend is running on port 3000.",
-        );
-
-        return;
-      }
+      console.error("Create announcement error:", err);
 
       setError(
         err instanceof Error ? err.message : "Failed to create announcement.",
@@ -507,169 +408,408 @@ export default function CreateAnnouncement() {
     }
   }
 
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
+  function handleCancel() {
+    navigate("/admin/announcement/list");
+  }
 
-  if (!authenticated || !session || userRole !== "Admin") {
+  if (!isAdmin) {
     return null;
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <DashboardLayout>
-      <div className="admin-announcement-create">
-        <h1>Create Announcement</h1>
+      <main className="admin-create-announcement">
+        <div className="admin-create-announcement__toolbar">
+          <button
+            type="button"
+            className="admin-create-announcement__back"
+            onClick={handleCancel}
+            disabled={loading}
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to Announcements
+          </button>
+        </div>
 
-        {error && <p className="error-message">{error}</p>}
+        <section className="admin-create-announcement__hero">
+          <div className="admin-create-announcement__hero-copy">
+            <div className="admin-create-announcement__eyebrow">
+              <span>
+                <Megaphone size={16} aria-hidden="true" />
+              </span>
+              Admin · Announcement Management
+            </div>
 
-        <form className="announcement-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="admin-announcement-title">Title</label>
+            <h1>Create Announcement</h1>
 
-            <input
-              id="admin-announcement-title"
-              type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              disabled={loading}
-              required
-            />
+            <p>
+              Create and publish announcements for selected members of the PTC
+              community.
+            </p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="admin-announcement-content">Content</label>
-
-            <textarea
-              id="admin-announcement-content"
-              rows={8}
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              disabled={loading}
-              required
-            />
+          <div className="admin-create-announcement__hero-status">
+            <span
+              className={
+                isActive
+                  ? "admin-create-announcement__status admin-create-announcement__status--active"
+                  : "admin-create-announcement__status admin-create-announcement__status--inactive"
+              }
+            >
+              {isActive ? (
+                <CheckCircle2 size={15} aria-hidden="true" />
+              ) : (
+                <CircleOff size={15} aria-hidden="true" />
+              )}
+              {isActive ? "Active" : "Inactive"}
+            </span>
           </div>
+        </section>
 
-          <div className="form-group">
-            <label>Recipients</label>
+        {error && (
+          <div className="admin-create-announcement__error" role="alert">
+            <CircleAlert size={18} aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
 
-            {rolesLoading ? (
-              <p>Loading roles...</p>
-            ) : (
-              <div className="recipient-list">
-                {roles.map((role) => (
-                  <label key={role.role_id}>
+        <form
+          className="admin-create-announcement__form"
+          onSubmit={handleSubmit}
+        >
+          <div className="admin-create-announcement__form-grid">
+            <div className="admin-create-announcement__main-column">
+              <section className="admin-create-announcement__card">
+                <header className="admin-create-announcement__card-header">
+                  <span className="admin-create-announcement__card-icon">
+                    <Megaphone size={18} aria-hidden="true" />
+                  </span>
+
+                  <div>
+                    <span>Announcement Details</span>
+                    <h2>Message Information</h2>
+                    <p>Enter the title and content that recipients will see.</p>
+                  </div>
+                </header>
+
+                <div className="admin-create-announcement__card-body">
+                  <label className="admin-create-announcement__field">
+                    <span>
+                      Title <em>*</em>
+                    </span>
+
                     <input
-                      type="checkbox"
-                      checked={recipients.includes(role.role_id)}
-                      onChange={(event) =>
-                        handleRecipientChange(
-                          role.role_id,
-                          event.target.checked,
-                        )
-                      }
+                      id="announcement-title"
+                      type="text"
+                      value={title}
+                      maxLength={TITLE_MAX_LENGTH}
+                      placeholder="Enter announcement title"
+                      autoComplete="off"
                       disabled={loading}
+                      onChange={(event) => {
+                        setTitle(event.target.value);
+
+                        if (error) {
+                          setError("");
+                        }
+                      }}
                     />
 
-                    {role.role_name}
+                    <small className="admin-create-announcement__counter">
+                      {title.length}/{TITLE_MAX_LENGTH}
+                    </small>
                   </label>
-                ))}
-              </div>
-            )}
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="admin-announcement-file">Attachment</label>
+                  <label className="admin-create-announcement__field">
+                    <span>
+                      Content <em>*</em>
+                    </span>
 
-            <input
-              id="admin-announcement-file"
-              type="file"
-              onChange={(event) =>
-                setSelectedFile(event.target.files?.[0] || null)
-              }
-              disabled={loading}
-            />
+                    <textarea
+                      id="announcement-content"
+                      rows={8}
+                      value={content}
+                      maxLength={CONTENT_MAX_LENGTH}
+                      placeholder="Write the announcement message here..."
+                      disabled={loading}
+                      onChange={(event) => {
+                        setContent(event.target.value);
 
-            {selectedFile && <p>Selected: {selectedFile.name}</p>}
-          </div>
+                        if (error) {
+                          setError("");
+                        }
+                      }}
+                    />
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="admin-announcement-status">Status</label>
+                    <small className="admin-create-announcement__counter">
+                      {content.length}/{CONTENT_MAX_LENGTH}
+                    </small>
+                  </label>
+                </div>
+              </section>
 
-              <select
-                id="admin-announcement-status"
-                value={isActive ? "true" : "false"}
-                onChange={(event) => setIsActive(event.target.value === "true")}
-                disabled={loading}
-              >
-                <option value="true">Active</option>
+              <section className="admin-create-announcement__card">
+                <header className="admin-create-announcement__card-header">
+                  <span className="admin-create-announcement__card-icon">
+                    <Paperclip size={18} aria-hidden="true" />
+                  </span>
 
-                <option value="false">Inactive</option>
-              </select>
+                  <div>
+                    <span>Attachment</span>
+                    <h2>Supporting File</h2>
+                    <p>
+                      Optionally attach a document, image, or other supporting
+                      file.
+                    </p>
+                  </div>
+                </header>
+
+                <div className="admin-create-announcement__card-body">
+                  <label className="admin-create-announcement__file-field">
+                    <span className="admin-create-announcement__file-icon">
+                      <FileUp size={20} aria-hidden="true" />
+                    </span>
+
+                    <span className="admin-create-announcement__file-copy">
+                      <strong>
+                        {selectedFile
+                          ? selectedFile.name
+                          : "Choose an attachment"}
+                      </strong>
+                      <small>
+                        {selectedFile
+                          ? "This file will be uploaded with the announcement."
+                          : "Optional. Select one file to attach."}
+                      </small>
+                    </span>
+
+                    <span className="admin-create-announcement__file-action">
+                      Browse
+                    </span>
+
+                    <input
+                      id="announcement-file"
+                      type="file"
+                      disabled={loading}
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+              </section>
             </div>
-          </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="admin-announcement-publish-date">
-                Publish Date
-              </label>
+            <aside className="admin-create-announcement__side-column">
+              <section className="admin-create-announcement__card">
+                <header className="admin-create-announcement__card-header">
+                  <span className="admin-create-announcement__card-icon">
+                    <UsersRound size={18} aria-hidden="true" />
+                  </span>
 
-              <input
-                id="admin-announcement-publish-date"
-                type="date"
-                value={publishDate}
-                onChange={(event) => setPublishDate(event.target.value)}
-                disabled={loading}
-                required
-              />
-            </div>
+                  <div>
+                    <span>Audience</span>
+                    <h2>Recipients</h2>
+                    <p>Select one or more user roles.</p>
+                  </div>
+                </header>
 
-            <div className="form-group">
-              <label htmlFor="admin-announcement-expiry-date">
-                Expiry Date
-              </label>
+                <div className="admin-create-announcement__card-body">
+                  {rolesLoading ? (
+                    <div className="admin-create-announcement__inline-state">
+                      <LoaderCircle
+                        size={18}
+                        className="admin-create-announcement__spinner"
+                        aria-hidden="true"
+                      />
+                      Loading recipient roles...
+                    </div>
+                  ) : roles.length > 0 ? (
+                    <div className="admin-create-announcement__recipients">
+                      {roles.map((role) => {
+                        const checked = recipients.includes(role.role_id);
 
-              <input
-                id="admin-announcement-expiry-date"
-                type="date"
-                value={expiryDate}
-                onChange={(event) => setExpiryDate(event.target.value)}
-                min={publishDate || undefined}
-                disabled={loading}
-              />
-            </div>
-          </div>
+                        return (
+                          <label
+                            key={role.role_id}
+                            className={
+                              checked
+                                ? "admin-create-announcement__recipient admin-create-announcement__recipient--selected"
+                                : "admin-create-announcement__recipient"
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={loading}
+                              onChange={(event) =>
+                                handleRecipientChange(
+                                  role.role_id,
+                                  event.target.checked,
+                                )
+                              }
+                            />
 
-          <div className="button-group">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate("/admin/announcement/list")}
-              disabled={loading}
-            >
-              Cancel
-            </button>
+                            <span>{role.role_name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="admin-create-announcement__inline-state">
+                      No recipient roles available.
+                    </div>
+                  )}
 
-            <button
-              type="submit"
-              disabled={
-                loading ||
-                rolesLoading ||
-                !authenticated ||
-                userRole !== "Admin"
-              }
-              className="save-btn"
-            >
-              {loading ? "Creating..." : "Create Announcement"}
-            </button>
+                  <div className="admin-create-announcement__selection">
+                    <span>Selected</span>
+                    <strong>
+                      {selectedRecipientNames.length === 0
+                        ? "No recipients selected"
+                        : selectedRecipientNames.join(", ")}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+
+              <section className="admin-create-announcement__card">
+                <header className="admin-create-announcement__card-header">
+                  <span className="admin-create-announcement__card-icon">
+                    <CalendarClock size={18} aria-hidden="true" />
+                  </span>
+
+                  <div>
+                    <span>Publishing</span>
+                    <h2>Publish Settings</h2>
+                    <p>Set status and publication dates.</p>
+                  </div>
+                </header>
+
+                <div className="admin-create-announcement__card-body admin-create-announcement__settings">
+                  <label className="admin-create-announcement__field">
+                    <span>Status</span>
+
+                    <select
+                      id="announcement-status"
+                      value={isActive ? "true" : "false"}
+                      disabled={loading}
+                      onChange={(event) =>
+                        setIsActive(event.target.value === "true")
+                      }
+                    >
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
+
+                    <small>
+                      Active announcements can be shown to selected recipients.
+                    </small>
+                  </label>
+
+                  <label className="admin-create-announcement__field">
+                    <span>
+                      Publish Date <em>*</em>
+                    </span>
+
+                    <div className="admin-create-announcement__input-with-icon">
+                      <CalendarDays size={15} aria-hidden="true" />
+                      <input
+                        id="publish-date"
+                        type="date"
+                        value={publishDate}
+                        disabled={loading}
+                        onChange={(event) => {
+                          const newPublishDate = event.target.value;
+                          setPublishDate(newPublishDate);
+
+                          if (
+                            expiryDate &&
+                            newPublishDate &&
+                            expiryDate < newPublishDate
+                          ) {
+                            setExpiryDate("");
+                          }
+
+                          if (error) {
+                            setError("");
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <small>Date when the announcement becomes available.</small>
+                  </label>
+
+                  <label className="admin-create-announcement__field">
+                    <span>Expiry Date</span>
+
+                    <div className="admin-create-announcement__input-with-icon">
+                      <CalendarClock size={15} aria-hidden="true" />
+                      <input
+                        id="expiry-date"
+                        type="date"
+                        value={expiryDate}
+                        min={publishDate || undefined}
+                        disabled={loading}
+                        onChange={(event) => setExpiryDate(event.target.value)}
+                      />
+                    </div>
+
+                    <small>
+                      Optional. Leave empty if the announcement should not
+                      expire.
+                    </small>
+                  </label>
+                </div>
+              </section>
+
+              <section className="admin-create-announcement__actions-card">
+                <div className="admin-create-announcement__actions-copy">
+                  <ShieldCheck size={18} aria-hidden="true" />
+                  <div>
+                    <strong>Ready to publish?</strong>
+                    <span>
+                      Required fields and at least one recipient must be
+                      selected.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="admin-create-announcement__actions">
+                  <button
+                    type="button"
+                    className="admin-create-announcement__button admin-create-announcement__button--secondary"
+                    disabled={loading}
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="admin-create-announcement__button admin-create-announcement__button--primary"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <LoaderCircle
+                          size={16}
+                          className="admin-create-announcement__spinner"
+                          aria-hidden="true"
+                        />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} aria-hidden="true" />
+                        Create Announcement
+                      </>
+                    )}
+                  </button>
+                </div>
+              </section>
+            </aside>
           </div>
         </form>
-      </div>
+      </main>
     </DashboardLayout>
   );
 }

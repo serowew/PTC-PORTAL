@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 
 import "../../../styles/FacultyStudentList.css";
 
@@ -10,7 +11,7 @@ import "../../../styles/FacultyStudentList.css";
 // API
 // =====================================================
 
-const API_BASE_URL = "http://localhost:3000/api/faculty/classes";
+const API_BASE_URL = apiUrl("/api/faculty/classes");
 
 // =====================================================
 // TYPES

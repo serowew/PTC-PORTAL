@@ -51,10 +51,15 @@ function buildPtcResultMetadata(finalRating) {
   if (result === ACADEMIC_RESULT.PASSED) {
     return {
       result_code: "PASSED",
+
       classification: "Passed",
+
       passed: true,
+
       retake: false,
+
       valid_result: true,
+
       curriculum_satisfied: true,
     };
   }
@@ -62,10 +67,15 @@ function buildPtcResultMetadata(finalRating) {
   if (result === ACADEMIC_RESULT.INCOMPLETE) {
     return {
       result_code: "INCOMPLETE",
+
       classification: "Incomplete",
+
       passed: false,
+
       retake: true,
+
       valid_result: true,
+
       curriculum_satisfied: false,
     };
   }
@@ -73,10 +83,31 @@ function buildPtcResultMetadata(finalRating) {
   if (result === ACADEMIC_RESULT.FAILED) {
     return {
       result_code: "FAILED",
+
       classification: "Failed",
+
       passed: false,
+
       retake: true,
+
       valid_result: true,
+
+      curriculum_satisfied: false,
+    };
+  }
+
+  if (result === ACADEMIC_RESULT.UNOFFICIAL_DROP) {
+    return {
+      result_code: "UNOFFICIAL_DROP",
+
+      classification: "Unofficial Drop",
+
+      passed: false,
+
+      retake: true,
+
+      valid_result: true,
+
       curriculum_satisfied: false,
     };
   }
@@ -90,8 +121,11 @@ function buildPtcResultMetadata(finalRating) {
     classification: "Unknown",
 
     passed: false,
+
     retake: false,
+
     valid_result: false,
+
     curriculum_satisfied: false,
   };
 }
@@ -196,10 +230,14 @@ export async function getOfficialAcademicRecordForStudent(
             g.enrollment_subject_id,
             g.faculty_id,
 
-            g.prelim_grade,
             g.midterm_grade,
             g.final_grade,
+            g.overall_percentage,
             g.final_rating,
+
+            g.grading_policy,
+            g.grading_outcome,
+            g.outcome_reason,
 
             g.remarks,
             g.grade_status,
@@ -405,15 +443,20 @@ export async function getOfficialAcademicRecordForStudent(
       // PTC GRADE VALUES
       // ---------------------------------------------
 
-      prelim_grade: toNullableNumber(row.prelim_grade),
-
       midterm_grade: toNullableNumber(row.midterm_grade),
 
       final_grade: toNullableNumber(row.final_grade),
 
+      overall_percentage: toNullableNumber(row.overall_percentage),
+
       final_rating: finalRating,
 
-      // External-source grade does not apply.
+      grading_policy: row.grading_policy || null,
+
+      grading_outcome: row.grading_outcome || null,
+
+      outcome_reason: row.outcome_reason || null,
+
       source_grade: null,
 
       remarks: row.remarks || null,
@@ -480,9 +523,6 @@ export async function getOfficialAcademicRecordForStudent(
 
   // ===================================================
   // 3. OFFICIAL TRANSFER CREDITS
-  //
-  // The transfer-credit service owns the authoritative
-  // Completed + Credited rule.
   // ===================================================
 
   const transferResult = await getOfficialTransferCreditsForStudent(
@@ -495,13 +535,6 @@ export async function getOfficialAcademicRecordForStudent(
 
   // ===================================================
   // 4. FORMAT TRANSFER-CREDIT RECORDS
-  //
-  // IMPORTANT:
-  //
-  // final_grade  = NULL
-  // final_rating = NULL
-  //
-  // We preserve source_grade separately.
   // ===================================================
 
   const transferCreditRecords = (
@@ -510,21 +543,11 @@ export async function getOfficialAcademicRecordForStudent(
     const creditedUnits = Number(credit.credit?.credited_units || 0);
 
     return {
-      // ---------------------------------------------
-      // RECORD IDENTITY
-      // ---------------------------------------------
-
       record_type: "TRANSFER_CREDIT",
 
       academic_source: "Transfer Credit",
 
       official_record: true,
-
-      // ---------------------------------------------
-      // PTC GRADE IDS
-      //
-      // These MUST stay NULL.
-      // ---------------------------------------------
 
       grade_id: null,
 
@@ -536,25 +559,13 @@ export async function getOfficialAcademicRecordForStudent(
 
       transfer_subject_id: Number(credit.transfer_subject_id),
 
-      // ---------------------------------------------
-      // MAPPED PTC SUBJECT
-      // ---------------------------------------------
-
       subject_id: Number(credit.ptc_subject?.subject_id),
 
       subject_code: credit.ptc_subject?.subject_code || null,
 
       subject_name: credit.ptc_subject?.subject_name || null,
 
-      // Awarded credit units.
       units: creditedUnits,
-
-      // ---------------------------------------------
-      // SOURCE-SCHOOL PERIOD
-      //
-      // Do NOT manufacture PTC academic_year_id or
-      // semester_id for an external institution.
-      // ---------------------------------------------
 
       academic_year_id: null,
 
@@ -564,39 +575,29 @@ export async function getOfficialAcademicRecordForStudent(
 
       semester_name: credit.source?.semester || "Previous School",
 
-      // ---------------------------------------------
-      // NO PTC ENROLLMENT EXISTS
-      // ---------------------------------------------
-
       enrollment_status: null,
 
       subject_status: "Credited",
-
-      // ---------------------------------------------
-      // NO PTC GRADE VALUES
-      // ---------------------------------------------
-
-      prelim_grade: null,
 
       midterm_grade: null,
 
       final_grade: null,
 
+      overall_percentage: null,
+
       final_rating: null,
 
-      // Preserve source exactly.
+      grading_policy: null,
+
+      grading_outcome: null,
+
+      outcome_reason: null,
+
       source_grade: credit.source?.grade ?? null,
 
       remarks: credit.source?.remarks || credit.credit?.decision_reason || null,
 
       grade_status: null,
-
-      // ---------------------------------------------
-      // ACADEMIC RESULT
-      //
-      // "Credited" is intentionally NOT converted
-      // into a fake PTC numeric grade.
-      // ---------------------------------------------
 
       result_code: "TRANSFER_CREDIT",
 
@@ -610,15 +611,7 @@ export async function getOfficialAcademicRecordForStudent(
 
       curriculum_satisfied: true,
 
-      // ---------------------------------------------
-      // NO PTC FACULTY
-      // ---------------------------------------------
-
       faculty: null,
-
-      // ---------------------------------------------
-      // PROGRAM HEAD CREDIT DECISION
-      // ---------------------------------------------
 
       approval: {
         reviewed_by: credit.credit?.reviewed_by ?? null,
@@ -629,10 +622,6 @@ export async function getOfficialAcademicRecordForStudent(
 
         review_remarks: credit.credit?.decision_reason || null,
       },
-
-      // ---------------------------------------------
-      // SOURCE-SCHOOL INFORMATION
-      // ---------------------------------------------
 
       transfer_source: {
         school: credit.source?.school || null,
@@ -658,10 +647,6 @@ export async function getOfficialAcademicRecordForStudent(
         semester: credit.source?.semester || null,
       },
 
-      // ---------------------------------------------
-      // PTC CURRICULUM MAPPING
-      // ---------------------------------------------
-
       curriculum_mapping: {
         curriculum_id: credit.evaluated_curriculum?.curriculum_id ?? null,
 
@@ -685,10 +670,6 @@ export async function getOfficialAcademicRecordForStudent(
           credit.evaluated_curriculum?.curriculum_subject?.is_required ?? null,
       },
 
-      // ---------------------------------------------
-      // EVALUATION COMPLETION
-      // ---------------------------------------------
-
       transfer_completion: {
         evaluation_status: credit.completion?.evaluation_status || "Completed",
 
@@ -701,7 +682,6 @@ export async function getOfficialAcademicRecordForStudent(
         completion_remarks: credit.completion?.completion_remarks || null,
       },
 
-      // Transfer records do not use grade timestamps.
       submitted_at: null,
 
       created_at: credit.completion?.completed_at || null,
@@ -748,9 +728,6 @@ export async function getOfficialAcademicRecordForStudent(
 
   // ===================================================
   // 7. UNIQUE TRANSFER-CREDIT UNITS
-  //
-  // Do not double-count the same mapped PTC subject if
-  // historical duplicate official evaluations exist.
   // ===================================================
 
   const transferSatisfiedUnits = new Map();
@@ -773,12 +750,6 @@ export async function getOfficialAcademicRecordForStudent(
 
   // ===================================================
   // 8. UNIQUE COMBINED EARNED UNITS
-  //
-  // A curriculum subject must never contribute earned
-  // units twice if legacy data somehow contains both:
-  //
-  // - an Approved PTC pass
-  // - official transfer credit
   // ===================================================
 
   const satisfiedSubjectUnits = new Map();
@@ -820,7 +791,6 @@ export async function getOfficialAcademicRecordForStudent(
     student_id: safeStudentId,
 
     summary: {
-      // Combined official view
       total_official_records: records.length,
 
       total_recorded_units: ptcRecordedUnits + transferCreditedUnits,
@@ -829,7 +799,6 @@ export async function getOfficialAcademicRecordForStudent(
 
       unique_satisfied_subjects: satisfiedSubjectUnits.size,
 
-      // Existing PTC-grade semantics
       total_approved_subjects: ptcGradeRecords.length,
 
       ptc_grade_records: ptcGradeRecords.length,
@@ -846,7 +815,6 @@ export async function getOfficialAcademicRecordForStudent(
 
       retake_subjects: ptcRetakeRecords.length,
 
-      // Transfer-credit semantics
       official_transfer_credit_records: transferCreditRecords.length,
 
       unique_transfer_credit_subjects: transferSatisfiedUnits.size,

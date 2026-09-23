@@ -19,12 +19,21 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
+
 import { authService } from "../../../services/auth.service";
+import { API_BASE_URL } from "../../../services/api";
 
 import "../../../styles/announcementStudent.css";
 
-const API_BASE_URL = "http://localhost:3000";
-const FILE_BASE_URL = "http://localhost:3000";
+// =====================================================
+// FILE BASE URL
+// =====================================================
+
+const FILE_BASE_URL = API_BASE_URL;
+
+// =====================================================
+// TYPES
+// =====================================================
 
 interface Attachment {
   file_id: number;
@@ -281,6 +290,10 @@ export default function AnnouncementProgD() {
   // LOAD DETAIL
   // =====================================================
 
+  // =====================================================
+  // LOAD ANNOUNCEMENT
+  // =====================================================
+
   useEffect(() => {
     const controller =
       new AbortController();
@@ -473,6 +486,10 @@ export default function AnnouncementProgD() {
             <h1>
               Announcement Details
             </h1>
+
+            {/* ======================================= */}
+            {/* CREATED BY */}
+            {/* ======================================= */}
 
             <p>
               Review the full notice,
