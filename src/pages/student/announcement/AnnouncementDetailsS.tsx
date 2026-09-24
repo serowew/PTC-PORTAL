@@ -17,7 +17,6 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
-import { fileService } from "../../../services/file.service";
 import "../../../styles/announcementDetailsStudent.css";
 
 interface Attachment {
@@ -154,6 +153,12 @@ function formatFileType(mimeType: string) {
   }
 
   return mimeType;
+}
+
+function buildFileUrl(path: string) {
+  const normalized = path.replace(/\\/g, "/").replace(/^\/+/, "");
+
+  return apiUrl(normalized);
 }
 
 export default function AnnouncementDetailsS() {
@@ -297,7 +302,7 @@ export default function AnnouncementDetailsS() {
 
         if (requestError instanceof TypeError) {
           setError(
-            "Unable to connect to the announcement server. Please make sure the backend server is running.",
+            "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
           );
           return;
         }
@@ -553,26 +558,12 @@ export default function AnnouncementDetailsS() {
 
                 <div className="student-announcement-detail__attachment-list">
                   {announcement.attachments?.map((file) => (
-                    <button
+                    <a
                       key={file.file_id}
-                      type="button"
+                      href={buildFileUrl(file.file_path)}
+                      target="_blank"
+                      rel="noreferrer"
                       className="student-announcement-detail__attachment"
-                      onClick={async () => {
-                        try {
-                          await fileService.openFile(file.file_id);
-                        } catch (fileError) {
-                          console.error(
-                            "OPEN STUDENT ANNOUNCEMENT ATTACHMENT ERROR:",
-                            fileError,
-                          );
-
-                          window.alert(
-                            fileError instanceof Error
-                              ? fileError.message
-                              : "Unable to open attachment.",
-                          );
-                        }
-                      }}
                     >
                       <span className="student-announcement-detail__file-icon">
                         <FileText size={17} />
@@ -593,7 +584,7 @@ export default function AnnouncementDetailsS() {
                         Open
                         <ExternalLink size={14} />
                       </span>
-                    </button>
+                    </a>
                   ))}
                 </div>
               </section>

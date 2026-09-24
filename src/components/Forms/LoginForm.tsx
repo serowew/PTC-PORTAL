@@ -11,8 +11,6 @@ export default function LoginForm() {
   // STATE
   // =====================================================
 
-  const showDevLogin = import.meta.env.DEV;
-
   const [username, setUsername] = useState("");
 
   const [password, setPassword] = useState("");
@@ -610,107 +608,93 @@ export default function LoginForm() {
               </button>
             </div>
 
-        {/* ========================================
-    DEVELOPMENT LOGIN
-======================================== */}
+          {/* ========================================
+              DEVELOPMENT LOGIN
+          ======================================== */}
 
-{showDevLogin && (
-  <div
-    style={{
-      marginTop: "20px",
-    }}
-  >
-    <h4>
-      For Development Access
-    </h4>
+          <div
+            style={{
+              marginTop: "20px",
+            }}
+          >
+            <h4>For Development Access</h4>
 
-    <div className={styles.devButtons}>
+            <div className={styles.devButtons}>
+              {/* ================================
+                  ADMIN
+              ================================ */}
 
-      {/* ADMIN */}
+              <button
+                type="button"
+                className={styles.devBtn}
+                disabled={loading}
+                onClick={() => handleDevLogin("admin")}
+              >
+                Login as Admin
+              </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("admin")
-        }
-      >
-        Login as Admin
-      </button>
+              {/* ================================
+                  REGISTRAR
+              ================================ */}
 
-      {/* REGISTRAR */}
+              <button
+                type="button"
+                className={styles.devBtn}
+                disabled={loading}
+                onClick={() => handleDevLogin("registrar")}
+              >
+                Login as Registrar
+              </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("registrar")
-        }
-      >
-        Login as Registrar
-      </button>
+              {/* ================================
+                  PROGRAM HEAD
+              ================================ */}
 
-      {/* PROGRAM HEAD */}
+              <button
+                type="button"
+                className={styles.devBtn}
+                disabled={loading}
+                onClick={() => handleDevLogin("proghead")}
+              >
+                Login as Program Head
+              </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("proghead")
-        }
-      >
-        Login as Program Head
-      </button>
+              {/* ================================
+                  FACULTY
+              ================================ */}
 
-      {/* FACULTY */}
+              <button
+                type="button"
+                className={styles.devBtn}
+                disabled={loading}
+                onClick={() => handleDevLogin("faculty")}
+              >
+                Login as Faculty
+              </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("faculty")
-        }
-      >
-        Login as Faculty
-      </button>
+              {/* ================================
+                  STUDENT
+              ================================ */}
 
-      {/* STUDENT */}
+              <button
+                type="button"
+                className={styles.devBtn}
+                disabled={loading}
+                onClick={() => handleDevLogin("26BSIT-0008")}
+              >
+                Login as Student
+              </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin(
-            "26BSIT-0008",
-          )
-        }
-      >
-        Login as Student
-      </button>
-
-      {/* FINANCE */}
-
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin(
-            "FINANCE CASIER",
-          )
-        }
-      >
-        Login as Finance
-      </button>
-
-    </div>
-  </div>
-)}
+              <button
+                type="button"
+                className={styles.devBtn}
+                disabled={loading}
+                onClick={() => handleDevLogin("FINANCE CASIER")}
+              >
+                Login as Finance
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

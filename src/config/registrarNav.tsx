@@ -73,7 +73,6 @@ export const registrarNavGroups = [
       },
     ],
   },
-
   {
     id: "Document",
     label: "Documents ",
@@ -82,11 +81,6 @@ export const registrarNavGroups = [
       {
         label: "Request Verification",
         path: "/registrar/document-requests",
-        icon: "",
-      },
-      {
-        label: "Grade Change Requests",
-        path: "/registrar/grade-change-requests",
         icon: "",
       },
     ],

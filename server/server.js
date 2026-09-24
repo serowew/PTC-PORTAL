@@ -50,7 +50,7 @@ app.use(express.json());
 // Later, sensitive academic/student files should be served
 // through authenticated download endpoints instead of
 // direct public URLs.
-//app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // =====================================================
 // PUBLIC AUTHENTICATION ROUTES

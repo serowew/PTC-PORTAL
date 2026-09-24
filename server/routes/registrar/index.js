@@ -22,8 +22,6 @@ import transferevaluationRoutes from "./transferEvaluations.js";
 
 import documentRequestsRoutes from "./documentRequests.js";
 
-import gradeChangeRequestRoutes from "./gradeChangeRequests.js";
-
 const router = express.Router();
 
 // ============================================================
@@ -95,7 +93,5 @@ router.use("/transfer-evaluations", transferevaluationRoutes);
 // ============================================================
 
 router.use("/document-requests", documentRequestsRoutes);
-
-router.use("/grade-change-requests", gradeChangeRequestRoutes);
 
 export default router;

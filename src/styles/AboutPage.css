@@ -1,10 +1,27 @@
+/* =========================================================
+   SCROLL ROOT
+   The scrollbar is attached to this div.
+   ========================================================= */
+
+.scroll-root {
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   ABOUT PAGE
+   ========================================================= */
+
 .ptc-about-page {
   --about-green-950: #073b24;
   --about-green-900: #0a4b2d;
   --about-green-800: #0d653b;
   --about-green-700: #0f7a45;
   --about-green-600: #159452;
-  --about-green-100: #dcf5e6;
+  --about-green-100: #0ee062;
   --about-green-50: #f1fbf5;
   --about-text-950: #17201b;
   --about-text-800: #28352d;
@@ -12,14 +29,39 @@
   --about-text-500: #76827b;
   --about-border: #dfe8e2;
   --about-surface: #ffffff;
-  --about-bg: #f5f8f6;
+  --about-bg: #020805;
 
   min-height: calc(100vh - 64px);
+
   padding: 42px 40px 58px;
+
   color: var(--about-text-950);
+
   background:
-    radial-gradient(circle at 92% 8%, rgba(21, 148, 82, 0.08), transparent 26%),
-    var(--about-bg);
+    radial-gradient(
+      circle at 12% 14%,
+      rgba(20, 255, 120, 0.2) 0%,
+      rgba(13, 125, 66, 0.1) 24%,
+      transparent 46%
+    ),
+    radial-gradient(
+      circle at 88% 74%,
+      rgba(0, 201, 92, 0.18) 0%,
+      rgba(5, 91, 45, 0.08) 27%,
+      transparent 50%
+    ),
+    linear-gradient(
+      135deg,
+      #010302 0%,
+      #06170d 45%,
+      #020805 72%,
+      #000000 100%
+    );
+
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+
   font-family:
     Inter,
     "Helvetica Neue",
@@ -227,7 +269,7 @@
 .ptc-about-section-kicker {
   display: inline-block;
   margin-bottom: 7px;
-  color: var(--about-green-700);
+  color: #42f58d;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.085em;
@@ -237,7 +279,7 @@
 .ptc-about-section-heading h2,
 .ptc-about-experience__copy h2 {
   margin: 0;
-  color: var(--about-text-950);
+  color: #f4fff8;
   font-size: clamp(27px, 3vw, 38px);
   font-weight: 770;
   line-height: 1.14;
@@ -247,7 +289,7 @@
 .ptc-about-section-heading p,
 .ptc-about-experience__copy > p {
   margin: 10px 0 0;
-  color: var(--about-text-600);
+  color: rgba(226, 244, 233, 0.76);
   font-size: 14px;
   line-height: 1.65;
 }

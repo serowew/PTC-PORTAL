@@ -22,15 +22,14 @@ import {
   ShieldCheck,
   UserRound,
   UsersRound,
-  X,
 } from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-import { api } from "../../../services/api";
+import { apiUrl } from "../../../services/api";
 
 import "../../../styles/EnterGrades.css";
 
-const API_BASE_URL = `${api.baseUrl}/api/faculty/classes`;
+const API_BASE_URL = apiUrl("/api/faculty/classes");
 
 type GradeStatus = "Draft" | "Submitted" | "Returned" | "Approved";
 
@@ -150,18 +149,6 @@ interface FacultyGrade {
   updated_at: string | null;
 }
 
-type IncCompletionRequestStatus =
-  | "Pending Program Head"
-  | "For Registrar Processing";
-
-interface IncCompletionRequestSummary {
-  grade_change_request_id: number;
-  status: IncCompletionRequestStatus;
-  requested_at: string | null;
-  reviewed_at: string | null;
-  review_remarks: string | null;
-}
-
 interface GradebookStudent {
   enrollment_subject_id: number;
   enrollment_id: number;
@@ -180,7 +167,6 @@ interface GradebookStudent {
   subject_status: string;
 
   grade: FacultyGrade | null;
-  inc_completion_request: IncCompletionRequestSummary | null;
 }
 
 interface GradebookSummary {
@@ -249,34 +235,6 @@ interface GradePreview {
 interface RowFeedback {
   type: "success" | "error";
   message: string;
-}
-
-interface IncCompletionForm {
-  midtermGrade: string;
-  finalGrade: string;
-  completionRemarks: string;
-}
-
-interface IncCompletionResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-
-  request?: {
-    grade_change_request_id: number;
-    grade_id: number;
-    request_type: "INC_COMPLETION";
-    status: string;
-  };
-
-  proposed_grade?: {
-    midterm_grade: number;
-    final_grade: number;
-    overall_percentage: number;
-    final_rating: number;
-    grading_outcome: "NUMERIC";
-    remarks: "Passed" | "Failed";
-  };
 }
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
@@ -399,34 +357,6 @@ function isEditable(student: GradebookStudent): boolean {
     student.grade.grade_status === "Draft" ||
     student.grade.grade_status === "Returned"
   );
-}
-
-function isApprovedIncomplete(student: GradebookStudent): boolean {
-  return (
-    student.subject_status === "Incomplete" &&
-    student.grade?.grade_status === "Approved" &&
-    student.grade?.grading_outcome === "INCOMPLETE" &&
-    student.grade?.remarks === "Incomplete" &&
-    Number(student.grade?.final_rating) === 4
-  );
-}
-
-function getIncCompletionStatusLabel(
-  request: IncCompletionRequestSummary,
-): string {
-  if (request.status === "For Registrar Processing") {
-    return "Waiting for Registrar";
-  }
-
-  return "Waiting for Program Head";
-}
-
-function getIncCompletionStatusClass(
-  request: IncCompletionRequestSummary,
-): string {
-  return request.status === "For Registrar Processing"
-    ? "registrar"
-    : "program-head";
 }
 
 const GRADE_BANDS = [
@@ -593,18 +523,6 @@ export default function EnterGrades() {
   const [studentSearch, setStudentSearch] = useState("");
 
   const [statusFilter, setStatusFilter] = useState("All");
-
-  const [incStudent, setIncStudent] = useState<GradebookStudent | null>(null);
-
-  const [incForm, setIncForm] = useState<IncCompletionForm>({
-    midtermGrade: "",
-    finalGrade: "",
-    completionRemarks: "",
-  });
-
-  const [incSubmitting, setIncSubmitting] = useState(false);
-
-  const [incError, setIncError] = useState("");
 
   useEffect(() => {
     if (!authenticated) {
@@ -1248,184 +1166,6 @@ export default function EnterGrades() {
       }));
     } finally {
       setSubmittingId(null);
-    }
-  };
-
-  const openIncCompletion = (student: GradebookStudent) => {
-    if (!isApprovedIncomplete(student)) {
-      return;
-    }
-
-    setIncStudent(student);
-
-    setIncForm({
-      midtermGrade: gradeValueToString(student.grade?.midterm_grade),
-      finalGrade: gradeValueToString(student.grade?.final_grade),
-      completionRemarks: "",
-    });
-
-    setIncError("");
-  };
-
-  const closeIncCompletion = () => {
-    if (incSubmitting) {
-      return;
-    }
-
-    setIncStudent(null);
-
-    setIncForm({
-      midtermGrade: "",
-      finalGrade: "",
-      completionRemarks: "",
-    });
-
-    setIncError("");
-  };
-
-  const incPreview = calculateGradePreview({
-    gradingOutcome: "NUMERIC",
-    outcomeReason: "",
-    midtermGrade: incForm.midtermGrade,
-    finalGrade: incForm.finalGrade,
-  });
-
-  const submitIncCompletion = async () => {
-    if (!incStudent || !selectedOfferingId) {
-      return;
-    }
-
-    const midtermError = validatePercentageField(
-      incForm.midtermGrade,
-      "Midterm",
-      true,
-    );
-
-    if (midtermError) {
-      setIncError(midtermError);
-      return;
-    }
-
-    const finalError = validatePercentageField(
-      incForm.finalGrade,
-      "Final Term",
-      true,
-    );
-
-    if (finalError) {
-      setIncError(finalError);
-      return;
-    }
-
-    const completionRemarks = incForm.completionRemarks.trim();
-
-    if (!completionRemarks) {
-      setIncError("Completion remarks are required.");
-      return;
-    }
-
-    if (completionRemarks.length > 1000) {
-      setIncError("Completion remarks must not exceed 1000 characters.");
-      return;
-    }
-
-    if (!incPreview.complete) {
-      setIncError("Both Midterm and Final Term grades are required.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Submit INC completion for ${incStudent.student_number} - ${incStudent.full_name}?\n\n` +
-        `Midterm: ${incForm.midtermGrade}\n` +
-        `Final Term: ${incForm.finalGrade}\n` +
-        `Overall: ${
-          incPreview.overallPercentage !== null
-            ? incPreview.overallPercentage.toFixed(2)
-            : "—"
-        }\n` +
-        `Final Rating: ${
-          incPreview.finalRating !== null
-            ? incPreview.finalRating.toFixed(2)
-            : "—"
-        }\n` +
-        `Result: ${incPreview.remarks || "—"}\n\n` +
-        "This will be sent to the Program Head for approval.",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setIncSubmitting(true);
-      setIncError("");
-
-      const response = await authService.authFetch(
-        `${API_BASE_URL}/${selectedOfferingId}/grades/${incStudent.enrollment_subject_id}/inc-completion`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            midterm_grade: Number(incForm.midtermGrade),
-            final_grade: Number(incForm.finalGrade),
-            completion_remarks: completionRemarks,
-          }),
-        },
-      );
-
-      const data = await readJsonResponse<IncCompletionResponse>(response);
-
-      if (response.status === 401) {
-        authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
-        return;
-      }
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message ||
-            data.error ||
-            "Unable to submit INC completion request.",
-        );
-      }
-
-      const enrollmentSubjectId = incStudent.enrollment_subject_id;
-
-      setRowFeedback((current) => ({
-        ...current,
-        [enrollmentSubjectId]: {
-          type: "success",
-          message:
-            data.message ||
-            "INC completion request submitted to the Program Head.",
-        },
-      }));
-
-      setIncStudent(null);
-
-      setIncForm({
-        midtermGrade: "",
-        finalGrade: "",
-        completionRemarks: "",
-      });
-
-      setGradebookRefreshKey((current) => current + 1);
-    } catch (requestError) {
-      console.error("SUBMIT INC COMPLETION ERROR:", requestError);
-
-      setIncError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to submit INC completion request.",
-      );
-    } finally {
-      setIncSubmitting(false);
     }
   };
 
@@ -2173,47 +1913,6 @@ export default function EnterGrades() {
                                             : "Submit Grade"}
                                       </button>
                                     </>
-                                  ) : isApprovedIncomplete(student) &&
-                                    student.inc_completion_request ? (
-                                    <>
-                                      <span
-                                        className={`faculty-grade-inc-request-status ${getIncCompletionStatusClass(
-                                          student.inc_completion_request,
-                                        )}`}
-                                      >
-                                        <Clock3 size={13} />
-                                        {getIncCompletionStatusLabel(
-                                          student.inc_completion_request,
-                                        )}
-                                      </span>
-
-                                      <span className="faculty-grade-locked">
-                                        <ShieldCheck size={13} />
-                                        Approved INC · Request #
-                                        {
-                                          student.inc_completion_request
-                                            .grade_change_request_id
-                                        }
-                                      </span>
-                                    </>
-                                  ) : isApprovedIncomplete(student) ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="faculty-grade-inc-complete"
-                                        onClick={() =>
-                                          openIncCompletion(student)
-                                        }
-                                      >
-                                        <FilePenLine size={13} />
-                                        Complete INC
-                                      </button>
-
-                                      <span className="faculty-grade-locked">
-                                        <ShieldCheck size={13} />
-                                        Approved INC
-                                      </span>
-                                    </>
                                   ) : (
                                     <span className="faculty-grade-locked">
                                       <ShieldCheck size={13} />
@@ -2318,192 +2017,6 @@ export default function EnterGrades() {
               </article>
             </div>
           </section>
-        )}
-
-        {incStudent && (
-          <div
-            className="faculty-inc-modal-backdrop"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                closeIncCompletion();
-              }
-            }}
-          >
-            <section
-              className="faculty-inc-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="faculty-inc-modal-title"
-            >
-              <header className="faculty-inc-modal__header">
-                <div>
-                  <span>INC Completion</span>
-                  <h2 id="faculty-inc-modal-title">
-                    Complete Incomplete Grade
-                  </h2>
-                  <p>
-                    Enter the completed numeric grades after verifying the
-                    student's missing course requirement.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className="faculty-inc-modal__close"
-                  onClick={closeIncCompletion}
-                  disabled={incSubmitting}
-                  aria-label="Close INC completion modal"
-                >
-                  <X size={18} />
-                </button>
-              </header>
-
-              <div className="faculty-inc-modal__student">
-                <div>
-                  <small>Student</small>
-                  <strong>{incStudent.full_name}</strong>
-                  <span>{incStudent.student_number}</span>
-                </div>
-
-                <div>
-                  <small>Current Official Grade</small>
-                  <strong>4.00 — Incomplete</strong>
-                  <span>
-                    {incStudent.grade?.outcome_reason ||
-                      "No incomplete reason recorded."}
-                  </span>
-                </div>
-              </div>
-
-              <div className="faculty-inc-modal__form">
-                <label>
-                  <span>Midterm Grade</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={incForm.midtermGrade}
-                    onChange={(event) =>
-                      setIncForm((current) => ({
-                        ...current,
-                        midtermGrade: event.target.value,
-                      }))
-                    }
-                    disabled={incSubmitting}
-                    placeholder="0-100"
-                  />
-                </label>
-
-                <label>
-                  <span>Final Term Grade</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={incForm.finalGrade}
-                    onChange={(event) =>
-                      setIncForm((current) => ({
-                        ...current,
-                        finalGrade: event.target.value,
-                      }))
-                    }
-                    disabled={incSubmitting}
-                    placeholder="0-100"
-                  />
-                </label>
-              </div>
-
-              <div className="faculty-inc-modal__preview">
-                <div>
-                  <small>Overall</small>
-                  <strong>
-                    {incPreview.overallPercentage !== null
-                      ? incPreview.overallPercentage.toFixed(2)
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <small>Final Rating</small>
-                  <strong>
-                    {incPreview.finalRating !== null
-                      ? incPreview.finalRating.toFixed(2)
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <small>Result</small>
-                  <strong>{incPreview.remarks || "—"}</strong>
-                </div>
-              </div>
-
-              <label className="faculty-inc-modal__remarks">
-                <span>Completion Remarks</span>
-                <textarea
-                  value={incForm.completionRemarks}
-                  onChange={(event) =>
-                    setIncForm((current) => ({
-                      ...current,
-                      completionRemarks: event.target.value,
-                    }))
-                  }
-                  disabled={incSubmitting}
-                  rows={4}
-                  maxLength={1000}
-                  placeholder="Example: Student completed and passed the missing final activity submitted through Google Drive."
-                />
-                <small>
-                  Describe the completed requirement that you verified.
-                </small>
-              </label>
-
-              {incError && (
-                <div className="faculty-inc-modal__error" role="alert">
-                  <AlertCircle size={16} />
-                  <span>{incError}</span>
-                </div>
-              )}
-
-              <div className="faculty-inc-modal__notice">
-                <ShieldCheck size={17} />
-                <p>
-                  Submitting this does not immediately change the student's
-                  official grade. The request will first be sent to the Program
-                  Head for review, then to the Registrar for official
-                  processing.
-                </p>
-              </div>
-
-              <footer className="faculty-inc-modal__footer">
-                <button
-                  type="button"
-                  className="faculty-inc-modal__cancel"
-                  onClick={closeIncCompletion}
-                  disabled={incSubmitting}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className="faculty-inc-modal__submit"
-                  onClick={() => void submitIncCompletion()}
-                  disabled={
-                    incSubmitting ||
-                    !incPreview.complete ||
-                    !incForm.completionRemarks.trim()
-                  }
-                >
-                  <Send size={15} />
-                  {incSubmitting ? "Submitting..." : "Send to Program Head"}
-                </button>
-              </footer>
-            </section>
-          </div>
         )}
       </main>
     </DashboardLayout>

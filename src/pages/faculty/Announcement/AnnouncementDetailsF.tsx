@@ -14,7 +14,6 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
-import { fileService } from "../../../services/file.service";
 import "../../../styles/announcementDetailsFaculty.css";
 
 const ANNOUNCEMENTS_API_URL = apiUrl("/api/announcements");
@@ -103,6 +102,12 @@ function formatFileSize(bytes: number) {
   }
 
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function buildFileUrl(path: string) {
+  const normalized = path.replace(/\\/g, "/").replace(/^\/+/, "");
+
+  return apiUrl(normalized);
 }
 
 export default function AnnouncementDF() {
@@ -419,26 +424,12 @@ export default function AnnouncementDF() {
 
                   <div className="faculty-announcement-detail__attachment-list">
                     {announcement.attachments.map((file) => (
-                      <button
+                      <a
                         key={file.file_id}
-                        type="button"
+                        href={buildFileUrl(file.file_path)}
+                        target="_blank"
+                        rel="noreferrer"
                         className="faculty-announcement-detail__attachment"
-                        onClick={async () => {
-                          try {
-                            await fileService.openFile(file.file_id);
-                          } catch (fileError) {
-                            console.error(
-                              "OPEN FACULTY ANNOUNCEMENT ATTACHMENT ERROR:",
-                              fileError,
-                            );
-
-                            window.alert(
-                              fileError instanceof Error
-                                ? fileError.message
-                                : "Unable to open attachment.",
-                            );
-                          }
-                        }}
                       >
                         <span className="faculty-announcement-detail__file-icon">
                           <Paperclip size={16} />
@@ -453,7 +444,7 @@ export default function AnnouncementDF() {
                         </div>
 
                         <Download size={16} />
-                      </button>
+                      </a>
                     ))}
                   </div>
                 </section>

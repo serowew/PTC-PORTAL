@@ -4,16 +4,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 
 import { authService } from "../../../services/auth.service";
-import { apiUrl } from "../../../services/api";
-import { fileService } from "../../../services/file.service";
+import { API_BASE_URL } from "../../../services/api";
 
 import "../../../styles/announcementStudent.css";
 
 // =====================================================
-// API
+// FILE BASE URL
 // =====================================================
 
-const ANNOUNCEMENTS_API_URL = apiUrl("/api/announcements");
+const FILE_BASE_URL = API_BASE_URL;
 
 // =====================================================
 // TYPES
@@ -116,10 +115,17 @@ export default function AnnouncementProgD() {
 
         // =================================================
         // LOAD PROTECTED ANNOUNCEMENT
+        //
+        // authFetch automatically adds:
+        //
+        // Authorization: Bearer <JWT>
+        //
+        // Do NOT send role_id manually.
+        // Backend gets the authenticated role from req.user.
         // =================================================
 
         const response = await authService.authFetch(
-          `${ANNOUNCEMENTS_API_URL}/${announcementId}`,
+          `${API_BASE_URL}/api/announcements/${announcementId}`,
           {
             method: "GET",
 
@@ -132,12 +138,21 @@ export default function AnnouncementProgD() {
         );
 
         // =================================================
+        // RESPONSE
+        // =================================================
+
+        const data = await response.json();
+
+        console.log("PROGRAM HEAD ANNOUNCEMENT DETAIL:", data);
+
+        // =================================================
         // UNAUTHORIZED
+        //
+        // authFetch already deletes the invalid token
+        // when status = 401.
         // =================================================
 
         if (response.status === 401) {
-          authService.logout();
-
           navigate("/login", {
             replace: true,
           });
@@ -146,28 +161,7 @@ export default function AnnouncementProgD() {
         }
 
         // =================================================
-        // PARSE RESPONSE
-        // =================================================
-
-        const contentType = response.headers.get("content-type") || "";
-
-        if (!contentType.includes("application/json")) {
-          const text = await response.text();
-
-          throw new Error(
-            `Server returned a non-JSON response (${response.status}): ${text.slice(
-              0,
-              200,
-            )}`,
-          );
-        }
-
-        const data = await response.json();
-
-        console.log("PROGRAM HEAD ANNOUNCEMENT DETAIL:", data);
-
-        // =================================================
-        // API ERROR
+        // OTHER API ERROR
         // =================================================
 
         if (!response.ok) {
@@ -177,27 +171,10 @@ export default function AnnouncementProgD() {
         }
 
         // =================================================
-        // NORMALIZE RESPONSE
-        // =================================================
-
-        const loadedAnnouncement: Announcement | undefined =
-          data.announcement || data.data || data;
-
-        if (!loadedAnnouncement || !loadedAnnouncement.announcement_id) {
-          throw new Error("Announcement data was not returned by the server.");
-        }
-
-        // =================================================
         // SAVE ANNOUNCEMENT
         // =================================================
 
-        setAnnouncement({
-          ...loadedAnnouncement,
-
-          attachments: Array.isArray(loadedAnnouncement.attachments)
-            ? loadedAnnouncement.attachments
-            : [],
-        });
+        setAnnouncement(data as Announcement);
       } catch (err) {
         // =================================================
         // IGNORE ABORT
@@ -208,16 +185,6 @@ export default function AnnouncementProgD() {
         }
 
         console.error("PROGRAM HEAD ANNOUNCEMENT ERROR:", err);
-
-        setAnnouncement(null);
-
-        if (err instanceof TypeError) {
-          setError(
-            "Unable to connect to the announcement server. Please make sure the backend server is running.",
-          );
-
-          return;
-        }
 
         if (err instanceof Error) {
           setError(err.message);
@@ -231,7 +198,7 @@ export default function AnnouncementProgD() {
       }
     }
 
-    void loadAnnouncement();
+    loadAnnouncement();
 
     // =====================================================
     // CLEANUP
@@ -241,24 +208,6 @@ export default function AnnouncementProgD() {
       controller.abort();
     };
   }, [id, user, token, navigate]);
-
-  // =====================================================
-  // OPEN PROTECTED ATTACHMENT
-  // =====================================================
-
-  const handleOpenAttachment = async (fileId: number) => {
-    try {
-      await fileService.openFile(fileId);
-    } catch (fileError) {
-      console.error("OPEN PROGRAM HEAD ATTACHMENT ERROR:", fileError);
-
-      window.alert(
-        fileError instanceof Error
-          ? fileError.message
-          : "Unable to open attachment.",
-      );
-    }
-  };
 
   // =====================================================
   // UI
@@ -316,20 +265,8 @@ export default function AnnouncementProgD() {
             {/* ======================================= */}
 
             <p>
-              Published:{" "}
-              {new Date(announcement.publish_date).toLocaleString("en-PH")}
+              Published: {new Date(announcement.publish_date).toLocaleString()}
             </p>
-
-            {/* ======================================= */}
-            {/* EXPIRY DATE */}
-            {/* ======================================= */}
-
-            {announcement.expiry_date && (
-              <p>
-                Expires:{" "}
-                {new Date(announcement.expiry_date).toLocaleString("en-PH")}
-              </p>
-            )}
 
             <hr />
 
@@ -343,29 +280,47 @@ export default function AnnouncementProgD() {
             {/* ATTACHMENTS */}
             {/* ======================================= */}
 
-            {announcement.attachments.length > 0 && (
-              <div>
-                <hr />
+            {announcement.attachments &&
+              announcement.attachments.length > 0 && (
+                <div>
+                  <hr />
 
-                <h3>Attachments</h3>
+                  <h3>Attachments</h3>
 
-                <div className="attachment-list">
-                  {announcement.attachments.map((file) => (
-                    <div key={file.file_id} className="attachment-item">
-                      📄{" "}
-                      <button
-                        type="button"
-                        className="attachment-link"
-                        onClick={() => void handleOpenAttachment(file.file_id)}
-                      >
-                        {file.original_name}
-                      </button>
-                      <span> ({(file.file_size / 1024).toFixed(1)} KB)</span>
-                    </div>
-                  ))}
+                  <div className="attachment-list">
+                    {announcement.attachments.map((file) => {
+                      // Convert:
+                      //
+                      // uploads\files\example.pdf
+                      //
+                      // into:
+                      //
+                      // uploads/files/example.pdf
+
+                      const normalizedPath = file.file_path
+                        .replace(/\\/g, "/")
+                        .replace(/^\/+/, "");
+
+                      return (
+                        <div key={file.file_id} className="attachment-item">
+                          📄{" "}
+                          <a
+                            href={`${FILE_BASE_URL}/${normalizedPath}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {file.original_name}
+                          </a>
+                          <span>
+                            {" "}
+                            ({(file.file_size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         )}
       </div>

@@ -19,10 +19,10 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
-import { fileService } from "../../../services/file.service";
 import "../../../styles/AdminAnnouncementDetails.css";
 
 const API_BASE_URL = apiUrl("/api/announcement-management");
+const FILE_BASE_URL = "API_BASE_URL";
 
 type Recipient = {
   role_id: number;
@@ -112,6 +112,12 @@ function formatFileSize(value: number) {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function buildAttachmentUrl(filePath: string) {
+  const normalizedPath = String(filePath || "").replace(/\\/g, "/");
+
+  return `${FILE_BASE_URL}/${normalizedPath.replace(/^\/+/, "")}`;
 }
 
 export default function AnnouncementDetails() {
@@ -254,7 +260,7 @@ export default function AnnouncementDetails() {
 
         if (requestError instanceof TypeError) {
           setError(
-            "Unable to connect to the announcement server. Please make sure the backend server is running.",
+            "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
           );
           return;
         }
@@ -499,26 +505,12 @@ export default function AnnouncementDetails() {
                   const fileSize = formatFileSize(file.file_size);
 
                   return (
-                    <button
+                    <a
                       key={file.file_id}
-                      type="button"
                       className="admin-announcement-details-view__attachment"
-                      onClick={async () => {
-                        try {
-                          await fileService.openFile(file.file_id);
-                        } catch (fileError) {
-                          console.error(
-                            "OPEN ADMIN ANNOUNCEMENT ATTACHMENT ERROR:",
-                            fileError,
-                          );
-
-                          window.alert(
-                            fileError instanceof Error
-                              ? fileError.message
-                              : "Unable to open attachment.",
-                          );
-                        }
-                      }}
+                      href={buildAttachmentUrl(file.file_path)}
+                      target="_blank"
+                      rel="noreferrer"
                     >
                       <span className="admin-announcement-details-view__attachment-icon">
                         <FileText size={17} aria-hidden="true" />
@@ -534,7 +526,7 @@ export default function AnnouncementDetails() {
                       </span>
 
                       <Download size={16} aria-hidden="true" />
-                    </button>
+                    </a>
                   );
                 })}
               </div>
