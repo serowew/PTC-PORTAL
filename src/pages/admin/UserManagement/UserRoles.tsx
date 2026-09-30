@@ -15,16 +15,12 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminUserRoles.css";
 
-const USERS_API_URL = "http://localhost:3000/api/users";
+const USERS_API_URL = apiUrl("/api/users");
 
-type RoleName =
-  | "Admin"
-  | "Registrar"
-  | "Program Head"
-  | "Faculty"
-  | "Student";
+type RoleName = "Admin" | "Registrar" | "Program Head" | "Faculty" | "Student";
 
 type UserRecord = {
   user_id: number;
@@ -87,23 +83,23 @@ const ROLE_DEFINITIONS: RoleDefinition[] = [
   {
     id: 4,
     name: "Faculty",
-    description:
-      "Manages classes, grades, schedules, and student performance.",
+    description: "Manages classes, grades, schedules, and student performance.",
     permissions: ["View Students", "Submit Grades", "Manage Classes"],
     icon: GraduationCap,
   },
   {
     id: 5,
     name: "Student",
-    description:
-      "Accesses academic records, enrollment, and student services.",
+    description: "Accesses academic records, enrollment, and student services.",
     permissions: ["View Grades", "View Schedule", "Submit Requests"],
     icon: UserRoundCheck,
   },
 ];
 
 function normalizeRoleName(value: string) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase();
 }
 
 export default function UserRoles() {
@@ -273,11 +269,8 @@ export default function UserRoles() {
 
   const representedRoles = useMemo(
     () =>
-      new Set(
-        users
-          .map((user) => normalizeRoleName(user.role))
-          .filter(Boolean),
-      ).size,
+      new Set(users.map((user) => normalizeRoleName(user.role)).filter(Boolean))
+        .size,
     [users],
   );
 
@@ -410,10 +403,7 @@ export default function UserRoles() {
               const count = roleCounts.get(normalizeRoleName(role.name)) || 0;
 
               return (
-                <article
-                  className="admin-user-roles__card"
-                  key={role.id}
-                >
+                <article className="admin-user-roles__card" key={role.id}>
                   <div className="admin-user-roles__card-header">
                     <span className="admin-user-roles__role-icon">
                       <RoleIcon size={19} aria-hidden="true" />

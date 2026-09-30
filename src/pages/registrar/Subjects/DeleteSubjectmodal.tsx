@@ -8,26 +8,22 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-
 import { authService } from "../../../services/auth.service";
+import { api } from "../../../services/api";
 import type { Subject } from "./Subjectmodal";
 import "../../../styles/DeleteSubjectModalR.css";
-
 interface DeleteSubjectModalProps {
   isOpen: boolean;
   subject: Subject | null;
   onClose: () => void;
   onSuccess: () => void;
 }
-
 interface DeleteSubjectResponse {
   success: boolean;
   message?: string;
   error?: string;
 }
-
-const API_BASE_URL = "http://localhost:3000/api/registrar/subjects";
-
+const API_BASE_URL = `${api.baseUrl}/api/registrar/subjects`;
 export default function DeleteSubjectModal({
   isOpen,
   subject,
@@ -38,57 +34,43 @@ export default function DeleteSubjectModal({
   const token = authService.getToken();
   const userRole = user?.role;
   const authenticated = Boolean(user && token);
-
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
-
   useEffect(() => {
     if (!isOpen) return;
     setError("");
   }, [isOpen, subject?.subject_id]);
-
   useEffect(() => {
     if (!isOpen) return;
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !deleting) {
         onClose();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, deleting, onClose]);
-
   if (!isOpen || !subject) return null;
-
   const handleDelete = async () => {
     setError("");
-
     if (!authenticated || userRole !== "Registrar") {
       setError(
         "Your session has expired or you are not authorized to delete subjects.",
       );
       return;
     }
-
     const subjectId = Number(subject.subject_id);
-
     if (!Number.isInteger(subjectId) || subjectId <= 0) {
       setError("Invalid subject ID.");
       return;
     }
-
     try {
       setDeleting(true);
-
       const response = await authService.authFetch(
         `${API_BASE_URL}/${subjectId}`,
         {
@@ -96,10 +78,8 @@ export default function DeleteSubjectModal({
           headers: { Accept: "application/json" },
         },
       );
-
       const contentType = response.headers.get("content-type") || "";
       let data: DeleteSubjectResponse | null = null;
-
       if (contentType.includes("application/json")) {
         data = await response.json();
       } else {
@@ -108,13 +88,11 @@ export default function DeleteSubjectModal({
           `Server returned a non-JSON response (${response.status}): ${text.slice(0, 200)}`,
         );
       }
-
       if (response.status === 401) {
         authService.logout();
         setError("Your session has expired. Please log in again.");
         return;
       }
-
       if (response.status === 403) {
         throw new Error(
           data?.message ||
@@ -122,7 +100,6 @@ export default function DeleteSubjectModal({
             "You are not authorized to delete subjects.",
         );
       }
-
       if (!response.ok) {
         throw new Error(
           data?.message ||
@@ -130,28 +107,23 @@ export default function DeleteSubjectModal({
             `Failed to delete subject (${response.status}).`,
         );
       }
-
       if (!data?.success) {
         throw new Error(data?.message || "Failed to delete subject.");
       }
-
       onSuccess();
     } catch (err) {
       console.error("DELETE SUBJECT ERROR:", err);
-
       if (err instanceof TypeError) {
         setError(
           "Unable to connect to the subject server. Make sure the backend is running on port 3000.",
         );
         return;
       }
-
       setError(err instanceof Error ? err.message : "Failed to delete subject.");
     } finally {
       setDeleting(false);
     }
   };
-
   return (
     <div
       className="registrar-delete-subject__overlay"
@@ -184,13 +156,11 @@ export default function DeleteSubjectModal({
             <X size={18} aria-hidden="true" />
           </button>
         </header>
-
         <div className="registrar-delete-subject__body">
           <p className="registrar-delete-subject__intro">
             Confirm that you want to permanently remove this master subject from
             the system.
           </p>
-
           <div className="registrar-delete-subject__subject-card">
             <span className="registrar-delete-subject__subject-icon">
               <BookOpen size={20} aria-hidden="true" />
@@ -204,7 +174,6 @@ export default function DeleteSubjectModal({
               <span>{Number(subject.units) === 1 ? "unit" : "units"}</span>
             </div>
           </div>
-
           <div className="registrar-delete-subject__protection">
             <ShieldAlert size={19} aria-hidden="true" />
             <div>
@@ -216,7 +185,6 @@ export default function DeleteSubjectModal({
               </p>
             </div>
           </div>
-
           <div className="registrar-delete-subject__warning">
             <AlertTriangle size={18} aria-hidden="true" />
             <p>
@@ -224,15 +192,17 @@ export default function DeleteSubjectModal({
               undone from this page.
             </p>
           </div>
-
           {error && (
-            <div className="registrar-delete-subject__error" role="alert">
+            <div
+              className="registrar-delete-subject__error"
+              role="alert"
+              aria-live="assertive"
+            >
               <AlertCircle size={17} aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
         </div>
-
         <footer className="registrar-delete-subject__footer">
           <button
             type="button"

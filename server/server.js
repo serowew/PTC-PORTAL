@@ -23,6 +23,7 @@ import programHeadRouter from "./routes/programhead/index.js";
 
 import authenticate from "./middleware/authenticate.js";
 import requireRole from "./middleware/requireRole.js";
+import financeRouter from "./routes/finance/index.js";
 
 const app = express();
 
@@ -49,7 +50,7 @@ app.use(express.json());
 // Later, sensitive academic/student files should be served
 // through authenticated download endpoints instead of
 // direct public URLs.
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+//app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // =====================================================
 // PUBLIC AUTHENTICATION ROUTES
@@ -140,14 +141,16 @@ app.use(
 );
 
 // =====================================================
-// TEMPORARY STUDENT ROUTE DEBUG
-// =====================================================
-
-// =====================================================
 // STUDENT ROUTES
 // =====================================================
 
 app.use("/api/student", authenticate, requireRole("Student"), studentRoutes);
+
+// =====================================================
+// FINANCE ROUTES
+// =====================================================
+
+app.use("/api/finance", authenticate, requireRole("Finance"), financeRouter);
 // =====================================================
 // SHARED AUTHENTICATED FILE ROUTES
 // =====================================================

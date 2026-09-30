@@ -20,10 +20,11 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 
 import "../../../styles/TransferEvaluationR.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/transfer-evaluations";
+const API_BASE_URL = apiUrl("/api/registrar/transfer-evaluations");
 
 type EvaluationStatus =
   | "Draft"

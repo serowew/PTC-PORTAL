@@ -1,0 +1,917 @@
+.registrar-teaching-schedule {
+  --rts-green-950: #073b24;
+  --rts-green-900: #0a4b2d;
+  --rts-green-800: #0d653b;
+  --rts-green-700: #0f7a45;
+  --rts-green-600: #159452;
+  --rts-green-500: #22c55e;
+  --rts-green-100: #dcf5e6;
+  --rts-green-50: #f1fbf5;
+  --rts-text-950: #17201b;
+  --rts-text-900: #28352d;
+  --rts-text-700: #425047;
+  --rts-text-600: #5e6b63;
+  --rts-text-500: #76827b;
+  --rts-text-400: #94a3b8;
+  --rts-border: #dfe8e2;
+  --rts-border-strong: #cfdcd3;
+  --rts-border-soft: #edf2ee;
+  --rts-surface: #ffffff;
+  --rts-surface-soft: #f8fbf9;
+  --rts-bg: #f5f8f6;
+  --rts-warning: #8a6414;
+  --rts-warning-soft: #fff9e8;
+  --rts-warning-border: #ecd9a8;
+  --rts-danger: #b42318;
+  --rts-danger-soft: #fff3f1;
+  --rts-danger-border: #f1c5bf;
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 30px 38px;
+  box-sizing: border-box;
+  color: var(--rts-text-950);
+  background:
+    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    var(--rts-bg);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.registrar-teaching-schedule *,
+.registrar-teaching-schedule *::before,
+.registrar-teaching-schedule *::after {
+  box-sizing: border-box;
+}
+.registrar-teaching-schedule button,
+.registrar-teaching-schedule input,
+.registrar-teaching-schedule select {
+  font: inherit;
+}
+.registrar-teaching-schedule button {
+  cursor: pointer;
+}
+.registrar-teaching-schedule__hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 25px 28px;
+  border: 1px solid rgba(15, 122, 69, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 253, 249, 0.99) 66%, rgba(230, 247, 237, 0.99) 100%);
+  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+}
+.registrar-teaching-schedule__hero::after {
+  content: "";
+  position: absolute;
+  top: -92px;
+  right: -70px;
+  width: 230px;
+  height: 230px;
+  border: 38px solid rgba(15, 122, 69, 0.055);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.registrar-teaching-schedule__hero-copy,
+.registrar-teaching-schedule__refresh {
+  position: relative;
+  z-index: 1;
+}
+.registrar-teaching-schedule__hero-copy {
+  min-width: 0;
+  max-width: 780px;
+}
+.registrar-teaching-schedule__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: var(--rts-green-800);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.registrar-teaching-schedule__eyebrow > span {
+  display: inline-flex;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: var(--rts-green-700);
+  background: var(--rts-green-100);
+}
+.registrar-teaching-schedule__hero h1 {
+  margin: 0;
+  color: var(--rts-text-950);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 770;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.registrar-teaching-schedule__hero p {
+  max-width: 720px;
+  margin: 9px 0 0;
+  color: var(--rts-text-600);
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+.registrar-teaching-schedule__refresh {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 8px 12px;
+  border: 1px solid var(--rts-green-800);
+  border-radius: 9px;
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--rts-green-700), var(--rts-green-900));
+  box-shadow: 0 5px 14px rgba(13, 101, 59, 0.13);
+  font-size: 10.5px;
+  font-weight: 730;
+  white-space: nowrap;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+.registrar-teaching-schedule__refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(13, 101, 59, 0.18);
+}
+.registrar-teaching-schedule__refresh:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+.registrar-teaching-schedule__refresh .is-spinning {
+  animation: registrarTeachingSpin 0.8s linear infinite;
+}
+.registrar-teaching-schedule__faculty {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.45fr) minmax(240px, 1fr) minmax(220px, 0.85fr);
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--rts-border);
+  border-radius: 15px;
+  background: var(--rts-border-soft);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.registrar-teaching-schedule__faculty > div {
+  min-width: 0;
+  padding: 15px 17px;
+  background: var(--rts-surface);
+}
+.registrar-teaching-schedule__faculty-main {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.registrar-teaching-schedule__faculty-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dceee2;
+  border-radius: 11px;
+  color: var(--rts-green-700);
+  background: var(--rts-green-50);
+}
+.registrar-teaching-schedule__faculty small {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--rts-text-500);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+.registrar-teaching-schedule__faculty strong {
+  display: block;
+  overflow: hidden;
+  color: var(--rts-text-900);
+  font-size: 12.5px;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.registrar-teaching-schedule__faculty select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 34px 8px 10px;
+  border: 1.5px solid #ccd8d0;
+  border-radius: 9px;
+  outline: none;
+  color: var(--rts-text-900);
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 680;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.registrar-teaching-schedule__faculty select:focus {
+  border-color: var(--rts-green-600);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+.registrar-teaching-schedule__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.registrar-teaching-schedule__summary article {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+  min-height: 92px;
+  padding: 14px 15px;
+  border: 1px solid var(--rts-border);
+  border-radius: 14px;
+  background: var(--rts-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.registrar-teaching-schedule__summary article:hover {
+  transform: translateY(-1px);
+  border-color: #bfdac8;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.055);
+}
+.registrar-teaching-schedule__summary-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dceee2;
+  border-radius: 11px;
+  color: var(--rts-green-700);
+  background: var(--rts-green-50);
+}
+.registrar-teaching-schedule__summary article > div {
+  min-width: 0;
+}
+.registrar-teaching-schedule__summary small {
+  display: block;
+  color: var(--rts-text-500);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+.registrar-teaching-schedule__summary strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--rts-text-900);
+  font-size: 1.35rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+.registrar-teaching-schedule__summary article > div > span {
+  display: block;
+  margin-top: 4px;
+  color: var(--rts-text-500);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+.registrar-teaching-schedule__filters {
+  padding: 18px;
+  border: 1px solid var(--rts-border);
+  border-radius: 15px;
+  background: var(--rts-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.registrar-teaching-schedule__filters > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--rts-border-soft);
+}
+.registrar-teaching-schedule__filters > header > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.registrar-teaching-schedule__filters-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #dceee2;
+  border-radius: 10px;
+  color: var(--rts-green-700);
+  background: var(--rts-green-50);
+}
+.registrar-teaching-schedule__filters header strong {
+  display: block;
+  color: var(--rts-text-900);
+  font-size: 13px;
+  font-weight: 780;
+}
+.registrar-teaching-schedule__filters header p {
+  margin: 4px 0 0;
+  color: var(--rts-text-500);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.registrar-teaching-schedule__filters header button,
+.registrar-teaching-schedule__empty button,
+.registrar-teaching-schedule__error button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #ccd8d0;
+  border-radius: 9px;
+  color: var(--rts-text-700);
+  background: #ffffff;
+  font-size: 10.5px;
+  font-weight: 740;
+  white-space: nowrap;
+  transition: transform 150ms ease, border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+.registrar-teaching-schedule__filters header button:hover,
+.registrar-teaching-schedule__empty button:hover {
+  transform: translateY(-1px);
+  border-color: #a8c6b2;
+  color: var(--rts-green-800);
+  background: #f8fcf9;
+}
+.registrar-teaching-schedule__filter-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.6fr) repeat(3, minmax(150px, 1fr));
+  gap: 10px;
+}
+.registrar-teaching-schedule__filter-grid label {
+  min-width: 0;
+}
+.registrar-teaching-schedule__filter-grid label > span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--rts-text-600);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+.registrar-teaching-schedule__filter-grid select,
+.registrar-teaching-schedule__filter-grid input {
+  width: 100%;
+  min-height: 40px;
+  border: 1.5px solid #ccd8d0;
+  border-radius: 9px;
+  outline: none;
+  color: var(--rts-text-900);
+  background: #ffffff;
+  font-size: 12px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.registrar-teaching-schedule__filter-grid select {
+  padding: 8px 30px 8px 10px;
+}
+.registrar-teaching-schedule__filter-grid input {
+  padding: 8px 10px 8px 34px;
+}
+.registrar-teaching-schedule__filter-grid select:focus,
+.registrar-teaching-schedule__filter-grid input:focus {
+  border-color: var(--rts-green-600);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+.registrar-teaching-schedule__search > div {
+  position: relative;
+}
+.registrar-teaching-schedule__search > div > svg {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  color: var(--rts-text-400);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.registrar-teaching-schedule__error,
+.registrar-teaching-schedule__loading,
+.registrar-teaching-schedule__empty {
+  padding: 18px;
+  border-radius: 14px;
+}
+.registrar-teaching-schedule__error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--rts-danger-border);
+  color: var(--rts-danger);
+  background: var(--rts-danger-soft);
+}
+.registrar-teaching-schedule__error > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+.registrar-teaching-schedule__error > div {
+  flex: 1;
+  min-width: 0;
+}
+.registrar-teaching-schedule__error strong {
+  display: block;
+  font-size: 12.5px;
+}
+.registrar-teaching-schedule__error p {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.registrar-teaching-schedule__error button {
+  border-color: var(--rts-danger-border);
+  color: var(--rts-danger);
+}
+.registrar-teaching-schedule__loading {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid var(--rts-border);
+  background: var(--rts-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.registrar-teaching-schedule__spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--rts-green-100);
+  border-top-color: var(--rts-green-700);
+  border-radius: 50%;
+  animation: registrarTeachingSpin 0.8s linear infinite;
+}
+.registrar-teaching-schedule__loading strong,
+.registrar-teaching-schedule__loading span {
+  display: block;
+}
+.registrar-teaching-schedule__loading strong {
+  color: var(--rts-text-800);
+  font-size: 12.5px;
+}
+.registrar-teaching-schedule__loading span {
+  margin-top: 3px;
+  color: var(--rts-text-500);
+  font-size: 10.5px;
+}
+.registrar-teaching-schedule__empty {
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px dashed var(--rts-border-strong);
+  color: var(--rts-text-500);
+  background: #fbfdfc;
+  text-align: center;
+}
+.registrar-teaching-schedule__empty > span {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 9px;
+  border: 1px solid #dce8df;
+  border-radius: 12px;
+  color: var(--rts-green-700);
+  background: var(--rts-green-50);
+}
+.registrar-teaching-schedule__empty strong {
+  color: var(--rts-text-800);
+  font-size: 13px;
+}
+.registrar-teaching-schedule__empty p {
+  max-width: 520px;
+  margin: 5px 0 12px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.registrar-teaching-schedule__section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--rts-border-soft);
+}
+.registrar-teaching-schedule__section-header > div > span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--rts-green-800);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.registrar-teaching-schedule__section-header h2 {
+  margin: 0;
+  color: var(--rts-text-950);
+  font-size: 17px;
+  font-weight: 760;
+  letter-spacing: -0.015em;
+}
+.registrar-teaching-schedule__section-header p {
+  margin: 5px 0 0;
+  color: var(--rts-text-500);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+.registrar-teaching-schedule__count {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  color: #166534;
+  background: #dcfce7;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.registrar-teaching-schedule__week,
+.registrar-teaching-schedule__unscheduled {
+  padding: 20px;
+  border: 1px solid var(--rts-border);
+  border-radius: 15px;
+  background: var(--rts-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.registrar-teaching-schedule__days {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+.registrar-teaching-schedule__days > .registrar-teaching-day {
+  min-width: 0;
+}
+.registrar-teaching-day {
+  overflow: hidden;
+  border: 1px solid var(--rts-border);
+  border-radius: 12px;
+  background: var(--rts-surface-soft);
+}
+.registrar-teaching-day__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 11px;
+  border-bottom: 1px solid var(--rts-border);
+  background: #ffffff;
+}
+.registrar-teaching-day__header > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.registrar-teaching-day__header > div > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 8px;
+  color: var(--rts-green-800);
+  background: var(--rts-green-100);
+  font-size: 8.5px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.registrar-teaching-day__header strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--rts-text-800);
+  font-size: 11px;
+  font-weight: 780;
+  text-overflow: ellipsis;
+}
+.registrar-teaching-day__header small {
+  color: var(--rts-text-500);
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.registrar-teaching-day__list {
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+}
+.registrar-teaching-day--empty .registrar-teaching-day__list {
+  min-height: 88px;
+}
+.registrar-teaching-day__no-class {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 68px;
+  color: var(--rts-text-400);
+  font-size: 10px;
+}
+.registrar-teaching-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e5ece7;
+  border-radius: 10px;
+  background: #ffffff;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+.registrar-teaching-entry:hover {
+  transform: translateY(-1px);
+  border-color: #bfd4c6;
+  box-shadow: 0 5px 14px rgba(20, 55, 34, 0.06);
+}
+.registrar-teaching-entry__time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--rts-green-800);
+}
+.registrar-teaching-entry__time svg {
+  flex: 0 0 auto;
+}
+.registrar-teaching-entry__time strong {
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.registrar-teaching-entry__main {
+  min-width: 0;
+}
+.registrar-teaching-entry__subject {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+.registrar-teaching-entry__subject > span {
+  color: var(--rts-green-800);
+  font-size: 9px;
+  font-weight: 850;
+}
+.registrar-teaching-entry__subject > strong {
+  color: var(--rts-text-800);
+  font-size: 10.5px;
+  font-weight: 780;
+  line-height: 1.4;
+}
+.registrar-teaching-entry__meta {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+}
+.registrar-teaching-entry__meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--rts-text-500);
+  font-size: 8.8px;
+  line-height: 1.35;
+}
+.registrar-teaching-entry__meta svg {
+  flex: 0 0 auto;
+}
+.registrar-teaching-entry__side {
+  align-self: flex-start;
+}
+.registrar-teaching-entry__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.registrar-teaching-entry__status.open {
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  background: #dcfce7;
+}
+.registrar-teaching-entry__status.closed {
+  border: 1px solid #fde68a;
+  color: #a16207;
+  background: #fffbeb;
+}
+.registrar-teaching-entry__status.cancelled {
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  background: #fef2f2;
+}
+.registrar-teaching-schedule__unscheduled {
+  border-color: var(--rts-warning-border);
+  background: #fffdf8;
+}
+.registrar-teaching-schedule__unscheduled .registrar-teaching-schedule__count {
+  border-color: var(--rts-warning-border);
+  color: var(--rts-warning);
+  background: var(--rts-warning-soft);
+}
+.registrar-teaching-schedule__unscheduled-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.registrar-teaching-schedule__unscheduled-grid article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--rts-warning-border);
+  border-radius: 11px;
+  background: #ffffff;
+}
+.registrar-teaching-schedule__unscheduled-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--rts-warning);
+  background: var(--rts-warning-soft);
+}
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) {
+  min-width: 0;
+}
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) > span,
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) > strong,
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) > small {
+  display: block;
+}
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) > span {
+  color: var(--rts-warning);
+  font-size: 8.5px;
+  font-weight: 850;
+}
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) > strong {
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--rts-text-800);
+  font-size: 10.8px;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.registrar-teaching-schedule__unscheduled-grid article > div:nth-child(2) > small {
+  margin-top: 3px;
+  color: var(--rts-text-500);
+  font-size: 9px;
+}
+.registrar-teaching-schedule__unscheduled-actions > span {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 4px 7px;
+  border: 1px solid var(--rts-warning-border);
+  border-radius: 999px;
+  color: var(--rts-warning);
+  background: var(--rts-warning-soft);
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+@keyframes registrarTeachingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 1250px) {
+  .registrar-teaching-schedule__days {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1180px) {
+  .registrar-teaching-schedule__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .registrar-teaching-schedule__filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .registrar-teaching-schedule__faculty {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .registrar-teaching-schedule__faculty-main {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 900px) {
+  .registrar-teaching-schedule {
+    padding: 22px 20px 32px;
+  }
+  .registrar-teaching-schedule__days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .registrar-teaching-schedule__unscheduled-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 860px) {
+  .registrar-teaching-schedule__hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .registrar-teaching-schedule__refresh {
+    width: 100%;
+  }
+}
+@media (max-width: 700px) {
+  .registrar-teaching-schedule {
+    gap: 14px;
+    padding: 18px 14px 28px;
+  }
+  .registrar-teaching-schedule__hero {
+    padding: 20px 19px;
+    border-radius: 15px;
+  }
+  .registrar-teaching-schedule__hero h1 {
+    font-size: 25px;
+  }
+  .registrar-teaching-schedule__faculty,
+  .registrar-teaching-schedule__summary,
+  .registrar-teaching-schedule__filter-grid {
+    grid-template-columns: 1fr;
+  }
+  .registrar-teaching-schedule__faculty-main {
+    grid-column: auto;
+  }
+  .registrar-teaching-schedule__filters > header,
+  .registrar-teaching-schedule__section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .registrar-teaching-schedule__filters header button {
+    width: 100%;
+  }
+  .registrar-teaching-schedule__count {
+    align-self: flex-start;
+  }
+  .registrar-teaching-schedule__days {
+    grid-template-columns: 1fr;
+  }
+  .registrar-teaching-schedule__error {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .registrar-teaching-schedule__error button {
+    width: 100%;
+  }
+  .registrar-teaching-schedule__unscheduled-grid article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .registrar-teaching-schedule__unscheduled-actions {
+    grid-column: 1 / -1;
+    padding-left: 46px;
+  }
+}
+@media (max-width: 480px) {
+  .registrar-teaching-schedule__week,
+  .registrar-teaching-schedule__unscheduled,
+  .registrar-teaching-schedule__filters {
+    padding: 14px;
+  }
+  .registrar-teaching-schedule__summary article {
+    padding: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .registrar-teaching-schedule *,
+  .registrar-teaching-schedule *::before,
+  .registrar-teaching-schedule *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+  .registrar-teaching-schedule__spinner,
+  .registrar-teaching-schedule__refresh .is-spinning {
+    animation-duration: 1.5s;
+  }
+}

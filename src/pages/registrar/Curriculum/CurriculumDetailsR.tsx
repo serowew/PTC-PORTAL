@@ -20,10 +20,11 @@ import {
 
 import CurriculumSubjectModal from "./CurriculumSubjectModal";
 import RemoveSubjectModal from "./RemoveSubjectModal";
+import { apiUrl } from "../../../services/api";
 
 import "../../../styles/CurriculumDetailR.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/curriculums";
+const API_BASE_URL = apiUrl("/api/registrar/curriculums");
 
 interface Curriculum {
   curriculum_id: number;
@@ -105,8 +106,7 @@ export default function CurriculumDetailR() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<SubjectTypeFilter>("all");
   const [yearFilter, setYearFilter] = useState<YearFilter>("all");
-  const [semesterFilter, setSemesterFilter] =
-    useState<SemesterFilter>("all");
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>("all");
 
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
   const [subjectModalMode, setSubjectModalMode] = useState<"add" | "edit">(
@@ -289,9 +289,7 @@ export default function CurriculumDetailR() {
 
   const availableYears = useMemo(
     () =>
-      Array.from(
-        new Set(subjects.map((subject) => Number(subject.year_level))),
-      )
+      Array.from(new Set(subjects.map((subject) => Number(subject.year_level))))
         .filter((year) => Number.isFinite(year) && year > 0)
         .sort((a, b) => a - b),
     [subjects],
@@ -624,7 +622,9 @@ export default function CurriculumDetailR() {
           <div className="registrar-curriculum-details__progress-track">
             <div
               className={`registrar-curriculum-details__progress-fill registrar-curriculum-details__progress-fill--${mappingTone}`}
-              style={{ width: `${Math.min(Math.max(metrics.mappingPercent, 0), 100)}%` }}
+              style={{
+                width: `${Math.min(Math.max(metrics.mappingPercent, 0), 100)}%`,
+              }}
             />
           </div>
         </section>
@@ -643,7 +643,9 @@ export default function CurriculumDetailR() {
             </div>
 
             <div className="registrar-curriculum-details__subjects-count">
-              {hasFilters ? `${filteredSubjects.length} matching` : `${totalSubjects} total`}
+              {hasFilters
+                ? `${filteredSubjects.length} matching`
+                : `${totalSubjects} total`}
             </div>
           </div>
 
@@ -795,8 +797,7 @@ export default function CurriculumDetailR() {
                     {[1, 2].map((semester) => {
                       const semesterSubjects = yearSubjects
                         .filter(
-                          (subject) =>
-                            Number(subject.semester_id) === semester,
+                          (subject) => Number(subject.semester_id) === semester,
                         )
                         .sort(
                           (a, b) =>
@@ -861,7 +862,9 @@ export default function CurriculumDetailR() {
                                     </td>
                                     <td>
                                       <strong className="registrar-curriculum-details__units-value">
-                                        {formatNumber(Number(subject.units || 0))}
+                                        {formatNumber(
+                                          Number(subject.units || 0),
+                                        )}
                                       </strong>
                                     </td>
                                     <td>
@@ -869,7 +872,9 @@ export default function CurriculumDetailR() {
                                         <span>
                                           <strong>
                                             {formatNumber(
-                                              Number(subject.lecture_hours || 0),
+                                              Number(
+                                                subject.lecture_hours || 0,
+                                              ),
                                             )}
                                           </strong>{" "}
                                           Lec
@@ -877,7 +882,9 @@ export default function CurriculumDetailR() {
                                         <span>
                                           <strong>
                                             {formatNumber(
-                                              Number(subject.laboratory_hours || 0),
+                                              Number(
+                                                subject.laboratory_hours || 0,
+                                              ),
                                             )}
                                           </strong>{" "}
                                           Lab

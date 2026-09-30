@@ -17,9 +17,8 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-
+import { apiUrl } from "../../../services/api";
 import "../../../styles/ClassOfferingManagementR.css";
 
 import OfferingSetupFilters, {
@@ -54,7 +53,7 @@ import PrepareSectionSubjectsModal from "./PrepareSectionSubjectsModal";
 // API
 // =====================================================
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/offerings";
+const API_BASE_URL = apiUrl("/api/registrar/offerings");
 
 // =====================================================
 // SAFE JSON
@@ -84,6 +83,8 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 interface FacultyOption {
   faculty_id: number;
 
+  user_id?: number;
+
   employee_number?: string;
 
   faculty_name?: string;
@@ -95,6 +96,20 @@ interface FacultyOption {
   last_name?: string;
 
   department_id?: number | null;
+
+  department_name?: string;
+
+  employment_status?: string;
+
+  username?: string;
+
+  role_id?: number;
+
+  role_name?: string;
+
+  is_active?: boolean;
+
+  is_verified?: boolean;
 }
 
 interface RoomOption {
@@ -853,6 +868,50 @@ export default function ClassOfferingManagementR() {
   const selectedSection = sections.find(
     (item) => String(item.section_id) === sectionId,
   );
+
+  // =====================================================
+  // ENRICH CURRICULUM OFFERINGS WITH INSTRUCTOR ROLE
+  //
+  // Readiness contains the assigned faculty ID, while
+  // setup-data contains the authenticated user's actual
+  // teaching role. Match them here so the table can show
+  // Faculty vs Program Head without changing the backend
+  // readiness response shape.
+  // =====================================================
+
+  const normalizedCurriculumSubjects = useMemo<OfferingTableSubject[]>(() => {
+    const subjects = readiness?.subjects || [];
+
+    return subjects.map((item) => {
+      if (!item.offering?.faculty) {
+        return item;
+      }
+
+      const assignedFacultyId = Number(item.offering.faculty.faculty_id);
+
+      const instructor = faculty.find(
+        (candidate) => Number(candidate.faculty_id) === assignedFacultyId,
+      );
+
+      if (!instructor) {
+        return item;
+      }
+
+      return {
+        ...item,
+
+        offering: {
+          ...item.offering,
+
+          faculty: {
+            ...item.offering.faculty,
+            employee_number: instructor.employee_number,
+            role_name: instructor.role_name,
+          },
+        },
+      };
+    });
+  }, [readiness?.subjects, faculty]);
 
   // =====================================================
   // NORMALIZE SPECIAL / RETAKE SUBJECTS
@@ -1707,8 +1766,12 @@ export default function ClassOfferingManagementR() {
             </span>
             <div>
               <span>Academic Period</span>
-              <strong>{selectedAcademicYear?.academic_year || "Select year"}</strong>
-              <small>{selectedSemester?.semester_name || "Semester not selected"}</small>
+              <strong>
+                {selectedAcademicYear?.academic_year || "Select year"}
+              </strong>
+              <small>
+                {selectedSemester?.semester_name || "Semester not selected"}
+              </small>
             </div>
           </article>
 
@@ -1733,7 +1796,9 @@ export default function ClassOfferingManagementR() {
             </span>
             <div>
               <span>Section</span>
-              <strong>{selectedSection?.section_name || "Select section"}</strong>
+              <strong>
+                {selectedSection?.section_name || "Select section"}
+              </strong>
               <small>
                 {selectedSection?.max_students
                   ? `Capacity ${selectedSection.max_students}`
@@ -1874,13 +1939,15 @@ export default function ClassOfferingManagementR() {
 
                     <p>
                       <strong>{readiness.section.section_name}</strong> has{" "}
-                      <strong>{readiness.summary.missing_section_subjects}</strong>{" "}
+                      <strong>
+                        {readiness.summary.missing_section_subjects}
+                      </strong>{" "}
                       curriculum subject
                       {readiness.summary.missing_section_subjects !== 1
                         ? "s"
                         : ""}{" "}
-                      that still need to be prepared before their class offerings
-                      can be configured.
+                      that still need to be prepared before their class
+                      offerings can be configured.
                     </p>
                   </div>
                 </div>
@@ -1895,7 +1962,7 @@ export default function ClassOfferingManagementR() {
             )}
 
             <OfferingTable
-              subjects={readiness.subjects}
+              subjects={normalizedCurriculumSubjects}
               onCreateOffering={openAddOffering}
               onEditOffering={openEditOffering}
               onOfferingStatus={openOfferingStatus}
@@ -1914,8 +1981,8 @@ export default function ClassOfferingManagementR() {
                   <p>
                     Manage exception and retake classes outside the normal
                     curriculum subjects for this term. New special offerings
-                    start Closed and remain incomplete until faculty and schedule
-                    are configured.
+                    start Closed and remain incomplete until faculty and
+                    schedule are configured.
                   </p>
                 </div>
 
@@ -1994,7 +2061,6 @@ export default function ClassOfferingManagementR() {
           open={showAddOffering}
           subject={selectedSubject}
           faculty={faculty}
-          rooms={rooms}
           onClose={closeAddOfferingModal}
           onSuccess={handleAddOfferingSuccess}
           onUnauthorized={handleUnauthorized}
@@ -2004,7 +2070,6 @@ export default function ClassOfferingManagementR() {
           open={showEditOffering}
           subject={selectedSubject}
           faculty={faculty}
-          rooms={rooms}
           onClose={closeEditOfferingModal}
           onSuccess={handleEditOfferingSuccess}
           onUnauthorized={handleUnauthorized}

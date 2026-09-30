@@ -3,6 +3,7 @@ import { AlertTriangle, LoaderCircle, Trash2, X } from "lucide-react";
 
 import { authService } from "../../../services/auth.service";
 import "../../../styles/RemoveSubjectModal.css";
+import { apiUrl } from "../../../services/api";
 
 interface CurriculumSubject {
   curriculum_subject_id: number;
@@ -27,7 +28,7 @@ interface RemoveSubjectResponse {
   removed?: unknown;
 }
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/curriculums";
+const API_BASE_URL = apiUrl("/api/registrar/curriculums");
 
 export default function RemoveSubjectModal({
   isOpen,

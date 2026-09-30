@@ -11,9 +11,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/announcementFaculty.css";
 
-const API_BASE_URL = "http://localhost:3000";
+const ANNOUNCEMENTS_API_URL = apiUrl("/api/announcements");
 
 interface Announcement {
   announcement_id: number;
@@ -65,9 +66,7 @@ function formatAuthor(value: string | null | undefined) {
   return value?.trim() || "PTC Administration";
 }
 
-function isFacultyAudience(
-  recipients: Announcement["recipients"],
-) {
+function isFacultyAudience(recipients: Announcement["recipients"]) {
   if (typeof recipients === "string") {
     return recipients
       .split(",")
@@ -162,16 +161,13 @@ export default function AnnouncementF() {
 
         setError("");
 
-        const response = await authService.authFetch(
-          `${API_BASE_URL}/api/announcements`,
-          {
-            method: "GET",
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-            },
+        const response = await authService.authFetch(ANNOUNCEMENTS_API_URL, {
+          method: "GET",
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
           },
-        );
+        });
 
         if (response.status === 401) {
           authService.logout();
@@ -239,7 +235,7 @@ export default function AnnouncementF() {
 
         if (requestError instanceof TypeError) {
           setError(
-            "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
+            "Unable to connect to the announcement server. Please make sure the backend server is running.",
           );
           return;
         }
@@ -322,10 +318,7 @@ export default function AnnouncementF() {
             onClick={() => setRefreshKey((current) => current + 1)}
             disabled={loading || refreshing}
           >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "is-spinning" : ""}
-            />
+            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </section>
@@ -407,15 +400,9 @@ export default function AnnouncementF() {
           </header>
 
           {loading && (
-            <div
-              className="faculty-announcements__loading"
-              aria-live="polite"
-            >
+            <div className="faculty-announcements__loading" aria-live="polite">
               {[1, 2, 3, 4].map((item) => (
-                <div
-                  className="faculty-announcements__skeleton"
-                  key={item}
-                >
+                <div className="faculty-announcements__skeleton" key={item}>
                   <span />
                   <span />
                   <span />
@@ -448,22 +435,18 @@ export default function AnnouncementF() {
             </div>
           )}
 
-          {!loading &&
-            !error &&
-            announcements.length === 0 && (
-              <div className="faculty-announcements__state">
-                <span className="faculty-announcements__state-icon">
-                  <Megaphone size={24} />
-                </span>
+          {!loading && !error && announcements.length === 0 && (
+            <div className="faculty-announcements__state">
+              <span className="faculty-announcements__state-icon">
+                <Megaphone size={24} />
+              </span>
 
-                <div>
-                  <strong>No announcements available</strong>
-                  <p>
-                    There are currently no active announcements for faculty.
-                  </p>
-                </div>
+              <div>
+                <strong>No announcements available</strong>
+                <p>There are currently no active announcements for faculty.</p>
               </div>
-            )}
+            </div>
+          )}
 
           {!loading &&
             !error &&
@@ -476,9 +459,7 @@ export default function AnnouncementF() {
 
                 <div>
                   <strong>No matching announcements</strong>
-                  <p>
-                    Try a different title, keyword, or announcement author.
-                  </p>
+                  <p>Try a different title, keyword, or announcement author.</p>
                 </div>
 
                 <button type="button" onClick={() => setSearch("")}>
@@ -487,67 +468,63 @@ export default function AnnouncementF() {
               </div>
             )}
 
-          {!loading &&
-            !error &&
-            filteredAnnouncements.length > 0 && (
-              <div className="faculty-announcements__list">
-                {filteredAnnouncements.map((announcement) => (
-                  <article
-                    key={announcement.announcement_id}
-                    className="faculty-announcements__card"
-                  >
-                    <div className="faculty-announcements__card-accent" />
+          {!loading && !error && filteredAnnouncements.length > 0 && (
+            <div className="faculty-announcements__list">
+              {filteredAnnouncements.map((announcement) => (
+                <article
+                  key={announcement.announcement_id}
+                  className="faculty-announcements__card"
+                >
+                  <div className="faculty-announcements__card-accent" />
 
-                    <div className="faculty-announcements__card-main">
-                      <div className="faculty-announcements__card-top">
-                        <span className="faculty-announcements__card-date">
-                          <CalendarDays size={14} />
-                          {formatDate(announcement.publish_date)}
+                  <div className="faculty-announcements__card-main">
+                    <div className="faculty-announcements__card-top">
+                      <span className="faculty-announcements__card-date">
+                        <CalendarDays size={14} />
+                        {formatDate(announcement.publish_date)}
+                      </span>
+
+                      {isRecent(announcement.publish_date) && (
+                        <span className="faculty-announcements__new-badge">
+                          New
                         </span>
-
-                        {isRecent(announcement.publish_date) && (
-                          <span className="faculty-announcements__new-badge">
-                            New
-                          </span>
-                        )}
-                      </div>
-
-                      <h3>{announcement.title}</h3>
-
-                      <p>{getPreview(announcement.content)}</p>
-
-                      <div className="faculty-announcements__card-meta">
-                        <span>
-                          <UserRound size={14} />
-                          Posted by{" "}
-                          <strong>
-                            {formatAuthor(announcement.created_by)}
-                          </strong>
-                        </span>
-
-                        {announcement.attachments && (
-                          <span className="faculty-announcements__attachment-note">
-                            Attachment available
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      className="faculty-announcements__view"
-                      onClick={() =>
-                        navigate(
-                          `/faculty/announcementDF/${announcement.announcement_id}`,
-                        )
-                      }
-                    >
-                      View Details
-                    </button>
-                  </article>
-                ))}
-              </div>
-            )}
+                    <h3>{announcement.title}</h3>
+
+                    <p>{getPreview(announcement.content)}</p>
+
+                    <div className="faculty-announcements__card-meta">
+                      <span>
+                        <UserRound size={14} />
+                        Posted by{" "}
+                        <strong>{formatAuthor(announcement.created_by)}</strong>
+                      </span>
+
+                      {announcement.attachments && (
+                        <span className="faculty-announcements__attachment-note">
+                          Attachment available
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="faculty-announcements__view"
+                    onClick={() =>
+                      navigate(
+                        `/faculty/announcementDF/${announcement.announcement_id}`,
+                      )
+                    }
+                  >
+                    View Details
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </DashboardLayout>

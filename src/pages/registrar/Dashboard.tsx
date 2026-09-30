@@ -23,12 +23,15 @@ import {
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
+import { apiUrl } from "../../services/api";
 import "../../styles/RegistrarDashboard.css";
 
-const STUDENTS_API = "http://localhost:3000/api/registrar/students";
-const ENROLLMENTS_API = "http://localhost:3000/api/registrar/enrollments";
+const STUDENTS_API = apiUrl("/api/registrar/students");
+
+const ENROLLMENTS_API = apiUrl("/api/registrar/enrollments");
+
+const ANNOUNCEMENTS_API = apiUrl("/api/announcement-management");
 const PERIOD_API = `${ENROLLMENTS_API}/period`;
-const ANNOUNCEMENTS_API = "http://localhost:3000/api/announcement-management";
 
 interface StudentResponse {
   success: boolean;
@@ -167,10 +170,7 @@ const formatDateTime = (value?: string | null) => {
 };
 
 const getInitials = (name: string) => {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = name.trim().split(/\s+/).filter(Boolean);
 
   if (parts.length === 0) return "S";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -211,7 +211,9 @@ export default function RegistrarDashboard() {
   const authenticated = Boolean(user && token);
 
   const [studentTotal, setStudentTotal] = useState<number | null>(null);
-  const [pendingEnrollments, setPendingEnrollments] = useState<PendingEnrollment[]>([]);
+  const [pendingEnrollments, setPendingEnrollments] = useState<
+    PendingEnrollment[]
+  >([]);
   const [pendingTotal, setPendingTotal] = useState<number | null>(null);
   const [periodData, setPeriodData] = useState<PeriodResponse | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -274,11 +276,14 @@ export default function RegistrarDashboard() {
             signal: controller.signal,
             headers: { Accept: "application/json" },
           }),
-          authService.authFetch(`${ENROLLMENTS_API}?page=1&limit=5&status=Pending`, {
-            method: "GET",
-            signal: controller.signal,
-            headers: { Accept: "application/json" },
-          }),
+          authService.authFetch(
+            `${ENROLLMENTS_API}?page=1&limit=5&status=Pending`,
+            {
+              method: "GET",
+              signal: controller.signal,
+              headers: { Accept: "application/json" },
+            },
+          ),
           authService.authFetch(PERIOD_API, {
             method: "GET",
             signal: controller.signal,
@@ -323,9 +328,12 @@ export default function RegistrarDashboard() {
             if (response.status !== 401) nextWarnings.push("enrollments");
           } else if (response.ok) {
             try {
-              const data = await parseJsonResponse<EnrollmentResponse>(response);
+              const data =
+                await parseJsonResponse<EnrollmentResponse>(response);
               if (data.success) {
-                setPendingEnrollments(Array.isArray(data.data) ? data.data : []);
+                setPendingEnrollments(
+                  Array.isArray(data.data) ? data.data : [],
+                );
                 setPendingTotal(Number(data.pagination?.total || 0));
               } else {
                 nextWarnings.push("enrollments");
@@ -370,9 +378,9 @@ export default function RegistrarDashboard() {
             if (response.status !== 401) nextWarnings.push("announcements");
           } else if (response.ok) {
             try {
-              const data = await parseJsonResponse<Announcement[] | AnnouncementResponse>(
-                response,
-              );
+              const data = await parseJsonResponse<
+                Announcement[] | AnnouncementResponse
+              >(response);
 
               const rows = Array.isArray(data)
                 ? data
@@ -430,7 +438,10 @@ export default function RegistrarDashboard() {
         .sort((a, b) => {
           const aDate = new Date(a.publish_date || a.created_at).getTime();
           const bDate = new Date(b.publish_date || b.created_at).getTime();
-          return (Number.isNaN(bDate) ? 0 : bDate) - (Number.isNaN(aDate) ? 0 : aDate);
+          return (
+            (Number.isNaN(bDate) ? 0 : bDate) -
+            (Number.isNaN(aDate) ? 0 : aDate)
+          );
         })
         .slice(0, 3),
     [announcements],
@@ -497,8 +508,8 @@ export default function RegistrarDashboard() {
             </div>
             <h1>Registrar Dashboard</h1>
             <p>
-              Review enrollment priorities, academic-period status, student records,
-              and official announcements from one Registrar workspace.
+              Review enrollment priorities, academic-period status, student
+              records, and official announcements from one Registrar workspace.
             </p>
           </div>
 
@@ -534,14 +545,18 @@ export default function RegistrarDashboard() {
             <div>
               <strong>Some dashboard data could not be refreshed.</strong>
               <p>
-                Unavailable: {warnings.map((item) => sourceLabels[item]).join(", ")}. You
-                can still use the dashboard shortcuts normally.
+                Unavailable:{" "}
+                {warnings.map((item) => sourceLabels[item]).join(", ")}. You can
+                still use the dashboard shortcuts normally.
               </p>
             </div>
           </div>
         )}
 
-        <section className="registrar-dashboard__stats" aria-label="Registrar overview">
+        <section
+          className="registrar-dashboard__stats"
+          aria-label="Registrar overview"
+        >
           <button
             type="button"
             className="registrar-dashboard__stat-card"
@@ -552,10 +567,15 @@ export default function RegistrarDashboard() {
             </span>
             <span className="registrar-dashboard__stat-copy">
               <span>Total Students</span>
-              <strong>{loading || studentTotal === null ? "—" : studentTotal}</strong>
+              <strong>
+                {loading || studentTotal === null ? "—" : studentTotal}
+              </strong>
               <small>Registered student records</small>
             </span>
-            <ChevronRight size={17} className="registrar-dashboard__stat-arrow" />
+            <ChevronRight
+              size={17}
+              className="registrar-dashboard__stat-arrow"
+            />
           </button>
 
           <button
@@ -568,10 +588,15 @@ export default function RegistrarDashboard() {
             </span>
             <span className="registrar-dashboard__stat-copy">
               <span>Pending Enrollments</span>
-              <strong>{loading || pendingTotal === null ? "—" : pendingTotal}</strong>
+              <strong>
+                {loading || pendingTotal === null ? "—" : pendingTotal}
+              </strong>
               <small>Waiting for Registrar review</small>
             </span>
-            <ChevronRight size={17} className="registrar-dashboard__stat-arrow" />
+            <ChevronRight
+              size={17}
+              className="registrar-dashboard__stat-arrow"
+            />
           </button>
 
           <button
@@ -590,14 +615,19 @@ export default function RegistrarDashboard() {
             </span>
             <span className="registrar-dashboard__stat-copy">
               <span>Enrollment Access</span>
-              <strong>{loading ? "—" : periodIsOpen ? "Open" : "Closed"}</strong>
+              <strong>
+                {loading ? "—" : periodIsOpen ? "Open" : "Closed"}
+              </strong>
               <small>
                 {latestPeriod
                   ? `${latestPeriod.academic_year} · ${latestPeriod.semester_name}`
                   : "No period record returned"}
               </small>
             </span>
-            <ChevronRight size={17} className="registrar-dashboard__stat-arrow" />
+            <ChevronRight
+              size={17}
+              className="registrar-dashboard__stat-arrow"
+            />
           </button>
 
           <button
@@ -613,7 +643,10 @@ export default function RegistrarDashboard() {
               <strong>{loading ? "—" : activeAnnouncements}</strong>
               <small>{announcements.length} announcement records</small>
             </span>
-            <ChevronRight size={17} className="registrar-dashboard__stat-arrow" />
+            <ChevronRight
+              size={17}
+              className="registrar-dashboard__stat-arrow"
+            />
           </button>
         </section>
 
@@ -626,8 +659,8 @@ export default function RegistrarDashboard() {
                 </span>
                 <h2>Pending Enrollment Reviews</h2>
                 <p>
-                  Open the students currently waiting for Registrar validation and
-                  approval.
+                  Open the students currently waiting for Registrar validation
+                  and approval.
                 </p>
               </div>
               <button
@@ -642,9 +675,15 @@ export default function RegistrarDashboard() {
             {loading ? (
               <div className="registrar-dashboard__queue-list">
                 {[1, 2, 3, 4].map((item) => (
-                  <div className="registrar-dashboard__queue-skeleton" key={item}>
+                  <div
+                    className="registrar-dashboard__queue-skeleton"
+                    key={item}
+                  >
                     <span />
-                    <div><i /><i /></div>
+                    <div>
+                      <i />
+                      <i />
+                    </div>
                     <i />
                   </div>
                 ))}
@@ -658,7 +697,9 @@ export default function RegistrarDashboard() {
                   const placementPercent =
                     placementTotal > 0
                       ? Math.round(
-                          (enrollment.placement.placed_subjects / placementTotal) * 100,
+                          (enrollment.placement.placed_subjects /
+                            placementTotal) *
+                            100,
                         )
                       : 0;
 
@@ -674,7 +715,8 @@ export default function RegistrarDashboard() {
                       <div className="registrar-dashboard__queue-student">
                         <strong>{enrollment.student.student_name}</strong>
                         <span>
-                          {enrollment.student.student_number} · {enrollment.course.course_code}
+                          {enrollment.student.student_number} ·{" "}
+                          {enrollment.course.course_code}
                           {enrollment.student.year_level
                             ? ` · Year ${enrollment.student.year_level}`
                             : ""}
@@ -683,8 +725,12 @@ export default function RegistrarDashboard() {
 
                       <div className="registrar-dashboard__queue-period">
                         <span>Academic Period</span>
-                        <strong>{enrollment.academic_period.academic_year}</strong>
-                        <small>{enrollment.academic_period.semester_name}</small>
+                        <strong>
+                          {enrollment.academic_period.academic_year}
+                        </strong>
+                        <small>
+                          {enrollment.academic_period.semester_name}
+                        </small>
                       </div>
 
                       <div className="registrar-dashboard__queue-load">
@@ -694,7 +740,8 @@ export default function RegistrarDashboard() {
                             <span style={{ width: `${placementPercent}%` }} />
                           </div>
                           <small>
-                            {enrollment.placement.placed_subjects}/{placementTotal || 0}
+                            {enrollment.placement.placed_subjects}/
+                            {placementTotal || 0}
                           </small>
                         </div>
                       </div>
@@ -709,7 +756,9 @@ export default function RegistrarDashboard() {
                         type="button"
                         className="registrar-dashboard__review-button"
                         onClick={() =>
-                          navigate(`/registrar/enrollment/${enrollment.enrollment_id}`)
+                          navigate(
+                            `/registrar/enrollment/${enrollment.enrollment_id}`,
+                          )
                         }
                       >
                         Review <ChevronRight size={15} />
@@ -759,7 +808,10 @@ export default function RegistrarDashboard() {
 
             {loading ? (
               <div className="registrar-dashboard__period-skeleton">
-                <i /><i /><i /><i />
+                <i />
+                <i />
+                <i />
+                <i />
               </div>
             ) : (
               <>
@@ -774,7 +826,9 @@ export default function RegistrarDashboard() {
                         currentAcademicYear?.academic_year ||
                         "Not configured"}
                     </strong>
-                    <small>{latestPeriod?.semester_name || "No open semester"}</small>
+                    <small>
+                      {latestPeriod?.semester_name || "No open semester"}
+                    </small>
                   </div>
                 </div>
 
@@ -782,7 +836,9 @@ export default function RegistrarDashboard() {
                   <div>
                     <span>Latest Record</span>
                     <strong>
-                      {latestPeriod ? `#${latestPeriod.enrollment_period_id}` : "None"}
+                      {latestPeriod
+                        ? `#${latestPeriod.enrollment_period_id}`
+                        : "None"}
                     </strong>
                   </div>
                   <div>
@@ -810,7 +866,11 @@ export default function RegistrarDashboard() {
                       : "registrar-dashboard__period-note--closed"
                   }`}
                 >
-                  {periodIsOpen ? <CheckCircle2 size={17} /> : <Clock3 size={17} />}
+                  {periodIsOpen ? (
+                    <CheckCircle2 size={17} />
+                  ) : (
+                    <Clock3 size={17} />
+                  )}
                   <p>
                     {periodIsOpen
                       ? "Students can submit prepared enrollment for the active term."
@@ -838,7 +898,10 @@ export default function RegistrarDashboard() {
                 <LayoutDashboard size={14} /> Registrar Workspace
               </span>
               <h2>Quick Actions</h2>
-              <p>Jump directly to the Registrar tools used throughout the academic cycle.</p>
+              <p>
+                Jump directly to the Registrar tools used throughout the
+                academic cycle.
+              </p>
             </div>
           </div>
 
@@ -873,7 +936,10 @@ export default function RegistrarDashboard() {
                 <Megaphone size={14} /> Communications
               </span>
               <h2>Recent Announcements</h2>
-              <p>Latest official portal notices available from Announcement Management.</p>
+              <p>
+                Latest official portal notices available from Announcement
+                Management.
+              </p>
             </div>
             <button
               type="button"
@@ -887,8 +953,13 @@ export default function RegistrarDashboard() {
           {loading ? (
             <div className="registrar-dashboard__announcement-grid">
               {[1, 2, 3].map((item) => (
-                <div className="registrar-dashboard__announcement-skeleton" key={item}>
-                  <i /><i /><i />
+                <div
+                  className="registrar-dashboard__announcement-skeleton"
+                  key={item}
+                >
+                  <i />
+                  <i />
+                  <i />
                 </div>
               ))}
             </div>
@@ -904,7 +975,9 @@ export default function RegistrarDashboard() {
                     className="registrar-dashboard__announcement-card"
                     key={announcement.announcement_id}
                     onClick={() =>
-                      navigate(`/registrar/announcement/DetailR/${announcement.announcement_id}`)
+                      navigate(
+                        `/registrar/announcement/DetailR/${announcement.announcement_id}`,
+                      )
                     }
                   >
                     <div className="registrar-dashboard__announcement-topline">
@@ -917,7 +990,11 @@ export default function RegistrarDashboard() {
                       >
                         <span /> {active ? "Active" : "Inactive"}
                       </span>
-                      <span>{formatDate(announcement.publish_date || announcement.created_at)}</span>
+                      <span>
+                        {formatDate(
+                          announcement.publish_date || announcement.created_at,
+                        )}
+                      </span>
                     </div>
 
                     <strong>{announcement.title}</strong>
@@ -925,12 +1002,16 @@ export default function RegistrarDashboard() {
 
                     <div className="registrar-dashboard__announcement-footer">
                       <span>
-                        <UserRound size={13} /> {announcement.created_by || "Unknown creator"}
+                        <UserRound size={13} />{" "}
+                        {announcement.created_by || "Unknown creator"}
                       </span>
                       {recipients.length > 0 && (
                         <span>
-                          <UsersRound size={13} /> {recipients.slice(0, 2).join(", ")}
-                          {recipients.length > 2 ? ` +${recipients.length - 2}` : ""}
+                          <UsersRound size={13} />{" "}
+                          {recipients.slice(0, 2).join(", ")}
+                          {recipients.length > 2
+                            ? ` +${recipients.length - 2}`
+                            : ""}
                         </span>
                       )}
                     </div>
@@ -960,7 +1041,11 @@ export default function RegistrarDashboard() {
         <div className="registrar-dashboard__footer-meta">
           <FileText size={13} />
           <span>
-            Dashboard data {lastUpdated ? `updated ${lastUpdated.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}` : "is loading"}.
+            Dashboard data{" "}
+            {lastUpdated
+              ? `updated ${lastUpdated.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}`
+              : "is loading"}
+            .
           </span>
         </div>
       </main>

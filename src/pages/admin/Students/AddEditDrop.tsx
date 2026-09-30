@@ -17,9 +17,10 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import Modal from "../../../components/modal";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminStudentManagement.css";
 
-const API_BASE_URL = "http://localhost:3000/api/students";
+const API_BASE_URL = apiUrl("/api/students");
 
 type Student = {
   id: string;

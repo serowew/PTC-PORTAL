@@ -12,8 +12,9 @@ import {
 
 import { authService } from "../../../services/auth.service";
 import "../../../styles/CurriculumManagementR.css";
+import { apiUrl } from "../../../services/api";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/curriculums";
+const API_BASE_URL = apiUrl("/api/registrar/curriculums");
 const COURSES_API_URL = `${API_BASE_URL}/courses`;
 
 interface AddCurriculumModalProps {
@@ -304,9 +305,15 @@ export default function AddCurriculumModal({
           </button>
         </header>
 
-        <form className="registrar-curriculum-modal__form" onSubmit={handleSubmit}>
+        <form
+          className="registrar-curriculum-modal__form"
+          onSubmit={handleSubmit}
+        >
           {error && (
-            <div className="registrar-curriculum-modal__message registrar-curriculum-modal__message--error" role="alert">
+            <div
+              className="registrar-curriculum-modal__message registrar-curriculum-modal__message--error"
+              role="alert"
+            >
               <AlertCircle size={18} aria-hidden="true" />
               <div>
                 <strong>Unable to create curriculum</strong>
@@ -316,7 +323,10 @@ export default function AddCurriculumModal({
           )}
 
           {successMessage && (
-            <div className="registrar-curriculum-modal__message registrar-curriculum-modal__message--success" role="status">
+            <div
+              className="registrar-curriculum-modal__message registrar-curriculum-modal__message--success"
+              role="status"
+            >
               <CheckCircle2 size={18} aria-hidden="true" />
               <div>
                 <strong>Curriculum created</strong>
@@ -337,7 +347,11 @@ export default function AddCurriculumModal({
                 <GraduationCap size={16} aria-hidden="true" />
                 {loadingCourses ? (
                   <div className="registrar-curriculum-modal__loading-field">
-                    <LoaderCircle size={16} className="is-spinning" aria-hidden="true" />
+                    <LoaderCircle
+                      size={16}
+                      className="is-spinning"
+                      aria-hidden="true"
+                    />
                     Loading available courses...
                   </div>
                 ) : courseError ? (
@@ -364,7 +378,8 @@ export default function AddCurriculumModal({
               </div>
               {selectedCourse && (
                 <span className="registrar-curriculum-modal__helper">
-                  Creating for {selectedCourse.course_code} — {selectedCourse.course_name}
+                  Creating for {selectedCourse.course_code} —{" "}
+                  {selectedCourse.course_name}
                 </span>
               )}
             </div>
@@ -388,7 +403,9 @@ export default function AddCurriculumModal({
 
             <div className="registrar-curriculum-modal__grid registrar-curriculum-modal__grid--two">
               <div className="registrar-curriculum-modal__field">
-                <label htmlFor="curriculum-effective-year">Effective Year</label>
+                <label htmlFor="curriculum-effective-year">
+                  Effective Year
+                </label>
                 <div className="registrar-curriculum-modal__control">
                   <CalendarRange size={16} aria-hidden="true" />
                   <input
@@ -405,7 +422,9 @@ export default function AddCurriculumModal({
               </div>
 
               <div className="registrar-curriculum-modal__field">
-                <label htmlFor="curriculum-total-units">Planned Total Units</label>
+                <label htmlFor="curriculum-total-units">
+                  Planned Total Units
+                </label>
                 <div className="registrar-curriculum-modal__control">
                   <Hash size={16} aria-hidden="true" />
                   <input
@@ -421,7 +440,8 @@ export default function AddCurriculumModal({
                   />
                 </div>
                 <span className="registrar-curriculum-modal__helper">
-                  This can later reflect the units of mapped curriculum subjects.
+                  This can later reflect the units of mapped curriculum
+                  subjects.
                 </span>
               </div>
             </div>
@@ -430,7 +450,9 @@ export default function AddCurriculumModal({
           <div className="registrar-curriculum-modal__section registrar-curriculum-modal__section--compact">
             <div className="registrar-curriculum-modal__section-heading">
               <h3>Initial Status</h3>
-              <p>Choose whether this curriculum should start active or inactive.</p>
+              <p>
+                Choose whether this curriculum should start active or inactive.
+              </p>
             </div>
 
             <div className="registrar-curriculum-modal__status-options">
@@ -450,7 +472,9 @@ export default function AddCurriculumModal({
                 <span className="registrar-curriculum-modal__status-radio" />
                 <div>
                   <strong>Inactive</strong>
-                  <span>Build and review the curriculum before activating it.</span>
+                  <span>
+                    Build and review the curriculum before activating it.
+                  </span>
                 </div>
               </label>
 
@@ -499,7 +523,11 @@ export default function AddCurriculumModal({
             >
               {submitting ? (
                 <>
-                  <LoaderCircle size={16} className="is-spinning" aria-hidden="true" />
+                  <LoaderCircle
+                    size={16}
+                    className="is-spinning"
+                    aria-hidden="true"
+                  />
                   Creating...
                 </>
               ) : (

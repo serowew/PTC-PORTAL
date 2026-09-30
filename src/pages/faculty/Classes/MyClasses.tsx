@@ -18,9 +18,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/MyClasses.css";
 
-const API_BASE_URL = "http://localhost:3000/api/faculty/classes";
+const API_BASE_URL = apiUrl("/api/faculty/classes");
 
 interface FacultyInfo {
   faculty_id: number;
@@ -413,10 +414,7 @@ export default function MyClasses() {
             onClick={refreshClasses}
             disabled={loading}
           >
-            <RefreshCw
-              size={16}
-              className={loading ? "is-spinning" : ""}
-            />
+            <RefreshCw size={16} className={loading ? "is-spinning" : ""} />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </section>
@@ -446,10 +444,7 @@ export default function MyClasses() {
           </section>
         )}
 
-        <section
-          className="faculty-classes-summary"
-          aria-label="Class summary"
-        >
+        <section className="faculty-classes-summary" aria-label="Class summary">
           <article className="faculty-class-stat">
             <span className="faculty-class-stat__icon">
               <BookOpenCheck size={19} />

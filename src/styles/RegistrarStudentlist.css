@@ -2,7 +2,6 @@
    REGISTRAR — STUDENT LIST
    Scoped styles to avoid affecting other Registrar pages.
 ========================================================= */
-
 .registrar-student-list {
   --rsl-green-950: #073b24;
   --rsl-green-900: #0a4b2d;
@@ -20,7 +19,6 @@
   --rsl-surface: #ffffff;
   --rsl-bg: #f5f8f6;
   --rsl-danger: #b42318;
-
   min-height: 100%;
   padding: 28px 30px 36px;
   background:
@@ -29,17 +27,14 @@
   color: var(--rsl-text-950);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-
 .registrar-student-list *,
 .registrar-student-list *::before,
 .registrar-student-list *::after {
   box-sizing: border-box;
 }
-
 /* =========================================================
    HERO
 ========================================================= */
-
 .registrar-student-list__hero {
   position: relative;
   overflow: hidden;
@@ -55,7 +50,6 @@
     linear-gradient(105deg, rgba(255,255,255,0.98) 0%, rgba(247,253,249,0.98) 66%, rgba(230,247,237,0.98) 100%);
   box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
 }
-
 .registrar-student-list__hero::after {
   content: "";
   position: absolute;
@@ -67,13 +61,11 @@
   border: 38px solid rgba(15, 122, 69, 0.055);
   pointer-events: none;
 }
-
 .registrar-student-list__hero-copy {
   position: relative;
   z-index: 1;
   max-width: 780px;
 }
-
 .registrar-student-list__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -85,7 +77,6 @@
   letter-spacing: 0.055em;
   text-transform: uppercase;
 }
-
 .registrar-student-list__eyebrow-icon {
   display: inline-flex;
   align-items: center;
@@ -96,7 +87,6 @@
   color: var(--rsl-green-700);
   background: var(--rsl-green-100);
 }
-
 .registrar-student-list__hero h1 {
   margin: 0;
   color: var(--rsl-text-950);
@@ -105,7 +95,6 @@
   line-height: 1.15;
   letter-spacing: -0.025em;
 }
-
 .registrar-student-list__hero p {
   max-width: 720px;
   margin: 9px 0 0;
@@ -113,7 +102,6 @@
   font-size: 14px;
   line-height: 1.65;
 }
-
 .registrar-student-list__hero-badge {
   position: relative;
   z-index: 1;
@@ -129,7 +117,6 @@
   box-shadow: 0 5px 18px rgba(20, 55, 34, 0.06);
   backdrop-filter: blur(10px);
 }
-
 .registrar-student-list__hero-badge-icon {
   display: inline-flex;
   align-items: center;
@@ -140,12 +127,10 @@
   color: #ffffff;
   background: linear-gradient(145deg, var(--rsl-green-700), var(--rsl-green-900));
 }
-
 .registrar-student-list__hero-badge span:last-child {
   display: grid;
   gap: 2px;
 }
-
 .registrar-student-list__hero-badge small {
   color: var(--rsl-text-500);
   font-size: 11px;
@@ -153,24 +138,20 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .registrar-student-list__hero-badge strong {
   color: var(--rsl-text-800);
   font-size: 13px;
   font-weight: 720;
 }
-
 /* =========================================================
    STAT CARDS
 ========================================================= */
-
 .registrar-student-list__stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 20px;
 }
-
 .registrar-student-list__stat-card {
   display: flex;
   align-items: center;
@@ -183,13 +164,11 @@
   box-shadow: 0 5px 18px rgba(31, 56, 40, 0.045);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
-
 .registrar-student-list__stat-card:hover {
   transform: translateY(-2px);
   border-color: rgba(15, 122, 69, 0.28);
   box-shadow: 0 9px 24px rgba(31, 56, 40, 0.07);
 }
-
 .registrar-student-list__stat-icon {
   flex: 0 0 auto;
   display: inline-flex;
@@ -202,25 +181,21 @@
   background: var(--rsl-green-50);
   border: 1px solid rgba(15, 122, 69, 0.12);
 }
-
 .registrar-student-list__stat-icon--primary {
   color: #ffffff;
   background: linear-gradient(145deg, var(--rsl-green-700), var(--rsl-green-900));
   border-color: transparent;
 }
-
 .registrar-student-list__stat-card > div:last-child {
   min-width: 0;
   display: grid;
   gap: 2px;
 }
-
 .registrar-student-list__stat-card span {
   color: var(--rsl-text-600);
   font-size: 12px;
   font-weight: 650;
 }
-
 .registrar-student-list__stat-card strong {
   color: var(--rsl-text-950);
   font-size: 24px;
@@ -228,7 +203,6 @@
   line-height: 1.05;
   letter-spacing: -0.025em;
 }
-
 .registrar-student-list__stat-card small {
   overflow: hidden;
   color: var(--rsl-text-500);
@@ -236,11 +210,9 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 /* =========================================================
    MAIN PANEL / TOOLBAR
 ========================================================= */
-
 .registrar-student-list__panel {
   overflow: hidden;
   border: 1px solid var(--rsl-border);
@@ -248,7 +220,6 @@
   background: var(--rsl-surface);
   box-shadow: 0 9px 28px rgba(31, 56, 40, 0.06);
 }
-
 .registrar-student-list__panel-heading {
   display: flex;
   align-items: center;
@@ -256,7 +227,6 @@
   gap: 20px;
   padding: 20px 22px 15px;
 }
-
 .registrar-student-list__panel-heading h2 {
   margin: 0;
   color: var(--rsl-text-950);
@@ -264,14 +234,12 @@
   font-weight: 740;
   letter-spacing: -0.012em;
 }
-
 .registrar-student-list__panel-heading p {
   margin: 4px 0 0;
   color: var(--rsl-text-500);
   font-size: 12px;
   line-height: 1.5;
 }
-
 .registrar-student-list__record-count {
   flex: 0 0 auto;
   padding: 7px 10px;
@@ -282,7 +250,6 @@
   font-size: 11px;
   font-weight: 680;
 }
-
 .registrar-student-list__toolbar {
   display: flex;
   align-items: center;
@@ -290,7 +257,6 @@
   gap: 12px;
   padding: 0 22px 17px;
 }
-
 .registrar-student-list__search {
   position: relative;
   flex: 1 1 360px;
@@ -299,7 +265,6 @@
   align-items: center;
   min-width: 250px;
 }
-
 .registrar-student-list__search > svg {
   position: absolute;
   left: 13px;
@@ -307,7 +272,6 @@
   color: #87928b;
   pointer-events: none;
 }
-
 .registrar-student-list__search input {
   width: 100%;
   height: 41px;
@@ -321,17 +285,14 @@
   font-size: 12.5px;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
-
 .registrar-student-list__search input::placeholder {
   color: #929d96;
 }
-
 .registrar-student-list__search input:focus {
   border-color: var(--rsl-green-600);
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.1);
 }
-
 .registrar-student-list__search-clear {
   position: absolute;
   right: 9px;
@@ -347,19 +308,16 @@
   background: transparent;
   cursor: pointer;
 }
-
 .registrar-student-list__search-clear:hover {
   color: var(--rsl-text-800);
   background: #eef3ef;
 }
-
 .registrar-student-list__filters {
   flex: 0 1 auto;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .registrar-student-list__filter-label {
   display: inline-flex;
   align-items: center;
@@ -368,7 +326,6 @@
   font-size: 11px;
   font-weight: 700;
 }
-
 .registrar-student-list__filters select {
   height: 41px;
   min-width: 112px;
@@ -384,12 +341,10 @@
   cursor: pointer;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
-
 .registrar-student-list__filters select:focus {
   border-color: var(--rsl-green-600);
   box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.09);
 }
-
 .registrar-student-list__clear-filters {
   display: inline-flex;
   align-items: center;
@@ -406,13 +361,11 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .registrar-student-list__clear-filters:hover {
   border-color: #c9d7cd;
   color: var(--rsl-green-800);
   background: var(--rsl-green-50);
 }
-
 .registrar-student-list__filter-summary {
   display: flex;
   align-items: center;
@@ -427,26 +380,21 @@
   font-size: 11px;
   font-weight: 650;
 }
-
 .registrar-student-list__filter-summary span {
   padding: 4px 7px;
   border-radius: 7px;
   background: #e9f6ee;
 }
-
 /* =========================================================
    TABLE
 ========================================================= */
-
 .registrar-student-list__table-shell {
   border-top: 1px solid var(--rsl-border);
 }
-
 .registrar-student-list__table-scroll {
   width: 100%;
   overflow-x: auto;
 }
-
 .registrar-student-list__table {
   width: 100%;
   min-width: 1080px;
@@ -454,7 +402,6 @@
   border-spacing: 0;
   table-layout: auto;
 }
-
 .registrar-student-list__table thead th {
   padding: 11px 13px;
   border-bottom: 1px solid #dce7df;
@@ -467,17 +414,14 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-
 .registrar-student-list__table thead th:first-child,
 .registrar-student-list__table tbody td:first-child {
   padding-left: 22px;
 }
-
 .registrar-student-list__table thead th:last-child,
 .registrar-student-list__table tbody td:last-child {
   padding-right: 22px;
 }
-
 .registrar-student-list__table tbody td {
   padding: 12px 13px;
   border-bottom: 1px solid #edf1ee;
@@ -486,22 +430,18 @@
   font-size: 11.8px;
   vertical-align: middle;
 }
-
 .registrar-student-list__table tbody tr:last-child td {
   border-bottom: 0;
 }
-
 .registrar-student-list__table tbody tr:not(.registrar-student-list__skeleton-row):hover td {
   background: #fbfdfb;
 }
-
 .registrar-student-list__student-cell {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 220px;
 }
-
 .registrar-student-list__avatar {
   flex: 0 0 auto;
   display: inline-flex;
@@ -517,13 +457,11 @@
   font-weight: 800;
   letter-spacing: 0.035em;
 }
-
 .registrar-student-list__student-copy {
   min-width: 0;
   display: grid;
   gap: 2px;
 }
-
 .registrar-student-list__student-copy strong {
   overflow: hidden;
   max-width: 230px;
@@ -534,7 +472,6 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 .registrar-student-list__student-copy span {
   overflow: hidden;
   max-width: 230px;
@@ -544,14 +481,12 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 .registrar-student-list__student-number {
   color: var(--rsl-text-800);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-
 .registrar-student-list__course-chip {
   display: inline-flex;
   align-items: center;
@@ -565,7 +500,6 @@
   font-weight: 760;
   white-space: nowrap;
 }
-
 .registrar-student-list__status {
   display: inline-flex;
   align-items: center;
@@ -580,52 +514,52 @@
   font-weight: 700;
   white-space: nowrap;
 }
-
 .registrar-student-list__status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
-
 .registrar-student-list__status--active,
 .registrar-student-list__status--enrolled {
   border-color: #bde3c9;
   color: #08783e;
   background: #edf9f1;
 }
-
 .registrar-student-list__status--inactive,
 .registrar-student-list__status--dropped {
   border-color: #f1c6c2;
   color: #a2372d;
   background: #fff4f2;
 }
-
 .registrar-student-list__status--graduated {
   border-color: #cbd9ef;
   color: #315f9b;
   background: #f2f6fc;
 }
-
 .registrar-student-list__status--leave-of-absence,
 .registrar-student-list__status--loa {
   border-color: #ead8ad;
   color: #8b6514;
   background: #fff9e9;
 }
-
 .registrar-student-list__actions-heading {
-  min-width: 245px;
+  width: 1%;
+  min-width: 0;
+  white-space: nowrap;
 }
-
+.registrar-student-list__table tbody td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
 .registrar-student-list__actions {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-width: max-content;
+  width: max-content;
+  min-width: 0;
+  white-space: nowrap;
 }
-
 .registrar-student-list__action {
   display: inline-flex;
   align-items: center;
@@ -644,30 +578,25 @@
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease, background 160ms ease, transform 160ms ease;
 }
-
 .registrar-student-list__action:hover {
   transform: translateY(-1px);
   border-color: #b9d7c3;
   color: var(--rsl-green-800);
   background: var(--rsl-green-50);
 }
-
 .registrar-student-list__action--primary {
   border-color: var(--rsl-green-700);
   color: #ffffff;
   background: var(--rsl-green-700);
 }
-
 .registrar-student-list__action--primary:hover {
   border-color: var(--rsl-green-900);
   color: #ffffff;
   background: var(--rsl-green-900);
 }
-
 /* =========================================================
    STATES / SKELETON
 ========================================================= */
-
 .registrar-student-list__state {
   display: flex;
   flex-direction: column;
@@ -677,7 +606,6 @@
   padding: 38px 20px;
   text-align: center;
 }
-
 .registrar-student-list__state-icon {
   display: inline-flex;
   align-items: center;
@@ -691,14 +619,12 @@
   font-size: 22px;
   font-weight: 800;
 }
-
 .registrar-student-list__state h3 {
   margin: 0;
   color: var(--rsl-text-800);
   font-size: 15px;
   font-weight: 740;
 }
-
 .registrar-student-list__state p {
   max-width: 570px;
   margin: 7px 0 0;
@@ -706,7 +632,6 @@
   font-size: 11.5px;
   line-height: 1.55;
 }
-
 .registrar-student-list__state button {
   margin-top: 14px;
   padding: 8px 12px;
@@ -719,16 +644,13 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .registrar-student-list__state--error .registrar-student-list__state-icon {
   color: var(--rsl-danger);
   background: #fff1ef;
 }
-
 .registrar-student-list__state--error h3 {
   color: #8f2821;
 }
-
 .registrar-student-list__skeleton {
   position: relative;
   display: block;
@@ -737,7 +659,6 @@
   border-radius: 999px;
   background: #edf2ee;
 }
-
 .registrar-student-list__skeleton::after {
   content: "";
   position: absolute;
@@ -746,36 +667,29 @@
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
   animation: registrar-student-list-shimmer 1.25s infinite;
 }
-
 .registrar-student-list__skeleton--avatar {
   width: 37px;
   height: 37px;
   border-radius: 10px;
 }
-
 .registrar-student-list__skeleton--name {
   width: 130px;
   margin-bottom: 7px;
 }
-
 .registrar-student-list__skeleton--email {
   width: 170px;
   height: 8px;
 }
-
 .registrar-student-list__skeleton--text { width: 90px; }
 .registrar-student-list__skeleton--short { width: 56px; }
 .registrar-student-list__skeleton--badge { width: 72px; height: 24px; }
 .registrar-student-list__skeleton--actions { width: 210px; height: 30px; border-radius: 8px; }
-
 @keyframes registrar-student-list-shimmer {
   100% { transform: translateX(100%); }
 }
-
 /* =========================================================
    PAGINATION
 ========================================================= */
-
 .registrar-student-list__pagination-bar {
   display: flex;
   align-items: center;
@@ -785,25 +699,21 @@
   border-top: 1px solid var(--rsl-border);
   background: #fbfcfb;
 }
-
 .registrar-student-list__pagination-bar p {
   margin: 0;
   color: var(--rsl-text-500);
   font-size: 10.8px;
 }
-
 .registrar-student-list__pagination-bar p strong {
   color: var(--rsl-text-800);
   font-weight: 740;
 }
-
 .registrar-student-list__pagination,
 .registrar-student-list__page-numbers {
   display: flex;
   align-items: center;
   gap: 5px;
 }
-
 .registrar-student-list__page-btn {
   display: inline-flex;
   align-items: center;
@@ -821,140 +731,111 @@
   font-weight: 700;
   cursor: pointer;
 }
-
 .registrar-student-list__page-btn:hover:not(:disabled) {
   border-color: #bcd7c5;
   color: var(--rsl-green-800);
   background: var(--rsl-green-50);
 }
-
 .registrar-student-list__page-btn--active {
   border-color: var(--rsl-green-700);
   color: #ffffff;
   background: var(--rsl-green-700);
 }
-
 .registrar-student-list__page-btn--active:hover:not(:disabled) {
   color: #ffffff;
   background: var(--rsl-green-800);
 }
-
 .registrar-student-list__page-btn--nav {
   padding: 0 9px;
 }
-
 .registrar-student-list__page-btn:disabled {
   opacity: 0.42;
   cursor: not-allowed;
 }
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
-
 @media (max-width: 1280px) {
   .registrar-student-list__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .registrar-student-list__toolbar {
     align-items: stretch;
     flex-direction: column;
   }
-
   .registrar-student-list__search {
     max-width: none;
   }
-
   .registrar-student-list__filters {
     flex-wrap: wrap;
   }
 }
-
 @media (max-width: 850px) {
   .registrar-student-list {
     padding: 20px 18px 30px;
   }
-
   .registrar-student-list__hero {
     align-items: flex-start;
     flex-direction: column;
     padding: 22px;
   }
-
   .registrar-student-list__hero-badge {
     min-width: 0;
   }
-
   .registrar-student-list__panel-heading,
   .registrar-student-list__pagination-bar {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .registrar-student-list__filters {
     width: 100%;
   }
-
   .registrar-student-list__filters select {
     flex: 1 1 150px;
   }
-
   .registrar-student-list__pagination {
     width: 100%;
     justify-content: space-between;
   }
 }
-
 @media (max-width: 560px) {
   .registrar-student-list {
     padding: 14px 12px 24px;
   }
-
   .registrar-student-list__hero,
   .registrar-student-list__panel {
     border-radius: 14px;
   }
-
   .registrar-student-list__stats {
     grid-template-columns: 1fr;
     gap: 9px;
   }
-
   .registrar-student-list__stat-card {
     padding: 14px 15px;
   }
-
   .registrar-student-list__panel-heading {
     padding: 17px 16px 13px;
   }
-
   .registrar-student-list__toolbar {
     padding: 0 16px 14px;
   }
-
   .registrar-student-list__filter-summary {
     margin: 0 16px 12px;
   }
-
   .registrar-student-list__filter-label {
     width: 100%;
   }
-
   .registrar-student-list__filters select,
   .registrar-student-list__clear-filters {
     flex: 1 1 calc(50% - 5px);
   }
-
   .registrar-student-list__page-btn--nav span {
     display: none;
   }
-
   .registrar-student-list__page-numbers .registrar-student-list__page-btn:nth-child(n+4) {
     display: none;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .registrar-student-list *,
   .registrar-student-list *::before,

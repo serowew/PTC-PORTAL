@@ -17,6 +17,7 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import DeleteAnnouncementModal from "./DaleteAnnouncementModal";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminAnnouncementList.css";
 
 type Announcement = {
@@ -45,7 +46,7 @@ interface DeleteResponse {
   error?: string;
 }
 
-const API_BASE_URL = "http://localhost:3000/api/announcement-management";
+const API_BASE_URL = apiUrl("/api/announcement-management");
 
 type StatusFilter = "All" | "Active" | "Inactive";
 

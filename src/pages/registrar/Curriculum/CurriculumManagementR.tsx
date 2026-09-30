@@ -19,10 +19,11 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import AddCurriculumModal from "./AddCurriculumModal";
 import "../../../styles/CurriculumManagementR.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/curriculums";
+const API_BASE_URL = apiUrl("/api/registrar/curriculums");
 const COURSES_API_URL = `${API_BASE_URL}/courses`;
 const PAGE_SIZE = 10;
 
@@ -376,9 +377,12 @@ export default function CurriculumManagementR() {
   );
 
   const activeFilterCount = useMemo(() => {
-    return [search, course !== "All", Boolean(effectiveYear), activeStatus !== "All"].filter(
-      Boolean,
-    ).length;
+    return [
+      search,
+      course !== "All",
+      Boolean(effectiveYear),
+      activeStatus !== "All",
+    ].filter(Boolean).length;
   }, [search, course, effectiveYear, activeStatus]);
 
   const paginationItems = useMemo(
@@ -675,14 +679,31 @@ export default function CurriculumManagementR() {
                 </thead>
                 <tbody>
                   {Array.from({ length: 6 }, (_, index) => (
-                    <tr key={index} className="registrar-curriculum-management__skeleton-row">
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--wide" /></td>
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--long" /></td>
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--short" /></td>
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--short" /></td>
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--short" /></td>
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--status" /></td>
-                      <td><span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--button" /></td>
+                    <tr
+                      key={index}
+                      className="registrar-curriculum-management__skeleton-row"
+                    >
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--wide" />
+                      </td>
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--long" />
+                      </td>
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--short" />
+                      </td>
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--short" />
+                      </td>
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--short" />
+                      </td>
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--status" />
+                      </td>
+                      <td>
+                        <span className="registrar-curriculum-management__skeleton registrar-curriculum-management__skeleton--button" />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -787,7 +808,9 @@ export default function CurriculumManagementR() {
 
                       <td>
                         <div className="registrar-curriculum-management__metric-cell">
-                          <strong>{Number(curriculum.subject_count || 0)}</strong>
+                          <strong>
+                            {Number(curriculum.subject_count || 0)}
+                          </strong>
                           <small>
                             {Number(curriculum.subject_count || 0) === 1
                               ? "subject"
@@ -839,7 +862,8 @@ export default function CurriculumManagementR() {
           {!loading && !error && totalCurriculums > 0 && (
             <div className="registrar-curriculum-management__pagination-bar">
               <p>
-                Showing <strong>{startRecord}</strong>–<strong>{endRecord}</strong> of{" "}
+                Showing <strong>{startRecord}</strong>–
+                <strong>{endRecord}</strong> of{" "}
                 <strong>{totalCurriculums}</strong> curricula
               </p>
 
@@ -851,7 +875,9 @@ export default function CurriculumManagementR() {
                   type="button"
                   className="registrar-curriculum-management__page-button registrar-curriculum-management__page-button--nav"
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
                   aria-label="Previous page"
                 >
                   <ChevronLeft size={16} aria-hidden="true" />

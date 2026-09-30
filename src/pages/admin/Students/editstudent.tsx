@@ -21,18 +21,14 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminEditStudent.css";
 
-const API_BASE_URL = "http://localhost:3000/api/students";
+const API_BASE_URL = apiUrl("/api/students");
 
 const COURSES = ["BSIT", "BSCS", "BSA"] as const;
 
-const YEAR_LEVELS = [
-  "1st Year",
-  "2nd Year",
-  "3rd Year",
-  "4th Year",
-] as const;
+const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year"] as const;
 
 const SEMESTERS = [
   {

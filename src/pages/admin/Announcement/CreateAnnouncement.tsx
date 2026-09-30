@@ -24,12 +24,12 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminCreateAnnouncement.css";
 
-const ANNOUNCEMENT_API_URL =
-  "http://localhost:3000/api/announcement-management";
-const ROLE_API_URL = "http://localhost:3000/api/roles";
-const FILE_UPLOAD_URL = "http://localhost:3000/api/files/upload";
+const ANNOUNCEMENT_API_URL = apiUrl("/api/announcement-management");
+const ROLE_API_URL = apiUrl("/api/roles");
+const FILE_UPLOAD_URL = apiUrl("/api/files/upload");
 
 type Role = {
   role_id: number;
@@ -173,9 +173,7 @@ export default function CreateAnnouncement() {
 
         console.error("Load roles error:", err);
 
-        setError(
-          err instanceof Error ? err.message : "Unable to load roles.",
-        );
+        setError(err instanceof Error ? err.message : "Unable to load roles.");
       } finally {
         if (!controller.signal.aborted) {
           setRolesLoading(false);
@@ -267,9 +265,7 @@ export default function CreateAnnouncement() {
 
     if (response.status === 403) {
       throw new Error(
-        data.message ||
-          data.error ||
-          "You are not authorized to upload files.",
+        data.message || data.error || "You are not authorized to upload files.",
       );
     }
 
@@ -352,16 +348,13 @@ export default function CreateAnnouncement() {
         attachments: uploadedFileId ? [uploadedFileId] : [],
       };
 
-      const response = await authService.authFetch(
-        ANNOUNCEMENT_API_URL,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(announcementData),
+      const response = await authService.authFetch(ANNOUNCEMENT_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(announcementData),
+      });
 
       const contentType = response.headers.get("content-type") || "";
       let data: AnnouncementResponse = {};
@@ -756,9 +749,7 @@ export default function CreateAnnouncement() {
                         value={expiryDate}
                         min={publishDate || undefined}
                         disabled={loading}
-                        onChange={(event) =>
-                          setExpiryDate(event.target.value)
-                        }
+                        onChange={(event) => setExpiryDate(event.target.value)}
                       />
                     </div>
 

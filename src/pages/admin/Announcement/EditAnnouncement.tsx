@@ -17,12 +17,13 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminAnnouncementEdit.css";
 
-const API_BASE_URL = "http://localhost:3000/api/announcement-management";
-const ROLE_API_URL = "http://localhost:3000/api/roles";
-const FILE_UPLOAD_URL = "http://localhost:3000/api/files/upload";
-const FILE_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = apiUrl("/api/announcement-management");
+const ROLE_API_URL = apiUrl("/api/roles");
+const FILE_UPLOAD_URL = apiUrl("/api/files/upload");
+const FILE_BASE_URL = "API_BASE_URL";
 
 type Role = {
   role_id: number;
@@ -160,7 +161,8 @@ export default function AnnouncementEdit() {
           },
         });
 
-        const rolesContentType = rolesResponse.headers.get("content-type") || "";
+        const rolesContentType =
+          rolesResponse.headers.get("content-type") || "";
         let rolesData: Role[] | RoleResponse | null = null;
 
         if (rolesContentType.includes("application/json")) {
@@ -654,7 +656,10 @@ export default function AnnouncementEdit() {
           </div>
         )}
 
-        <form className="admin-announcement-editor__form" onSubmit={handleSubmit}>
+        <form
+          className="admin-announcement-editor__form"
+          onSubmit={handleSubmit}
+        >
           <section className="admin-announcement-editor__section admin-announcement-editor__section--wide">
             <header className="admin-announcement-editor__section-header">
               <span className="admin-announcement-editor__section-icon">
@@ -818,7 +823,9 @@ export default function AnnouncementEdit() {
               <div>
                 <span>Files</span>
                 <h2>Attachments</h2>
-                <p>Keep or remove existing files and optionally add a new one.</p>
+                <p>
+                  Keep or remove existing files and optionally add a new one.
+                </p>
               </div>
             </header>
 

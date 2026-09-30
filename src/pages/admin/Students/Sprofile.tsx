@@ -17,9 +17,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminStudentProfile.css";
 
-const API_BASE_URL = "http://localhost:3000/api/students";
+const API_BASE_URL = apiUrl("/api/students");
 
 interface Student {
   studentId: number;

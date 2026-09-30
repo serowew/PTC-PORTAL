@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
@@ -22,17 +22,21 @@ import {
   ShieldCheck,
   UserRound,
   UsersRound,
+  X,
 } from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { api } from "../../../services/api";
 
 import "../../../styles/EnterGrades.css";
 
-const API_BASE_URL = "http://localhost:3000/api/faculty/classes";
+const API_BASE_URL = `${api.baseUrl}/api/faculty/classes`;
 
 type GradeStatus = "Draft" | "Submitted" | "Returned" | "Approved";
 
-type GradeRemark = "" | "Passed" | "Failed" | "Incomplete";
+type GradeRemark = "Passed" | "Failed" | "Incomplete" | "Unofficial Drop";
+
+type GradeOutcome = "NUMERIC" | "INCOMPLETE" | "UNOFFICIAL_DROP";
 
 interface FacultyInfo {
   faculty_id: number;
@@ -125,12 +129,16 @@ interface FacultyGrade {
   grade_id: number;
   faculty_id: number | null;
 
-  prelim_grade: number | null;
   midterm_grade: number | null;
   final_grade: number | null;
+  overall_percentage: number | null;
   final_rating: number | null;
 
-  remarks: "Passed" | "Failed" | "Incomplete" | null;
+  grading_policy?: string;
+  grading_outcome?: string;
+  outcome_reason?: string | null;
+
+  remarks: GradeRemark | null;
 
   grade_status: GradeStatus;
 
@@ -140,6 +148,18 @@ interface FacultyGrade {
 
   created_at: string | null;
   updated_at: string | null;
+}
+
+type IncCompletionRequestStatus =
+  | "Pending Program Head"
+  | "For Registrar Processing";
+
+interface IncCompletionRequestSummary {
+  grade_change_request_id: number;
+  status: IncCompletionRequestStatus;
+  requested_at: string | null;
+  reviewed_at: string | null;
+  review_remarks: string | null;
 }
 
 interface GradebookStudent {
@@ -160,6 +180,7 @@ interface GradebookStudent {
   subject_status: string;
 
   grade: FacultyGrade | null;
+  inc_completion_request: IncCompletionRequestSummary | null;
 }
 
 interface GradebookSummary {
@@ -196,28 +217,66 @@ interface GradeMutationResponse {
     grade_id: number;
     enrollment_subject_id: number;
 
-    prelim_grade: number | null;
     midterm_grade: number | null;
     final_grade: number | null;
+    overall_percentage?: number | null;
     final_rating: number | null;
 
-    remarks: "Passed" | "Failed" | "Incomplete" | null;
+    grading_policy?: string;
+    grading_outcome?: string;
+    outcome_reason?: string | null;
+
+    remarks: GradeRemark | null;
 
     grade_status: GradeStatus;
   };
 }
 
 interface GradeForm {
-  prelimGrade: string;
+  gradingOutcome: GradeOutcome;
+  outcomeReason: string;
   midtermGrade: string;
   finalGrade: string;
-  finalRating: string;
-  remarks: GradeRemark;
+}
+
+interface GradePreview {
+  complete: boolean;
+  overallPercentage: number | null;
+  finalRating: number | null;
+  remarks: GradeRemark | null;
 }
 
 interface RowFeedback {
   type: "success" | "error";
   message: string;
+}
+
+interface IncCompletionForm {
+  midtermGrade: string;
+  finalGrade: string;
+  completionRemarks: string;
+}
+
+interface IncCompletionResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+
+  request?: {
+    grade_change_request_id: number;
+    grade_id: number;
+    request_type: "INC_COMPLETION";
+    status: string;
+  };
+
+  proposed_grade?: {
+    midterm_grade: number;
+    final_grade: number;
+    overall_percentage: number;
+    final_rating: number;
+    grading_outcome: "NUMERIC";
+    remarks: "Passed" | "Failed";
+  };
 }
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
@@ -260,29 +319,19 @@ function gradeValueToString(value: number | null | undefined): string {
 }
 
 function createGradeForm(grade: FacultyGrade | null): GradeForm {
+  const storedOutcome = grade?.grading_outcome;
+
+  const gradingOutcome: GradeOutcome =
+    storedOutcome === "INCOMPLETE" || storedOutcome === "UNOFFICIAL_DROP"
+      ? storedOutcome
+      : "NUMERIC";
+
   return {
-    prelimGrade: gradeValueToString(grade?.prelim_grade),
-
+    gradingOutcome,
+    outcomeReason: grade?.outcome_reason || "",
     midtermGrade: gradeValueToString(grade?.midterm_grade),
-
     finalGrade: gradeValueToString(grade?.final_grade),
-
-    finalRating: gradeValueToString(grade?.final_rating),
-
-    remarks: grade?.remarks || "",
   };
-}
-
-function toNullableNumber(value: string): number | null {
-  const clean = value.trim();
-
-  if (!clean) {
-    return null;
-  }
-
-  const parsed = Number(clean);
-
-  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function formatDays(value: string | null): string {
@@ -352,27 +401,132 @@ function isEditable(student: GradebookStudent): boolean {
   );
 }
 
-function getSuggestedRemark(value: string): string | null {
-  if (!value.trim()) {
+function isApprovedIncomplete(student: GradebookStudent): boolean {
+  return (
+    student.subject_status === "Incomplete" &&
+    student.grade?.grade_status === "Approved" &&
+    student.grade?.grading_outcome === "INCOMPLETE" &&
+    student.grade?.remarks === "Incomplete" &&
+    Number(student.grade?.final_rating) === 4
+  );
+}
+
+function getIncCompletionStatusLabel(
+  request: IncCompletionRequestSummary,
+): string {
+  if (request.status === "For Registrar Processing") {
+    return "Waiting for Registrar";
+  }
+
+  return "Waiting for Program Head";
+}
+
+function getIncCompletionStatusClass(
+  request: IncCompletionRequestSummary,
+): string {
+  return request.status === "For Registrar Processing"
+    ? "registrar"
+    : "program-head";
+}
+
+const GRADE_BANDS = [
+  [97, 1.0],
+  [94, 1.25],
+  [91, 1.5],
+  [88, 1.75],
+  [85, 2.0],
+  [82, 2.25],
+  [79, 2.5],
+  [76, 2.75],
+  [75, 3.0],
+  [0, 5.0],
+] as const;
+
+function parsePercentageHundredths(value: string): number | null {
+  const clean = value.trim();
+
+  if (!clean || !/^\d+(?:\.\d{1,2})?$/.test(clean)) {
     return null;
   }
 
-  const rating = Number(value);
+  const numeric = Number(clean);
 
-  if (!Number.isFinite(rating)) {
+  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) {
     return null;
   }
 
-  if (rating >= 1 && rating <= 3) {
-    return "Passed";
+  return Math.round(numeric * 100);
+}
+
+function calculateGradePreview(form: GradeForm): GradePreview {
+  if (form.gradingOutcome === "INCOMPLETE") {
+    return {
+      complete: true,
+      overallPercentage: null,
+      finalRating: 4,
+      remarks: "Incomplete",
+    };
   }
 
-  if (rating === 4) {
-    return "Incomplete";
+  if (form.gradingOutcome === "UNOFFICIAL_DROP") {
+    return {
+      complete: true,
+      overallPercentage: null,
+      finalRating: 6,
+      remarks: "Unofficial Drop",
+    };
   }
 
-  if (rating === 5) {
-    return "Failed";
+  const midterm = parsePercentageHundredths(form.midtermGrade);
+  const finalTerm = parsePercentageHundredths(form.finalGrade);
+
+  if (midterm === null || finalTerm === null) {
+    return {
+      complete: false,
+      overallPercentage: null,
+      finalRating: null,
+      remarks: null,
+    };
+  }
+
+  // Same TWO_TERM_50_50 rule used by the backend.
+  // Keep hundredths so 74.995 never rounds up to a passing 75.
+  const sum = midterm + finalTerm;
+  const overallPercentage = sum / 200;
+
+  const finalRating =
+    GRADE_BANDS.find(([threshold]) => sum >= threshold * 200)?.[1] ?? 5;
+
+  const remarks: GradeRemark =
+    finalRating >= 1 && finalRating <= 3 ? "Passed" : "Failed";
+
+  return {
+    complete: true,
+    overallPercentage,
+    finalRating,
+    remarks,
+  };
+}
+
+function validatePercentageField(
+  value: string,
+  label: string,
+  required = false,
+): string | null {
+  const clean = value.trim();
+
+  if (!clean) {
+    return required ? `${label} is required.` : null;
+  }
+
+  if (!/^\d+(?:\.\d{1,2})?$/.test(clean)) {
+    return `${label} must be a percentage from 0 to 100 with at most two decimal places.`;
+  }
+
+  const numeric = Number(clean);
+
+  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) {
+    return `${label} must be between 0 and 100.`;
   }
 
   return null;
@@ -391,6 +545,7 @@ function emptySummary(): GradebookSummary {
 
 export default function EnterGrades() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const session = authService.getSession();
 
@@ -399,6 +554,11 @@ export default function EnterGrades() {
   const userRole = session?.role;
 
   const authenticated = Boolean(session && token);
+
+  const requestedOfferingId = useMemo(
+    () => parsePositiveInt(searchParams.get("offering_id")),
+    [searchParams],
+  );
 
   const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
 
@@ -411,6 +571,9 @@ export default function EnterGrades() {
   const [selectedOfferingId, setSelectedOfferingId] = useState<number | null>(
     null,
   );
+
+  const [classSearch, setClassSearch] = useState("");
+  const [classSearchFocused, setClassSearchFocused] = useState(false);
 
   const [gradebookClass, setGradebookClass] = useState<FacultyClass | null>(
     null,
@@ -439,6 +602,18 @@ export default function EnterGrades() {
   const [studentSearch, setStudentSearch] = useState("");
 
   const [statusFilter, setStatusFilter] = useState("All");
+
+  const [incStudent, setIncStudent] = useState<GradebookStudent | null>(null);
+
+  const [incForm, setIncForm] = useState<IncCompletionForm>({
+    midtermGrade: "",
+    finalGrade: "",
+    completionRemarks: "",
+  });
+
+  const [incSubmitting, setIncSubmitting] = useState(false);
+
+  const [incError, setIncError] = useState("");
 
   useEffect(() => {
     if (!authenticated) {
@@ -517,6 +692,15 @@ export default function EnterGrades() {
 
         setSelectedOfferingId((current) => {
           if (
+            requestedOfferingId &&
+            loadedClasses.some(
+              (item) => item.offering_id === requestedOfferingId,
+            )
+          ) {
+            return requestedOfferingId;
+          }
+
+          if (
             current &&
             loadedClasses.some((item) => item.offering_id === current)
           ) {
@@ -555,7 +739,7 @@ export default function EnterGrades() {
     return () => {
       controller.abort();
     };
-  }, [authenticated, userRole, navigate]);
+  }, [authenticated, userRole, navigate, requestedOfferingId]);
 
   const loadGradebook = useCallback(
     async (signal?: AbortSignal) => {
@@ -760,6 +944,40 @@ export default function EnterGrades() {
     setGradebookError("");
   };
 
+  const filteredAssignedClasses = useMemo(() => {
+    const query = classSearch.trim().toLowerCase();
+
+    if (!query) {
+      return [];
+    }
+
+    return classes.filter((item) => {
+      const searchableText = [
+        String(item.offering_id),
+        item.subject.subject_code,
+        item.subject.subject_name,
+        item.section.section_name,
+        item.section.course.course_code,
+        item.section.course.course_name,
+        item.academic_period.academic_year,
+        item.academic_period.semester_name,
+        item.schedule.days || "",
+        item.schedule.time || "",
+        getRoomLabel(item.room),
+        item.offering_status,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }, [classes, classSearch]);
+
+  const selectAssignedClass = (item: FacultyClass) => {
+    handleClassChange(String(item.offering_id));
+    setClassSearch("");
+  };
+
   const updateForm = (
     enrollmentSubjectId: number,
     field: keyof GradeForm,
@@ -770,11 +988,10 @@ export default function EnterGrades() {
 
       [enrollmentSubjectId]: {
         ...(current[enrollmentSubjectId] || {
-          prelimGrade: "",
+          gradingOutcome: "NUMERIC",
+          outcomeReason: "",
           midtermGrade: "",
           finalGrade: "",
-          finalRating: "",
-          remarks: "",
         }),
 
         [field]: value,
@@ -793,98 +1010,54 @@ export default function EnterGrades() {
   };
 
   const buildGradeBody = (form: GradeForm) => {
+    const specialOutcome = form.gradingOutcome !== "NUMERIC";
+
     return {
-      prelim_grade: toNullableNumber(form.prelimGrade),
-
-      midterm_grade: toNullableNumber(form.midtermGrade),
-
-      final_grade: toNullableNumber(form.finalGrade),
-
-      final_rating: toNullableNumber(form.finalRating),
-
-      remarks: form.remarks || null,
+      midterm_grade: specialOutcome ? null : form.midtermGrade.trim() || null,
+      final_grade: specialOutcome ? null : form.finalGrade.trim() || null,
+      grading_outcome: form.gradingOutcome,
+      outcome_reason: specialOutcome ? form.outcomeReason.trim() : null,
     };
   };
 
-  const validateNumericFields = (form: GradeForm): string | null => {
-    const fields = [
-      {
-        label: "Prelim grade",
+  const validateOutcomeReason = (form: GradeForm): string | null => {
+    if (form.gradingOutcome === "NUMERIC") {
+      return null;
+    }
 
-        value: form.prelimGrade,
-      },
-      {
-        label: "Midterm grade",
+    const reason = form.outcomeReason.trim();
 
-        value: form.midtermGrade,
-      },
-      {
-        label: "Final grade",
+    if (!reason) {
+      return "A reason is required for Incomplete or Unofficial Drop.";
+    }
 
-        value: form.finalGrade,
-      },
-      {
-        label: "Final rating",
-
-        value: form.finalRating,
-      },
-    ];
-
-    for (const field of fields) {
-      const clean = field.value.trim();
-
-      if (!clean) {
-        continue;
-      }
-
-      if (!Number.isFinite(Number(clean))) {
-        return `${field.label} must be a valid number.`;
-      }
+    if (reason.length > 500) {
+      return "Outcome reason must not exceed 500 characters.";
     }
 
     return null;
   };
 
+  const validateNumericFields = (form: GradeForm): string | null => {
+    if (form.gradingOutcome !== "NUMERIC") {
+      return validateOutcomeReason(form);
+    }
+
+    return (
+      validatePercentageField(form.midtermGrade, "Midterm") ||
+      validatePercentageField(form.finalGrade, "Final Term")
+    );
+  };
+
   const validateForSubmit = (form: GradeForm): string | null => {
-    const numericError = validateNumericFields(form);
-
-    if (numericError) {
-      return numericError;
+    if (form.gradingOutcome !== "NUMERIC") {
+      return validateOutcomeReason(form);
     }
 
-    if (!form.remarks) {
-      return "Grade remarks are required before submission.";
-    }
-
-    // Passed / Failed require complete grades.
-
-    if (form.remarks === "Passed" || form.remarks === "Failed") {
-      const missing: string[] = [];
-
-      if (!form.prelimGrade.trim()) {
-        missing.push("Prelim");
-      }
-
-      if (!form.midtermGrade.trim()) {
-        missing.push("Midterm");
-      }
-
-      if (!form.finalGrade.trim()) {
-        missing.push("Final Grade");
-      }
-
-      if (!form.finalRating.trim()) {
-        missing.push("Final Rating");
-      }
-
-      if (missing.length > 0) {
-        return `Complete the following before submission: ${missing.join(
-          ", ",
-        )}.`;
-      }
-    }
-
-    return null;
+    return (
+      validatePercentageField(form.midtermGrade, "Midterm", true) ||
+      validatePercentageField(form.finalGrade, "Final Term", true)
+    );
   };
 
   const saveDraftRequest = async (
@@ -1029,8 +1202,23 @@ export default function EnterGrades() {
       return;
     }
 
+    const preview = calculateGradePreview(form);
+
+    const outcomeLabel =
+      form.gradingOutcome === "NUMERIC"
+        ? "Numeric Grade"
+        : form.gradingOutcome === "INCOMPLETE"
+          ? "Incomplete"
+          : "Unofficial Drop";
+
     const confirmed = window.confirm(
-      `Submit the grade for ${student.student_number} - ${student.full_name}?\n\nAfter submission, Faculty cannot edit it unless the Program Head returns it.`,
+      `Submit the grade for ${student.student_number} - ${student.full_name}?\n\nOutcome: ${outcomeLabel}\nFinal Rating: ${
+        preview.finalRating !== null ? preview.finalRating.toFixed(2) : "—"
+      }\nResult: ${preview.remarks || "—"}${
+        form.gradingOutcome !== "NUMERIC"
+          ? `\nReason: ${form.outcomeReason.trim()}`
+          : ""
+      }\n\nAfter submission, Faculty cannot edit it unless the Program Head returns it.`,
     );
 
     if (!confirmed) {
@@ -1112,6 +1300,184 @@ export default function EnterGrades() {
       }));
     } finally {
       setSubmittingId(null);
+    }
+  };
+
+  const openIncCompletion = (student: GradebookStudent) => {
+    if (!isApprovedIncomplete(student)) {
+      return;
+    }
+
+    setIncStudent(student);
+
+    setIncForm({
+      midtermGrade: gradeValueToString(student.grade?.midterm_grade),
+      finalGrade: gradeValueToString(student.grade?.final_grade),
+      completionRemarks: "",
+    });
+
+    setIncError("");
+  };
+
+  const closeIncCompletion = () => {
+    if (incSubmitting) {
+      return;
+    }
+
+    setIncStudent(null);
+
+    setIncForm({
+      midtermGrade: "",
+      finalGrade: "",
+      completionRemarks: "",
+    });
+
+    setIncError("");
+  };
+
+  const incPreview = calculateGradePreview({
+    gradingOutcome: "NUMERIC",
+    outcomeReason: "",
+    midtermGrade: incForm.midtermGrade,
+    finalGrade: incForm.finalGrade,
+  });
+
+  const submitIncCompletion = async () => {
+    if (!incStudent || !selectedOfferingId) {
+      return;
+    }
+
+    const midtermError = validatePercentageField(
+      incForm.midtermGrade,
+      "Midterm",
+      true,
+    );
+
+    if (midtermError) {
+      setIncError(midtermError);
+      return;
+    }
+
+    const finalError = validatePercentageField(
+      incForm.finalGrade,
+      "Final Term",
+      true,
+    );
+
+    if (finalError) {
+      setIncError(finalError);
+      return;
+    }
+
+    const completionRemarks = incForm.completionRemarks.trim();
+
+    if (!completionRemarks) {
+      setIncError("Completion remarks are required.");
+      return;
+    }
+
+    if (completionRemarks.length > 1000) {
+      setIncError("Completion remarks must not exceed 1000 characters.");
+      return;
+    }
+
+    if (!incPreview.complete) {
+      setIncError("Both Midterm and Final Term grades are required.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Submit INC completion for ${incStudent.student_number} - ${incStudent.full_name}?\n\n` +
+        `Midterm: ${incForm.midtermGrade}\n` +
+        `Final Term: ${incForm.finalGrade}\n` +
+        `Overall: ${
+          incPreview.overallPercentage !== null
+            ? incPreview.overallPercentage.toFixed(2)
+            : "—"
+        }\n` +
+        `Final Rating: ${
+          incPreview.finalRating !== null
+            ? incPreview.finalRating.toFixed(2)
+            : "—"
+        }\n` +
+        `Result: ${incPreview.remarks || "—"}\n\n` +
+        "This will be sent to the Program Head for approval.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setIncSubmitting(true);
+      setIncError("");
+
+      const response = await authService.authFetch(
+        `${API_BASE_URL}/${selectedOfferingId}/grades/${incStudent.enrollment_subject_id}/inc-completion`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            midterm_grade: Number(incForm.midtermGrade),
+            final_grade: Number(incForm.finalGrade),
+            completion_remarks: completionRemarks,
+          }),
+        },
+      );
+
+      const data = await readJsonResponse<IncCompletionResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+
+        navigate("/login", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message ||
+            data.error ||
+            "Unable to submit INC completion request.",
+        );
+      }
+
+      const enrollmentSubjectId = incStudent.enrollment_subject_id;
+
+      setRowFeedback((current) => ({
+        ...current,
+        [enrollmentSubjectId]: {
+          type: "success",
+          message:
+            data.message ||
+            "INC completion request submitted to the Program Head.",
+        },
+      }));
+
+      setIncStudent(null);
+
+      setIncForm({
+        midtermGrade: "",
+        finalGrade: "",
+        completionRemarks: "",
+      });
+
+      setGradebookRefreshKey((current) => current + 1);
+    } catch (requestError) {
+      console.error("SUBMIT INC COMPLETION ERROR:", requestError);
+
+      setIncError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to submit INC completion request.",
+      );
+    } finally {
+      setIncSubmitting(false);
     }
   };
 
@@ -1199,7 +1565,9 @@ export default function EnterGrades() {
             <div className="faculty-grade-faculty__copy">
               <small>Faculty</small>
               <strong>{faculty?.faculty_name || "Faculty"}</strong>
-              <span>{faculty?.employee_number || "Employee number unavailable"}</span>
+              <span>
+                {faculty?.employee_number || "Employee number unavailable"}
+              </span>
             </div>
           </div>
 
@@ -1215,26 +1583,98 @@ export default function EnterGrades() {
               </span>
             </div>
 
-            <label htmlFor="faculty-grade-class">Assigned Class</label>
+            <div className="faculty-assigned-class-search">
+              <label htmlFor="faculty-grade-class">Search Assigned Class</label>
 
-            <select
-              id="faculty-grade-class"
-              value={selectedOfferingId ? String(selectedOfferingId) : ""}
-              onChange={(event) => handleClassChange(event.target.value)}
-              disabled={classesLoading || classes.length === 0}
-            >
-              {classes.length === 0 && (
-                <option value="">No assigned classes</option>
-              )}
+              <div className="faculty-assigned-class-search__control">
+                <div className="faculty-assigned-class-search__input">
+                  <Search size={16} />
 
-              {classes.map((item) => (
-                <option key={item.offering_id} value={item.offering_id}>
-                  {item.subject.subject_code} — {item.section.section_name} —{" "}
-                  {item.academic_period.academic_year} /{" "}
-                  {item.academic_period.semester_name}
-                </option>
-              ))}
-            </select>
+                  <input
+                    id="faculty-grade-class"
+                    type="text"
+                    name="faculty-assigned-class-filter"
+                    value={classSearch}
+                    onChange={(event) => setClassSearch(event.target.value)}
+                    onFocus={() => setClassSearchFocused(true)}
+                    onBlur={() => {
+                      window.setTimeout(() => {
+                        setClassSearchFocused(false);
+                      }, 120);
+                    }}
+                    placeholder="Search subject, section, course, year..."
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    disabled={classesLoading || classes.length === 0}
+                  />
+
+                  {classSearch && (
+                    <button
+                      type="button"
+                      aria-label="Clear class search"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => setClassSearch("")}
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
+                </div>
+
+                {classSearchFocused && classSearch.trim() && (
+                  <div
+                    className="faculty-assigned-class-suggestions"
+                    role="listbox"
+                    aria-label="Matching assigned classes"
+                  >
+                    {filteredAssignedClasses.length === 0 ? (
+                      <div className="faculty-assigned-class-suggestions__empty">
+                        <Search size={16} />
+                        <span>No matching assigned class</span>
+                      </div>
+                    ) : (
+                      filteredAssignedClasses.slice(0, 8).map((item) => {
+                        const isSelected =
+                          item.offering_id === selectedOfferingId;
+
+                        return (
+                          <button
+                            key={item.offering_id}
+                            type="button"
+                            className={`faculty-assigned-class-suggestion ${
+                              isSelected ? "is-selected" : ""
+                            }`}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              selectAssignedClass(item);
+                              setClassSearchFocused(false);
+                            }}
+                          >
+                            <div>
+                              <strong>
+                                {item.subject.subject_code} —{" "}
+                                {item.section.section_name}
+                              </strong>
+                              <span>
+                                {item.academic_period.academic_year} /{" "}
+                                {item.academic_period.semester_name}
+                              </span>
+                            </div>
+
+                            <small>
+                              {item.subject.subject_name} ·{" "}
+                              {item.section.course.course_code}
+                            </small>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <small>Start typing to see matching assigned classes.</small>
+            </div>
           </div>
         </section>
 
@@ -1347,7 +1787,10 @@ export default function EnterGrades() {
           </section>
         )}
 
-        <section className="faculty-grade-summary" aria-label="Grade status summary">
+        <section
+          className="faculty-grade-summary"
+          aria-label="Grade status summary"
+        >
           <article className="faculty-grade-summary-card faculty-grade-summary-card--total">
             <span className="faculty-grade-summary-icon">
               <UsersRound size={18} />
@@ -1546,11 +1989,13 @@ export default function EnterGrades() {
                       <thead>
                         <tr>
                           <th>Student</th>
-                          <th>Prelim</th>
-                          <th>Midterm</th>
-                          <th>Final</th>
+                          <th>Outcome</th>
+                          <th>Midterm %</th>
+                          <th>Final Term %</th>
+                          <th>Overall %</th>
                           <th>Final Rating</th>
-                          <th>Remarks</th>
+                          <th>Result</th>
+                          <th>Reason</th>
                           <th>Status</th>
                           <th>Program Head Review</th>
                           <th>Actions</th>
@@ -1568,9 +2013,22 @@ export default function EnterGrades() {
                           const busy = isSaving || isSubmitting;
                           const status = getGradeStatus(student);
                           const feedback = rowFeedback[id];
-                          const suggestedRemark = getSuggestedRemark(
-                            form.finalRating,
-                          );
+                          const preview = calculateGradePreview(form);
+
+                          const useStoredResult =
+                            !editable && Boolean(student.grade);
+
+                          const overallPercentage = useStoredResult
+                            ? (student.grade?.overall_percentage ?? null)
+                            : preview.overallPercentage;
+
+                          const finalRating = useStoredResult
+                            ? (student.grade?.final_rating ?? null)
+                            : preview.finalRating;
+
+                          const resultRemark = useStoredResult
+                            ? (student.grade?.remarks ?? null)
+                            : preview.remarks;
 
                           return (
                             <tr
@@ -1591,35 +2049,41 @@ export default function EnterGrades() {
                                     <strong>{student.full_name}</strong>
                                     <span>{student.student_number}</span>
                                     <small>
-                                      Enrollment Subject #{student.enrollment_subject_id}
+                                      Enrollment Subject #
+                                      {student.enrollment_subject_id}
                                     </small>
                                   </div>
                                 </div>
                               </td>
 
                               <td>
-                                <input
-                                  className="faculty-grade-input"
-                                  type="number"
-                                  step="0.01"
-                                  value={form.prelimGrade}
+                                <select
+                                  className="faculty-grade-remarks"
+                                  value={form.gradingOutcome}
                                   onChange={(event) =>
                                     updateForm(
                                       id,
-                                      "prelimGrade",
-                                      event.target.value,
+                                      "gradingOutcome",
+                                      event.target.value as GradeOutcome,
                                     )
                                   }
                                   disabled={!editable || busy}
-                                  placeholder="—"
-                                  aria-label={`Prelim grade for ${student.full_name}`}
-                                />
+                                  aria-label={`Grade outcome for ${student.full_name}`}
+                                >
+                                  <option value="NUMERIC">Numeric Grade</option>
+                                  <option value="INCOMPLETE">Incomplete</option>
+                                  <option value="UNOFFICIAL_DROP">
+                                    Unofficial Drop
+                                  </option>
+                                </select>
                               </td>
 
                               <td>
                                 <input
                                   className="faculty-grade-input"
                                   type="number"
+                                  min="0"
+                                  max="100"
                                   step="0.01"
                                   value={form.midtermGrade}
                                   onChange={(event) =>
@@ -1629,9 +2093,17 @@ export default function EnterGrades() {
                                       event.target.value,
                                     )
                                   }
-                                  disabled={!editable || busy}
-                                  placeholder="—"
-                                  aria-label={`Midterm grade for ${student.full_name}`}
+                                  disabled={
+                                    !editable ||
+                                    busy ||
+                                    form.gradingOutcome !== "NUMERIC"
+                                  }
+                                  placeholder={
+                                    form.gradingOutcome === "NUMERIC"
+                                      ? "0-100"
+                                      : "—"
+                                  }
+                                  aria-label={`Midterm percentage for ${student.full_name}`}
                                 />
                               </td>
 
@@ -1639,6 +2111,8 @@ export default function EnterGrades() {
                                 <input
                                   className="faculty-grade-input"
                                   type="number"
+                                  min="0"
+                                  max="100"
                                   step="0.01"
                                   value={form.finalGrade}
                                   onChange={(event) =>
@@ -1648,54 +2122,76 @@ export default function EnterGrades() {
                                       event.target.value,
                                     )
                                   }
-                                  disabled={!editable || busy}
-                                  placeholder="—"
-                                  aria-label={`Final grade for ${student.full_name}`}
+                                  disabled={
+                                    !editable ||
+                                    busy ||
+                                    form.gradingOutcome !== "NUMERIC"
+                                  }
+                                  placeholder={
+                                    form.gradingOutcome === "NUMERIC"
+                                      ? "0-100"
+                                      : "—"
+                                  }
+                                  aria-label={`Final Term percentage for ${student.full_name}`}
                                 />
                               </td>
 
                               <td>
                                 <div className="faculty-grade-rating-field">
-                                  <input
-                                    className="faculty-grade-input"
-                                    type="number"
-                                    step="0.01"
-                                    value={form.finalRating}
-                                    onChange={(event) =>
-                                      updateForm(
-                                        id,
-                                        "finalRating",
-                                        event.target.value,
-                                      )
-                                    }
-                                    disabled={!editable || busy}
-                                    placeholder="—"
-                                    aria-label={`Final rating for ${student.full_name}`}
-                                  />
-
-                                  {suggestedRemark && (
-                                    <small>
-                                      Suggested: <strong>{suggestedRemark}</strong>
-                                    </small>
-                                  )}
+                                  <strong>
+                                    {overallPercentage !== null
+                                      ? overallPercentage.toFixed(3)
+                                      : "—"}
+                                  </strong>
+                                  <small>Automatic 50/50 average</small>
                                 </div>
                               </td>
 
                               <td>
-                                <select
-                                  className="faculty-grade-remarks"
-                                  value={form.remarks}
-                                  onChange={(event) =>
-                                    updateForm(id, "remarks", event.target.value)
-                                  }
-                                  disabled={!editable || busy}
-                                  aria-label={`Remarks for ${student.full_name}`}
-                                >
-                                  <option value="">Select</option>
-                                  <option value="Passed">Passed</option>
-                                  <option value="Incomplete">Incomplete</option>
-                                  <option value="Failed">Failed</option>
-                                </select>
+                                <div className="faculty-grade-rating-field">
+                                  <strong>
+                                    {finalRating !== null
+                                      ? Number(finalRating).toFixed(2)
+                                      : "—"}
+                                  </strong>
+                                  <small>Automatic</small>
+                                </div>
+                              </td>
+
+                              <td>
+                                <div className="faculty-grade-rating-field">
+                                  <strong>{resultRemark || "—"}</strong>
+                                  <small>Calculated by policy</small>
+                                </div>
+                              </td>
+
+                              <td>
+                                {form.gradingOutcome === "NUMERIC" ? (
+                                  <span className="faculty-grade-no-review">
+                                    Not required
+                                  </span>
+                                ) : (
+                                  <input
+                                    className="faculty-grade-remarks"
+                                    type="text"
+                                    maxLength={500}
+                                    value={form.outcomeReason}
+                                    onChange={(event) =>
+                                      updateForm(
+                                        id,
+                                        "outcomeReason",
+                                        event.target.value,
+                                      )
+                                    }
+                                    disabled={!editable || busy}
+                                    placeholder={
+                                      form.gradingOutcome === "INCOMPLETE"
+                                        ? "Reason for incomplete..."
+                                        : "Reason for unofficial drop..."
+                                    }
+                                    aria-label={`Outcome reason for ${student.full_name}`}
+                                  />
+                                )}
                               </td>
 
                               <td>
@@ -1711,7 +2207,9 @@ export default function EnterGrades() {
                                   {student.grade?.submitted_at && (
                                     <small>
                                       Submitted{" "}
-                                      {formatDateTime(student.grade.submitted_at)}
+                                      {formatDateTime(
+                                        student.grade.submitted_at,
+                                      )}
                                     </small>
                                   )}
                                 </div>
@@ -1727,9 +2225,12 @@ export default function EnterGrades() {
                                     <div>
                                       <strong>
                                         {student.grade.review
-                                          .reviewed_by_username || "Program Head"}
+                                          .reviewed_by_username ||
+                                          "Program Head"}
                                       </strong>
-                                      <p>{student.grade.review.review_remarks}</p>
+                                      <p>
+                                        {student.grade.review.review_remarks}
+                                      </p>
                                       <small>
                                         {formatDateTime(
                                           student.grade.review.reviewed_at,
@@ -1737,7 +2238,8 @@ export default function EnterGrades() {
                                       </small>
                                     </div>
                                   </div>
-                                ) : student.grade?.grade_status === "Approved" ? (
+                                ) : student.grade?.grade_status ===
+                                  "Approved" ? (
                                   <div className="faculty-grade-review approved">
                                     <span className="faculty-grade-review__icon">
                                       <CheckCircle2 size={14} />
@@ -1781,7 +2283,9 @@ export default function EnterGrades() {
                                       <button
                                         type="button"
                                         className="faculty-grade-submit"
-                                        onClick={() => void submitGrade(student)}
+                                        onClick={() =>
+                                          void submitGrade(student)
+                                        }
                                         disabled={busy}
                                       >
                                         <Send size={13} />
@@ -1792,6 +2296,47 @@ export default function EnterGrades() {
                                             ? "Resubmit"
                                             : "Submit Grade"}
                                       </button>
+                                    </>
+                                  ) : isApprovedIncomplete(student) &&
+                                    student.inc_completion_request ? (
+                                    <>
+                                      <span
+                                        className={`faculty-grade-inc-request-status ${getIncCompletionStatusClass(
+                                          student.inc_completion_request,
+                                        )}`}
+                                      >
+                                        <Clock3 size={13} />
+                                        {getIncCompletionStatusLabel(
+                                          student.inc_completion_request,
+                                        )}
+                                      </span>
+
+                                      <span className="faculty-grade-locked">
+                                        <ShieldCheck size={13} />
+                                        Approved INC · Request #
+                                        {
+                                          student.inc_completion_request
+                                            .grade_change_request_id
+                                        }
+                                      </span>
+                                    </>
+                                  ) : isApprovedIncomplete(student) ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="faculty-grade-inc-complete"
+                                        onClick={() =>
+                                          openIncCompletion(student)
+                                        }
+                                      >
+                                        <FilePenLine size={13} />
+                                        Complete INC
+                                      </button>
+
+                                      <span className="faculty-grade-locked">
+                                        <ShieldCheck size={13} />
+                                        Approved INC
+                                      </span>
                                     </>
                                   ) : (
                                     <span className="faculty-grade-locked">
@@ -1847,7 +2392,12 @@ export default function EnterGrades() {
                 </span>
                 <div>
                   <strong>Encode</strong>
-                  <p>Enter grading components, final rating, and remarks.</p>
+                  <p>
+                    Choose Numeric Grade for normal 0–100 Midterm and Final Term
+                    encoding, or choose Incomplete / Unofficial Drop and provide
+                    a required reason. Final Rating and Result are calculated
+                    automatically by policy.
+                  </p>
                 </div>
               </article>
 
@@ -1858,7 +2408,9 @@ export default function EnterGrades() {
                 </span>
                 <div>
                   <strong>Save Draft</strong>
-                  <p>Keep unfinished grade records editable before submission.</p>
+                  <p>
+                    Keep unfinished grade records editable before submission.
+                  </p>
                 </div>
               </article>
 
@@ -1869,7 +2421,9 @@ export default function EnterGrades() {
                 </span>
                 <div>
                   <strong>Submit</strong>
-                  <p>Lock the grade and send it to the Program Head for review.</p>
+                  <p>
+                    Lock the grade and send it to the Program Head for review.
+                  </p>
                 </div>
               </article>
 
@@ -1880,11 +2434,200 @@ export default function EnterGrades() {
                 </span>
                 <div>
                   <strong>Review</strong>
-                  <p>The Program Head approves the grade or returns it for correction.</p>
+                  <p>
+                    The Program Head approves the grade or returns it for
+                    correction.
+                  </p>
                 </div>
               </article>
             </div>
           </section>
+        )}
+
+        {incStudent && (
+          <div
+            className="faculty-inc-modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeIncCompletion();
+              }
+            }}
+          >
+            <section
+              className="faculty-inc-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="faculty-inc-modal-title"
+            >
+              <header className="faculty-inc-modal__header">
+                <div>
+                  <span>INC Completion</span>
+                  <h2 id="faculty-inc-modal-title">
+                    Complete Incomplete Grade
+                  </h2>
+                  <p>
+                    Enter the completed numeric grades after verifying the
+                    student's missing course requirement.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="faculty-inc-modal__close"
+                  onClick={closeIncCompletion}
+                  disabled={incSubmitting}
+                  aria-label="Close INC completion modal"
+                >
+                  <X size={18} />
+                </button>
+              </header>
+
+              <div className="faculty-inc-modal__student">
+                <div>
+                  <small>Student</small>
+                  <strong>{incStudent.full_name}</strong>
+                  <span>{incStudent.student_number}</span>
+                </div>
+
+                <div>
+                  <small>Current Official Grade</small>
+                  <strong>4.00 — Incomplete</strong>
+                  <span>
+                    {incStudent.grade?.outcome_reason ||
+                      "No incomplete reason recorded."}
+                  </span>
+                </div>
+              </div>
+
+              <div className="faculty-inc-modal__form">
+                <label>
+                  <span>Midterm Grade</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={incForm.midtermGrade}
+                    onChange={(event) =>
+                      setIncForm((current) => ({
+                        ...current,
+                        midtermGrade: event.target.value,
+                      }))
+                    }
+                    disabled={incSubmitting}
+                    placeholder="0-100"
+                  />
+                </label>
+
+                <label>
+                  <span>Final Term Grade</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={incForm.finalGrade}
+                    onChange={(event) =>
+                      setIncForm((current) => ({
+                        ...current,
+                        finalGrade: event.target.value,
+                      }))
+                    }
+                    disabled={incSubmitting}
+                    placeholder="0-100"
+                  />
+                </label>
+              </div>
+
+              <div className="faculty-inc-modal__preview">
+                <div>
+                  <small>Overall</small>
+                  <strong>
+                    {incPreview.overallPercentage !== null
+                      ? incPreview.overallPercentage.toFixed(2)
+                      : "—"}
+                  </strong>
+                </div>
+
+                <div>
+                  <small>Final Rating</small>
+                  <strong>
+                    {incPreview.finalRating !== null
+                      ? incPreview.finalRating.toFixed(2)
+                      : "—"}
+                  </strong>
+                </div>
+
+                <div>
+                  <small>Result</small>
+                  <strong>{incPreview.remarks || "—"}</strong>
+                </div>
+              </div>
+
+              <label className="faculty-inc-modal__remarks">
+                <span>Completion Remarks</span>
+                <textarea
+                  value={incForm.completionRemarks}
+                  onChange={(event) =>
+                    setIncForm((current) => ({
+                      ...current,
+                      completionRemarks: event.target.value,
+                    }))
+                  }
+                  disabled={incSubmitting}
+                  rows={4}
+                  maxLength={1000}
+                  placeholder="Example: Student completed and passed the missing final activity submitted through Google Drive."
+                />
+                <small>
+                  Describe the completed requirement that you verified.
+                </small>
+              </label>
+
+              {incError && (
+                <div className="faculty-inc-modal__error" role="alert">
+                  <AlertCircle size={16} />
+                  <span>{incError}</span>
+                </div>
+              )}
+
+              <div className="faculty-inc-modal__notice">
+                <ShieldCheck size={17} />
+                <p>
+                  Submitting this does not immediately change the student's
+                  official grade. The request will first be sent to the Program
+                  Head for review, then to the Registrar for official
+                  processing.
+                </p>
+              </div>
+
+              <footer className="faculty-inc-modal__footer">
+                <button
+                  type="button"
+                  className="faculty-inc-modal__cancel"
+                  onClick={closeIncCompletion}
+                  disabled={incSubmitting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="faculty-inc-modal__submit"
+                  onClick={() => void submitIncCompletion()}
+                  disabled={
+                    incSubmitting ||
+                    !incPreview.complete ||
+                    !incForm.completionRemarks.trim()
+                  }
+                >
+                  <Send size={15} />
+                  {incSubmitting ? "Submitting..." : "Send to Program Head"}
+                </button>
+              </footer>
+            </section>
+          </div>
         )}
       </main>
     </DashboardLayout>

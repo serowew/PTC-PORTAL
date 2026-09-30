@@ -15,9 +15,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminCreateUser.css";
 
-const API_BASE_URL = "http://localhost:3000/api/users";
+const API_BASE_URL = apiUrl("/api/users");
 
 interface CreateUserResponse {
   success?: boolean;
@@ -31,6 +32,7 @@ const USER_ROLES = [
   "Registrar",
   "Faculty",
   "Program Head",
+  "Finance",
   "Student",
 ] as const;
 
@@ -394,7 +396,9 @@ export default function CreateUser() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     disabled={loading}
                   >
                     {showPassword ? (

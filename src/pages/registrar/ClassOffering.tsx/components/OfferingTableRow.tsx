@@ -1,179 +1,385 @@
-import OfferingTableRow from "./OfferingTableRow";
+import {
+  BookOpen,
+  Clock3,
+  Edit3,
+  Power,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 
-// =====================================================
-// TYPES
-// =====================================================
-
-interface OfferingFaculty {
-  faculty_id: number;
-  faculty_name: string;
-}
-
-interface OfferingRoom {
-  room_id: number;
-  room_name: string;
-  room_code?: string | null;
-}
-
-interface OfferingSchedule {
-  days: string | null;
-  time: string | null;
-}
-
-interface OfferingCapacity {
-  max_students: number;
-  enrolled_count: number;
-  available_slots: number;
-  is_full: boolean;
-}
-
-interface Offering {
-  offering_id: number;
-  status: "Open" | "Closed" | "Cancelled";
-  faculty: OfferingFaculty | null;
-  room: OfferingRoom | null;
-  schedule: OfferingSchedule;
-  capacity: OfferingCapacity;
-}
-
-interface SectionSubject {
-  section_subject_id: number;
-  status: "Open" | "Closed" | "Cancelled";
-  max_students: number | null;
-}
-
-interface SubjectInfo {
-  subject_id: number;
-  subject_code: string;
-  subject_name: string;
-  units: number;
-  lecture_hours?: number;
-  laboratory_hours?: number;
-  is_required?: boolean;
-  display_order?: number | null;
-}
-
-export interface OfferingTableSubject {
-  curriculum_subject_id: number | null;
-  subject: SubjectInfo;
-  section_subject: SectionSubject | null;
-  offering: Offering | null;
-  has_section_subject: boolean;
-  has_offering: boolean;
-  configuration_complete: boolean;
-  ready_for_enrollment: boolean;
-  missing_configuration: string[];
-}
+import type { OfferingTableSubject } from "./OfferingTable";
 
 // =====================================================
 // PROPS
 // =====================================================
 
-interface OfferingTableProps {
-  subjects: OfferingTableSubject[];
+interface OfferingTableRowProps {
+  item: OfferingTableSubject;
+
   onCreateOffering: (subject: OfferingTableSubject) => void;
+
   onEditOffering: (subject: OfferingTableSubject) => void;
+
   onOfferingStatus: (subject: OfferingTableSubject) => void;
+
   onSectionSubjectStatus: (subject: OfferingTableSubject) => void;
 }
 
 // =====================================================
-// ROW KEY
+// STATUS
 // =====================================================
 
-function getRowKey(item: OfferingTableSubject) {
-  if (item.curriculum_subject_id !== null) {
-    return `curriculum-${item.curriculum_subject_id}`;
+function getStatusLabel(item: OfferingTableSubject) {
+  const sectionSubject = item.section_subject;
+  const offering = item.offering;
+
+  if (!item.has_section_subject || !sectionSubject) {
+    return "NO SECTION SUBJECT";
   }
 
-  if (item.section_subject?.section_subject_id) {
-    return `section-subject-${item.section_subject.section_subject_id}`;
+  if (sectionSubject.status === "Cancelled") {
+    return "SECTION CANCELLED";
   }
 
-  if (item.offering?.offering_id) {
-    return `offering-${item.offering.offering_id}`;
+  if (!item.has_offering || !offering) {
+    return "NO OFFERING";
   }
 
-  return `subject-${item.subject.subject_id}`;
+  if (offering.status === "Cancelled") {
+    return "CANCELLED";
+  }
+
+  if (sectionSubject.status !== "Open") {
+    return "SECTION CLOSED";
+  }
+
+  if (item.ready_for_enrollment) {
+    return "READY";
+  }
+
+  if (!item.configuration_complete) {
+    return "INCOMPLETE";
+  }
+
+  if (offering.status === "Closed") {
+    return "CONFIGURED";
+  }
+
+  return "NOT READY";
+}
+
+// =====================================================
+// STATUS CLASS
+// =====================================================
+
+function getStatusClassName(status: string) {
+  switch (status) {
+    case "READY":
+      return "ready";
+
+    case "CONFIGURED":
+      return "closed";
+
+    case "NO OFFERING":
+      return "no-offering";
+
+    case "NO SECTION SUBJECT":
+      return "no-section-subject";
+
+    case "INCOMPLETE":
+      return "incomplete";
+
+    case "CANCELLED":
+      return "cancelled";
+
+    case "SECTION CLOSED":
+      return "section-closed";
+
+    case "SECTION CANCELLED":
+      return "section-cancelled";
+
+    default:
+      return "not-ready";
+  }
 }
 
 // =====================================================
 // COMPONENT
 // =====================================================
 
-export default function OfferingTable({
-  subjects,
+export default function OfferingTableRow({
+  item,
   onCreateOffering,
   onEditOffering,
   onOfferingStatus,
   onSectionSubjectStatus,
-}: OfferingTableProps) {
-  const isSpecialTable =
-    subjects.length > 0 &&
-    subjects.every((item) => item.curriculum_subject_id === null);
+}: OfferingTableRowProps) {
+  const subject = item.subject;
 
-  const tableContent = (
-    <div className="class-offering-table-wrapper">
-      <table className="class-offering-table">
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>Faculty</th>
-            <th>Schedule &amp; Room</th>
-            <th>Capacity</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+  const sectionSubject = item.section_subject;
 
-        <tbody>
-          {subjects.length === 0 && (
-            <tr>
-              <td colSpan={6}>
-                <div className="class-offering-table-empty">
-                  No curriculum subjects found for this academic setup.
-                </div>
-              </td>
-            </tr>
-          )}
+  const offering = item.offering;
 
-          {subjects.map((item) => (
-            <OfferingTableRow
-              key={getRowKey(item)}
-              item={item}
-              onCreateOffering={onCreateOffering}
-              onEditOffering={onEditOffering}
-              onOfferingStatus={onOfferingStatus}
-              onSectionSubjectStatus={onSectionSubjectStatus}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const capacity = offering?.capacity;
+
+  // =====================================================
+  // STATUS
+  // =====================================================
+
+  const statusLabel = getStatusLabel(item);
+
+  const statusClassName = getStatusClassName(statusLabel);
+
+  // =====================================================
+  // TERMINAL STATES
+  // =====================================================
+
+  const sectionSubjectCancelled = sectionSubject?.status === "Cancelled";
+
+  const offeringCancelled = offering?.status === "Cancelled";
+
+  // =====================================================
+  // DISPLAY VALUES
+  // =====================================================
+
+  const facultyName = offering?.faculty?.faculty_name || "Not assigned";
+
+  const facultyRole = offering?.faculty?.role_name || null;
+
+  const scheduleDays = offering?.schedule?.days?.trim() || null;
+
+  const scheduleTime = offering?.schedule?.time?.trim() || null;
+
+  const hasSchedule = Boolean(scheduleDays) && Boolean(scheduleTime);
+
+  // =====================================================
+  // CAPACITY
+  // =====================================================
+
+  const maxStudents = Number(
+    capacity?.max_students ?? sectionSubject?.max_students ?? 0,
   );
 
-  if (isSpecialTable) {
-    return tableContent;
-  }
+  const enrolledCount = Number(capacity?.enrolled_count ?? 0);
+
+  const availableSlots = Number(
+    capacity?.available_slots ?? Math.max(maxStudents - enrolledCount, 0),
+  );
+
+  const isFull =
+    capacity?.is_full ?? (maxStudents > 0 && enrolledCount >= maxStudents);
+
+  const capacityPercent =
+    maxStudents > 0
+      ? Math.min(
+          100,
+          Math.max(0, Math.round((enrolledCount / maxStudents) * 100)),
+        )
+      : 0;
+
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
-    <section className="class-offering-section">
-      <div className="class-offering-section-header">
-        <div>
-          <div className="class-offering-section-kicker">Curriculum Plan</div>
-          <h2>Curriculum Class Offerings</h2>
-          <p>
-            Every expected curriculum subject is shown, including subjects that
-            still need a section-subject record or a class offering.
-          </p>
+    <tr>
+      {/* SUBJECT */}
+
+      <td>
+        <div className="class-offering-subject-cell">
+          <span className="class-offering-subject-code">
+            {subject?.subject_code || "—"}
+          </span>
+
+          <div className="class-offering-subject-copy">
+            <strong>{subject?.subject_name || "Unknown Subject"}</strong>
+
+            <span>
+              {Number(subject?.units || 0)} unit
+              {Number(subject?.units || 0) === 1 ? "" : "s"}
+              {typeof subject?.is_required === "boolean"
+                ? ` • ${subject.is_required ? "Required" : "Elective"}`
+                : ""}
+            </span>
+          </div>
         </div>
+      </td>
 
-        <span className="class-offering-section-count">
-          {subjects.length} subject{subjects.length === 1 ? "" : "s"}
-        </span>
-      </div>
+      {/* INSTRUCTOR */}
 
-      {tableContent}
-    </section>
+      <td>
+        <div className="class-offering-meta-line">
+          <UserRound size={15} aria-hidden="true" />
+
+          <span>
+            <strong>{facultyName}</strong>
+
+            {facultyRole && <small>{facultyRole}</small>}
+          </span>
+        </div>
+      </td>
+
+      {/* SCHEDULE */}
+
+      <td>
+        <div className="class-offering-schedule-cell">
+          <div className="class-offering-meta-line">
+            <Clock3 size={15} aria-hidden="true" />
+
+            {hasSchedule ? (
+              <span>
+                <strong>{scheduleDays}</strong>
+
+                <small>{scheduleTime}</small>
+              </span>
+            ) : offering?.faculty ? (
+              <span>
+                <strong>Pending Instructor Schedule</strong>
+
+                <small>
+                  Assigned instructor must set the class day and time.
+                </small>
+              </span>
+            ) : (
+              <span>
+                <strong>No Schedule</strong>
+
+                <small>Assign an instructor first.</small>
+              </span>
+            )}
+          </div>
+        </div>
+      </td>
+
+      {/* CAPACITY */}
+
+      <td>
+        {capacity ? (
+          <div className="class-offering-capacity-cell">
+            <div className="class-offering-capacity-value">
+              <strong>{enrolledCount}</strong>
+
+              <span>/ {maxStudents}</span>
+
+              {isFull && <em>Full</em>}
+            </div>
+
+            <div className="class-offering-capacity-track" aria-hidden="true">
+              <span
+                style={{
+                  width: `${capacityPercent}%`,
+                }}
+              />
+            </div>
+
+            <small>
+              {availableSlots} slot
+              {availableSlots === 1 ? "" : "s"} available
+            </small>
+          </div>
+        ) : (
+          <div className="class-offering-capacity-cell">
+            <strong>{sectionSubject?.max_students ?? "—"}</strong>
+
+            <small>Section capacity</small>
+          </div>
+        )}
+      </td>
+
+      {/* STATUS */}
+
+      <td>
+        <div className="class-offering-status-stack">
+          <span className={`class-offering-status-badge ${statusClassName}`}>
+            {statusLabel}
+          </span>
+
+          {sectionSubject && <small>Section: {sectionSubject.status}</small>}
+        </div>
+      </td>
+
+      {/* ACTIONS */}
+
+      <td>
+        {!item.has_section_subject || !sectionSubject ? (
+          <span className="class-offering-action-note">
+            Section subject missing
+          </span>
+        ) : sectionSubjectCancelled ? (
+          <span className="class-offering-action-note">
+            No actions available
+          </span>
+        ) : !item.has_offering || !offering ? (
+          <div className="class-offering-actions">
+            <button
+              type="button"
+              className="class-offering-action-button class-offering-action-button--primary"
+              onClick={() => onCreateOffering(item)}
+            >
+              <BookOpen size={14} aria-hidden="true" />
+              Create
+            </button>
+
+            <button
+              type="button"
+              className="class-offering-action-button"
+              onClick={() => onSectionSubjectStatus(item)}
+            >
+              <ShieldCheck size={14} aria-hidden="true" />
+              Section Status
+            </button>
+          </div>
+        ) : offeringCancelled ? (
+          <div className="class-offering-actions">
+            <button
+              type="button"
+              className="class-offering-action-button"
+              onClick={() => onOfferingStatus(item)}
+            >
+              <Power size={14} aria-hidden="true" />
+              Offering Status
+            </button>
+
+            <button
+              type="button"
+              className="class-offering-action-button"
+              onClick={() => onSectionSubjectStatus(item)}
+            >
+              <ShieldCheck size={14} aria-hidden="true" />
+              Section Status
+            </button>
+          </div>
+        ) : (
+          <div className="class-offering-actions">
+            <button
+              type="button"
+              className="class-offering-action-button class-offering-action-button--primary"
+              onClick={() => onEditOffering(item)}
+            >
+              <Edit3 size={14} aria-hidden="true" />
+              Reassign
+            </button>
+
+            <button
+              type="button"
+              className="class-offering-action-button"
+              onClick={() => onOfferingStatus(item)}
+            >
+              <Power size={14} aria-hidden="true" />
+              Status
+            </button>
+
+            <button
+              type="button"
+              className="class-offering-action-button"
+              onClick={() => onSectionSubjectStatus(item)}
+            >
+              <ShieldCheck size={14} aria-hidden="true" />
+              Section
+            </button>
+          </div>
+        )}
+      </td>
+    </tr>
   );
 }

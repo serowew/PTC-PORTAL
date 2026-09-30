@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 import { authService } from "../../services/auth.service";
 
@@ -10,13 +11,60 @@ export default function LoginForm() {
   // STATE
   // =====================================================
 
+  const showDevLogin = import.meta.env.DEV;
+
   const [username, setUsername] = useState("");
 
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const [cooldownSeconds, setCooldownSeconds] = useState(() => {
+    return authService.getLoginCooldownRemaining();
+  });
+
+  // =====================================================
+  // LIVE LOGIN COOLDOWN COUNTDOWN
+  // =====================================================
+
+  useEffect(() => {
+    const syncCountdown = () => {
+      setCooldownSeconds(
+        authService.getLoginCooldownRemaining(),
+      );
+    };
+
+    syncCountdown();
+
+    const intervalId = window.setInterval(
+      syncCountdown,
+      1000,
+    );
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  function formatLoginCooldown(totalSeconds: number) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  const cooldownMessage =
+    cooldownSeconds > 0
+      ? `Too many failed login attempts. Try again in ${formatLoginCooldown(
+          cooldownSeconds,
+        )}.`
+      : "";
+
+  const displayError = cooldownMessage || error;
 
   // =====================================================
   // ROUTER
@@ -62,6 +110,15 @@ export default function LoginForm() {
     // =====================================================
 
     const cleanUsername = username.trim();
+
+    const remainingCooldown =
+      authService.getLoginCooldownRemaining();
+
+    if (remainingCooldown > 0) {
+      setCooldownSeconds(remainingCooldown);
+      setError("");
+      return;
+    }
 
     // =====================================================
     // FRONTEND VALIDATION
@@ -161,12 +218,28 @@ export default function LoginForm() {
         replace: true,
       });
     } catch (err) {
-      console.error("LOGIN ERROR:", err);
+  console.error("LOGIN ERROR:", err);
 
-      setError(err instanceof Error ? err.message : "Login failed.");
-    } finally {
-      setLoading(false);
-    }
+  // Clear the incorrect password after a failed login.
+  setPassword("");
+  setShowPassword(false);
+
+  const remaining =
+    authService.getLoginCooldownRemaining();
+
+  if (remaining > 0) {
+    setCooldownSeconds(remaining);
+    setError("");
+  } else {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Login failed.",
+    );
+  }
+} finally {
+  setLoading(false);
+}
   }
 
   // =====================================================
@@ -340,8 +413,13 @@ export default function LoginForm() {
     // Let the backend/database determine the username.
     // =====================================================
 
-    setUsername(e.target.value);
+    const nextUsername = e.target.value;
 
+    setUsername(nextUsername);
+
+    // IMPORTANT:
+    // Changing the username does NOT remove or alter
+    // the active login cooldown.
     if (error) {
       setError("");
     }
@@ -438,25 +516,59 @@ export default function LoginForm() {
 
             <div className={styles.inputgroup}>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder=" "
                 value={password}
                 onChange={handlePasswordChange}
                 disabled={loading}
                 required
                 autoComplete="current-password"
+                style={{ paddingRight: "52px" }}
               />
 
               <label>Password</label>
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                disabled={loading}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "12px",
+                  transform: "translateY(-50%)",
+                  width: "34px",
+                  height: "34px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                  border: 0,
+                  borderRadius: "7px",
+                  background: "transparent",
+                  color: "#52645a",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.55 : 1,
+                  zIndex: 2,
+                }}
+              >
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
             </div>
 
             {/* ======================================
                 ERROR
             ====================================== */}
 
-            {error && (
-              <p key={error} className={styles.errorMsg}>
-                {error}
+            {displayError && (
+              <p
+                key={displayError}
+                className={styles.errorMsg}
+                aria-live="polite"
+              >
+                {displayError}
               </p>
             )}
 
@@ -466,10 +578,21 @@ export default function LoginForm() {
 
             <button
               type="submit"
-              disabled={loading || !username.trim() || !password}
+              disabled={
+                loading ||
+                cooldownSeconds > 0 ||
+                !username.trim() ||
+                !password
+              }
               className={`${styles.submitBtn} ${loading ? styles.loading : ""}`}
             >
-              {loading ? "Sending OTP..." : "Login"}
+              {loading
+                ? "Sending OTP..."
+                : cooldownSeconds > 0
+                  ? `Try again in ${formatLoginCooldown(
+                      cooldownSeconds,
+                    )}`
+                  : "Login"}
             </button>
           </form>
 
@@ -477,90 +600,140 @@ export default function LoginForm() {
               FORGOT PASSWORD
           ======================================== */}
 
-          <div className={styles.authlinks}>
-            <a href="#">Forgot password?</a>
-          </div>
-
-          {/* ========================================
-              DEVELOPMENT LOGIN
-          ======================================== */}
-
-          <div
-            style={{
-              marginTop: "20px",
-            }}
-          >
-            <h4>For Development Access</h4>
-
-            <div className={styles.devButtons}>
-              {/* ================================
-                  ADMIN
-              ================================ */}
-
+            <div className={styles.authlinks}>
               <button
                 type="button"
-                className={styles.devBtn}
+                onClick={() => navigate("/forgot-password")}
                 disabled={loading}
-                onClick={() => handleDevLogin("admin")}
               >
-                Login as Admin
+                Forgot password?
               </button>
+            </div>
 
-              {/* ================================
-                  REGISTRAR
-              ================================ */}
+        {/* ========================================
+    DEVELOPMENT LOGIN
+======================================== */}
 
-              <button
-                type="button"
-                className={styles.devBtn}
-                disabled={loading}
-                onClick={() => handleDevLogin("registrar")}
-              >
-                Login as Registrar
-              </button>
+{showDevLogin && (
+  <div
+    style={{
+      marginTop: "20px",
+    }}
+  >
+    <h4>
+      For Development Access
+    </h4>
 
-              {/* ================================
-                  PROGRAM HEAD
-              ================================ */}
+    <div className={styles.devButtons}>
 
-              <button
-                type="button"
-                className={styles.devBtn}
-                disabled={loading}
-                onClick={() => handleDevLogin("proghead")}
-              >
-                Login as Program Head
-              </button>
+      {/* ADMIN */}
 
-              {/* ================================
-                  FACULTY
-              ================================ */}
+      <button
+        type="button"
+        className={styles.devBtn}
+        disabled={loading}
+        onClick={() =>
+          handleDevLogin("admin")
+        }
+      >
+        Login as Admin
+      </button>
 
-              <button
-                type="button"
-                className={styles.devBtn}
-                disabled={loading}
-                onClick={() => handleDevLogin("faculty")}
-              >
-                Login as Faculty
-              </button>
+      {/* REGISTRAR */}
 
-              {/* ================================
-                  STUDENT
-              ================================ */}
+      <button
+        type="button"
+        className={styles.devBtn}
+        disabled={loading}
+        onClick={() =>
+          handleDevLogin("registrar")
+        }
+      >
+        Login as Registrar
+      </button>
 
-              <button
-                type="button"
-                className={styles.devBtn}
-                disabled={loading}
-                onClick={() => handleDevLogin("26BSIT-0008")}
-              >
-                Login as Student
-              </button>
+      {/* PROGRAM HEAD */}
+
+      <button
+        type="button"
+        className={styles.devBtn}
+        disabled={loading}
+        onClick={() =>
+          handleDevLogin("proghead")
+        }
+      >
+        Login as Program Head
+      </button>
+
+      {/* FACULTY */}
+
+      <button
+        type="button"
+        className={styles.devBtn}
+        disabled={loading}
+        onClick={() =>
+          handleDevLogin("faculty")
+        }
+      >
+        Login as Faculty
+      </button>
+
+      {/* STUDENT */}
+
+      <button
+        type="button"
+        className={styles.devBtn}
+        disabled={loading}
+        onClick={() =>
+          handleDevLogin(
+            "26BSIT-0008",
+          )
+        }
+      >
+        Login as Student
+      </button>
+
+      {/* FINANCE */}
+
+      <button
+        type="button"
+        className={styles.devBtn}
+        disabled={loading}
+        onClick={() =>
+          handleDevLogin(
+            "FINANCE CASIER",
+          )
+        }
+      >
+        Login as Finance
+      </button>
+
+    </div>
+  </div>
+)}
+        </div>
+      </div>
+
+      {loading && (
+        <div
+          className={styles.loginLoadingOverlay}
+          role="status"
+          aria-live="polite"
+          aria-label="Signing you in"
+        >
+          <div className={styles.loginLoadingPanel}>
+            <span
+              className={styles.loginLoadingSpinner}
+              aria-hidden="true"
+            />
+
+            <div className={styles.loginLoadingText}>
+              <strong>Signing you in</strong>
+              <span>Sending your OTP. Please wait...</span>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

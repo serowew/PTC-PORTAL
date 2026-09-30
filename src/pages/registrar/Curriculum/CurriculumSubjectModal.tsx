@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   BookOpen,
   CheckCircle2,
@@ -15,9 +10,10 @@ import {
 } from "lucide-react";
 
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/CurriculumSubjectModal.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/curriculums";
+const API_BASE_URL = apiUrl("/api/registrar/curriculums");
 
 interface CurriculumSubject {
   curriculum_subject_id: number;
@@ -245,9 +241,8 @@ export default function CurriculumSubjectModal({
 
   const selectedAvailableSubject = useMemo(
     () =>
-      availableSubjects.find(
-        (item) => String(item.subject_id) === subjectId,
-      ) ?? null,
+      availableSubjects.find((item) => String(item.subject_id) === subjectId) ??
+      null,
     [availableSubjects, subjectId],
   );
 
@@ -436,12 +431,17 @@ export default function CurriculumSubjectModal({
                   </div>
                   <div>
                     <h3>Select Subject</h3>
-                    <p>Only subjects not yet mapped to this curriculum are listed.</p>
+                    <p>
+                      Only subjects not yet mapped to this curriculum are
+                      listed.
+                    </p>
                   </div>
                 </div>
 
                 <div className="registrar-curriculum-subject-modal__field">
-                  <label htmlFor="curriculum-subject-search">Find subject</label>
+                  <label htmlFor="curriculum-subject-search">
+                    Find subject
+                  </label>
                   <div className="registrar-curriculum-subject-modal__search">
                     <Search size={16} />
                     <input
@@ -504,7 +504,10 @@ export default function CurriculumSubjectModal({
                   </div>
                   <div>
                     <h3>Selected Subject</h3>
-                    <p>The subject itself cannot be changed while editing this mapping.</p>
+                    <p>
+                      The subject itself cannot be changed while editing this
+                      mapping.
+                    </p>
                   </div>
                 </div>
               </section>
@@ -599,7 +602,10 @@ export default function CurriculumSubjectModal({
                 </div>
                 <div>
                   <h3>Units & Contact Hours</h3>
-                  <p>These values are auto-filled when adding a subject and can be adjusted for this curriculum mapping.</p>
+                  <p>
+                    These values are auto-filled when adding a subject and can
+                    be adjusted for this curriculum mapping.
+                  </p>
                 </div>
               </div>
 

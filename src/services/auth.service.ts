@@ -1,5 +1,6 @@
-const API_BASE_URL = "http://localhost:3000";
+import { API_BASE_URL } from "./api";
 
+export { API_BASE_URL };
 // ======================
 // User Roles
 // ======================
@@ -9,6 +10,7 @@ export type UserRole =
   | "Registrar"
   | "Program Head"
   | "Faculty"
+  | "Finance"
   | "Student";
 
 // ======================
@@ -28,6 +30,35 @@ export interface User {
 // ======================
 
 export interface LoginResponse {
+  message: string;
+}
+
+export interface ResendOtpResponse {
+  success?: boolean;
+  message: string;
+  cooldown_seconds?: number;
+  retry_after?: number;
+}
+
+// ======================
+// Forgot Password
+// ======================
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+  requestId: string;
+}
+
+export interface VerifyResetOtpResponse {
+  success: boolean;
+  message: string;
+  verified: boolean;
+  resetToken: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
   message: string;
 }
 
@@ -78,6 +109,7 @@ const VALID_ROLES: UserRole[] = [
   "Registrar",
   "Program Head",
   "Faculty",
+  "Finance",
   "Student",
 ];
 
@@ -120,6 +152,43 @@ function mapBackendUser(user: BackendUser): User {
   };
 }
 
+const LOGIN_COOLDOWN_UNTIL_KEY = "login_cooldown_until";
+
+function saveLoginCooldownState(lockedUntil: number): void {
+  sessionStorage.setItem(
+    LOGIN_COOLDOWN_UNTIL_KEY,
+    String(Math.max(0, Math.floor(lockedUntil))),
+  );
+}
+
+function getLoginCooldownRemainingState(): number {
+  const storedUntil = sessionStorage.getItem(LOGIN_COOLDOWN_UNTIL_KEY);
+
+  if (!storedUntil) {
+    return 0;
+  }
+
+  const lockedUntil = Number(storedUntil);
+
+  if (!Number.isFinite(lockedUntil) || lockedUntil <= 0) {
+    sessionStorage.removeItem(LOGIN_COOLDOWN_UNTIL_KEY);
+    return 0;
+  }
+
+  const remaining = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
+
+  if (remaining <= 0) {
+    sessionStorage.removeItem(LOGIN_COOLDOWN_UNTIL_KEY);
+    return 0;
+  }
+
+  return remaining;
+}
+
+function clearLoginCooldownState(): void {
+  sessionStorage.removeItem(LOGIN_COOLDOWN_UNTIL_KEY);
+}
+
 // ======================
 // Authentication Service
 // ======================
@@ -151,6 +220,7 @@ export const authService = {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("pending_username");
+    sessionStorage.removeItem("otp_resend_available_at");
 
     // =====================================================
     // NORMALIZE USERNAME
@@ -191,6 +261,9 @@ export const authService = {
     const data: LoginResponse & {
       error?: string;
       success?: boolean;
+      locked?: boolean;
+      retry_after?: number;
+      attempts_remaining?: number;
     } = await response.json();
 
     // =====================================================
@@ -198,7 +271,19 @@ export const authService = {
     // =====================================================
 
     if (!response.ok) {
-      throw new Error(data.error || data.message || "Login failed.");
+      const message = data.error || data.message || "Login failed.";
+
+      const retryAfter =
+        Number.isFinite(Number(data.retry_after)) &&
+        Number(data.retry_after) > 0
+          ? Number(data.retry_after)
+          : 0;
+
+      if ((response.status === 429 || data.locked === true) && retryAfter > 0) {
+        saveLoginCooldownState(Date.now() + retryAfter * 1000);
+      }
+
+      throw new Error(message);
     }
 
     // =====================================================
@@ -207,7 +292,68 @@ export const authService = {
     // Save ONLY the username currently waiting for OTP.
     // =====================================================
 
+    clearLoginCooldownState();
     this.savePendingUsername(cleanUsername);
+    this.saveOtpResendAvailableAt(Date.now() + 60_000);
+
+    return data;
+  },
+
+  // =====================================================
+  // RESEND OTP
+  //
+  // POST /auth/resend-otp
+  //
+  // The backend enforces the real 60-second cooldown.
+  // =====================================================
+
+  async resendOtp(username: string): Promise<ResendOtpResponse> {
+    const cleanUsername = username.trim();
+
+    if (!cleanUsername) {
+      throw new Error("Username is required.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+
+      body: JSON.stringify({
+        username: cleanUsername,
+      }),
+    });
+
+    const data: ResendOtpResponse & {
+      error?: string;
+    } = await response.json();
+
+    if (!response.ok) {
+      if (
+        response.status === 429 &&
+        Number.isFinite(Number(data.retry_after)) &&
+        Number(data.retry_after) > 0
+      ) {
+        this.saveOtpResendAvailableAt(
+          Date.now() + Number(data.retry_after) * 1000,
+        );
+      }
+
+      throw new Error(data.error || data.message || "Unable to resend OTP.");
+    }
+
+    this.savePendingUsername(cleanUsername);
+
+    const cooldownSeconds =
+      Number.isFinite(Number(data.cooldown_seconds)) &&
+      Number(data.cooldown_seconds) > 0
+        ? Number(data.cooldown_seconds)
+        : 60;
+
+    this.saveOtpResendAvailableAt(Date.now() + cooldownSeconds * 1000);
 
     return data;
   },
@@ -326,8 +472,266 @@ export const authService = {
     // =====================================================
 
     this.clearPendingUsername();
+    this.clearOtpResendAvailableAt();
 
     return user;
+  },
+
+  // =====================================================
+  // FORGOT PASSWORD — REQUEST RESET OTP
+  //
+  // POST /auth/forgot-password
+  //
+  // Flow:
+  //
+  // Forgot Password
+  //      ↓
+  // Enter username
+  //      ↓
+  // Backend creates password reset request
+  //      ↓
+  // OTP sent through email
+  //      ↓
+  // requestId returned
+  // =====================================================
+
+  async forgotPassword(username: string): Promise<ForgotPasswordResponse> {
+    const cleanUsername = username.trim();
+
+    if (!cleanUsername) {
+      throw new Error("Username is required.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+
+      body: JSON.stringify({
+        username: cleanUsername,
+      }),
+    });
+
+    const data: ForgotPasswordResponse & {
+      error?: string;
+    } = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+          data.message ||
+          "Unable to process the password reset request.",
+      );
+    }
+
+    if (!data.requestId) {
+      throw new Error(
+        "Password reset request ID was not returned by the server.",
+      );
+    }
+
+    return data;
+  },
+
+  // =====================================================
+  // FORGOT PASSWORD — VERIFY OTP
+  //
+  // POST /auth/forgot-password/verify
+  //
+  // Successful verification returns a temporary
+  // password-reset authorization token.
+  //
+  // IMPORTANT:
+  //
+  // This is NOT the normal login JWT.
+  // =====================================================
+
+  async verifyResetOtp(
+    requestId: string,
+    otp: string,
+  ): Promise<VerifyResetOtpResponse> {
+    const cleanRequestId = requestId.trim();
+    const cleanOtp = otp.trim();
+
+    if (!cleanRequestId) {
+      throw new Error("Password reset request is missing.");
+    }
+
+    if (!cleanOtp) {
+      throw new Error("Verification code is required.");
+    }
+
+    if (!/^\d{6}$/.test(cleanOtp)) {
+      throw new Error("Verification code must be 6 digits.");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/auth/forgot-password/verify`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+
+        body: JSON.stringify({
+          requestId: cleanRequestId,
+          otp: cleanOtp,
+        }),
+      },
+    );
+
+    const data: VerifyResetOtpResponse & {
+      error?: string;
+    } = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+          data.message ||
+          "Unable to verify the password reset code.",
+      );
+    }
+
+    if (!data.verified) {
+      throw new Error("Password reset verification was not completed.");
+    }
+
+    if (!data.resetToken) {
+      throw new Error(
+        "Password reset authorization was not returned by the server.",
+      );
+    }
+
+    return data;
+  },
+
+  // =====================================================
+  // FORGOT PASSWORD — RESEND OTP
+  //
+  // POST /auth/forgot-password/resend
+  //
+  // IMPORTANT:
+  //
+  // The backend creates a NEW requestId.
+  // The frontend must replace the old requestId.
+  // =====================================================
+
+  async resendResetOtp(requestId: string): Promise<ForgotPasswordResponse> {
+    const cleanRequestId = requestId.trim();
+
+    if (!cleanRequestId) {
+      throw new Error("Password reset request is missing.");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/auth/forgot-password/resend`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+
+        body: JSON.stringify({
+          requestId: cleanRequestId,
+        }),
+      },
+    );
+
+    const data: ForgotPasswordResponse & {
+      error?: string;
+      retryAfterSeconds?: number;
+    } = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || data.message || "Unable to resend the verification code.",
+      );
+    }
+
+    if (!data.requestId) {
+      throw new Error("New password reset request ID was not returned.");
+    }
+
+    return data;
+  },
+
+  // =====================================================
+  // FORGOT PASSWORD — RESET PASSWORD
+  //
+  // POST /auth/forgot-password/reset
+  //
+  // requestId
+  // resetToken
+  // newPassword
+  //      ↓
+  // Backend validates verified reset request
+  //      ↓
+  // bcrypt hashes password
+  //      ↓
+  // users.password_hash updated
+  //      ↓
+  // reset request marked used
+  //      ↓
+  // activity log created
+  // =====================================================
+
+  async resetPassword(
+    requestId: string,
+    resetToken: string,
+    newPassword: string,
+  ): Promise<ResetPasswordResponse> {
+    const cleanRequestId = requestId.trim();
+    const cleanResetToken = resetToken.trim();
+
+    if (!cleanRequestId) {
+      throw new Error("Password reset request is missing.");
+    }
+
+    if (!cleanResetToken) {
+      throw new Error("Password reset authorization is missing.");
+    }
+
+    if (!newPassword) {
+      throw new Error("New password is required.");
+    }
+
+    if (newPassword.length < 8) {
+      throw new Error("Password must be at least 8 characters long.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password/reset`, {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+
+      body: JSON.stringify({
+        requestId: cleanRequestId,
+        resetToken: cleanResetToken,
+        newPassword,
+      }),
+    });
+
+    const data: ResetPasswordResponse & {
+      error?: string;
+    } = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || data.message || "Unable to reset the password.",
+      );
+    }
+
+    return data;
   },
 
   // =====================================================
@@ -350,6 +754,7 @@ export const authService = {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("pending_username");
+    sessionStorage.removeItem("otp_resend_available_at");
 
     const cleanUsername = username.trim();
 
@@ -571,6 +976,61 @@ export const authService = {
   },
 
   // =====================================================
+  // LOGIN COOLDOWN
+  //
+  // GLOBAL for this browser tab/session.
+  // It is not tied to a username.
+  // =====================================================
+
+  saveLoginCooldown(lockedUntil: number): void {
+    saveLoginCooldownState(lockedUntil);
+  },
+
+  getLoginCooldownRemaining(): number {
+    return getLoginCooldownRemainingState();
+  },
+
+  clearLoginCooldown(): void {
+    clearLoginCooldownState();
+  },
+
+  // =====================================================
+  // OTP RESEND COOLDOWN
+  //
+  // Stores the exact timestamp when Resend OTP becomes
+  // available again. This keeps the countdown accurate
+  // even if the OTP page re-renders or refreshes.
+  // =====================================================
+
+  saveOtpResendAvailableAt(timestamp: number): void {
+    sessionStorage.setItem(
+      "otp_resend_available_at",
+      String(Math.max(0, Math.floor(timestamp))),
+    );
+  },
+
+  getOtpResendAvailableAt(): number | null {
+    const stored = sessionStorage.getItem("otp_resend_available_at");
+
+    if (!stored) {
+      return null;
+    }
+
+    const timestamp = Number(stored);
+
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      sessionStorage.removeItem("otp_resend_available_at");
+      return null;
+    }
+
+    return timestamp;
+  },
+
+  clearOtpResendAvailableAt(): void {
+    sessionStorage.removeItem("otp_resend_available_at");
+  },
+
+  // =====================================================
   // FRONTEND USER SESSION
   //
   // Used for:
@@ -636,6 +1096,10 @@ export const authService = {
     sessionStorage.removeItem("access_token");
 
     sessionStorage.removeItem("pending_username");
+
+    sessionStorage.removeItem("otp_resend_available_at");
+
+    clearLoginCooldownState();
   },
 
   // =====================================================
@@ -666,11 +1130,11 @@ export const authService = {
 
       Faculty: "/faculty/dashboard",
 
+      Finance: "/finance/dashboard",
+
       Student: "/student/dashboard",
     };
 
     return routes[role];
   },
 };
-
-export { API_BASE_URL };

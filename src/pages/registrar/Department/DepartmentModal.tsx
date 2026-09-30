@@ -10,6 +10,7 @@ import {
 
 import { authService } from "../../../services/auth.service";
 import "../../../styles/DepartmentModal.css";
+import { apiUrl } from "../../../services/api";
 
 export interface Department {
   department_id: number;
@@ -32,7 +33,7 @@ interface DepartmentSaveResponse {
   department?: Department;
 }
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/departments";
+const API_BASE_URL = apiUrl("/api/registrar/departments");
 
 export default function DepartmentModal({
   isOpen,
@@ -284,9 +285,15 @@ export default function DepartmentModal({
           </button>
         </div>
 
-        <form className="registrar-department-modal__form" onSubmit={handleSubmit}>
+        <form
+          className="registrar-department-modal__form"
+          onSubmit={handleSubmit}
+        >
           {error && (
-            <div className="registrar-department-modal__message registrar-department-modal__message--error" role="alert">
+            <div
+              className="registrar-department-modal__message registrar-department-modal__message--error"
+              role="alert"
+            >
               <AlertCircle size={18} aria-hidden="true" />
               <div>
                 <strong>Department could not be saved</strong>

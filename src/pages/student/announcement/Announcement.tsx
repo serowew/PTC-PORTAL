@@ -11,9 +11,9 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-import "../../../styles/announcementStudent.css";
+import { apiUrl } from "../../../services/api";
 
-const API_BASE_URL = "http://localhost:3000";
+import "../../../styles/announcementStudent.css";
 
 interface Announcement {
   announcement_id: number;
@@ -65,9 +65,7 @@ function formatAuthor(value: string | null | undefined) {
   return value?.trim() || "PTC Administration";
 }
 
-function isStudentAudience(
-  recipients: Announcement["recipients"],
-) {
+function isStudentAudience(recipients: Announcement["recipients"]) {
   if (typeof recipients === "string") {
     return recipients
       .split(",")
@@ -163,7 +161,7 @@ export default function AnnouncementS() {
         setError("");
 
         const response = await authService.authFetch(
-          `${API_BASE_URL}/api/announcements`,
+          apiUrl("/api/announcements"),
           {
             method: "GET",
             signal: controller.signal,
@@ -326,10 +324,7 @@ export default function AnnouncementS() {
             onClick={() => setRefreshKey((current) => current + 1)}
             disabled={loading || refreshing}
           >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "is-spinning" : ""}
-            />
+            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </section>
@@ -411,15 +406,9 @@ export default function AnnouncementS() {
           </header>
 
           {loading && (
-            <div
-              className="student-announcements__loading"
-              aria-live="polite"
-            >
+            <div className="student-announcements__loading" aria-live="polite">
               {[1, 2, 3, 4].map((item) => (
-                <div
-                  className="student-announcements__skeleton"
-                  key={item}
-                >
+                <div className="student-announcements__skeleton" key={item}>
                   <span />
                   <span />
                   <span />
@@ -452,22 +441,18 @@ export default function AnnouncementS() {
             </div>
           )}
 
-          {!loading &&
-            !error &&
-            announcements.length === 0 && (
-              <div className="student-announcements__state">
-                <span className="student-announcements__state-icon">
-                  <Megaphone size={24} />
-                </span>
+          {!loading && !error && announcements.length === 0 && (
+            <div className="student-announcements__state">
+              <span className="student-announcements__state-icon">
+                <Megaphone size={24} />
+              </span>
 
-                <div>
-                  <strong>No announcements available</strong>
-                  <p>
-                    There are currently no active announcements for students.
-                  </p>
-                </div>
+              <div>
+                <strong>No announcements available</strong>
+                <p>There are currently no active announcements for students.</p>
               </div>
-            )}
+            </div>
+          )}
 
           {!loading &&
             !error &&
@@ -480,9 +465,7 @@ export default function AnnouncementS() {
 
                 <div>
                   <strong>No matching announcements</strong>
-                  <p>
-                    Try a different title, keyword, or announcement author.
-                  </p>
+                  <p>Try a different title, keyword, or announcement author.</p>
                 </div>
 
                 <button type="button" onClick={() => setSearch("")}>
@@ -491,67 +474,63 @@ export default function AnnouncementS() {
               </div>
             )}
 
-          {!loading &&
-            !error &&
-            filteredAnnouncements.length > 0 && (
-              <div className="student-announcements__list">
-                {filteredAnnouncements.map((announcement) => (
-                  <article
-                    key={announcement.announcement_id}
-                    className="student-announcements__card"
-                  >
-                    <div className="student-announcements__card-accent" />
+          {!loading && !error && filteredAnnouncements.length > 0 && (
+            <div className="student-announcements__list">
+              {filteredAnnouncements.map((announcement) => (
+                <article
+                  key={announcement.announcement_id}
+                  className="student-announcements__card"
+                >
+                  <div className="student-announcements__card-accent" />
 
-                    <div className="student-announcements__card-main">
-                      <div className="student-announcements__card-top">
-                        <span className="student-announcements__card-date">
-                          <CalendarDays size={14} />
-                          {formatDate(announcement.publish_date)}
+                  <div className="student-announcements__card-main">
+                    <div className="student-announcements__card-top">
+                      <span className="student-announcements__card-date">
+                        <CalendarDays size={14} />
+                        {formatDate(announcement.publish_date)}
+                      </span>
+
+                      {isRecent(announcement.publish_date) && (
+                        <span className="student-announcements__new-badge">
+                          New
                         </span>
-
-                        {isRecent(announcement.publish_date) && (
-                          <span className="student-announcements__new-badge">
-                            New
-                          </span>
-                        )}
-                      </div>
-
-                      <h3>{announcement.title}</h3>
-
-                      <p>{getPreview(announcement.content)}</p>
-
-                      <div className="student-announcements__card-meta">
-                        <span>
-                          <UserRound size={14} />
-                          Posted by{" "}
-                          <strong>
-                            {formatAuthor(announcement.created_by)}
-                          </strong>
-                        </span>
-
-                        {announcement.attachments && (
-                          <span className="student-announcements__attachment-note">
-                            Attachment available
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      className="student-announcements__view"
-                      onClick={() =>
-                        navigate(
-                          `/student/announcementD/${announcement.announcement_id}`,
-                        )
-                      }
-                    >
-                      View Details
-                    </button>
-                  </article>
-                ))}
-              </div>
-            )}
+                    <h3>{announcement.title}</h3>
+
+                    <p>{getPreview(announcement.content)}</p>
+
+                    <div className="student-announcements__card-meta">
+                      <span>
+                        <UserRound size={14} />
+                        Posted by{" "}
+                        <strong>{formatAuthor(announcement.created_by)}</strong>
+                      </span>
+
+                      {announcement.attachments && (
+                        <span className="student-announcements__attachment-note">
+                          Attachment available
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="student-announcements__view"
+                    onClick={() =>
+                      navigate(
+                        `/student/announcementD/${announcement.announcement_id}`,
+                      )
+                    }
+                  >
+                    View Details
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </DashboardLayout>

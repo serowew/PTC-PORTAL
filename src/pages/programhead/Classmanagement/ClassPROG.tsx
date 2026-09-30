@@ -12,7 +12,7 @@ type GradeRemark = "Passed" | "Failed" | "Incomplete";
 
 interface GradeComputation {
   complete: boolean;
-  rawAverage: number | null;
+  overallPercentage: number | null;
   finalRating: number | null;
   finalRatingText: string;
   remarks: GradeRemark | null;
@@ -129,7 +129,6 @@ interface GradeInfo {
   grade_id: number;
   faculty_id: number | null;
 
-  prelim_grade: number | null;
   midterm_grade: number | null;
   final_grade: number | null;
   final_rating: number | null;
@@ -199,10 +198,14 @@ interface DirectGradeResponse {
     enrollment_subject_id: number;
     faculty_id: number;
 
-    prelim_grade: number | null;
     midterm_grade: number | null;
     final_grade: number | null;
+    overall_percentage?: number | null;
     final_rating: number | null;
+
+    grading_policy?: string;
+    grading_outcome?: string;
+    outcome_reason?: string | null;
 
     remarks: string;
     grade_status: string;
@@ -219,7 +222,6 @@ interface DirectGradeResponse {
 }
 
 interface DirectGradeForm {
-  prelim_grade: string;
   midterm_grade: string;
   final_grade: string;
 }
@@ -228,24 +230,6 @@ interface Notice {
   type: "success" | "error";
   message: string;
 }
-
-const GRADE_OPTIONS = [
-  "1.00",
-  "1.25",
-  "1.50",
-  "1.75",
-  "2.00",
-  "2.25",
-  "2.50",
-  "2.75",
-  "3.00",
-  "4.00",
-  "5.00",
-];
-
-const OFFICIAL_GRADE_SCALE = [
-  1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 4, 5,
-] as const;
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
@@ -314,18 +298,6 @@ function getSubjectStatusClass(status: string): string {
   return status.toLowerCase().replace(/\s+/g, "-");
 }
 
-function nullableGrade(value: string): number | null {
-  const clean = value.trim();
-
-  if (!clean) {
-    return null;
-  }
-
-  const numeric = Number(clean);
-
-  return Number.isFinite(numeric) ? numeric : null;
-}
-
 function getRemarkFromFinalRating(
   finalRating: number | null,
 ): GradeRemark | null {
@@ -348,76 +320,88 @@ function getRemarkFromFinalRating(
   return null;
 }
 
-function normalizeToOfficialGradeScale(average: number): number {
-  let closest: number = OFFICIAL_GRADE_SCALE[0];
+const GRADE_BANDS = [
+  [97, 1.0],
+  [94, 1.25],
+  [91, 1.5],
+  [88, 1.75],
+  [85, 2.0],
+  [82, 2.25],
+  [79, 2.5],
+  [76, 2.75],
+  [75, 3.0],
+  [0, 5.0],
+] as const;
 
-  let closestDistance = Math.abs(average - closest);
+function parsePercentageHundredths(value: string): number | null {
+  const clean = value.trim();
 
-  for (const grade of OFFICIAL_GRADE_SCALE) {
-    const distance = Math.abs(average - grade);
-
-    if (distance < closestDistance) {
-      closest = grade;
-      closestDistance = distance;
-      continue;
-    }
-
-    if (distance === closestDistance && grade > closest) {
-      closest = grade;
-    }
+  if (!clean || !/^\d+(?:\.\d{1,2})?$/.test(clean)) {
+    return null;
   }
 
-  return closest;
+  const numeric = Number(clean);
+
+  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) {
+    return null;
+  }
+
+  return Math.round(numeric * 100);
+}
+
+function validatePercentage(value: string, label: string): string | null {
+  const clean = value.trim();
+
+  if (!clean) {
+    return `${label} is required.`;
+  }
+
+  if (!/^\d+(?:\.\d{1,2})?$/.test(clean)) {
+    return `${label} must be a percentage from 0 to 100 with at most two decimal places.`;
+  }
+
+  const numeric = Number(clean);
+
+  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) {
+    return `${label} must be between 0 and 100.`;
+  }
+
+  return null;
 }
 
 function calculateGrade(
-  prelimGrade: string,
   midtermGrade: string,
   finalGrade: string,
 ): GradeComputation {
-  const prelimText = prelimGrade.trim();
-  const midtermText = midtermGrade.trim();
-  const finalText = finalGrade.trim();
+  const midterm = parsePercentageHundredths(midtermGrade);
+  const finalTerm = parsePercentageHundredths(finalGrade);
 
-  if (!prelimText || !midtermText || !finalText) {
+  if (midterm === null || finalTerm === null) {
     return {
       complete: false,
-      rawAverage: null,
+      overallPercentage: null,
       finalRating: null,
       finalRatingText: "",
       remarks: null,
     };
   }
 
-  const prelim = Number(prelimText);
-  const midterm = Number(midtermText);
-  const final = Number(finalText);
+  // Same TWO_TERM_50_50 rule used by the backend.
+  // Values are kept in hundredths so a score such as 74.995
+  // is never incorrectly rounded upward to a passing 75.
+  const sum = midterm + finalTerm;
+  const overallPercentage = sum / 200;
 
-  if (
-    !Number.isFinite(prelim) ||
-    !Number.isFinite(midterm) ||
-    !Number.isFinite(final)
-  ) {
-    return {
-      complete: false,
-      rawAverage: null,
-      finalRating: null,
-      finalRatingText: "",
-      remarks: null,
-    };
-  }
+  const finalRating =
+    GRADE_BANDS.find(([threshold]) => sum >= threshold * 200)?.[1] ?? 5;
 
-  const rawAverage = (prelim + midterm + final) / 3;
-
-  const normalizedFinalRating = normalizeToOfficialGradeScale(rawAverage);
-
-  const remarks = getRemarkFromFinalRating(normalizedFinalRating);
+  const remarks = getRemarkFromFinalRating(finalRating);
 
   return {
     complete: true,
-    rawAverage,
-    finalRating: normalizedFinalRating,
-    finalRatingText: normalizedFinalRating.toFixed(2),
+    overallPercentage,
+    finalRating,
+    finalRatingText: finalRating.toFixed(2),
     remarks,
   };
 }
@@ -461,7 +445,6 @@ export default function ClassPROG() {
   );
 
   const [directForm, setDirectForm] = useState<DirectGradeForm>({
-    prelim_grade: "",
     midterm_grade: "",
     final_grade: "",
   });
@@ -721,13 +704,8 @@ export default function ClassPROG() {
   }, [filteredClasses]);
 
   const directGradeResult = useMemo(
-    () =>
-      calculateGrade(
-        directForm.prelim_grade,
-        directForm.midterm_grade,
-        directForm.final_grade,
-      ),
-    [directForm.prelim_grade, directForm.midterm_grade, directForm.final_grade],
+    () => calculateGrade(directForm.midterm_grade, directForm.final_grade),
+    [directForm.midterm_grade, directForm.final_grade],
   );
 
   const clearFilters = () => {
@@ -816,7 +794,6 @@ export default function ClassPROG() {
     setDirectStudent(null);
 
     setDirectForm({
-      prelim_grade: "",
       midterm_grade: "",
       final_grade: "",
     });
@@ -868,7 +845,6 @@ export default function ClassPROG() {
     setDirectStudent(student);
 
     setDirectForm({
-      prelim_grade: "",
       midterm_grade: "",
       final_grade: "",
     });
@@ -886,7 +862,6 @@ export default function ClassPROG() {
     setDirectStudent(null);
 
     setDirectForm({
-      prelim_grade: "",
       midterm_grade: "",
       final_grade: "",
     });
@@ -928,10 +903,6 @@ export default function ClassPROG() {
 
     const missing: string[] = [];
 
-    if (!directForm.prelim_grade.trim()) {
-      missing.push("Prelim");
-    }
-
     if (!directForm.midterm_grade.trim()) {
       missing.push("Midterm");
     }
@@ -948,29 +919,24 @@ export default function ClassPROG() {
       return;
     }
 
-    const componentValues = [
-      {
-        label: "Prelim",
-        value: directForm.prelim_grade,
-      },
-      {
-        label: "Midterm",
-        value: directForm.midterm_grade,
-      },
-      {
-        label: "Final",
-        value: directForm.final_grade,
-      },
-    ];
+    const midtermError = validatePercentage(
+      directForm.midterm_grade,
+      "Midterm percentage",
+    );
 
-    for (const field of componentValues) {
-      const value = Number(field.value);
+    if (midtermError) {
+      setDirectError(midtermError);
+      return;
+    }
 
-      if (!Number.isFinite(value) || value < 1 || value > 5) {
-        setDirectError(`${field.label} grade must be between 1.00 and 5.00.`);
+    const finalError = validatePercentage(
+      directForm.final_grade,
+      "Final Term percentage",
+    );
 
-        return;
-      }
+    if (finalError) {
+      setDirectError(finalError);
+      return;
     }
 
     if (
@@ -992,7 +958,6 @@ export default function ClassPROG() {
     }
 
     const gradeResult = calculateGrade(
-      directForm.prelim_grade,
       directForm.midterm_grade,
       directForm.final_grade,
     );
@@ -1025,15 +990,11 @@ export default function ClassPROG() {
           },
 
           body: JSON.stringify({
-            prelim_grade: nullableGrade(directForm.prelim_grade),
+            midterm_grade: directForm.midterm_grade.trim(),
 
-            midterm_grade: nullableGrade(directForm.midterm_grade),
+            final_grade: directForm.final_grade.trim(),
 
-            final_grade: nullableGrade(directForm.final_grade),
-
-            final_rating: gradeResult.finalRating,
-
-            remarks: gradeResult.remarks,
+            grading_outcome: "NUMERIC",
           }),
         },
       );
@@ -1071,7 +1032,6 @@ export default function ClassPROG() {
       setDirectStudent(null);
 
       setDirectForm({
-        prelim_grade: "",
         midterm_grade: "",
         final_grade: "",
       });
@@ -1117,7 +1077,6 @@ export default function ClassPROG() {
           setDirectStudent(null);
 
           setDirectForm({
-            prelim_grade: "",
             midterm_grade: "",
             final_grade: "",
           });
@@ -1812,7 +1771,6 @@ export default function ClassPROG() {
                             <tr>
                               <th>Student</th>
                               <th>Subject Status</th>
-                              <th>Prelim</th>
                               <th>Midterm</th>
                               <th>Final</th>
                               <th>Rating</th>
@@ -1848,10 +1806,6 @@ export default function ClassPROG() {
                                     >
                                       {student.subject_status}
                                     </span>
-                                  </td>
-
-                                  <td>
-                                    {formatGrade(student.grade?.prelim_grade)}
                                   </td>
 
                                   <td>
@@ -1957,8 +1911,8 @@ export default function ClassPROG() {
                     <h2>Encode Student Grade</h2>
 
                     <p>
-                      Enter Prelim, Midterm, and Final. Final Rating and
-                      academic result are calculated automatically.
+                      Enter Midterm and Final. Final Rating and academic result
+                      are calculated automatically.
                     </p>
                   </div>
 
@@ -2018,40 +1972,22 @@ export default function ClassPROG() {
 
                   <p>
                     <strong>Final Rating is calculated automatically.</strong>{" "}
-                    The system calculates the average of Prelim, Midterm, and
-                    Final, then normalizes it to the official grading scale.
+                    Enter Midterm and Final Term percentages from 0 to 100. The
+                    system applies the same 50/50 grading policy used by Faculty
+                    and converts the result to the official rating.
                   </p>
                 </div>
 
                 <div className="programhead-direct-grade-form">
                   <div>
-                    <label>Prelim Grade</label>
+                    <label>Midterm Percentage</label>
 
-                    <select
-                      value={directForm.prelim_grade}
-                      onChange={(event) =>
-                        setDirectForm((current) => ({
-                          ...current,
-
-                          prelim_grade: event.target.value,
-                        }))
-                      }
-                      disabled={directSubmitting}
-                    >
-                      <option value="">Select grade</option>
-
-                      {GRADE_OPTIONS.map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label>Midterm Grade</label>
-
-                    <select
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      inputMode="decimal"
                       value={directForm.midterm_grade}
                       onChange={(event) =>
                         setDirectForm((current) => ({
@@ -2061,21 +1997,20 @@ export default function ClassPROG() {
                         }))
                       }
                       disabled={directSubmitting}
-                    >
-                      <option value="">Select grade</option>
-
-                      {GRADE_OPTIONS.map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="0-100"
+                      aria-label={`Midterm percentage for ${directStudent.full_name}`}
+                    />
                   </div>
 
                   <div>
-                    <label>Final Grade</label>
+                    <label>Final Term Percentage</label>
 
-                    <select
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      inputMode="decimal"
                       value={directForm.final_grade}
                       onChange={(event) =>
                         setDirectForm((current) => ({
@@ -2085,29 +2020,22 @@ export default function ClassPROG() {
                         }))
                       }
                       disabled={directSubmitting}
-                    >
-                      <option value="">Select grade</option>
-
-                      {GRADE_OPTIONS.map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="0-100"
+                      aria-label={`Final Term percentage for ${directStudent.full_name}`}
+                    />
                   </div>
 
                   <div>
                     <label>Final Rating</label>
 
-                    <select value={directGradeResult.finalRatingText} disabled>
-                      <option value="">Auto-calculated</option>
-
-                      {GRADE_OPTIONS.map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      value={directGradeResult.finalRatingText}
+                      readOnly
+                      disabled
+                      placeholder="Auto-calculated"
+                      aria-label={`Calculated final rating for ${directStudent.full_name}`}
+                    />
                   </div>
                 </div>
 
@@ -2115,7 +2043,7 @@ export default function ClassPROG() {
                   <span>Calculated Academic Result</span>
 
                   {!directGradeResult.complete ? (
-                    <strong className="none">Complete All Three Grades</strong>
+                    <strong className="none">Complete Both Grades</strong>
                   ) : directGradeResult.remarks ? (
                     <strong className={directGradeResult.remarks.toLowerCase()}>
                       {directGradeResult.remarks}
@@ -2124,25 +2052,15 @@ export default function ClassPROG() {
                     <strong className="none">Unable to Calculate</strong>
                   )}
 
-                  {directGradeResult.rawAverage !== null ? (
+                  {directGradeResult.overallPercentage !== null ? (
                     <small>
-                      Average: {directGradeResult.rawAverage.toFixed(2)} · Final
-                      Rating: {directGradeResult.finalRatingText}
+                      Overall: {directGradeResult.overallPercentage.toFixed(2)}%
+                      · Final Rating: {directGradeResult.finalRatingText}
                     </small>
                   ) : (
-                    <small>
-                      Final Rating = normalized average of Prelim + Midterm +
-                      Final
-                    </small>
+                    <small>Final Rating = 50% Midterm + 50% Final Term</small>
                   )}
                 </div>
-
-                {directGradeResult.remarks === "Incomplete" && (
-                  <div className="programhead-direct-incomplete-note">
-                    The calculated Final Rating is 4.00. This academic result
-                    will be recorded as Incomplete.
-                  </div>
-                )}
 
                 {directGradeResult.remarks === "Failed" && (
                   <div className="programhead-direct-incomplete-note">
@@ -2234,19 +2152,13 @@ export default function ClassPROG() {
 
                 <div className="programhead-confirm-grade-review">
                   <div>
-                    <span>Prelim</span>
-
-                    <strong>{directForm.prelim_grade || "—"}</strong>
-                  </div>
-
-                  <div>
-                    <span>Midterm</span>
+                    <span>Midterm %</span>
 
                     <strong>{directForm.midterm_grade || "—"}</strong>
                   </div>
 
                   <div>
-                    <span>Final</span>
+                    <span>Final Term %</span>
 
                     <strong>{directForm.final_grade || "—"}</strong>
                   </div>
@@ -2277,13 +2189,13 @@ export default function ClassPROG() {
                     <strong>This will become an official grade.</strong>
 
                     <p>
-                      Raw Average{" "}
+                      Overall Percentage{" "}
                       <b>
-                        {directGradeResult.rawAverage !== null
-                          ? directGradeResult.rawAverage.toFixed(2)
+                        {directGradeResult.overallPercentage !== null
+                          ? directGradeResult.overallPercentage.toFixed(2)
                           : "—"}
                       </b>{" "}
-                      is normalized to Final Rating{" "}
+                      maps to Final Rating{" "}
                       <b>{directGradeResult.finalRatingText || "—"}</b> and
                       recorded as{" "}
                       <b>{directGradeResult.remarks || "Invalid"}</b>.

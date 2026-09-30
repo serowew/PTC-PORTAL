@@ -17,6 +17,8 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
+
 import {
   fallbackStudents,
   type StudentRecord,
@@ -24,7 +26,7 @@ import {
 
 import "../../../styles/Studentlist.css";
 
-const API_BASE_URL = "http://localhost:3000/api/students";
+const API_BASE_URL = apiUrl("/api/students");
 
 type SectionMap = Record<string, StudentRecord[]>;
 type CourseMap = Record<string, SectionMap>;
@@ -294,11 +296,7 @@ export default function StudentManagement() {
   }, [searchTerm, folderFilteredStudents]);
 
   const selectedFolderTitle = selectedFolder
-    ? [
-        selectedFolder.year,
-        selectedFolder.course,
-        selectedFolder.section,
-      ]
+    ? [selectedFolder.year, selectedFolder.course, selectedFolder.section]
         .filter(Boolean)
         .join(" / ")
     : "All Students";
@@ -337,7 +335,9 @@ export default function StudentManagement() {
             </span>
             <div>
               <small>Total Students</small>
-              <strong>{loading ? "…" : students.length.toLocaleString()}</strong>
+              <strong>
+                {loading ? "…" : students.length.toLocaleString()}
+              </strong>
             </div>
           </article>
 
@@ -409,9 +409,7 @@ export default function StudentManagement() {
                       >
                         <ChevronRight
                           size={14}
-                          className={`chevron ${
-                            isYearExpanded ? "open" : ""
-                          }`}
+                          className={`chevron ${isYearExpanded ? "open" : ""}`}
                           aria-hidden="true"
                         />
 
@@ -520,9 +518,7 @@ export default function StudentManagement() {
           <div className="folder-content">
             <header className="folder-content-header">
               <div className="folder-content-heading">
-                <span className="folder-content-kicker">
-                  Student Records
-                </span>
+                <span className="folder-content-kicker">Student Records</span>
                 <h2 className="folder-content-title">{selectedFolderTitle}</h2>
                 <p>
                   {loading

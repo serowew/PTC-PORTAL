@@ -66,6 +66,29 @@ export const registrarNavGroups = [
         path: "/registrar/offering/managementR",
         icon: "",
       },
+      {
+        label: "Teaching Schedules",
+        path: "/registrar/schedules/faculty",
+        icon: "",
+      },
+    ],
+  },
+
+  {
+    id: "Document",
+    label: "Documents ",
+    icon: "",
+    children: [
+      {
+        label: "Request Verification",
+        path: "/registrar/document-requests",
+        icon: "",
+      },
+      {
+        label: "Grade Change Requests",
+        path: "/registrar/grade-change-requests",
+        icon: "",
+      },
     ],
   },
 ];

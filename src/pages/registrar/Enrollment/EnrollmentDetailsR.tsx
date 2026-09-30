@@ -3,9 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { api } from "../../../services/api";
 import "../../../styles/EnrollmementDetailsR.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/enrollments";
+const API_BASE_URL = `${api.baseUrl}/api/registrar/enrollments`;
 
 // =====================================================
 // TYPES
@@ -1996,6 +1997,7 @@ export default function EnrollmentDetailsR() {
   }, [
     authenticated,
     enrollmentId,
+    enrollment?.enrollment_status,
     user,
     userRole,
     subjects,
@@ -4508,13 +4510,8 @@ export default function EnrollmentDetailsR() {
 
         <section className="enrollment-details-header">
           <div className="enrollment-details-identity">
-            <div
-              className="enrollment-details-avatar"
-              aria-hidden="true"
-            >
-              {enrollment.student.first_name
-                ?.charAt(0)
-                .toUpperCase() || "S"}
+            <div className="enrollment-details-avatar" aria-hidden="true">
+              {enrollment.student.first_name?.charAt(0).toUpperCase() || "S"}
             </div>
 
             <div className="enrollment-details-identity-copy">
@@ -4527,9 +4524,7 @@ export default function EnrollmentDetailsR() {
 
                 <div className="enrollment-header-badges">
                   <span
-                    className={getStatusClass(
-                      enrollment.enrollment_status,
-                    )}
+                    className={getStatusClass(enrollment.enrollment_status)}
                   >
                     {enrollment.enrollment_status}
                   </span>
@@ -4561,16 +4556,12 @@ export default function EnrollmentDetailsR() {
 
             <div>
               <span>Academic Year</span>
-              <strong>
-                {enrollment.academic_period.academic_year}
-              </strong>
+              <strong>{enrollment.academic_period.academic_year}</strong>
             </div>
 
             <div>
               <span>Semester</span>
-              <strong>
-                {enrollment.academic_period.semester_name}
-              </strong>
+              <strong>{enrollment.academic_period.semester_name}</strong>
             </div>
           </div>
         </section>
@@ -5275,290 +5266,335 @@ export default function EnrollmentDetailsR() {
         </div>
 
         {/* =================================================
-            ADD SUBJECT PANEL
+            ADD SUBJECT MODAL
         ================================================= */}
 
         {addSubjectOpen && (
-          <div className="enrollment-details-card">
-            <div className="details-card-header">
-              <div>
-                <h2>Add Subject</h2>
+          <div
+            className="assignment-modal-backdrop add-subject-modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                !addSubjectLoading &&
+                !availableSubjectsLoading
+              ) {
+                closeAddSubject();
+              }
+            }}
+          >
+            <section
+              className="assignment-modal add-subject-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-subject-modal-title"
+            >
+              <div className="assignment-modal-header">
+                <div>
+                  <span className="assignment-modal-eyebrow">
+                    Enrollment Subject
+                  </span>
 
-                <span>
-                  Select an academically eligible subject and one valid Open
-                  offering. The backend determines the official Regular, Retake,
-                  or Carry Over enrollment type.
-                </span>
-              </div>
+                  <h2 id="add-subject-modal-title">Add Subject</h2>
 
-              <button
-                type="button"
-                className="subject-action-btn"
-                disabled={addSubjectLoading || availableSubjectsLoading}
-                onClick={() => closeAddSubject()}
-              >
-                Close
-              </button>
-            </div>
-
-            {availableSubjectsLoading ? (
-              <div className="enrollment-details-loading">
-                Loading subjects available for addition...
-              </div>
-            ) : (
-              <>
-                <div className="details-grid">
-                  <div className="detail-item">
-                    <span>Subject</span>
-
-                    <select
-                      value={selectedAddSubjectId}
-                      disabled={addSubjectLoading}
-                      onChange={(event) => {
-                        setSelectedAddSubjectId(event.target.value);
-
-                        setSelectedAddOfferingId("");
-
-                        clearActionError();
-                      }}
-                    >
-                      <option value="">Select subject</option>
-
-                      {availableSubjects.map((subject) => {
-                        const eligibility = subject.academic_eligibility;
-
-                        const candidateLabel = getCandidateTypeLabel(subject);
-
-                        return (
-                          <option
-                            key={subject.subject_id}
-                            value={subject.subject_id}
-                            disabled={eligibility?.eligible === false}
-                          >
-                            {subject.subject_code} — {subject.subject_name} ·{" "}
-                            {subject.units} unit
-                            {subject.units !== 1 ? "s" : ""} · {candidateLabel}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-
-                  <div className="detail-item">
-                    <span>Offering</span>
-
-                    <select
-                      value={selectedAddOfferingId}
-                      disabled={addSubjectLoading || !selectedAddSubject}
-                      onChange={(event) => {
-                        setSelectedAddOfferingId(event.target.value);
-
-                        clearActionError();
-                      }}
-                    >
-                      <option value="">Select offering</option>
-
-                      {(selectedAddSubject?.available_offerings || []).map(
-                        (offering) => (
-                          <option
-                            key={offering.offering_id}
-                            value={offering.offering_id}
-                          >
-                            #{offering.offering_id} ·{" "}
-                            {offering.section.section_name}
-                            {offering.section.course_code
-                              ? ` · ${offering.section.course_code}`
-                              : ""}
-                            {offering.section.year_level
-                              ? ` · Year ${offering.section.year_level}`
-                              : ""}
-                            {" · "}
-                            {offering.faculty.faculty_name ||
-                              "Faculty not assigned"}
-                            {" · "}
-                            {formatSchedule(
-                              offering.schedule.days,
-                              offering.schedule.time,
-                            )}
-                            {" · "}
-                            {offering.capacity.available_slots} slot
-                            {offering.capacity.available_slots !== 1 ? "s" : ""}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                  </div>
-
-                  <div className="detail-item">
-                    <span>Reason</span>
-
-                    <textarea
-                      value={addSubjectReason}
-                      disabled={addSubjectLoading}
-                      maxLength={500}
-                      onChange={(event) =>
-                        setAddSubjectReason(event.target.value)
-                      }
-                    />
-
-                    <small>
-                      {addSubjectReason.length}
-                      /500 characters
-                    </small>
-                  </div>
+                  <p>
+                    Select an academically eligible subject and one valid Open
+                    offering. The backend determines the official Regular,
+                    Retake, or Carry Over enrollment type.
+                  </p>
                 </div>
 
-                {selectedAddSubject && (
-                  <div className="remarks-box">
-                    <span>Subject Eligibility</span>
+                <button
+                  type="button"
+                  className="assignment-modal-close"
+                  aria-label="Close add subject modal"
+                  disabled={addSubjectLoading || availableSubjectsLoading}
+                  onClick={() => closeAddSubject()}
+                >
+                  ×
+                </button>
+              </div>
 
-                    <p>
-                      <strong>
-                        {selectedAddSubject.academic_eligibility?.eligible ===
-                        false
-                          ? "BLOCKED"
-                          : "ELIGIBLE"}
-                      </strong>
-                      {" · "}
-                      Candidate:{" "}
-                      <strong>
-                        {getCandidateTypeLabel(selectedAddSubject)}
-                      </strong>
-                    </p>
+              <div className="assignment-modal-body add-subject-modal-body">
+                {actionError && (
+                  <div className="assignment-modal-alert" role="alert">
+                    <strong>Unable to add subject</strong>
+                    <span>{actionError}</span>
+                  </div>
+                )}
 
-                    {getAcademicEligibilityMessage(
-                      selectedAddSubject.academic_eligibility,
-                    ) && (
-                      <p>
-                        {getAcademicEligibilityMessage(
-                          selectedAddSubject.academic_eligibility,
-                        )}
-                      </p>
-                    )}
+                {availableSubjectsLoading ? (
+                  <div className="assignment-modal-loading">
+                    <div className="assignment-modal-spinner" />
+                    <div>
+                      <strong>Loading subjects</strong>
+                      <span>Checking eligible subjects and offerings...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="details-grid add-subject-form-grid">
+                      <div className="detail-item">
+                        <span>Subject</span>
 
-                    {getLatestApprovedFinalRating(
-                      selectedAddSubject.academic_eligibility,
-                    ) !== null && (
-                      <p>
-                        Previous Approved Final Rating:{" "}
-                        <strong>
-                          {formatFinalRating(
-                            getLatestApprovedFinalRating(
-                              selectedAddSubject.academic_eligibility,
+                        <select
+                          value={selectedAddSubjectId}
+                          disabled={addSubjectLoading}
+                          onChange={(event) => {
+                            setSelectedAddSubjectId(event.target.value);
+
+                            setSelectedAddOfferingId("");
+
+                            clearActionError();
+                          }}
+                        >
+                          <option value="">Select subject</option>
+
+                          {availableSubjects.map((subject) => {
+                            const eligibility = subject.academic_eligibility;
+
+                            const candidateLabel =
+                              getCandidateTypeLabel(subject);
+
+                            return (
+                              <option
+                                key={subject.subject_id}
+                                value={subject.subject_id}
+                                disabled={eligibility?.eligible === false}
+                              >
+                                {subject.subject_code} — {subject.subject_name} ·{" "}
+                                {subject.units} unit
+                                {subject.units !== 1 ? "s" : ""} ·{" "}
+                                {candidateLabel}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+
+                      <div className="detail-item">
+                        <span>Offering</span>
+
+                        <select
+                          value={selectedAddOfferingId}
+                          disabled={addSubjectLoading || !selectedAddSubject}
+                          onChange={(event) => {
+                            setSelectedAddOfferingId(event.target.value);
+
+                            clearActionError();
+                          }}
+                        >
+                          <option value="">Select offering</option>
+
+                          {(selectedAddSubject?.available_offerings || []).map(
+                            (offering) => (
+                              <option
+                                key={offering.offering_id}
+                                value={offering.offering_id}
+                              >
+                                #{offering.offering_id} ·{" "}
+                                {offering.section.section_name}
+                                {offering.section.course_code
+                                  ? ` · ${offering.section.course_code}`
+                                  : ""}
+                                {offering.section.year_level
+                                  ? ` · Year ${offering.section.year_level}`
+                                  : ""}
+                                {" · "}
+                                {offering.faculty.faculty_name ||
+                                  "Faculty not assigned"}
+                                {" · "}
+                                {formatSchedule(
+                                  offering.schedule.days,
+                                  offering.schedule.time,
+                                )}
+                                {" · "}
+                                {offering.capacity.available_slots} slot
+                                {offering.capacity.available_slots !== 1
+                                  ? "s"
+                                  : ""}
+                              </option>
                             ),
                           )}
-                        </strong>
-                      </p>
-                    )}
-                  </div>
-                )}
+                        </select>
+                      </div>
 
-                {selectedAddOffering && (
-                  <div className="assignment-selected-summary">
-                    <div>
-                      <span>Assigned Class</span>
+                      <div className="detail-item add-subject-reason-field">
+                        <span>Reason</span>
 
-                      <strong>
-                        {selectedAddOffering.section.section_name}
-                      </strong>
+                        <textarea
+                          value={addSubjectReason}
+                          disabled={addSubjectLoading}
+                          maxLength={500}
+                          onChange={(event) =>
+                            setAddSubjectReason(event.target.value)
+                          }
+                        />
+
+                        <small>
+                          {addSubjectReason.length}
+                          /500 characters
+                        </small>
+                      </div>
                     </div>
 
-                    <div>
-                      <span>Course</span>
+                    {selectedAddSubject && (
+                      <div className="remarks-box add-subject-eligibility">
+                        <span>Subject Eligibility</span>
 
-                      <strong>
-                        {selectedAddOffering.section.course_code || "—"}
-                      </strong>
-                    </div>
+                        <p>
+                          <strong>
+                            {selectedAddSubject.academic_eligibility?.eligible ===
+                            false
+                              ? "BLOCKED"
+                              : "ELIGIBLE"}
+                          </strong>
+                          {" · "}
+                          Candidate:{" "}
+                          <strong>
+                            {getCandidateTypeLabel(selectedAddSubject)}
+                          </strong>
+                        </p>
 
-                    <div>
-                      <span>Year Level</span>
-
-                      <strong>
-                        {selectedAddOffering.section.year_level
-                          ? `Year ${selectedAddOffering.section.year_level}`
-                          : "—"}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Schedule</span>
-
-                      <strong>
-                        {formatSchedule(
-                          selectedAddOffering.schedule.days,
-                          selectedAddOffering.schedule.time,
+                        {getAcademicEligibilityMessage(
+                          selectedAddSubject.academic_eligibility,
+                        ) && (
+                          <p>
+                            {getAcademicEligibilityMessage(
+                              selectedAddSubject.academic_eligibility,
+                            )}
+                          </p>
                         )}
-                      </strong>
-                    </div>
 
-                    {getPlacementFlagLabels(
-                      getOfferingPlacementFlags(selectedAddOffering),
-                    ).length > 0 && (
-                      <div className="placement-flags">
-                        {getPlacementFlagLabels(
-                          getOfferingPlacementFlags(selectedAddOffering),
-                        ).map((flag) => (
-                          <span
-                            key={`add-${flag}`}
-                            className={`placement-flag ${flag
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                          >
-                            {flag}
-                          </span>
-                        ))}
+                        {getLatestApprovedFinalRating(
+                          selectedAddSubject.academic_eligibility,
+                        ) !== null && (
+                          <p>
+                            Previous Approved Final Rating:{" "}
+                            <strong>
+                              {formatFinalRating(
+                                getLatestApprovedFinalRating(
+                                  selectedAddSubject.academic_eligibility,
+                                ),
+                              )}
+                            </strong>
+                          </p>
+                        )}
                       </div>
                     )}
-                  </div>
+
+                    {selectedAddOffering && (
+                      <div className="assignment-selected-summary add-subject-selected-summary">
+                        <div>
+                          <span>Assigned Class</span>
+
+                          <strong>
+                            {selectedAddOffering.section.section_name}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Course</span>
+
+                          <strong>
+                            {selectedAddOffering.section.course_code || "—"}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Year Level</span>
+
+                          <strong>
+                            {selectedAddOffering.section.year_level
+                              ? `Year ${selectedAddOffering.section.year_level}`
+                              : "—"}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Schedule</span>
+
+                          <strong>
+                            {formatSchedule(
+                              selectedAddOffering.schedule.days,
+                              selectedAddOffering.schedule.time,
+                            )}
+                          </strong>
+                        </div>
+
+                        {getPlacementFlagLabels(
+                          getOfferingPlacementFlags(selectedAddOffering),
+                        ).length > 0 && (
+                          <div className="placement-flags">
+                            {getPlacementFlagLabels(
+                              getOfferingPlacementFlags(selectedAddOffering),
+                            ).map((flag) => (
+                              <span
+                                key={`add-${flag}`}
+                                className={`placement-flag ${flag
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "-")}`}
+                              >
+                                {flag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {availableSubjects.length === 0 && (
+                      <div className="remarks-box add-subject-availability">
+                        <p>
+                          No academically eligible subject with a valid Open
+                          offering can be added right now.
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedAddSubject &&
+                      selectedAddSubject.available_offerings.length === 0 && (
+                        <div className="remarks-box add-subject-availability">
+                          <p>
+                            The selected subject does not currently have an
+                            available Open offering with capacity.
+                          </p>
+                        </div>
+                      )}
+                  </>
                 )}
+              </div>
 
-                {availableSubjects.length === 0 && (
-                  <div className="remarks-box">
-                    <p>
-                      No academically eligible subject with a valid Open
-                      offering can be added right now.
-                    </p>
+              {!availableSubjectsLoading && (
+                <div className="assignment-modal-footer add-subject-modal-footer">
+                  <div className="assignment-modal-actions">
+                    <button
+                      type="button"
+                      className="assignment-modal-cancel"
+                      disabled={addSubjectLoading}
+                      onClick={() => closeAddSubject()}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      className="assignment-modal-save"
+                      disabled={
+                        addSubjectLoading ||
+                        !selectedAddSubject ||
+                        !selectedAddOffering ||
+                        selectedAddSubject.academic_eligibility?.eligible ===
+                          false
+                      }
+                      onClick={() => void addSelectedSubject()}
+                    >
+                      {addSubjectLoading ? "Adding..." : "Add Subject"}
+                    </button>
                   </div>
-                )}
-
-                {selectedAddSubject &&
-                  selectedAddSubject.available_offerings.length === 0 && (
-                    <div className="remarks-box">
-                      <p>
-                        The selected subject does not currently have an
-                        available Open offering with capacity.
-                      </p>
-                    </div>
-                  )}
-
-                <div className="enrollment-details-actions">
-                  <button
-                    type="button"
-                    className="reject-enrollment-btn"
-                    disabled={addSubjectLoading}
-                    onClick={() => closeAddSubject()}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    className="approve-enrollment-btn"
-                    disabled={
-                      addSubjectLoading ||
-                      !selectedAddSubject ||
-                      !selectedAddOffering ||
-                      selectedAddSubject.academic_eligibility?.eligible ===
-                        false
-                    }
-                    onClick={() => void addSelectedSubject()}
-                  >
-                    {addSubjectLoading ? "Adding..." : "Add Subject"}
-                  </button>
                 </div>
-              </>
-            )}
+              )}
+            </section>
           </div>
         )}
 

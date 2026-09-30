@@ -15,9 +15,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminUserActivity.css";
 
-const API_BASE_URL = "http://localhost:3000/api/activity-logs";
+const API_BASE_URL = apiUrl("/api/activity-logs");
 
 type ActivityLog = {
   activity_id: number;
@@ -220,9 +221,7 @@ export default function UserActivity() {
     () =>
       Array.from(
         new Set(
-          logs
-            .map((log) => String(log.role || "").trim())
-            .filter(Boolean),
+          logs.map((log) => String(log.role || "").trim()).filter(Boolean),
         ),
       ).sort((a, b) => a.localeCompare(b)),
     [logs],
@@ -274,9 +273,7 @@ export default function UserActivity() {
   const modules = useMemo(
     () =>
       new Set(
-        logs
-          .map((log) => String(log.module_name || "").trim())
-          .filter(Boolean),
+        logs.map((log) => String(log.module_name || "").trim()).filter(Boolean),
       ).size,
     [logs],
   );
@@ -537,7 +534,9 @@ export default function UserActivity() {
                         .trim()
                         .charAt(0)
                         .toUpperCase() || "U";
-                    const roleClass = normalizeBadgeClass(log.role || "unknown");
+                    const roleClass = normalizeBadgeClass(
+                      log.role || "unknown",
+                    );
                     const activityClass = normalizeBadgeClass(
                       log.activity_type || "activity",
                     );

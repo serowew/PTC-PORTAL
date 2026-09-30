@@ -10,6 +10,128 @@ import { logActivity } from "../utils/activityLogger.js";
 
 const router = express.Router();
 
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+
+// =======================
+// LOGIN ATTEMPT SECURITY
+// =======================
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_COOLDOWN_MS = 2 * 60 * 1000;
+
+// Stores failed attempts while the Node server is running.
+const loginAttempts = new Map();
+
+function getLoginAttemptKey(req) {
+  const ip = req.ip || req.socket?.remoteAddress || "unknown";
+
+  // IMPORTANT:
+  // The cooldown is intentionally NOT tied to a username.
+  // After 5 failed normal-login attempts from this client/IP,
+  // every username is blocked for 2 minutes.
+  return String(ip);
+}
+
+function formatCooldown(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function checkLoginCooldown(req) {
+  const key = getLoginAttemptKey(req);
+
+  const entry = loginAttempts.get(key);
+
+  if (!entry) {
+    return {
+      locked: false,
+      retryAfter: 0,
+    };
+  }
+
+  if (entry.lockedUntil) {
+    const remainingMs = entry.lockedUntil - Date.now();
+
+    if (remainingMs > 0) {
+      return {
+        locked: true,
+
+        retryAfter: Math.max(1, Math.ceil(remainingMs / 1000)),
+      };
+    }
+
+    // Cooldown finished.
+    loginAttempts.delete(key);
+
+    return {
+      locked: false,
+      retryAfter: 0,
+    };
+  }
+
+  return {
+    locked: false,
+    retryAfter: 0,
+  };
+}
+
+function registerFailedLogin(req) {
+  const key = getLoginAttemptKey(req);
+
+  const existing = loginAttempts.get(key) || {
+    attempts: 0,
+    lockedUntil: null,
+  };
+
+  const attempts = existing.attempts + 1;
+
+  // =============================
+  // FIFTH FAILED ATTEMPT
+  // =============================
+
+  if (attempts >= MAX_LOGIN_ATTEMPTS) {
+    const lockedUntil = Date.now() + LOGIN_COOLDOWN_MS;
+
+    loginAttempts.set(key, {
+      attempts: MAX_LOGIN_ATTEMPTS,
+      lockedUntil,
+    });
+
+    return {
+      locked: true,
+      retryAfter: Math.ceil(LOGIN_COOLDOWN_MS / 1000),
+      attemptsRemaining: 0,
+    };
+  }
+
+  // =============================
+  // ATTEMPTS 1 - 4
+  // =============================
+
+  loginAttempts.set(key, {
+    attempts,
+    lockedUntil: null,
+  });
+
+  return {
+    locked: false,
+    retryAfter: 0,
+
+    attemptsRemaining: MAX_LOGIN_ATTEMPTS - attempts,
+  };
+}
+
+function clearFailedLogins(req) {
+  const key = getLoginAttemptKey(req);
+
+  loginAttempts.delete(key);
+}
+
+console.log("✅ AUTH ROUTER LOADED - RESEND OTP ENABLED");
+
 // =======================
 // Nodemailer
 // =======================
@@ -21,6 +143,1360 @@ const transporter = nodemailer.createTransport({
     user: process.env.ETHEREAL_USER,
     pass: process.env.ETHEREAL_PASS,
   },
+});
+
+// =======================
+// FORGOT PASSWORD HELPERS
+// =======================
+const PASSWORD_RESET_OTP_MIN = 100000;
+const PASSWORD_RESET_OTP_MAX = 1000000;
+const PASSWORD_RESET_OTP_TTL_MS = 5 * 60 * 1000;
+const PASSWORD_RESET_MAX_ATTEMPTS = 5;
+const PASSWORD_RESET_RESEND_COOLDOWN_MS = 60 * 1000;
+
+function getClientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim().slice(0, 45);
+  }
+
+  return String(req.ip || req.socket?.remoteAddress || "unknown").slice(0, 45);
+}
+
+function getUserAgent(req) {
+  return String(req.get("user-agent") || "unknown").slice(0, 255);
+}
+
+function createPasswordResetOtp() {
+  return crypto
+    .randomInt(PASSWORD_RESET_OTP_MIN, PASSWORD_RESET_OTP_MAX)
+    .toString();
+}
+
+async function sendPasswordResetOtp(email, otp) {
+  return transporter.sendMail({
+    from: '"PTC Portal" <noreply@ptc.edu.ph>',
+    to: email,
+    subject: "Your PTC Portal password reset code",
+
+    text: `
+PTC Portal
+Password Reset Verification
+
+Your password reset verification code is:
+
+${otp}
+
+This code will expire in 5 minutes.
+
+If you did not request a password reset, you can safely ignore this email.
+
+This is an automated message from PTC Portal.
+    `.trim(),
+
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password Reset Verification</title>
+</head>
+
+<body style="
+  margin: 0;
+  padding: 0;
+  background-color: #f3f4f6;
+  font-family: Arial, Helvetica, sans-serif;
+">
+
+  <div style="
+    width: 100%;
+    padding: 40px 15px;
+    box-sizing: border-box;
+  ">
+
+    <div style="
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+    ">
+
+      <!-- Header -->
+      <div style="
+        padding: 28px 30px;
+        background-color: #1f2937;
+        color: #ffffff;
+        text-align: center;
+      ">
+
+        <div style="
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 8px;
+        ">
+          PTC Portal
+        </div>
+
+        <div style="
+          font-size: 14px;
+          opacity: 0.85;
+        ">
+          Secure Account Verification
+        </div>
+
+      </div>
+
+      <!-- Content -->
+      <div style="
+        padding: 35px 30px;
+        text-align: center;
+      ">
+
+        <h2 style="
+          margin: 0 0 12px;
+          color: #1f2937;
+          font-size: 22px;
+        ">
+          Reset your password
+        </h2>
+
+        <p style="
+          margin: 0 0 25px;
+          color: #6b7280;
+          font-size: 15px;
+          line-height: 1.6;
+        ">
+          Use the verification code below to continue
+          resetting your PTC Portal password.
+        </p>
+
+        <!-- OTP -->
+        <div style="
+          display: inline-block;
+          padding: 16px 28px;
+          margin: 5px 0 20px;
+          background-color: #f3f4f6;
+          border-radius: 10px;
+          letter-spacing: 8px;
+          font-size: 32px;
+          font-weight: bold;
+          color: #111827;
+        ">
+          ${otp}
+        </div>
+
+        <p style="
+          margin: 10px 0 0;
+          color: #6b7280;
+          font-size: 14px;
+        ">
+          This verification code expires in
+          <strong style="color: #374151;">
+            5 minutes
+          </strong>.
+        </p>
+
+        <!-- Security Notice -->
+        <div style="
+          margin-top: 28px;
+          padding: 15px;
+          background-color: #f9fafb;
+          border-radius: 8px;
+          text-align: left;
+        ">
+
+          <p style="
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.6;
+          ">
+
+            <strong style="color: #374151;">
+              Security notice:
+            </strong>
+
+            If you did not request a password reset,
+            you can safely ignore this email.
+            Do not share this verification code with anyone.
+
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="
+        padding: 20px 30px;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+      ">
+
+        <p style="
+          margin: 0;
+          color: #9ca3af;
+          font-size: 12px;
+          line-height: 1.5;
+        ">
+
+          This is an automated message from PTC Portal.
+          <br />
+          Please do not reply to this email.
+
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
+    `.trim()
+  });
+}
+
+// =====================================================
+// FORGOT PASSWORD — REQUEST OTP
+// POST /auth/forgot-password
+// =====================================================
+router.post("/forgot-password", async (req, res) => {
+  const username =
+    typeof req.body.username === "string" ? req.body.username.trim() : "";
+
+  if (!username) {
+    return res.status(400).json({
+      success: false,
+      error: "Username is required.",
+    });
+  }
+
+  /*
+    Generate a public request ID.
+
+    We generate this before checking if the account exists
+    so the response does not directly expose whether the
+    username exists.
+  */
+  const publicId = crypto.randomUUID();
+
+  try {
+    // ==========================================
+    // 1. Find user
+    // ==========================================
+    const [rows] = await db.execute(
+      `
+      SELECT
+        u.user_id,
+        u.username,
+        u.email,
+        u.is_active
+      FROM users u
+      WHERE u.username = ?
+      LIMIT 1
+      `,
+      [username],
+    );
+
+    /*
+      IMPORTANT SECURITY BEHAVIOR:
+
+      For unknown accounts we return a generic message.
+
+      This helps prevent username enumeration.
+    */
+    if (rows.length === 0) {
+      return res.json({
+        success: true,
+        message:
+          "If the account exists and is eligible for recovery, a verification code has been sent.",
+        requestId: publicId,
+      });
+    }
+
+    const user = rows[0];
+
+    // ==========================================
+    // 2. Account must be active
+    // ==========================================
+    if (!user.is_active) {
+      await logActivity(
+        user.user_id,
+        "PASSWORD_RESET_BLOCKED",
+        "Authentication",
+        `${user.username} attempted a password reset while the account was inactive. Request ID: ${publicId}. IP: ${getClientIp(req)}.`,
+      );
+
+      return res.json({
+        success: true,
+        message:
+          "If the account exists and is eligible for recovery, a verification code has been sent.",
+        requestId: publicId,
+      });
+    }
+
+    // ==========================================
+    // 3. Make sure user has an email
+    // ==========================================
+    if (!user.email) {
+      await logActivity(
+        user.user_id,
+        "PASSWORD_RESET_EMAIL_MISSING",
+        "Authentication",
+        `${user.username} requested a password reset but no email address is registered. Request ID: ${publicId}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+        error: "This account does not have a registered recovery email.",
+      });
+    }
+
+    // ==========================================
+    // 4. Generate recovery OTP
+    // ==========================================
+    const otp = createPasswordResetOtp();
+
+    /*
+      DO NOT store the OTP itself.
+
+      bcrypt hashes the OTP before it is stored
+      inside password_reset_requests.
+    */
+    const codeHash = await bcrypt.hash(otp, 10);
+
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MS);
+
+    const requestIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+
+    // ==========================================
+    // 5. Invalidate old reset requests
+    // ==========================================
+    await db.execute(
+      `
+      UPDATE password_reset_requests
+      SET used_at = COALESCE(used_at, NOW())
+      WHERE user_id = ?
+        AND used_at IS NULL
+      `,
+      [user.user_id],
+    );
+
+    // ==========================================
+    // 6. Create reset request
+    // ==========================================
+    await db.execute(
+      `
+      INSERT INTO password_reset_requests
+      (
+        public_id,
+        user_id,
+        method,
+        code_hash,
+        expires_at,
+        attempt_count,
+        max_attempts,
+        request_ip,
+        user_agent
+      )
+      VALUES (?, ?, 'EMAIL', ?, ?, 0, ?, ?, ?)
+      `,
+      [
+        publicId,
+        user.user_id,
+        codeHash,
+        expiresAt,
+        PASSWORD_RESET_MAX_ATTEMPTS,
+        requestIp,
+        userAgent,
+      ],
+    );
+
+    // ==========================================
+    // 7. Activity log — request created
+    // ==========================================
+    await logActivity(
+      user.user_id,
+      "PASSWORD_RESET_REQUESTED",
+      "Authentication",
+      `${user.username} requested a password reset. Request ID: ${publicId}. IP: ${requestIp}.`,
+    );
+
+    // ==========================================
+    // 8. Send OTP email
+    // ==========================================
+    try {
+      const info = await sendPasswordResetOtp(user.email, otp);
+
+      /*
+        Since your project currently uses Ethereal,
+        this prints the email preview link.
+
+        Later, when you use a real email provider,
+        getTestMessageUrl may return false/null.
+      */
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+
+      if (previewUrl) {
+        console.log("Password reset preview URL:", previewUrl);
+      }
+
+      // ========================================
+      // 9. Activity log — OTP sent
+      // ========================================
+      await logActivity(
+        user.user_id,
+        "PASSWORD_RESET_OTP_SENT",
+        "Authentication",
+        `A password reset OTP was sent for ${user.username}. Request ID: ${publicId}.`,
+      );
+    } catch (mailError) {
+      console.error("PASSWORD RESET EMAIL ERROR:", mailError);
+
+      /*
+        If the email fails, invalidate the request
+        so it cannot later be used.
+      */
+      await db.execute(
+        `
+        UPDATE password_reset_requests
+        SET used_at = NOW()
+        WHERE public_id = ?
+        `,
+        [publicId],
+      );
+
+      await logActivity(
+        user.user_id,
+        "PASSWORD_RESET_OTP_SEND_FAILED",
+        "Authentication",
+        `Password reset OTP delivery failed for ${user.username}. Request ID: ${publicId}.`,
+      );
+
+      return res.status(500).json({
+        success: false,
+        error: "Unable to send the password reset code. Please try again.",
+      });
+    }
+
+    // ==========================================
+    // 10. Success
+    // ==========================================
+    return res.json({
+      success: true,
+      message:
+        "If the account exists and is eligible for recovery, a verification code has been sent.",
+      requestId: publicId,
+    });
+  } catch (err) {
+    console.error("FORGOT PASSWORD ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      error: "Unable to process the password reset request.",
+    });
+  }
+});
+
+// =====================================================
+// FORGOT PASSWORD — VERIFY OTP
+// POST /auth/forgot-password/verify
+// =====================================================
+router.post("/forgot-password/verify", async (req, res) => {
+  const requestId =
+    typeof req.body.requestId === "string" ? req.body.requestId.trim() : "";
+
+  const otp = typeof req.body.otp === "string" ? req.body.otp.trim() : "";
+
+  // ==========================================
+  // 1. Basic validation
+  // ==========================================
+  if (!requestId || !otp) {
+    return res.status(400).json({
+      success: false,
+      error: "Request ID and OTP are required.",
+    });
+  }
+
+  if (!/^\d{6}$/.test(otp)) {
+    return res.status(400).json({
+      success: false,
+      error: "OTP must be a 6-digit code.",
+    });
+  }
+
+  try {
+    // ========================================
+    // 2. Load reset request + user
+    // ========================================
+    const [rows] = await db.execute(
+      `
+        SELECT
+          pr.public_id,
+          pr.user_id,
+          pr.code_hash,
+          pr.expires_at,
+          pr.attempt_count,
+          pr.max_attempts,
+          pr.verified_at,
+          pr.used_at,
+          u.username,
+          u.is_active
+        FROM password_reset_requests pr
+        INNER JOIN users u
+          ON u.user_id = pr.user_id
+        WHERE pr.public_id = ?
+        LIMIT 1
+        `,
+      [requestId],
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired password reset request.",
+      });
+    }
+
+    const resetRequest = rows[0];
+
+    // ========================================
+    // 3. Account must still be active
+    // ========================================
+    if (!resetRequest.is_active) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_BLOCKED",
+        "Authentication",
+        `${resetRequest.username} attempted OTP verification while the account was inactive. Request ID: ${requestId}.`,
+      );
+
+      return res.status(403).json({
+        success: false,
+        error: "This account is not available for password recovery.",
+      });
+    }
+
+    // ========================================
+    // 4. Request must not already be used
+    // ========================================
+    if (resetRequest.used_at) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_INVALID_ATTEMPT",
+        "Authentication",
+        `${resetRequest.username} attempted to verify an already-used password reset request. Request ID: ${requestId}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+        error: "This password reset request is no longer valid.",
+      });
+    }
+
+    // ========================================
+    // 5. Check expiration
+    // ========================================
+    if (new Date() > new Date(resetRequest.expires_at)) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_OTP_EXPIRED",
+        "Authentication",
+        `${resetRequest.username} attempted to use an expired password reset OTP. Request ID: ${requestId}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+        error: "Verification code has expired. Please request a new code.",
+      });
+    }
+
+    // ========================================
+    // 6. Check maximum attempts
+    // ========================================
+    if (
+      Number(resetRequest.attempt_count) >= Number(resetRequest.max_attempts)
+    ) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_OTP_LOCKED",
+        "Authentication",
+        `${resetRequest.username} reached the maximum password reset OTP attempts. Request ID: ${requestId}.`,
+      );
+
+      return res.status(429).json({
+        success: false,
+        error:
+          "Maximum verification attempts reached. Please request a new code.",
+      });
+    }
+
+    // ========================================
+    // 7. Compare OTP with bcrypt hash
+    // ========================================
+    const otpMatches = await bcrypt.compare(otp, resetRequest.code_hash);
+
+    if (!otpMatches) {
+      /*
+          Increase attempt counter.
+        */
+      await db.execute(
+        `
+          UPDATE password_reset_requests
+          SET attempt_count =
+            attempt_count + 1
+          WHERE public_id = ?
+          `,
+        [requestId],
+      );
+
+      const newAttemptCount = Number(resetRequest.attempt_count) + 1;
+
+      const remainingAttempts = Math.max(
+        Number(resetRequest.max_attempts) - newAttemptCount,
+        0,
+      );
+
+      // ======================================
+      // Activity log — wrong OTP
+      // ======================================
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_OTP_FAILED",
+        "Authentication",
+        `${resetRequest.username} entered an incorrect password reset OTP. Request ID: ${requestId}. Remaining attempts: ${remainingAttempts}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+
+        error:
+          remainingAttempts > 0
+            ? `Invalid verification code. ${remainingAttempts} attempt(s) remaining.`
+            : "Maximum verification attempts reached. Please request a new code.",
+
+        remainingAttempts,
+      });
+    }
+
+    // ========================================
+    // 8. Mark request verified
+    // ========================================
+    if (!resetRequest.verified_at) {
+      await db.execute(
+        `
+          UPDATE password_reset_requests
+          SET verified_at = NOW()
+          WHERE public_id = ?
+          `,
+        [requestId],
+      );
+
+      // ======================================
+      // Activity log — OTP verified
+      // ======================================
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_OTP_VERIFIED",
+        "Authentication",
+        `${resetRequest.username} successfully verified a password reset OTP. Request ID: ${requestId}.`,
+      );
+    }
+
+    // ========================================
+    // 9. JWT_SECRET required
+    // ========================================
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured.");
+
+      return res.status(500).json({
+        success: false,
+        error: "Authentication configuration error.",
+      });
+    }
+
+    /*
+        IMPORTANT:
+
+        This is NOT a normal login JWT.
+
+        It has a special purpose:
+        "password-reset"
+
+        The frontend must send this token
+        during the final password reset request.
+
+        It expires after 10 minutes.
+      */
+    const resetToken = jwt.sign(
+      {
+        purpose: "password-reset",
+
+        request_id: requestId,
+
+        user_id: Number(resetRequest.user_id),
+      },
+
+      process.env.JWT_SECRET,
+
+      {
+        expiresIn: "10m",
+      },
+    );
+
+    // ========================================
+    // 10. Success
+    // ========================================
+    return res.json({
+      success: true,
+
+      message: "Verification code confirmed.",
+
+      verified: true,
+
+      resetToken,
+    });
+  } catch (err) {
+    console.error("VERIFY PASSWORD RESET OTP ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      error: "Unable to verify the password reset code.",
+    });
+  }
+});
+
+// =====================================================
+// FORGOT PASSWORD — RESEND OTP
+// POST /auth/forgot-password/resend
+// =====================================================
+router.post("/forgot-password/resend", async (req, res) => {
+  const requestId =
+    typeof req.body.requestId === "string" ? req.body.requestId.trim() : "";
+
+  if (!requestId) {
+    return res.status(400).json({
+      success: false,
+      error: "Request ID is required.",
+    });
+  }
+
+  try {
+    // ========================================
+    // 1. Load current request
+    // ========================================
+    const [rows] = await db.execute(
+      `
+        SELECT
+          pr.public_id,
+          pr.user_id,
+          pr.method,
+          pr.verified_at,
+          pr.used_at,
+          pr.created_at,
+          u.username,
+          u.email,
+          u.is_active
+        FROM password_reset_requests pr
+        INNER JOIN users u
+          ON u.user_id = pr.user_id
+        WHERE pr.public_id = ?
+        LIMIT 1
+        `,
+      [requestId],
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid password reset request.",
+      });
+    }
+
+    const resetRequest = rows[0];
+
+    // ========================================
+    // 2. Validate request
+    // ========================================
+    if (!resetRequest.is_active || resetRequest.used_at) {
+      return res.status(400).json({
+        success: false,
+        error: "This password reset request is no longer valid.",
+      });
+    }
+
+    if (resetRequest.verified_at) {
+      return res.status(400).json({
+        success: false,
+        error: "This password reset request is already verified.",
+      });
+    }
+
+    // ========================================
+    // 3. Resend cooldown
+    // ========================================
+    const lastSentAt = new Date(resetRequest.created_at).getTime();
+
+    const elapsedSinceLastSend = Date.now() - lastSentAt;
+
+    if (
+      Number.isFinite(lastSentAt) &&
+      elapsedSinceLastSend < PASSWORD_RESET_RESEND_COOLDOWN_MS
+    ) {
+      const retryAfterSeconds = Math.ceil(
+        (PASSWORD_RESET_RESEND_COOLDOWN_MS - elapsedSinceLastSend) / 1000,
+      );
+
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_OTP_RESEND_THROTTLED",
+        "Authentication",
+        `${resetRequest.username} attempted to resend a password reset OTP too soon. Request ID: ${requestId}.`,
+      );
+
+      return res.status(429).json({
+        success: false,
+
+        error: `Please wait ${retryAfterSeconds} second(s) before requesting another code.`,
+
+        retryAfterSeconds,
+      });
+    }
+
+    // ========================================
+    // 4. Generate new request + OTP
+    // ========================================
+    const newRequestId = crypto.randomUUID();
+
+    const otp = createPasswordResetOtp();
+
+    const codeHash = await bcrypt.hash(otp, 10);
+
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MS);
+
+    const requestIp = getClientIp(req);
+
+    const userAgent = getUserAgent(req);
+
+    /*
+        IMPORTANT:
+
+        Your Step 1 SQL table has created_at,
+        but does NOT have updated_at.
+
+        Because of that, a resend creates a
+        BRAND NEW password reset request.
+
+        The old request is invalidated only
+        after the new email is successfully sent.
+      */
+
+    // ========================================
+    // 5. Insert replacement request
+    // ========================================
+    await db.execute(
+      `
+        INSERT INTO password_reset_requests
+        (
+          public_id,
+          user_id,
+          method,
+          code_hash,
+          expires_at,
+          attempt_count,
+          max_attempts,
+          request_ip,
+          user_agent
+        )
+        VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
+        `,
+      [
+        newRequestId,
+
+        resetRequest.user_id,
+
+        resetRequest.method || "EMAIL",
+
+        codeHash,
+
+        expiresAt,
+
+        PASSWORD_RESET_MAX_ATTEMPTS,
+
+        requestIp,
+
+        userAgent,
+      ],
+    );
+
+    // ========================================
+    // 6. Send new OTP
+    // ========================================
+    try {
+      const info = await sendPasswordResetOtp(resetRequest.email, otp);
+
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+
+      if (previewUrl) {
+        console.log("Password reset resend preview URL:", previewUrl);
+      }
+    } catch (mailError) {
+      console.error("PASSWORD RESET RESEND EMAIL ERROR:", mailError);
+
+      /*
+          The replacement request cannot be used
+          if sending the email failed.
+        */
+      await db.execute(
+        `
+          UPDATE password_reset_requests
+          SET used_at = NOW()
+          WHERE public_id = ?
+          `,
+        [newRequestId],
+      );
+
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_OTP_SEND_FAILED",
+        "Authentication",
+        `Password reset OTP resend failed for ${resetRequest.username}. Request ID: ${newRequestId}.`,
+      );
+
+      return res.status(500).json({
+        success: false,
+
+        error: "Unable to resend the verification code. Please try again.",
+      });
+    }
+
+    // ========================================
+    // 7. Invalidate previous request
+    // ========================================
+    await db.execute(
+      `
+        UPDATE password_reset_requests
+        SET used_at = NOW()
+        WHERE public_id = ?
+          AND used_at IS NULL
+        `,
+      [requestId],
+    );
+
+    // ========================================
+    // 8. Activity log
+    // ========================================
+    await logActivity(
+      resetRequest.user_id,
+      "PASSWORD_RESET_OTP_RESENT",
+      "Authentication",
+      `A new password reset OTP was sent for ${resetRequest.username}. Request ID: ${newRequestId}. Previous request ID: ${requestId}. IP: ${requestIp}.`,
+    );
+
+    // ========================================
+    // 9. IMPORTANT:
+    // frontend must save NEW requestId
+    // ========================================
+    return res.json({
+      success: true,
+
+      message: "A new verification code has been sent.",
+
+      requestId: newRequestId,
+    });
+  } catch (err) {
+    console.error("RESEND PASSWORD RESET OTP ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+
+      error: "Unable to resend the verification code.",
+    });
+  }
+});
+
+// =====================================================
+// FORGOT PASSWORD — SET NEW PASSWORD
+// POST /auth/forgot-password/reset
+// =====================================================
+router.post("/forgot-password/reset", async (req, res) => {
+  const requestId =
+    typeof req.body.requestId === "string" ? req.body.requestId.trim() : "";
+
+  const resetToken =
+    typeof req.body.resetToken === "string" ? req.body.resetToken.trim() : "";
+
+  const newPassword =
+    typeof req.body.newPassword === "string" ? req.body.newPassword : "";
+
+  // ==========================================
+  // 1. Validate input
+  // ==========================================
+  if (!requestId || !resetToken || !newPassword) {
+    return res.status(400).json({
+      success: false,
+
+      error: "Request ID, reset token, and new password are required.",
+    });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({
+      success: false,
+
+      error: "Password must be at least 8 characters long.",
+    });
+  }
+
+  /*
+      bcrypt only uses the first 72 bytes.
+
+      Rejecting longer passwords prevents
+      confusing password behavior.
+    */
+  if (Buffer.byteLength(newPassword, "utf8") > 72) {
+    return res.status(400).json({
+      success: false,
+      error: "Password is too long.",
+    });
+  }
+
+  let connection;
+
+  let resetRequestForLog = null;
+
+  try {
+    // ========================================
+    // 2. JWT config
+    // ========================================
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured.");
+
+      return res.status(500).json({
+        success: false,
+
+        error: "Authentication configuration error.",
+      });
+    }
+
+    // ========================================
+    // 3. Verify reset authorization token
+    // ========================================
+    let decodedResetToken;
+
+    try {
+      decodedResetToken = jwt.verify(resetToken, process.env.JWT_SECRET);
+    } catch (tokenError) {
+      return res.status(401).json({
+        success: false,
+
+        error: "Invalid or expired password reset authorization.",
+      });
+    }
+
+    // ========================================
+    // 4. Make sure token is for password reset
+    // ========================================
+    if (
+      decodedResetToken?.purpose !== "password-reset" ||
+      decodedResetToken?.request_id !== requestId
+    ) {
+      return res.status(401).json({
+        success: false,
+
+        error: "Invalid or expired password reset authorization.",
+      });
+    }
+
+    // ========================================
+    // 5. Load request + current user
+    // ========================================
+    const [rows] = await db.execute(
+      `
+        SELECT
+          pr.public_id,
+          pr.user_id,
+          pr.expires_at,
+          pr.verified_at,
+          pr.used_at,
+
+          u.username,
+          u.password_hash,
+          u.is_active
+
+        FROM password_reset_requests pr
+
+        INNER JOIN users u
+          ON u.user_id = pr.user_id
+
+        WHERE pr.public_id = ?
+
+        LIMIT 1
+        `,
+      [requestId],
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+
+        error: "Invalid password reset request.",
+      });
+    }
+
+    const resetRequest = rows[0];
+
+    resetRequestForLog = resetRequest;
+
+    // ========================================
+    // 6. Token user must match reset user
+    // ========================================
+    if (Number(decodedResetToken.user_id) !== Number(resetRequest.user_id)) {
+      return res.status(401).json({
+        success: false,
+
+        error: "Invalid or expired password reset authorization.",
+      });
+    }
+
+    // ========================================
+    // 7. User must still be active
+    // ========================================
+    if (!resetRequest.is_active) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_BLOCKED",
+        "Authentication",
+        `${resetRequest.username} attempted to complete a password reset while the account was inactive. Request ID: ${requestId}.`,
+      );
+
+      return res.status(403).json({
+        success: false,
+
+        error: "This account is not available for password recovery.",
+      });
+    }
+
+    // ========================================
+    // 8. Request cannot already be used
+    // ========================================
+    if (resetRequest.used_at) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_INVALID_ATTEMPT",
+        "Authentication",
+        `${resetRequest.username} attempted to reuse a completed password reset request. Request ID: ${requestId}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+
+        error: "This password reset request has already been used.",
+      });
+    }
+
+    // ========================================
+    // 9. OTP must already be verified
+    // ========================================
+    if (!resetRequest.verified_at) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_NOT_VERIFIED",
+        "Authentication",
+        `${resetRequest.username} attempted to reset a password before OTP verification. Request ID: ${requestId}.`,
+      );
+
+      return res.status(403).json({
+        success: false,
+
+        error: "Verify the password reset code first.",
+      });
+    }
+
+    // ========================================
+    // 10. Check reset request expiration
+    // ========================================
+    if (new Date() > new Date(resetRequest.expires_at)) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_REQUEST_EXPIRED",
+        "Authentication",
+        `${resetRequest.username} attempted to reset a password using an expired request. Request ID: ${requestId}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+
+        error: "Password reset request has expired. Please request a new code.",
+      });
+    }
+
+    // ========================================
+    // 11. New password cannot equal old password
+    // ========================================
+    const sameAsCurrentPassword = await bcrypt.compare(
+      newPassword,
+      resetRequest.password_hash,
+    );
+
+    if (sameAsCurrentPassword) {
+      await logActivity(
+        resetRequest.user_id,
+        "PASSWORD_RESET_REJECTED",
+        "Authentication",
+        `${resetRequest.username} attempted to reuse the current password during Forgot Password. Request ID: ${requestId}.`,
+      );
+
+      return res.status(400).json({
+        success: false,
+
+        error: "New password must be different from the current password.",
+      });
+    }
+
+    // ========================================
+    // 12. Hash new password
+    // ========================================
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // ========================================
+    // 13. Begin database transaction
+    // ========================================
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+
+    // ========================================
+    // 14. Update users.password_hash
+    // ========================================
+    await connection.execute(
+      `
+        UPDATE users
+        SET password_hash = ?
+        WHERE user_id = ?
+        `,
+      [newPasswordHash, resetRequest.user_id],
+    );
+
+    // ========================================
+    // 15. Mark recovery request used
+    // ========================================
+    await connection.execute(
+      `
+        UPDATE password_reset_requests
+        SET used_at = NOW()
+        WHERE public_id = ?
+          AND used_at IS NULL
+        `,
+      [requestId],
+    );
+    // ========================================
+    // 16. INVALIDATE LOGIN OTP
+    //
+    // If the user's password was reset,
+    // invalidate any pending login OTP.
+    // ========================================
+
+    await connection.execute(
+      `
+  DELETE FROM otp_codes
+  WHERE user_id = ?
+  `,
+      [resetRequest.user_id],
+    );
+    /*
+        Invalidate any other password reset
+        requests that may exist for this user.
+      */
+    // ========================================
+    // 17. Invalidate other reset requests
+    // ========================================
+    await connection.execute(
+      `
+        UPDATE password_reset_requests
+
+        SET used_at =
+          COALESCE(
+            used_at,
+            NOW()
+          )
+
+        WHERE user_id = ?
+          AND used_at IS NULL
+        `,
+      [resetRequest.user_id],
+    );
+
+    // ========================================
+    // 18. Commit password change
+    // ========================================
+    await connection.commit();
+
+    // ========================================
+    // 19. Activity log — SUCCESS
+    // ========================================
+    await logActivity(
+      resetRequest.user_id,
+      "PASSWORD_RESET_SUCCESS",
+      "Authentication",
+      `${resetRequest.username} successfully changed the account password using Forgot Password. Request ID: ${requestId}. IP: ${getClientIp(req)}.`,
+    );
+
+    // ========================================
+    // 20. Final response
+    // ========================================
+    return res.json({
+      success: true,
+
+      message: "Password reset successfully. You can now log in.",
+    });
+  } catch (err) {
+    // ========================================
+    // Roll back transaction if necessary
+    // ========================================
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("PASSWORD RESET ROLLBACK ERROR:", rollbackError);
+      }
+    }
+
+    console.error("RESET PASSWORD ERROR:", err);
+
+    // ========================================
+    // Activity log — server/database failure
+    // ========================================
+    if (resetRequestForLog) {
+      await logActivity(
+        resetRequestForLog.user_id,
+        "PASSWORD_RESET_FAILED",
+        "Authentication",
+        `${resetRequestForLog.username} password reset failed because of a server/database error. Request ID: ${requestId}.`,
+      );
+    }
+
+    return res.status(500).json({
+      success: false,
+
+      error: "Unable to reset the password.",
+    });
+  } finally {
+    // ========================================
+    // Release MySQL connection
+    // ========================================
+    if (connection) {
+      connection.release();
+    }
+  }
 });
 
 // =======================
@@ -40,7 +1516,25 @@ router.post("/login", async (req, res) => {
       error: "Username and password are required.",
     });
   }
+  // ==========================================
+  // CHECK LOGIN COOLDOWN BEFORE AUTHENTICATING
+  // ==========================================
 
+  const cooldown = checkLoginCooldown(req);
+
+  if (cooldown.locked) {
+    return res.status(429).json({
+      success: false,
+
+      error:
+        `Too many failed login attempts. ` +
+        `Try again in ${formatCooldown(cooldown.retryAfter)}.`,
+
+      retry_after: cooldown.retryAfter,
+
+      locked: true,
+    });
+  }
   try {
     const [rows] = await db.execute(
       `
@@ -63,8 +1557,41 @@ router.post("/login", async (req, res) => {
 
     // Username does not exist
     if (rows.length === 0) {
+      const failed = registerFailedLogin(req);
+
+      // =============================
+      // ACCOUNT NOW TEMPORARILY LOCKED
+      // =============================
+
+      if (failed.locked) {
+        return res.status(429).json({
+          success: false,
+
+          error:
+            `Too many failed login attempts. ` +
+            `Try again in ${formatCooldown(failed.retryAfter)}.`,
+
+          retry_after: failed.retryAfter,
+
+          locked: true,
+
+          attempts_remaining: 0,
+        });
+      }
+
+      // =============================
+      // STILL HAS ATTEMPTS
+      // =============================
+
       return res.status(401).json({
-        error: "Invalid username or password.",
+        success: false,
+
+        error:
+          `Invalid username or password. ` +
+          `${failed.attemptsRemaining} ` +
+          `attempt${failed.attemptsRemaining === 1 ? "" : "s"} remaining.`,
+
+        attempts_remaining: failed.attemptsRemaining,
       });
     }
 
@@ -73,6 +1600,8 @@ router.post("/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (!match) {
+      const failed = registerFailedLogin(req);
+
       await logActivity(
         user.user_id,
         "FAILED LOGIN",
@@ -80,10 +1609,51 @@ router.post("/login", async (req, res) => {
         `${user.username} entered an incorrect password.`,
       );
 
+      // =============================
+      // FIFTH FAILURE
+      // =============================
+
+      if (failed.locked) {
+        await logActivity(
+          user.user_id,
+          "LOGIN COOLDOWN",
+          "Authentication",
+          `${user.username} reached the shared 5-attempt login limit and this client was temporarily blocked for 2 minutes.`,
+        );
+
+        return res.status(429).json({
+          success: false,
+
+          error:
+            `Too many failed login attempts. ` +
+            `Try again in ${formatCooldown(failed.retryAfter)}.`,
+
+          retry_after: failed.retryAfter,
+
+          locked: true,
+
+          attempts_remaining: 0,
+        });
+      }
+
+      // =============================
+      // ATTEMPTS 1 - 4
+      // =============================
+
       return res.status(401).json({
-        error: "Invalid username or password.",
+        success: false,
+
+        error:
+          `Invalid username or password. ` +
+          `${failed.attemptsRemaining} ` +
+          `attempt${failed.attemptsRemaining === 1 ? "" : "s"} remaining.`,
+
+        attempts_remaining: failed.attemptsRemaining,
       });
     }
+
+    // Correct password: reset previous failed attempts.
+    clearFailedLogins(req);
 
     // Account inactive
     if (!user.is_active) {
@@ -98,31 +1668,228 @@ router.post("/login", async (req, res) => {
         error: "Your account has been deactivated.",
       });
     }
+    // ==========================================
+    // GENERATE LOGIN OTP
+    // ==========================================
 
-    // Generate OTP
-    const otp = crypto.randomInt(100000, 999999).toString();
+    const otp = crypto.randomInt(100000, 1000000).toString();
 
-    // Remove any existing OTP for this user
-    await db.execute("DELETE FROM otp_codes WHERE user_id = ?", [user.user_id]);
+    // ==========================================
+    // HASH OTP BEFORE DATABASE STORAGE
+    // ==========================================
 
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    // ==========================================
+    // REMOVE OLD OTP
+    // ==========================================
 
     await db.execute(
       `
-      INSERT INTO otp_codes
-      (user_id, otp_code, expires_at)
-      VALUES (?, ?, ?)
-      `,
-      [user.user_id, otp, expiresAt],
+  DELETE FROM otp_codes
+  WHERE user_id = ?
+  `,
+      [user.user_id],
     );
 
-    const info = await transporter.sendMail({
-      from: '"PTC Portal" <noreply@ptc.edu.ph>',
-      to: user.email,
-      subject: "PTC Portal OTP",
-      text: `Your OTP is ${otp}.`,
-      html: `...`,
-    });
+    // ==========================================
+    // OTP EXPIRATION
+    // ==========================================
+
+    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+
+    // ==========================================
+    // STORE ONLY HASH
+    //
+    // Never store the actual six-digit OTP.
+    // ==========================================
+
+    await db.execute(
+      `
+  INSERT INTO otp_codes
+  (
+    user_id,
+    otp_hash,
+    expires_at
+  )
+  VALUES (?, ?, ?)
+  `,
+      [user.user_id, otpHash, expiresAt],
+    );
+
+const info = await transporter.sendMail({
+  from: '"PTC Portal" <noreply@ptc.edu.ph>',
+  to: user.email,
+  subject: "Your PTC Portal verification code",
+
+  text:
+    `Your PTC Portal verification code is ${otp}.\n\n` +
+    `This code expires in 5 minutes.\n\n` +
+    `If you did not try to sign in to PTC Portal, you can safely ignore this email.`,
+
+  html: `
+    <div
+      style="
+        margin: 0;
+        padding: 40px 20px;
+        background-color: #f4f6f8;
+        font-family: Arial, Helvetica, sans-serif;
+      "
+    >
+      <div
+        style="
+          max-width: 520px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border: 1px solid #e2e5e8;
+          border-radius: 12px;
+          overflow: hidden;
+        "
+      >
+
+        <!-- Header -->
+        <div
+          style="
+            padding: 24px 30px;
+            border-bottom: 1px solid #eeeeee;
+            text-align: center;
+          "
+        >
+          <div
+            style="
+              font-size: 22px;
+              font-weight: bold;
+              color: #1f2937;
+            "
+          >
+            PTC Portal
+          </div>
+
+          <div
+            style="
+              margin-top: 5px;
+              font-size: 13px;
+              color: #6b7280;
+            "
+          >
+            Secure Account Verification
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 35px 30px;">
+
+          <h2
+            style="
+              margin: 0 0 14px;
+              color: #202124;
+              font-size: 24px;
+              font-weight: 600;
+            "
+          >
+            Verify your sign-in
+          </h2>
+
+          <p
+            style="
+              margin: 0 0 25px;
+              color: #5f6368;
+              font-size: 15px;
+              line-height: 1.6;
+            "
+          >
+            We received a request to sign in to your PTC Portal account.
+            Enter the verification code below to continue.
+          </p>
+
+          <!-- OTP -->
+          <div
+            style="
+              margin: 25px 0;
+              padding: 22px;
+              background-color: #f7f8fa;
+              border: 1px solid #e1e4e8;
+              border-radius: 8px;
+              text-align: center;
+            "
+          >
+            <div
+              style="
+                margin-bottom: 8px;
+                color: #6b7280;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              "
+            >
+              Verification code
+            </div>
+
+            <div
+              style="
+                color: #202124;
+                font-size: 34px;
+                font-weight: 700;
+                letter-spacing: 8px;
+              "
+            >
+              ${otp}
+            </div>
+          </div>
+
+          <p
+            style="
+              margin: 20px 0 0;
+              color: #5f6368;
+              font-size: 14px;
+              line-height: 1.6;
+            "
+          >
+            This code will expire in
+            <strong>5 minutes</strong>.
+          </p>
+
+          <p
+            style="
+              margin: 18px 0 0;
+              color: #5f6368;
+              font-size: 14px;
+              line-height: 1.6;
+            "
+          >
+            If you did not try to sign in to PTC Portal,
+            you can safely ignore this email.
+          </p>
+
+        </div>
+
+        <!-- Footer -->
+        <div
+          style="
+            padding: 20px 30px;
+            background-color: #fafafa;
+            border-top: 1px solid #eeeeee;
+            text-align: center;
+          "
+        >
+          <p
+            style="
+              margin: 0;
+              color: #9aa0a6;
+              font-size: 12px;
+              line-height: 1.5;
+            "
+          >
+            This is an automated message from PTC Portal.
+            <br />
+            Please do not reply to this email.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  `,
+});
 
     console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
 
@@ -134,6 +1901,361 @@ router.post("/login", async (req, res) => {
 
     res.status(500).json({
       error: "Server Error",
+    });
+  }
+});
+
+// =======================
+// RESEND OTP
+// =======================
+//
+// This route is available only while an OTP record already
+// exists for the username. It does NOT create a new login
+// session by itself.
+//
+// Cooldown is enforced on the backend using the OTP expiry
+// timestamp, so refreshing the frontend cannot bypass it.
+//
+router.post(["/resend-otp", "/auth/resend-otp"], async (req, res) => {
+  const username =
+    typeof req.body.username === "string" ? req.body.username.trim() : "";
+
+  console.log("RESEND OTP REQUEST RECEIVED:", {
+    originalUrl: req.originalUrl,
+    baseUrl: req.baseUrl,
+    path: req.path,
+    username,
+  });
+
+  if (!username) {
+    return res.status(400).json({
+      success: false,
+      error: "Username is required.",
+    });
+  }
+
+  try {
+    // ==========================================
+    // 1. Find the account
+    // ==========================================
+
+    const [users] = await db.execute(
+      `
+      SELECT
+        user_id,
+        username,
+        email,
+        is_active
+      FROM users
+      WHERE username = ?
+      LIMIT 1
+      `,
+      [username],
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Your OTP session is unavailable. Please login again.",
+      });
+    }
+
+    const user = users[0];
+
+    if (!user.is_active) {
+      return res.status(403).json({
+        success: false,
+        error: "Your account has been deactivated.",
+      });
+    }
+
+    // ==========================================
+    // 2. Existing OTP is required
+    //
+    // This prevents /resend-otp from being used
+    // to start an OTP flow without a real login.
+    // ==========================================
+
+    const [otpRows] = await db.execute(
+      `
+      SELECT
+        expires_at
+      FROM otp_codes
+      WHERE user_id = ?
+      LIMIT 1
+      `,
+      [user.user_id],
+    );
+
+    if (otpRows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Your OTP session has expired. Please login again.",
+      });
+    }
+
+    // ==========================================
+    // 3. Enforce 60-second resend cooldown
+    //
+    // Every OTP lives for OTP_EXPIRY_MS.
+    // Therefore:
+    //
+    // issued_at = expires_at - OTP_EXPIRY_MS
+    // ==========================================
+
+    const expiresAtMs = new Date(otpRows[0].expires_at).getTime();
+
+    if (!Number.isFinite(expiresAtMs)) {
+      return res.status(500).json({
+        success: false,
+        error: "Unable to validate the OTP cooldown.",
+      });
+    }
+
+    const issuedAtMs = expiresAtMs - OTP_EXPIRY_MS;
+    const nextAllowedAtMs = issuedAtMs + OTP_RESEND_COOLDOWN_MS;
+    const remainingMs = nextAllowedAtMs - Date.now();
+
+    if (remainingMs > 0) {
+      const retryAfter = Math.max(1, Math.ceil(remainingMs / 1000));
+
+      return res.status(429).json({
+        success: false,
+        error: `Please wait ${retryAfter} second${
+          retryAfter === 1 ? "" : "s"
+        } before requesting another OTP.`,
+        retry_after: retryAfter,
+      });
+    }
+
+    // ==========================================
+    // 4. Create a fresh OTP
+    // ==========================================
+    // ==========================================
+    // CREATE NEW OTP
+    // ==========================================
+
+    const otp = crypto.randomInt(100000, 1000000).toString();
+
+    // ==========================================
+    // HASH NEW OTP
+    // ==========================================
+
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    // ==========================================
+    // NEW EXPIRATION
+    // ==========================================
+
+    const newExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+
+    // ==========================================
+    // STORE HASH
+    // ==========================================
+
+    await db.execute(
+      `
+ UPDATE otp_codes
+SET
+  otp_hash = ?,
+  expires_at = ?,
+  attempt_count = 0
+WHERE user_id = ?
+  `,
+      [otpHash, newExpiresAt, user.user_id],
+    );
+
+    // ==========================================
+    // 5. Send the new OTP
+    // ==========================================
+
+const info = await transporter.sendMail({
+  from: '"PTC Portal" <noreply@ptc.edu.ph>',
+  to: user.email,
+  subject: "Your new PTC Portal verification code",
+
+  text:
+    `Your new PTC Portal verification code is ${otp}.\n\n` +
+    `This code expires in 5 minutes.\n\n` +
+    `If you did not request a new verification code, you can safely ignore this email.`,
+
+  html: `
+    <div
+      style="
+        margin: 0;
+        padding: 40px 20px;
+        background-color: #f4f6f8;
+        font-family: Arial, Helvetica, sans-serif;
+      "
+    >
+      <div
+        style="
+          max-width: 520px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border: 1px solid #e2e5e8;
+          border-radius: 12px;
+          overflow: hidden;
+        "
+      >
+
+        <!-- Header -->
+        <div
+          style="
+            padding: 24px 30px;
+            border-bottom: 1px solid #eeeeee;
+            text-align: center;
+          "
+        >
+          <div
+            style="
+              font-size: 22px;
+              font-weight: bold;
+              color: #1f2937;
+            "
+          >
+            PTC Portal
+          </div>
+
+          <div
+            style="
+              margin-top: 5px;
+              font-size: 13px;
+              color: #6b7280;
+            "
+          >
+            Secure Account Verification
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 35px 30px;">
+
+          <h2
+            style="
+              margin: 0 0 14px;
+              color: #202124;
+              font-size: 24px;
+              font-weight: 600;
+            "
+          >
+            Your new verification code
+          </h2>
+
+          <p
+            style="
+              margin: 0 0 25px;
+              color: #5f6368;
+              font-size: 15px;
+              line-height: 1.6;
+            "
+          >
+            A new verification code was requested for your
+            PTC Portal account. Use the code below to continue.
+          </p>
+
+          <!-- OTP -->
+          <div
+            style="
+              margin: 25px 0;
+              padding: 22px;
+              background-color: #f7f8fa;
+              border: 1px solid #e1e4e8;
+              border-radius: 8px;
+              text-align: center;
+            "
+          >
+            <div
+              style="
+                margin-bottom: 8px;
+                color: #6b7280;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              "
+            >
+              New verification code
+            </div>
+
+            <div
+              style="
+                color: #202124;
+                font-size: 34px;
+                font-weight: 700;
+                letter-spacing: 8px;
+              "
+            >
+              ${otp}
+            </div>
+          </div>
+
+          <p
+            style="
+              margin: 20px 0 0;
+              color: #5f6368;
+              font-size: 14px;
+              line-height: 1.6;
+            "
+          >
+            This code will expire in
+            <strong>5 minutes</strong>.
+          </p>
+
+          <p
+            style="
+              margin: 18px 0 0;
+              color: #5f6368;
+              font-size: 14px;
+              line-height: 1.6;
+            "
+          >
+            If you did not request a new verification code,
+            you can safely ignore this email.
+          </p>
+
+        </div>
+
+        <!-- Footer -->
+        <div
+          style="
+            padding: 20px 30px;
+            background-color: #fafafa;
+            border-top: 1px solid #eeeeee;
+            text-align: center;
+          "
+        >
+          <p
+            style="
+              margin: 0;
+              color: #9aa0a6;
+              font-size: 12px;
+              line-height: 1.5;
+            "
+          >
+            This is an automated message from PTC Portal.
+            <br />
+            Please do not reply to this email.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  `,
+});
+
+    console.log("RESEND OTP PREVIEW URL:", nodemailer.getTestMessageUrl(info));
+
+    return res.json({
+      success: true,
+      message: "A new OTP has been sent successfully.",
+      cooldown_seconds: 60,
+    });
+  } catch (err) {
+    console.error("RESEND OTP ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      error: "Unable to resend OTP.",
     });
   }
 });
@@ -198,13 +2320,14 @@ router.post("/verify-otp", async (req, res) => {
 
     const [otpRows] = await db.execute(
       `
-      SELECT
-        otp_code,
-        expires_at
-      FROM otp_codes
-      WHERE user_id = ?
-      LIMIT 1
-      `,
+ SELECT
+  otp_hash,
+  expires_at,
+  attempt_count
+FROM otp_codes
+WHERE user_id = ?
+LIMIT 1
+  `,
       [user.user_id],
     );
 
@@ -215,6 +2338,26 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const storedOtp = otpRows[0];
+    // ==========================================
+    // 4. CHECK OTP ATTEMPT LIMIT
+    // ==========================================
+
+    const MAX_OTP_ATTEMPTS = 5;
+
+    if (Number(storedOtp.attempt_count) >= MAX_OTP_ATTEMPTS) {
+      await db.execute(
+        `
+    DELETE FROM otp_codes
+    WHERE user_id = ?
+    `,
+        [user.user_id],
+      );
+
+      return res.status(429).json({
+        success: false,
+        error: "Maximum OTP attempts reached. Please login again.",
+      });
+    }
 
     // ==========================================
     // 4. Check expiration
@@ -235,12 +2378,59 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     // ==========================================
-    // 5. Compare OTP
+    // COMPARE OTP AGAINST BCRYPT HASH
     // ==========================================
 
-    if (String(storedOtp.otp_code) !== String(otp)) {
+    const otpMatches = await bcrypt.compare(otp, storedOtp.otp_hash);
+
+    if (!otpMatches) {
+      // ========================================
+      // INCREASE FAILED OTP ATTEMPTS
+      // ========================================
+
+      const newAttemptCount = Number(storedOtp.attempt_count) + 1;
+
+      await db.execute(
+        `
+    UPDATE otp_codes
+    SET attempt_count = ?
+    WHERE user_id = ?
+    `,
+        [newAttemptCount, user.user_id],
+      );
+
+      const attemptsRemaining = Math.max(MAX_OTP_ATTEMPTS - newAttemptCount, 0);
+
+      // ========================================
+      // FIFTH FAILED ATTEMPT
+      // ========================================
+
+      if (attemptsRemaining === 0) {
+        await db.execute(
+          `
+      DELETE FROM otp_codes
+      WHERE user_id = ?
+      `,
+          [user.user_id],
+        );
+
+        return res.status(429).json({
+          success: false,
+          error: "Maximum OTP attempts reached. Please login again.",
+          attempts_remaining: 0,
+        });
+      }
+
       return res.status(400).json({
-        error: "Invalid OTP.",
+        success: false,
+
+        error:
+          `Invalid OTP. ` +
+          `${attemptsRemaining} attempt${
+            attemptsRemaining === 1 ? "" : "s"
+          } remaining.`,
+
+        attempts_remaining: attemptsRemaining,
       });
     }
 
@@ -346,21 +2536,47 @@ router.post("/verify-otp", async (req, res) => {
 // =======================
 // CURRENT AUTHENTICATED USER
 // =======================
+
 router.get("/me", authenticate, async (req, res) => {
   try {
+    // ==========================================
+    // AUTHENTICATED USER
+    //
+    // authenticate middleware already:
+    // - verifies the JWT
+    // - reloads the user from the database
+    // - checks active status
+    // - checks verified status
+    // - attaches the trusted user to req.user
+    // ==========================================
+
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    // ==========================================
+    // RETURN CURRENT USER
+    // ==========================================
+
     return res.json({
       success: true,
 
       user: {
         user_id: Number(user.user_id),
+
         username: user.username,
+
         email: user.email,
+
         role_id: Number(user.role_id),
 
-        // Frontend canonical role field
         role: user.role_name,
 
-        // Keep DB/API field too
         role_name: user.role_name,
       },
     });
@@ -369,6 +2585,7 @@ router.get("/me", authenticate, async (req, res) => {
 
     return res.status(500).json({
       success: false,
+
       message: "Failed to load authenticated user.",
     });
   }
@@ -382,8 +2599,22 @@ router.get("/me", authenticate, async (req, res) => {
 // This route must NEVER be enabled in production.
 //
 router.post("/dev-login", async (req, res) => {
-  // Disable this endpoint in production.
-  if (process.env.NODE_ENV === "production") {
+  // =====================================================
+  // DEVELOPMENT LOGIN SECURITY
+  //
+  // Dev login is available ONLY when:
+  //
+  // 1. Application is NOT running in production
+  // 2. ALLOW_DEV_LOGIN is explicitly set to "true"
+  //
+  // This prevents accidental exposure during deployment.
+  // =====================================================
+
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const devLoginEnabled = process.env.ALLOW_DEV_LOGIN === "true";
+
+  if (isProduction || !devLoginEnabled) {
     return res.status(404).json({
       success: false,
       message: "Endpoint not found.",
@@ -400,10 +2631,6 @@ router.post("/dev-login", async (req, res) => {
   }
 
   try {
-    // ------------------------------------------
-    // Load REAL user + REAL role from database
-    // ------------------------------------------
-
     const [rows] = await db.execute(
       `
       SELECT
@@ -414,10 +2641,14 @@ router.post("/dev-login", async (req, res) => {
         u.is_active,
         u.is_verified,
         r.role_name
+
       FROM users u
+
       INNER JOIN roles r
         ON r.role_id = u.role_id
+
       WHERE u.username = ?
+
       LIMIT 1
       `,
       [username],
@@ -432,9 +2663,9 @@ router.post("/dev-login", async (req, res) => {
 
     const user = rows[0];
 
-    // ------------------------------------------
-    // Account validation
-    // ------------------------------------------
+    // =====================================================
+    // ACCOUNT VALIDATION
+    // =====================================================
 
     if (!user.is_active) {
       return res.status(403).json({
@@ -450,9 +2681,9 @@ router.post("/dev-login", async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // JWT configuration
-    // ------------------------------------------
+    // =====================================================
+    // JWT CONFIGURATION
+    // =====================================================
 
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET is not configured.");
@@ -463,9 +2694,9 @@ router.post("/dev-login", async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Create REAL JWT
-    // ------------------------------------------
+    // =====================================================
+    // CREATE JWT
+    // =====================================================
 
     const token = jwt.sign(
       {
@@ -477,9 +2708,9 @@ router.post("/dev-login", async (req, res) => {
       },
     );
 
-    // ------------------------------------------
-    // Optional activity log
-    // ------------------------------------------
+    // =====================================================
+    // ACTIVITY LOG
+    // =====================================================
 
     await logActivity(
       user.user_id,
@@ -488,12 +2719,13 @@ router.post("/dev-login", async (req, res) => {
       `${user.username} logged in using development access.`,
     );
 
-    // ------------------------------------------
-    // Return exactly the same structure as OTP
-    // ------------------------------------------
+    // =====================================================
+    // RESPONSE
+    // =====================================================
 
     return res.json({
       success: true,
+
       message: "Development login successful.",
 
       token,

@@ -2,6 +2,7 @@
 
 import db from "../db.js";
 import { getOfficialTransferCreditsForStudent } from "./transferCredit.service.js";
+
 // =====================================================
 // CONSTANTS
 // =====================================================
@@ -10,6 +11,7 @@ export const ACADEMIC_RESULT = Object.freeze({
   PASSED: "Passed",
   FAILED: "Failed",
   INCOMPLETE: "Incomplete",
+  UNOFFICIAL_DROP: "Unofficial Drop",
   INVALID: "Invalid",
   NONE: "None",
 });
@@ -54,6 +56,7 @@ function getExecutor(executor) {
 // 1.00 - 3.00 = Passed
 // 4.00        = Incomplete / Retake
 // 5.00        = Failed / Retake
+// 6.00        = Unofficial Drop / Retake
 //
 // Anything else is NOT a valid official academic result.
 //
@@ -80,6 +83,10 @@ export function classifyFinalRating(finalRating) {
 
   if (rating === 5) {
     return ACADEMIC_RESULT.FAILED;
+  }
+
+  if (rating === 6) {
+    return ACADEMIC_RESULT.UNOFFICIAL_DROP;
   }
 
   return ACADEMIC_RESULT.INVALID;
@@ -116,7 +123,6 @@ export async function getApprovedAcademicHistory(studentId, executor = db) {
           g.enrollment_subject_id,
           g.faculty_id,
 
-          g.prelim_grade,
           g.midterm_grade,
           g.final_grade,
           g.final_rating,
@@ -203,8 +209,6 @@ export async function getApprovedAcademicHistory(studentId, executor = db) {
 
     faculty_id: row.faculty_id === null ? null : Number(row.faculty_id),
 
-    prelim_grade: row.prelim_grade === null ? null : Number(row.prelim_grade),
-
     midterm_grade:
       row.midterm_grade === null ? null : Number(row.midterm_grade),
 
@@ -252,7 +256,6 @@ export async function getLatestApprovedGrade(
           g.enrollment_subject_id,
           g.faculty_id,
 
-          g.prelim_grade,
           g.midterm_grade,
           g.final_grade,
           g.final_rating,
@@ -466,6 +469,7 @@ export async function getSubjectPrerequisites(subjectId, executor = db) {
     prerequisite_units: Number(row.prerequisite_units),
   }));
 }
+
 // =====================================================
 // CHECK PREREQUISITES
 // =====================================================
@@ -499,9 +503,6 @@ export async function checkPrerequisites(studentId, subjectId, executor = db) {
 
   // ===================================================
   // 1. LOAD AUTHORITATIVE OFFICIAL TRANSFER CREDITS
-  //
-  // Reuse transferCredit.service.js so the official
-  // Completed + Credited rule remains centralized.
   // ===================================================
 
   const transferCreditResult = await getOfficialTransferCreditsForStudent(
@@ -517,11 +518,6 @@ export async function checkPrerequisites(studentId, subjectId, executor = db) {
 
   // ===================================================
   // 2. LOAD SUBJECT PREREQUISITES
-  //
-  // The SQL below determines only whether the
-  // prerequisite has an official PTC passing grade.
-  //
-  // Transfer-credit satisfaction is merged afterward.
   // ===================================================
 
   const [rows] = await database.execute(
@@ -629,17 +625,9 @@ export async function checkPrerequisites(studentId, subjectId, executor = db) {
       prerequisite_units:
         row.prerequisite_units !== null ? Number(row.prerequisite_units) : null,
 
-      // -----------------------------------------------
-      // AUTHORITATIVE FINAL SATISFACTION
-      // -----------------------------------------------
-
       is_satisfied: isSatisfied,
 
       satisfaction_source: satisfactionSource,
-
-      // -----------------------------------------------
-      // SOURCE DETAIL
-      // -----------------------------------------------
 
       ptc_approved_grade_pass: ptcApprovedGradePass,
 
@@ -681,6 +669,7 @@ export async function checkPrerequisites(studentId, subjectId, executor = db) {
     },
   };
 }
+
 // =====================================================
 // EVALUATE ONE SUBJECT
 // =====================================================
@@ -695,10 +684,6 @@ export async function evaluateSubjectEligibility(
   const safeSubjectId = toPositiveInt(subjectId, "subjectId");
 
   const database = getExecutor(executor);
-
-  // ---------------------------------------------------
-  // Subject must exist and be active.
-  // ---------------------------------------------------
 
   const [subjectRows] = await database.execute(
     `
@@ -748,26 +733,11 @@ export async function evaluateSubjectEligibility(
     };
   }
 
-  // ---------------------------------------------------
-  // Only Approved history matters.
-  // ---------------------------------------------------
-
-  // ---------------------------------------------------
-  // LOAD OFFICIAL PTC GRADE HISTORY
-  // ---------------------------------------------------
-
   const latestApprovedGrade = await getLatestApprovedGrade(
     safeStudentId,
     safeSubjectId,
     database,
   );
-
-  // ---------------------------------------------------
-  // LOAD OFFICIAL TRANSFER-CREDIT SATISFACTION
-  //
-  // Only Completed + Credited rows can be returned by
-  // transferCredit.service.js.
-  // ---------------------------------------------------
 
   const transferCreditResult = await getOfficialTransferCreditsForStudent(
     safeStudentId,
@@ -780,10 +750,6 @@ export async function evaluateSubjectEligibility(
     (transferCreditResult.official_transfer_credits || []).find(
       (credit) => Number(credit.ptc_subject?.subject_id) === safeSubjectId,
     ) || null;
-
-  // ---------------------------------------------------
-  // PREREQUISITES
-  // ---------------------------------------------------
 
   const prerequisiteCheck = await checkPrerequisites(
     safeStudentId,
@@ -800,11 +766,10 @@ export async function evaluateSubjectEligibility(
 
     units: Number(subject.units),
   };
-  // ---------------------------------------------------
-  // ALREADY SATISFIED BY APPROVED PTC PASS
-  //
-  // Never enroll again normally.
-  // ---------------------------------------------------
+
+  // ===================================================
+  // ALREADY PASSED
+  // ===================================================
 
   if (latestApprovedGrade?.result === ACADEMIC_RESULT.PASSED) {
     return {
@@ -832,29 +797,14 @@ export async function evaluateSubjectEligibility(
     };
   }
 
-  // ---------------------------------------------------
-  // ALREADY SATISFIED BY OFFICIAL TRANSFER CREDIT
-  //
-  // Completed + Credited is academically authoritative.
-  //
-  // It satisfies the curriculum requirement without
-  // creating or pretending that a PTC grade exists.
-  //
-  // It must therefore suppress:
-  //
-  // - Regular enrollment
-  // - Carry Over
-  // - Retake
-  //
-  // ---------------------------------------------------
+  // ===================================================
+  // OFFICIAL TRANSFER CREDIT
+  // ===================================================
 
   if (officialTransferCredit) {
     return {
       eligible: false,
 
-      // Reuse the existing "already academically satisfied"
-      // exclusion bucket so all current enrollment callers
-      // continue to block this subject correctly.
       eligibility_type: ELIGIBILITY_TYPE.ALREADY_PASSED,
 
       reason:
@@ -862,8 +812,6 @@ export async function evaluateSubjectEligibility(
 
       subject: subjectData,
 
-      // Preserve actual PTC grade history separately.
-      // This may be null, failed, incomplete, etc.
       latest_approved_grade: latestApprovedGrade,
 
       prerequisites: prerequisiteCheck,
@@ -900,12 +848,9 @@ export async function evaluateSubjectEligibility(
     };
   }
 
-  // ---------------------------------------------------
-  // Invalid / unresolved Approved record.
-  //
-  // This should not occur after our DB grade contract,
-  // but existing legacy data must not silently pass.
-  // ---------------------------------------------------
+  // ===================================================
+  // INVALID / UNRESOLVED APPROVED RESULT
+  // ===================================================
 
   if (
     latestApprovedGrade &&
@@ -927,9 +872,9 @@ export async function evaluateSubjectEligibility(
     };
   }
 
-  // ---------------------------------------------------
-  // Prerequisites always apply before eligibility.
-  // ---------------------------------------------------
+  // ===================================================
+  // PREREQUISITES
+  // ===================================================
 
   if (!prerequisiteCheck.satisfied) {
     return {
@@ -947,14 +892,15 @@ export async function evaluateSubjectEligibility(
     };
   }
 
-  // ---------------------------------------------------
-  // 4.00 / 5.00 = valid retake
-  // ---------------------------------------------------
+  // ===================================================
+  // 4.00 / 5.00 / 6.00 = RETAKE
+  // ===================================================
 
   if (
     latestApprovedGrade &&
     (latestApprovedGrade.result === ACADEMIC_RESULT.INCOMPLETE ||
-      latestApprovedGrade.result === ACADEMIC_RESULT.FAILED)
+      latestApprovedGrade.result === ACADEMIC_RESULT.FAILED ||
+      latestApprovedGrade.result === ACADEMIC_RESULT.UNOFFICIAL_DROP)
   ) {
     return {
       eligible: true,
@@ -964,7 +910,9 @@ export async function evaluateSubjectEligibility(
       reason:
         latestApprovedGrade.result === ACADEMIC_RESULT.INCOMPLETE
           ? "Latest approved result is Incomplete (4.00)."
-          : "Latest approved result is Failed (5.00).",
+          : latestApprovedGrade.result === ACADEMIC_RESULT.UNOFFICIAL_DROP
+            ? "Latest approved result is Unofficial Drop (6.00)."
+            : "Latest approved result is Failed (5.00).",
 
       subject: subjectData,
 
@@ -974,12 +922,9 @@ export async function evaluateSubjectEligibility(
     };
   }
 
-  // ---------------------------------------------------
-  // No Approved attempt + prerequisites satisfied
-  // = normal Regular subject.
-  //
-  // Freshmen with no prior history naturally reach here.
-  // ---------------------------------------------------
+  // ===================================================
+  // NO APPROVED ATTEMPT
+  // ===================================================
 
   return {
     eligible: true,
@@ -1148,8 +1093,10 @@ export async function evaluateCurriculumTerm(
     blocked: evaluatedSubjects.filter((subject) => !subject.eligible),
   };
 }
+
 // =====================================================
 // GET CARRY-OVER / BACKLOG SUBJECTS
+// =====================================================
 //
 // A Carry-Over subject is:
 //
@@ -1157,15 +1104,10 @@ export async function evaluateCurriculumTerm(
 // - required
 // - from an EARLIER curriculum term
 // - not already passed
-// - not a 4.00 / 5.00 retake
+// - not a 4.00 / 5.00 / 6.00 retake
 // - never officially taken in an Approved enrollment
 // - prerequisites are now satisfied
 //
-// IMPORTANT:
-//
-// An old subject that was officially enrolled but still
-// has no Approved academic result is NOT Carry-Over.
-// That is an unresolved academic attempt.
 // =====================================================
 
 export async function getCarryOverCandidates(
@@ -1190,27 +1132,6 @@ export async function getCarryOverCandidates(
   }
 
   const database = getExecutor(executor);
-
-  // ===================================================
-  // LOAD REQUIRED SUBJECTS FROM EARLIER TERMS
-  //
-  // Examples:
-  //
-  // Current: Year 1 / Sem 2
-  // Previous:
-  //   Year 1 / Sem 1
-  //
-  // Current: Year 2 / Sem 1
-  // Previous:
-  //   Year 1 / Sem 1
-  //   Year 1 / Sem 2
-  //
-  // Current: Year 2 / Sem 2
-  // Previous:
-  //   Year 1 / Sem 1
-  //   Year 1 / Sem 2
-  //   Year 2 / Sem 1
-  // ===================================================
 
   const [rows] = await database.execute(
     `
@@ -1340,33 +1261,13 @@ export async function getCarryOverCandidates(
       prerequisites: evaluation.prerequisites,
     };
 
-    // ===============================================
-    // ALREADY PASSED
-    //
-    // Never enroll again.
-    // ===============================================
-
     if (evaluation.eligibility_type === ELIGIBILITY_TYPE.ALREADY_PASSED) {
       continue;
     }
 
-    // ===============================================
-    // RETAKE
-    //
-    // getRetakeCandidates() owns 4.00 / 5.00.
-    // Do not duplicate it as Carry-Over.
-    // ===============================================
-
     if (evaluation.eligibility_type === ELIGIBILITY_TYPE.RETAKE) {
       continue;
     }
-
-    // ===============================================
-    // OFFICIAL ATTEMPT EXISTS BUT NO RESOLVED
-    // APPROVED RESULT
-    //
-    // This is NOT a never-taken Carry-Over.
-    // ===============================================
 
     if (Number(row.has_official_attempt) === 1) {
       blocked.push({
@@ -1385,10 +1286,6 @@ export async function getCarryOverCandidates(
       continue;
     }
 
-    // ===============================================
-    // PREREQUISITES STILL BLOCKED
-    // ===============================================
-
     if (evaluation.eligibility_type === ELIGIBILITY_TYPE.BLOCKED_PREREQUISITE) {
       blocked.push({
         ...baseSubject,
@@ -1405,10 +1302,6 @@ export async function getCarryOverCandidates(
       continue;
     }
 
-    // ===============================================
-    // OTHER UNRESOLVED STATE
-    // ===============================================
-
     if (evaluation.eligibility_type === ELIGIBILITY_TYPE.UNRESOLVED) {
       blocked.push({
         ...baseSubject,
@@ -1424,12 +1317,6 @@ export async function getCarryOverCandidates(
 
       continue;
     }
-
-    // ===============================================
-    // NEVER TAKEN + PREREQUISITES SATISFIED
-    //
-    // Valid Carry-Over.
-    // ===============================================
 
     if (evaluation.eligibility_type === ELIGIBILITY_TYPE.REGULAR) {
       eligible.push({
@@ -1477,7 +1364,7 @@ export async function getCarryOverCandidates(
 // Retakes must:
 //
 // - belong to the student's active curriculum
-// - have an Approved 4.00 or 5.00 result
+// - have an Approved 4.00 / 5.00 / 6.00 result
 // - not already have a later Approved passing result
 //
 // =====================================================

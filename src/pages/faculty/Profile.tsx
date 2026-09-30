@@ -19,9 +19,10 @@ import {
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
+import { apiUrl } from "../../services/api";
 import "../../styles/FacultyProfile.css";
 
-const API_BASE_URL = "http://localhost:3000/api/faculty/classes";
+const API_BASE_URL = apiUrl("/api/faculty/classes");
 
 interface FacultyInfo {
   faculty_id: number;
@@ -311,10 +312,7 @@ export default function FacultyProfile() {
             onClick={() => setRefreshKey((current) => current + 1)}
             disabled={loading || refreshing}
           >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "is-spinning" : ""}
-            />
+            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </section>

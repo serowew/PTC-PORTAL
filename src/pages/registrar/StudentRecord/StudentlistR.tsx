@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
@@ -16,9 +16,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/RegistrarStudentlist.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/students";
+const API_BASE_URL = apiUrl("/api/registrar/students");
 
 interface Student {
   student_id: number;
@@ -255,7 +256,9 @@ export default function StudentListR() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Unable to load student records.",
+          err instanceof Error
+            ? err.message
+            : "Unable to load student records.",
         );
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -279,7 +282,9 @@ export default function StudentListR() {
   const courseOptions = useMemo(
     () => [
       "All",
-      ...new Set(students.map((student) => student.course_code).filter(Boolean)),
+      ...new Set(
+        students.map((student) => student.course_code).filter(Boolean),
+      ),
     ],
     [students],
   );
@@ -315,9 +320,7 @@ export default function StudentListR() {
   const startRecord = students.length
     ? (currentPage - 1) * studentsPerPage + 1
     : 0;
-  const endRecord = students.length
-    ? startRecord + students.length - 1
-    : 0;
+  const endRecord = students.length ? startRecord + students.length - 1 : 0;
 
   const visiblePages = useMemo(() => {
     if (totalPages <= 5) {
@@ -371,7 +374,10 @@ export default function StudentListR() {
           </div>
         </section>
 
-        <section className="registrar-student-list__stats" aria-label="Student statistics">
+        <section
+          className="registrar-student-list__stats"
+          aria-label="Student statistics"
+        >
           <article className="registrar-student-list__stat-card">
             <div className="registrar-student-list__stat-icon registrar-student-list__stat-icon--primary">
               <UsersRound size={21} />
@@ -425,7 +431,9 @@ export default function StudentListR() {
             </div>
 
             <div className="registrar-student-list__record-count">
-              {loading ? "Loading records..." : `${statistics.total.toLocaleString()} total records`}
+              {loading
+                ? "Loading records..."
+                : `${statistics.total.toLocaleString()} total records`}
             </div>
           </div>
 
@@ -523,9 +531,13 @@ export default function StudentListR() {
                   Search: <strong>“{search}”</strong>
                 </span>
               )}
-              {selectedCourse !== "All" && <span>Course: {selectedCourse}</span>}
+              {selectedCourse !== "All" && (
+                <span>Course: {selectedCourse}</span>
+              )}
               {selectedYear !== "All" && <span>Year: {selectedYear}</span>}
-              {selectedSection !== "All" && <span>Section: {selectedSection}</span>}
+              {selectedSection !== "All" && (
+                <span>Section: {selectedSection}</span>
+              )}
             </div>
           )}
 
@@ -540,14 +552,19 @@ export default function StudentListR() {
                     <th>Year</th>
                     <th>Section</th>
                     <th>Status</th>
-                    <th className="registrar-student-list__actions-heading">Actions</th>
+                    <th className="registrar-student-list__actions-heading">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {loading &&
                     Array.from({ length: 5 }, (_, index) => (
-                      <tr key={`student-skeleton-${index}`} className="registrar-student-list__skeleton-row">
+                      <tr
+                        key={`student-skeleton-${index}`}
+                        className="registrar-student-list__skeleton-row"
+                      >
                         <td>
                           <div className="registrar-student-list__student-cell">
                             <span className="registrar-student-list__skeleton registrar-student-list__skeleton--avatar" />
@@ -557,12 +574,24 @@ export default function StudentListR() {
                             </div>
                           </div>
                         </td>
-                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--text" /></td>
-                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--short" /></td>
-                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--short" /></td>
-                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--text" /></td>
-                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--badge" /></td>
-                        <td><span className="registrar-student-list__skeleton registrar-student-list__skeleton--actions" /></td>
+                        <td>
+                          <span className="registrar-student-list__skeleton registrar-student-list__skeleton--text" />
+                        </td>
+                        <td>
+                          <span className="registrar-student-list__skeleton registrar-student-list__skeleton--short" />
+                        </td>
+                        <td>
+                          <span className="registrar-student-list__skeleton registrar-student-list__skeleton--short" />
+                        </td>
+                        <td>
+                          <span className="registrar-student-list__skeleton registrar-student-list__skeleton--text" />
+                        </td>
+                        <td>
+                          <span className="registrar-student-list__skeleton registrar-student-list__skeleton--badge" />
+                        </td>
+                        <td>
+                          <span className="registrar-student-list__skeleton registrar-student-list__skeleton--actions" />
+                        </td>
                       </tr>
                     ))}
 
@@ -570,7 +599,9 @@ export default function StudentListR() {
                     <tr>
                       <td colSpan={7}>
                         <div className="registrar-student-list__state registrar-student-list__state--error">
-                          <div className="registrar-student-list__state-icon">!</div>
+                          <div className="registrar-student-list__state-icon">
+                            !
+                          </div>
                           <h3>Student records could not be loaded</h3>
                           <p>{error}</p>
                         </div>
@@ -607,12 +638,17 @@ export default function StudentListR() {
                       <tr key={student.student_id}>
                         <td>
                           <div className="registrar-student-list__student-cell">
-                            <div className="registrar-student-list__avatar" aria-hidden="true">
+                            <div
+                              className="registrar-student-list__avatar"
+                              aria-hidden="true"
+                            >
                               {getStudentInitials(student)}
                             </div>
                             <div className="registrar-student-list__student-copy">
                               <strong>{getStudentName(student)}</strong>
-                              <span title={student.email}>{student.email || "No email address"}</span>
+                              <span title={student.email}>
+                                {student.email || "No email address"}
+                              </span>
                             </div>
                           </div>
                         </td>
@@ -697,16 +733,22 @@ export default function StudentListR() {
             {!loading && !error && students.length > 0 && (
               <div className="registrar-student-list__pagination-bar">
                 <p>
-                  Showing <strong>{startRecord}</strong>–<strong>{endRecord}</strong> of{" "}
+                  Showing <strong>{startRecord}</strong>–
+                  <strong>{endRecord}</strong> of{" "}
                   <strong>{statistics.total.toLocaleString()}</strong> students
                 </p>
 
-                <nav className="registrar-student-list__pagination" aria-label="Student list pagination">
+                <nav
+                  className="registrar-student-list__pagination"
+                  aria-label="Student list pagination"
+                >
                   <button
                     type="button"
                     className="registrar-student-list__page-btn registrar-student-list__page-btn--nav"
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    onClick={() =>
+                      setCurrentPage((page) => Math.max(1, page - 1))
+                    }
                     aria-label="Previous page"
                   >
                     <ChevronLeft size={17} />

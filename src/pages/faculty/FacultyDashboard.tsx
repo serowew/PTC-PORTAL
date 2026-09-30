@@ -23,7 +23,8 @@ import "../../styles/FacultyDashboard.css";
 const primaryActions = [
   {
     title: "My Classes",
-    description: "Open your assigned classes and manage your teaching workspace.",
+    description:
+      "Open your assigned classes and manage your teaching workspace.",
     path: "/faculty/classes",
     icon: BookOpenCheck,
   },
@@ -72,7 +73,8 @@ const workflowSteps = [
   {
     step: "01",
     title: "Open assigned classes",
-    description: "Start from My Classes to review the subjects assigned to you.",
+    description:
+      "Start from My Classes to review the subjects assigned to you.",
     icon: BookOpenCheck,
   },
   {
@@ -90,7 +92,8 @@ const workflowSteps = [
   {
     step: "04",
     title: "Review submission",
-    description: "Check the grade summary before final submission and approval.",
+    description:
+      "Check the grade summary before final submission and approval.",
     icon: CheckCircle2,
   },
 ];
@@ -98,14 +101,26 @@ const workflowSteps = [
 export default function FacultyDashboard() {
   const navigate = useNavigate();
   const user = authService.getSession();
+  const token = authService.getToken();
+  const authenticated = Boolean(user && token);
 
   useEffect(() => {
-    if (!user || user.role !== "Faculty") {
+    if (!authenticated) {
+      authService.logout();
       navigate("/login", { replace: true });
+      return;
     }
-  }, [navigate, user]);
 
-  if (!user || user.role !== "Faculty") {
+    if (user?.role !== "Faculty") {
+      if (user?.role) {
+        navigate(authService.getDashboardRoute(user.role), { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [authenticated, navigate, user]);
+
+  if (!authenticated || !user || user.role !== "Faculty") {
     return null;
   }
 

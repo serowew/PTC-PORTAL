@@ -11,6 +11,9 @@ import OtpAuth from "../pages/auth/Otp";
 import About from "../components/Forms/about";
 import Programs from "../components/Forms/programs";
 import Contact from "../components/Forms/contact";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import VerifyResetOtp from "../pages/auth/VerifyResetOtp";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 // Student pages
 import StudentDashboard from "../pages/student/Dashboard";
@@ -67,12 +70,6 @@ import CreateStudent from "../pages/admin/Students/createstudent";
 import EditStudent from "../pages/admin/Students/editstudent";
 import Sprofile from "../pages/admin/Students/Sprofile";
 
-// ── Admin: Enrollment Management ──
-import ApproveEnrollment from "../pages/admin/Enrollment/ApproveEnrollment";
-import EnrollmentRequests from "../pages/admin/Enrollment/EnrollmentRequests";
-import EnrollmentHistory from "../pages/admin/Enrollment/EnrollmentHistory";
-import EnrollmentAnalytics from "../pages/admin/Enrollment/EnrollmentAnalytics";
-
 // ── Admin: Financial Management ──
 import Payment from "../pages/admin/FinancialManagement/Payments";
 import Billing from "../pages/admin/FinancialManagement/Billings";
@@ -123,6 +120,9 @@ import AcademicRecordsR from "../pages/registrar/StudentRecord/AcademicRecordsR"
 import StudentDocumentsR from "../pages/registrar/StudentRecord/StudentCOGR";
 import TranscriptPreviewR from "../pages/registrar/StudentRecord/TranscriptPreviewR";
 
+//Finance
+import FinanceDashboard from "../pages/finance/Dashboard";
+
 //This is the last one
 
 import type { ReactElement } from "react";
@@ -137,6 +137,19 @@ import EnrollmentPeriodMR from "../pages/registrar/Enrollment/EnrollmentPeriodMR
 import ClassOfferingManagementR from "../pages/registrar/ClassOffering.tsx/ClassOfferingManagementR";
 import ClassPROG from "../pages/programhead/Classmanagement/ClassPROG";
 import TransferEvaluationR from "../pages/registrar/StudentRecord/TransferEvaluationR";
+import ScheduleList from "../pages/programhead/ScheduleVerification/ScheduleList";
+import FacultySchedules from "../pages/programhead/ScheduleVerification/FacultySchedules";
+import FacultySchedulesR from "../pages/registrar/Schedules/FacultySchedulesR";
+import DocumentRequest from "../pages/registrar/Documents/DocumentRequests";
+import StudentCORR from "../pages/registrar/StudentRecord/StudentCORR";
+import FinanceTicketProcessing from "../pages/finance/FinanceTicketProcessing";
+import FinancePaymentHistory from "../pages/finance/FinancePaymentHistory";
+import MyTransactions from "../pages/student/Financial/MyTransactions";
+import CreateStudentTransaction from "../pages/finance/CreateStudentTransaction";
+import FinanceTransactionTypes from "../pages/finance/FinanceTransactionTypes";
+import FinanceReports from "../pages/finance/FinanceReports";
+import GradeChangeRequests from "../pages/programhead/GradeApproval/GradeChangeRequests";
+import GradeChangeRequestsR from "../pages/registrar/StudentRecord/GradeChangeRequestsR";
 
 // ─── Role guard ───────────────────────────────────────────────
 function ProtectedRoute({
@@ -158,6 +171,7 @@ function ProtectedRoute({
       Registrar: "/registrar/dashboard",
       Student: "/student/dashboard",
       Faculty: "/faculty/dashboard",
+      Finance: "/finance/dashboard",
       "Program Head": "/programhead/dashboard",
     };
 
@@ -186,6 +200,11 @@ function ProgramHeadRoute({ element }: { element: ReactElement }) {
 function RegistrarRoute({ element }: { element: ReactElement }) {
   return <ProtectedRoute allowedRole="Registrar">{element}</ProtectedRoute>;
 }
+
+function FinanceRoute({ element }: { element: ReactElement }) {
+  return <ProtectedRoute allowedRole="Finance">{element}</ProtectedRoute>;
+}
+
 // ─── Routes ───────────────────────────────────────────────────
 export default function AppRoutes() {
   return (
@@ -234,6 +253,9 @@ export default function AppRoutes() {
 
         <Route path="/login" element={<LoginAuth />} />
         <Route path="/otp" element={<OtpAuth />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgot-password/verify" element={<VerifyResetOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* ── Student: Solo links ── */}
         <Route
@@ -290,6 +312,11 @@ export default function AppRoutes() {
           element={<StudentRoute element={<DocumentRelease />} />}
         />
 
+        {/* ── Student: Financial ── */}
+        <Route
+          path="/student/transactions"
+          element={<StudentRoute element={<MyTransactions />} />}
+        />
         {/* ── Student: Settings ── */}
         <Route
           path="/student/setting/user"
@@ -370,24 +397,6 @@ export default function AppRoutes() {
         <Route
           path="/admin/students/profile/:id"
           element={<AdminRoute element={<Sprofile />} />}
-        />
-
-        {/* ── Admin: Enrollment Management ── */}
-        <Route
-          path="/admin/enrollment/approve"
-          element={<AdminRoute element={<ApproveEnrollment />} />}
-        />
-        <Route
-          path="/admin/enrollment/request"
-          element={<AdminRoute element={<EnrollmentRequests />} />}
-        />
-        <Route
-          path="/admin/enrollment/history"
-          element={<AdminRoute element={<EnrollmentHistory />} />}
-        />
-        <Route
-          path="/admin/enrollment/analytics"
-          element={<AdminRoute element={<EnrollmentAnalytics />} />}
         />
 
         {/* ── Admin: Financial Management ── */}
@@ -509,6 +518,10 @@ export default function AppRoutes() {
           path="/programhead/gradeapproval/pending"
           element={<ProgramHeadRoute element={<PendingGrades />} />}
         />
+        <Route
+          path="/programhead/grade-change-requests"
+          element={<ProgramHeadRoute element={<GradeChangeRequests />} />}
+        />
 
         <Route
           path="/programhead/transfer-evaluations"
@@ -518,6 +531,15 @@ export default function AppRoutes() {
         <Route
           path="/programhead/class/management"
           element={<ProgramHeadRoute element={<ClassPROG />} />}
+        />
+
+        <Route
+          path="/programhead/class/schedule"
+          element={<ProgramHeadRoute element={<ScheduleList />} />}
+        />
+        <Route
+          path="/programhead/class/faculty-schedules"
+          element={<ProgramHeadRoute element={<FacultySchedules />} />}
         />
 
         {/* ── Registrar ── */}
@@ -546,6 +568,11 @@ export default function AppRoutes() {
         <Route
           path="/registrar/student/:id/DocumentsR"
           element={<RegistrarRoute element={<StudentDocumentsR />} />}
+        />
+
+        <Route
+          path="/registrar/student/:id/CORR"
+          element={<RegistrarRoute element={<StudentCORR />} />}
         />
 
         <Route
@@ -604,6 +631,10 @@ export default function AppRoutes() {
           element={<RegistrarRoute element={<ClassOfferingManagementR />} />}
         />
 
+        <Route
+          path="/registrar/schedules/faculty"
+          element={<RegistrarRoute element={<FacultySchedulesR />} />}
+        />
         {/* ── Registrar Announcements ── */}
         <Route
           path="/registrar/announcement/listR"
@@ -622,6 +653,44 @@ export default function AppRoutes() {
         <Route
           path="/registrar/announcement/createR"
           element={<RegistrarRoute element={<AnnouncementCreateR />} />}
+        />
+        {/* ── Registrar Grade Changes ── */}
+        <Route
+          path="/registrar/grade-change-requests"
+          element={<RegistrarRoute element={<GradeChangeRequestsR />} />}
+        />
+
+        {/* ── Registrar Documents── */}
+        <Route
+          path="/registrar/document-requests"
+          element={<RegistrarRoute element={<DocumentRequest />} />}
+        />
+        {/* ── Finance ── */}
+        <Route
+          path="/finance/dashboard"
+          element={<FinanceRoute element={<FinanceDashboard />} />}
+        />
+
+        <Route
+          path="/finance/transactions/create"
+          element={<FinanceRoute element={<CreateStudentTransaction />} />}
+        />
+        <Route
+          path="/finance/tickets"
+          element={<FinanceRoute element={<FinanceTicketProcessing />} />}
+        />
+        <Route
+          path="/finance/transaction-types"
+          element={<FinanceRoute element={<FinanceTransactionTypes />} />}
+        />
+        <Route
+          path="/finance/reports"
+          element={<FinanceRoute element={<FinanceReports />} />}
+        />
+
+        <Route
+          path="/finance/payment-history"
+          element={<FinanceRoute element={<FinancePaymentHistory />} />}
         />
 
         {/* Catch-all */}

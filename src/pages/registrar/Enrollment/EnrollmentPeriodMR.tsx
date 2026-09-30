@@ -23,9 +23,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/EnrollmentPeriodMR.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/enrollments/period";
+const API_BASE_URL = apiUrl("/api/registrar/enrollments/period");
 
 interface AcademicYear {
   academic_year_id: number;
@@ -74,7 +75,9 @@ export default function EnrollmentPeriodMR() {
 
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
-  const [latestPeriod, setLatestPeriod] = useState<EnrollmentPeriod | null>(null);
+  const [latestPeriod, setLatestPeriod] = useState<EnrollmentPeriod | null>(
+    null,
+  );
 
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState(0);
   const [selectedSemesterId, setSelectedSemesterId] = useState(0);
@@ -215,7 +218,9 @@ export default function EnrollmentPeriodMR() {
         );
 
         setSelectedAcademicYearId(
-          Number(currentYear?.academic_year_id ?? years[0]?.academic_year_id ?? 0),
+          Number(
+            currentYear?.academic_year_id ?? years[0]?.academic_year_id ?? 0,
+          ),
         );
 
         const firstSemester = supportedSemesters.find(
@@ -232,7 +237,7 @@ export default function EnrollmentPeriodMR() {
     } catch (err) {
       if (err instanceof TypeError) {
         setError(
-          "Unable to connect to the enrollment server. Make sure the backend is running on http://localhost:3000.",
+          "Unable to connect to the enrollment server. Please make sure the backend server is running.",
         );
       } else {
         setError(
@@ -415,8 +420,8 @@ export default function EnrollmentPeriodMR() {
 
   const selectedMatchesLatest = Boolean(
     latestPeriod &&
-      Number(latestPeriod.academic_year_id) === Number(selectedAcademicYearId) &&
-      Number(latestPeriod.semester_id) === Number(selectedSemesterId),
+    Number(latestPeriod.academic_year_id) === Number(selectedAcademicYearId) &&
+    Number(latestPeriod.semester_id) === Number(selectedSemesterId),
   );
 
   const openingLabel =
@@ -569,7 +574,9 @@ export default function EnrollmentPeriodMR() {
                   : currentAcademicYear?.academic_year || "Not set"}
               </strong>
               <small>
-                {periodIsOpen ? "Open enrollment period" : "Current academic year"}
+                {periodIsOpen
+                  ? "Open enrollment period"
+                  : "Current academic year"}
               </small>
             </div>
           </article>
@@ -691,7 +698,9 @@ export default function EnrollmentPeriodMR() {
                         <Clock3 size={18} />
                         <div>
                           <span>Closed At</span>
-                          <strong>{formatDateTime(latestPeriod.closed_at)}</strong>
+                          <strong>
+                            {formatDateTime(latestPeriod.closed_at)}
+                          </strong>
                         </div>
                       </div>
                     </>
@@ -728,7 +737,9 @@ export default function EnrollmentPeriodMR() {
                 <span className="registrar-enrollment-period__section-label">
                   Period Configuration
                 </span>
-                <h2>{periodIsOpen ? "Enrollment is Active" : "Open Enrollment"}</h2>
+                <h2>
+                  {periodIsOpen ? "Enrollment is Active" : "Open Enrollment"}
+                </h2>
                 <p>
                   {periodIsOpen
                     ? "Close the active period before another academic term can be opened."
@@ -857,7 +868,9 @@ export default function EnrollmentPeriodMR() {
                     className="registrar-enrollment-period__button registrar-enrollment-period__button--primary"
                     onClick={() => {
                       if (!selectionComplete) {
-                        setError("Please select an academic year and semester.");
+                        setError(
+                          "Please select an academic year and semester.",
+                        );
                         return;
                       }
                       setError("");

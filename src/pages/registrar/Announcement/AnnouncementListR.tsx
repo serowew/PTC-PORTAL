@@ -23,9 +23,10 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/announcementRegistrar.css";
 
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = apiUrl("/api/announcement-management");
 
 interface Announcement {
   announcement_id: number;
@@ -79,9 +80,7 @@ const getRecipientLabels = (recipients: string | null) => {
     const parsed = JSON.parse(value);
 
     if (Array.isArray(parsed)) {
-      return parsed
-        .map((item) => String(item).trim())
-        .filter(Boolean);
+      return parsed.map((item) => String(item).trim()).filter(Boolean);
     }
   } catch {
     // The backend may return a normal comma-separated string.
@@ -179,7 +178,7 @@ export default function AnnouncementListR() {
         setActionError("");
 
         // Registrar management endpoint is intentionally preserved.
-        const url = `${API_BASE_URL}/api/announcement-management`;
+        const url = API_BASE_URL;
 
         console.log("GET REGISTRAR ANNOUNCEMENT MANAGEMENT:", url);
 
@@ -255,7 +254,7 @@ export default function AnnouncementListR() {
 
         if (err instanceof TypeError) {
           setError(
-            "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
+            "Unable to connect to the announcement server. Make sure the backend server running .",
           );
           return;
         }
@@ -381,7 +380,7 @@ export default function AnnouncementListR() {
       setSuccessMessage("");
 
       const response = await authService.authFetch(
-        `${API_BASE_URL}/api/announcement-management/${announcementId}`,
+        `${API_BASE_URL}/${announcementId}`,
         {
           method: "DELETE",
           headers: {
@@ -506,7 +505,10 @@ export default function AnnouncementListR() {
 
         {/* SUMMARY */}
         {!loading && !error && (
-          <section className="registrar-announcements__stats" aria-label="Announcement summary">
+          <section
+            className="registrar-announcements__stats"
+            aria-label="Announcement summary"
+          >
             <article className="registrar-announcements__stat-card">
               <span className="registrar-announcements__stat-icon registrar-announcements__stat-icon--primary">
                 <Megaphone size={20} />
@@ -685,8 +687,12 @@ export default function AnnouncementListR() {
                 <div className="registrar-announcements__filter-summary">
                   <Filter size={13} />
                   <strong>Active filters</strong>
-                  {searchTerm.trim() && <span>Search: {searchTerm.trim()}</span>}
-                  {statusFilter !== "all" && <span>Status: {statusFilter}</span>}
+                  {searchTerm.trim() && (
+                    <span>Search: {searchTerm.trim()}</span>
+                  )}
+                  {statusFilter !== "all" && (
+                    <span>Status: {statusFilter}</span>
+                  )}
                   {recipientFilter !== "all" && (
                     <span>Recipient: {recipientFilter}</span>
                   )}
@@ -699,7 +705,10 @@ export default function AnnouncementListR() {
           {loading && (
             <div className="registrar-announcements__card-grid registrar-announcements__card-grid--loading">
               {[1, 2, 3, 4, 5, 6].map((item) => (
-                <div className="registrar-announcements__skeleton-card" key={item}>
+                <div
+                  className="registrar-announcements__skeleton-card"
+                  key={item}
+                >
                   <div className="registrar-announcements__skeleton-line registrar-announcements__skeleton-line--short" />
                   <div className="registrar-announcements__skeleton-line registrar-announcements__skeleton-line--title" />
                   <div className="registrar-announcements__skeleton-line" />

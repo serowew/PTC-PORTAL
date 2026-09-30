@@ -1,30 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import {
+  ArrowLeftRight,
+  BookOpenCheck,
+  CheckCircle2,
+  Clock3,
+  FileText,
+  RefreshCw,
+  RotateCcw,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-
 import "../../../styles/StudentAcademicRecord.css";
-
 const API_URL = "http://localhost:3000/api/student/academic-records";
 const CURRICULUM_PROGRESS_API_URL =
   "http://localhost:3000/api/student/academic-records/curriculum-progress";
-
 type GradeClassification =
   | "Passed"
   | "Incomplete"
   | "Failed"
   | "Credited"
   | "Unknown";
-
 type AcademicRecordType = "PTC_GRADE" | "TRANSFER_CREDIT";
-
 interface StudentCourse {
   course_id: number;
   course_code: string;
   course_name: string;
 }
-
 interface StudentCurriculum {
   student_curriculum_id?: number;
   curriculum_id: number;
@@ -34,194 +38,132 @@ interface StudentCurriculum {
   status?: string;
   assigned_date?: string | null;
 }
-
 interface AcademicStudent {
   student_id: number;
   student_number: string;
-
   first_name: string;
   middle_name: string | null;
   last_name: string;
-
   student_name: string;
-
   email?: string | null;
-
   year_level: number;
   status: string;
-
   course: StudentCourse;
-
   curriculum: StudentCurriculum | null;
 }
-
 interface TransferSource {
   school: string;
   course: string | null;
   student_number: string | null;
-
   subject_code: string | null;
   subject_name: string;
-
   units: number | null;
   grade: string | null;
   remarks: string | null;
-
   academic_year: string | null;
   year_level: number | null;
   semester: string | null;
 }
-
 interface CurriculumMapping {
   curriculum_id: number;
   curriculum_name: string | null;
   curriculum_subject_id: number | null;
-
   year_level: number | null;
-
   semester_id: number | null;
   semester_name: string | null;
-
   is_required: boolean | null;
 }
-
 interface TransferCompletion {
   evaluation_status: string;
-
   completed_by: number | null;
   completed_by_username: string | null;
-
   completed_at: string | null;
-
   completion_remarks: string | null;
 }
-
 interface AcademicRecord {
   record_type: AcademicRecordType;
   academic_source: string;
-
   official_record: boolean;
-
   grade_id: number | null;
-
   enrollment_subject_id: number | null;
   enrollment_id: number | null;
-
   transfer_evaluation_id: number | null;
   transfer_subject_id: number | null;
-
   subject_id: number;
   subject_code: string;
   subject_name: string;
-
   units: number;
-
   academic_year_id: number | null;
   academic_year: string | null;
-
   semester_id: number | null;
   semester_name: string | null;
-
   enrollment_status: string | null;
   subject_status: string;
-
   prelim_grade: number | null;
   midterm_grade: number | null;
   final_grade: number | null;
-
   final_rating: number | null;
-
   source_grade: string | null;
-
   remarks: string | null;
-
   grade_status: "Draft" | "Submitted" | "Returned" | "Approved" | null;
-
   result_code?: string | null;
-
   classification?: GradeClassification | null;
-
   passed?: boolean;
   retake?: boolean;
-
   valid_result?: boolean;
   curriculum_satisfied?: boolean;
-
   faculty?: {
     faculty_id: number;
     employee_number: string | null;
     faculty_name: string;
   } | null;
-
   approval?: {
     reviewed_by: number | null;
     reviewed_by_username: string | null;
     reviewed_at: string | null;
     review_remarks?: string | null;
   } | null;
-
   transfer_source?: TransferSource | null;
-
   curriculum_mapping?: CurriculumMapping | null;
-
   transfer_completion?: TransferCompletion | null;
-
   submitted_at?: string | null;
-
   created_at?: string | null;
   updated_at?: string | null;
 }
-
 interface AcademicRecordSummary {
   total_official_records?: number;
-
   total_recorded_units?: number;
   earned_units?: number;
-
   unique_satisfied_subjects?: number;
-
   total_approved_subjects?: number;
-
   ptc_grade_records?: number;
   ptc_recorded_units?: number;
   ptc_earned_units?: number;
-
   passed_subjects?: number;
   incomplete_subjects?: number;
   failed_subjects?: number;
   retake_subjects?: number;
-
   official_transfer_credit_records?: number;
   unique_transfer_credit_subjects?: number;
   transfer_credited_units?: number;
 }
-
 interface AcademicRecordResponse {
   success: boolean;
-
   code?: string;
-
   student?: AcademicStudent;
-
   summary?: AcademicRecordSummary;
-
   records?: AcademicRecord[];
-
   ptc_grade_records?: AcademicRecord[];
-
   transfer_credit_records?: AcademicRecord[];
-
   academic_rule?: {
     official_ptc_grade?: string;
     official_transfer_credit?: string;
     transfer_grade_stored_as_ptc_grade?: boolean;
     earned_units_deduplicated_by_ptc_subject?: boolean;
   };
-
   message?: string;
   error?: string;
 }
-
 type CurriculumProgressStatus =
   | "COMPLETED_PTC"
   | "COMPLETED_TRANSFER"
@@ -230,7 +172,6 @@ type CurriculumProgressStatus =
   | "BLOCKED_PREREQUISITE"
   | "NOT_YET_DUE"
   | "UNRESOLVED";
-
 interface CurriculumProgressPrerequisite {
   prerequisite_id: number;
   prerequisite_subject_id: number;
@@ -244,7 +185,6 @@ interface CurriculumProgressPrerequisite {
   ptc_final_rating: number | null;
   transfer_source_grade: string | null;
 }
-
 interface CurriculumProgressPtcGrade {
   grade_id: number;
   enrollment_subject_id: number;
@@ -254,7 +194,6 @@ interface CurriculumProgressPtcGrade {
   academic_year: string | null;
   semester_name: string | null;
 }
-
 interface CurriculumProgressTransferCredit {
   transfer_evaluation_id: number;
   transfer_subject_id: number;
@@ -266,7 +205,6 @@ interface CurriculumProgressTransferCredit {
   official_record_count?: number;
   duplicate_satisfaction_record?: boolean;
 }
-
 interface CurriculumProgressSubject {
   curriculum_subject_id: number;
   curriculum_id: number;
@@ -296,7 +234,6 @@ interface CurriculumProgressSubject {
     classification: string | null;
   } | null;
 }
-
 interface CurriculumProgressSummary {
   total_subjects: number;
   completed_subjects: number;
@@ -318,7 +255,6 @@ interface CurriculumProgressSummary {
   official_academic_record_earned_units: number;
   official_academic_record_unique_satisfied_subjects: number;
 }
-
 interface CurriculumProgressResponse {
   success: boolean;
   code?: string;
@@ -350,43 +286,32 @@ interface CurriculumProgressResponse {
   summary?: CurriculumProgressSummary;
   subjects?: CurriculumProgressSubject[];
 }
-
 interface CurriculumProgressSemesterGroup {
   key: string;
   semesterId: number;
   semesterName: string;
   subjects: CurriculumProgressSubject[];
 }
-
 interface CurriculumProgressYearGroup {
   yearLevel: number;
   semesters: CurriculumProgressSemesterGroup[];
 }
-
 interface SemesterGroup {
   key: string;
-
   semesterName: string;
   sortOrder: number;
-
   records: AcademicRecord[];
 }
-
 interface AcademicYearGroup {
   key: string;
-
   academicYear: string;
   sortOrder: number;
-
   semesters: SemesterGroup[];
 }
-
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
-
   if (!contentType.includes("application/json")) {
     const text = await response.text();
-
     throw new Error(
       `Server returned a non-JSON response (${response.status}): ${text.slice(
         0,
@@ -394,63 +319,47 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
       )}`,
     );
   }
-
   return response.json() as Promise<T>;
 }
-
 function isTransferCredit(record: AcademicRecord): boolean {
   return record.record_type === "TRANSFER_CREDIT";
 }
-
 function isPtcGrade(record: AcademicRecord): boolean {
   return record.record_type === "PTC_GRADE";
 }
-
 function formatGrade(value: number | string | null | undefined): string {
   if (value === null || value === undefined || value === "") {
     return "—";
   }
-
   const numeric = Number(value);
-
   if (!Number.isFinite(numeric)) {
     return String(value);
   }
-
   return numeric.toFixed(2);
 }
-
 function classifyFinalRating(value: number | null): GradeClassification {
   if (value === null || value === undefined) {
     return "Unknown";
   }
-
   const rating = Number(value);
-
   if (!Number.isFinite(rating)) {
     return "Unknown";
   }
-
   if (rating >= 1 && rating <= 3) {
     return "Passed";
   }
-
   if (rating === 4) {
     return "Incomplete";
   }
-
   if (rating === 5) {
     return "Failed";
   }
-
   return "Unknown";
 }
-
 function getClassification(record: AcademicRecord): GradeClassification {
   if (isTransferCredit(record)) {
     return "Credited";
   }
-
   if (
     record.classification === "Passed" ||
     record.classification === "Incomplete" ||
@@ -459,108 +368,79 @@ function getClassification(record: AcademicRecord): GradeClassification {
   ) {
     return record.classification;
   }
-
   return classifyFinalRating(record.final_rating);
 }
-
 function requiresRetake(record: AcademicRecord): boolean {
   if (isTransferCredit(record)) {
     return false;
   }
-
   if (typeof record.retake === "boolean") {
     return record.retake;
   }
-
   const result = getClassification(record);
-
   return result === "Failed" || result === "Incomplete";
 }
-
 function formatDateTime(value: string | null | undefined): string {
   if (!value) {
     return "—";
   }
-
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-
   return date.toLocaleString();
 }
-
 function getAcademicYearLabel(record: AcademicRecord): string {
   if (record.academic_year) {
     return record.academic_year;
   }
-
   if (record.transfer_source?.academic_year) {
     return record.transfer_source.academic_year;
   }
-
   return "Transfer Credit";
 }
-
 function getSemesterLabel(record: AcademicRecord): string {
   if (record.semester_name) {
     return record.semester_name;
   }
-
   if (record.transfer_source?.semester) {
     return record.transfer_source.semester;
   }
-
   return "Transfer Credit";
 }
-
 function getAcademicYearSortOrder(value: string): number {
   const match = value.match(/^(\d{4})/);
-
   if (!match) {
     return 0;
   }
-
   const year = Number(match[1]);
-
   return Number.isFinite(year) ? year : 0;
 }
-
 function getSemesterSortOrder(value: string): number {
   const normalized = value.trim().toLowerCase();
-
   if (normalized.includes("first")) {
     return 1;
   }
-
   if (normalized.includes("second")) {
     return 2;
   }
-
   if (normalized.includes("summer")) {
     return 3;
   }
-
   return 99;
 }
-
 function getResultClass(classification: GradeClassification): string {
   if (classification === "Credited") {
     return "passed";
   }
-
   return classification.toLowerCase();
 }
-
 function getSubjectStatusClass(status: string): string {
   if (status.toLowerCase() === "credited") {
     return "completed";
   }
-
   return status.toLowerCase().replace(/\s+/g, "-");
 }
-
 function getProgressStatusLabel(status: CurriculumProgressStatus): string {
   switch (status) {
     case "COMPLETED_PTC":
@@ -581,16 +461,13 @@ function getProgressStatusLabel(status: CurriculumProgressStatus): string {
       return status;
   }
 }
-
 function getProgressStatusClass(status: CurriculumProgressStatus): string {
   return status.toLowerCase().replace(/_/g, "-");
 }
-
 function getProgressAcademicDetail(subject: CurriculumProgressSubject): string {
   if (subject.progress_status === "COMPLETED_PTC" && subject.ptc_grade) {
     return `PTC Final Rating ${formatGrade(subject.ptc_grade.final_rating)}`;
   }
-
   if (
     subject.progress_status === "COMPLETED_TRANSFER" &&
     subject.transfer_credit
@@ -598,107 +475,78 @@ function getProgressAcademicDetail(subject: CurriculumProgressSubject): string {
     const sourceGrade = subject.transfer_credit.source_grade
       ? ` • Source Grade ${formatGrade(subject.transfer_credit.source_grade)}`
       : "";
-
     return `Transfer Credit${sourceGrade}`;
   }
-
   if (subject.progress_status === "RETAKE_REQUIRED") {
     const classification =
       subject.latest_ptc_result?.classification || "Retake Required";
     const rating = subject.latest_ptc_result?.final_rating;
-
     return rating === null || rating === undefined
       ? classification
       : `${classification} (${formatGrade(rating)})`;
   }
-
   if (subject.progress_status === "BLOCKED_PREREQUISITE") {
     const missing = subject.missing_prerequisites
       .map((prerequisite) => prerequisite.prerequisite_subject_code)
       .join(", ");
-
     return missing ? `Missing: ${missing}` : "Prerequisite not satisfied";
   }
-
   if (subject.progress_status === "ELIGIBLE") {
     return "Requirement is currently eligible";
   }
-
   if (subject.progress_status === "NOT_YET_DUE") {
     return "Scheduled for a future curriculum term";
   }
-
   return "Academic status requires review";
 }
-
 function getRecordKey(record: AcademicRecord): string {
   if (isTransferCredit(record) && record.transfer_subject_id !== null) {
     return `transfer-${record.transfer_subject_id}`;
   }
-
   if (record.grade_id !== null) {
     return `grade-${record.grade_id}`;
   }
-
   if (record.enrollment_subject_id !== null) {
     return `es-${record.enrollment_subject_id}`;
   }
-
   return `${record.record_type}-${record.subject_id}-${record.subject_code}`;
 }
-
 export default function StudentRecord() {
   const navigate = useNavigate();
-
   const session = authService.getSession();
   const token = authService.getToken();
-
   const authenticated = Boolean(session && token);
-
   const userRole = session?.role;
-
   const [student, setStudent] = useState<AcademicStudent | null>(null);
-
   const [records, setRecords] = useState<AcademicRecord[]>([]);
-
   const [apiSummary, setApiSummary] = useState<AcademicRecordSummary | null>(
     null,
   );
-
   const [curriculumProgress, setCurriculumProgress] =
     useState<CurriculumProgressResponse | null>(null);
-
   const [progressError, setProgressError] = useState("");
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [refreshKey, setRefreshKey] = useState(0);
-
   const [search, setSearch] = useState("");
-
   const [academicYearFilter, setAcademicYearFilter] = useState("All");
-
   const [semesterFilter, setSemesterFilter] = useState("All");
-
   const [resultFilter, setResultFilter] = useState("All");
-
   const [curriculumSearch, setCurriculumSearch] = useState("");
-
   const [curriculumStatusFilter, setCurriculumStatusFilter] = useState("All");
-
+  // Only one curriculum year can be expanded at a time.
+  // The current academic year is opened automatically after data loads.
+  const [expandedCurriculumYear, setExpandedCurriculumYear] = useState<
+    number | null
+  >(null);
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-
       navigate("/login", {
         replace: true,
       });
-
       return;
     }
-
     if (userRole !== "Student") {
       if (session) {
         navigate(authService.getDashboardRoute(session.role), {
@@ -711,20 +559,16 @@ export default function StudentRecord() {
       }
     }
   }, [authenticated, userRole, session, navigate]);
-
   useEffect(() => {
     if (!authenticated || userRole !== "Student") {
       return;
     }
-
     const controller = new AbortController();
-
     const loadAcademicRecord = async () => {
       try {
         setLoading(true);
         setError("");
         setProgressError("");
-
         const [response, progressResponse] = await Promise.all([
           authService.authFetch(API_URL, {
             method: "GET",
@@ -735,38 +579,30 @@ export default function StudentRecord() {
             signal: controller.signal,
           }),
         ]);
-
         const [data, progressData] = await Promise.all([
           readJsonResponse<AcademicRecordResponse>(response),
           readJsonResponse<CurriculumProgressResponse>(progressResponse),
         ]);
-
         if (response.status === 401 || progressResponse.status === 401) {
           authService.logout();
-
           navigate("/login", {
             replace: true,
           });
-
           return;
         }
-
         if (response.status === 403) {
           throw new Error(data.message || "Student access is required.");
         }
-
         if (!response.ok || !data.success) {
           throw new Error(
             data.message || data.error || "Unable to load academic record.",
           );
         }
-
         const officialRecords = Array.isArray(data.records)
           ? data.records.filter((record) => {
               if (record.official_record !== true) {
                 return false;
               }
-
               if (isTransferCredit(record)) {
                 return (
                   record.subject_status === "Credited" &&
@@ -774,7 +610,6 @@ export default function StudentRecord() {
                   record.transfer_subject_id !== null
                 );
               }
-
               return (
                 record.grade_status === "Approved" &&
                 record.enrollment_status === "Approved" &&
@@ -782,13 +617,9 @@ export default function StudentRecord() {
               );
             })
           : [];
-
         setStudent(data.student || null);
-
         setApiSummary(data.summary || null);
-
         setRecords(officialRecords);
-
         if (!progressResponse.ok || !progressData.success) {
           setCurriculumProgress(null);
           setProgressError(
@@ -799,6 +630,16 @@ export default function StudentRecord() {
         } else {
           setCurriculumProgress(progressData);
           setProgressError("");
+          setExpandedCurriculumYear((currentYear) => {
+            if (currentYear !== null) {
+              return currentYear;
+            }
+            return (
+              progressData.current_academic_context?.year_level ??
+              progressData.subjects?.[0]?.year_level ??
+              null
+            );
+          });
         }
       } catch (requestError) {
         if (
@@ -807,15 +648,12 @@ export default function StudentRecord() {
         ) {
           return;
         }
-
         console.error("LOAD STUDENT ACADEMIC RECORD ERROR:", requestError);
-
         setStudent(null);
         setApiSummary(null);
         setRecords([]);
         setCurriculumProgress(null);
         setProgressError("");
-
         setError(
           requestError instanceof Error
             ? requestError.message
@@ -827,46 +665,34 @@ export default function StudentRecord() {
         }
       }
     };
-
     void loadAcademicRecord();
-
     return () => {
       controller.abort();
     };
   }, [authenticated, userRole, navigate, refreshKey]);
-
   const academicYears = useMemo(() => {
     const values = new Set<string>();
-
     records.forEach((record) => {
       values.add(getAcademicYearLabel(record));
     });
-
     return Array.from(values).sort(
       (a, b) => getAcademicYearSortOrder(b) - getAcademicYearSortOrder(a),
     );
   }, [records]);
-
   const semesters = useMemo(() => {
     const values = new Set<string>();
-
     records.forEach((record) => {
       values.add(getSemesterLabel(record));
     });
-
     return Array.from(values).sort(
       (a, b) => getSemesterSortOrder(a) - getSemesterSortOrder(b),
     );
   }, [records]);
-
   const filteredRecords = useMemo(() => {
     const query = search.trim().toLowerCase();
-
     return records.filter((record) => {
       const classification = getClassification(record);
-
       const transferSource = record.transfer_source;
-
       const matchesSearch =
         !query ||
         record.subject_code.toLowerCase().includes(query) ||
@@ -875,83 +701,59 @@ export default function StudentRecord() {
         (transferSource?.school || "").toLowerCase().includes(query) ||
         (transferSource?.subject_code || "").toLowerCase().includes(query) ||
         (transferSource?.subject_name || "").toLowerCase().includes(query);
-
       const matchesAY =
         academicYearFilter === "All" ||
         getAcademicYearLabel(record) === academicYearFilter;
-
       const matchesSemester =
         semesterFilter === "All" || getSemesterLabel(record) === semesterFilter;
-
       const matchesResult =
         resultFilter === "All" || classification === resultFilter;
-
       return matchesSearch && matchesAY && matchesSemester && matchesResult;
     });
   }, [records, search, academicYearFilter, semesterFilter, resultFilter]);
-
   const summary = useMemo(() => {
     const ptcRecords = records.filter(isPtcGrade);
-
     const transferRecords = records.filter(isTransferCredit);
-
     const passed = ptcRecords.filter(
       (record) => getClassification(record) === "Passed",
     );
-
     const incomplete = ptcRecords.filter(
       (record) => getClassification(record) === "Incomplete",
     );
-
     const failed = ptcRecords.filter(
       (record) => getClassification(record) === "Failed",
     );
-
     const retakes = ptcRecords.filter(requiresRetake);
-
     const satisfiedSubjects = new Map<number, number>();
-
     passed.forEach((record) => {
       if (!satisfiedSubjects.has(record.subject_id)) {
         satisfiedSubjects.set(record.subject_id, Number(record.units || 0));
       }
     });
-
     transferRecords.forEach((record) => {
       if (!satisfiedSubjects.has(record.subject_id)) {
         satisfiedSubjects.set(record.subject_id, Number(record.units || 0));
       }
     });
-
     const fallbackEarnedUnits = Array.from(satisfiedSubjects.values()).reduce(
       (total, units) => total + units,
       0,
     );
-
     const fallbackRecordedUnits = records.reduce(
       (total, record) => total + Number(record.units || 0),
       0,
     );
-
     return {
       total: apiSummary?.total_official_records ?? records.length,
-
       earnedUnits: apiSummary?.earned_units ?? fallbackEarnedUnits,
-
       passed: apiSummary?.passed_subjects ?? passed.length,
-
       transferCredits:
         apiSummary?.official_transfer_credit_records ?? transferRecords.length,
-
       incomplete: apiSummary?.incomplete_subjects ?? incomplete.length,
-
       failed: apiSummary?.failed_subjects ?? failed.length,
-
       retakes: apiSummary?.retake_subjects ?? retakes.length,
-
       totalRecordedUnits:
         apiSummary?.total_recorded_units ?? fallbackRecordedUnits,
-
       transferCreditedUnits:
         apiSummary?.transfer_credited_units ??
         transferRecords.reduce(
@@ -960,72 +762,48 @@ export default function StudentRecord() {
         ),
     };
   }, [records, apiSummary]);
-
   const groupedRecords = useMemo<AcademicYearGroup[]>(() => {
     const yearMap = new Map<string, AcademicYearGroup>();
-
     filteredRecords.forEach((record) => {
       const academicYear = getAcademicYearLabel(record);
-
       let yearGroup = yearMap.get(academicYear);
-
       if (!yearGroup) {
         yearGroup = {
           key: academicYear,
-
           academicYear,
-
           sortOrder: getAcademicYearSortOrder(academicYear),
-
           semesters: [],
         };
-
         yearMap.set(academicYear, yearGroup);
       }
-
       const semesterName = getSemesterLabel(record);
-
       const semesterKey = `${academicYear}-${semesterName}`;
-
       let semesterGroup = yearGroup.semesters.find(
         (semester) => semester.key === semesterKey,
       );
-
       if (!semesterGroup) {
         semesterGroup = {
           key: semesterKey,
-
           semesterName,
-
           sortOrder: getSemesterSortOrder(semesterName),
-
           records: [],
         };
-
         yearGroup.semesters.push(semesterGroup);
       }
-
       semesterGroup.records.push(record);
     });
-
     const result = Array.from(yearMap.values());
-
     result.sort((a, b) => b.sortOrder - a.sortOrder);
-
     result.forEach((year) => {
       year.semesters.sort((a, b) => a.sortOrder - b.sortOrder);
     });
-
     return result;
   }, [filteredRecords]);
-
   const filteredCurriculumSubjects = useMemo(() => {
     const subjects = Array.isArray(curriculumProgress?.subjects)
       ? curriculumProgress.subjects
       : [];
-
     const query = curriculumSearch.trim().toLowerCase();
-
     return subjects.filter((subject) => {
       const matchesSearch =
         !query ||
@@ -1035,36 +813,28 @@ export default function StudentRecord() {
         getProgressStatusLabel(subject.progress_status)
           .toLowerCase()
           .includes(query);
-
       const matchesStatus =
         curriculumStatusFilter === "All" ||
         subject.progress_status === curriculumStatusFilter;
-
       return matchesSearch && matchesStatus;
     });
   }, [curriculumProgress, curriculumSearch, curriculumStatusFilter]);
-
   const curriculumProgressGroups = useMemo<
     CurriculumProgressYearGroup[]
   >(() => {
     const yearMap = new Map<number, CurriculumProgressYearGroup>();
-
     filteredCurriculumSubjects.forEach((subject) => {
       let yearGroup = yearMap.get(subject.year_level);
-
       if (!yearGroup) {
         yearGroup = {
           yearLevel: subject.year_level,
           semesters: [],
         };
-
         yearMap.set(subject.year_level, yearGroup);
       }
-
       let semesterGroup = yearGroup.semesters.find(
         (semester) => semester.semesterId === subject.semester_id,
       );
-
       if (!semesterGroup) {
         semesterGroup = {
           key: `${subject.year_level}-${subject.semester_id}`,
@@ -1072,121 +842,106 @@ export default function StudentRecord() {
           semesterName: subject.semester_name,
           subjects: [],
         };
-
         yearGroup.semesters.push(semesterGroup);
       }
-
       semesterGroup.subjects.push(subject);
     });
-
     const groups = Array.from(yearMap.values()).sort(
       (a, b) => a.yearLevel - b.yearLevel,
     );
-
     groups.forEach((year) => {
       year.semesters.sort((a, b) => a.semesterId - b.semesterId);
     });
-
     return groups;
   }, [filteredCurriculumSubjects]);
-
+  const toggleCurriculumYear = (yearLevel: number) => {
+    setExpandedCurriculumYear((currentYear) =>
+      currentYear === yearLevel ? null : yearLevel,
+    );
+  };
   const clearCurriculumFilters = () => {
     setCurriculumSearch("");
     setCurriculumStatusFilter("All");
   };
-
   const clearFilters = () => {
     setSearch("");
     setAcademicYearFilter("All");
     setSemesterFilter("All");
     setResultFilter("All");
   };
-
   const refresh = () => {
     setRefreshKey((current) => current + 1);
   };
-
   if (!authenticated || userRole !== "Student") {
     return null;
   }
-
   return (
     <DashboardLayout>
       <main className="student-academic-record-page">
         <section className="student-record-header">
           <div>
             <span className="student-record-eyebrow">
-              Student Academic Records
+              <span className="student-record-eyebrow-icon">
+                <BookOpenCheck size={16} aria-hidden="true" />
+              </span>
+              Student · Grades
             </span>
-
-            <h1>Official Academic Record</h1>
-
+            <h1>Grades</h1>
             <p>
-              View your official academic history from approved PTC grades and
-              officially credited previous-school subjects.
+              Review your available Midterm and Finals grades, official grade,
+              remarks, and academic status from approved academic records.
             </p>
           </div>
-
           <button
             type="button"
             className="student-record-refresh"
             onClick={refresh}
             disabled={loading}
           >
-            {loading ? "Refreshing..." : "Refresh Record"}
+            <RefreshCw
+              size={16}
+              className={loading ? "is-spinning" : ""}
+              aria-hidden="true"
+            />
+            {loading ? "Refreshing..." : "Refresh Records"}
           </button>
         </section>
-
         <section className="student-record-official-notice">
-          <div className="student-record-official-icon">✓</div>
-
+          <div className="student-record-official-icon">
+            <ShieldCheck size={17} aria-hidden="true" />
+          </div>
           <div>
-            <strong>Official Academic Sources</strong>
-
+            <strong>Official Grade Information</strong>
             <p>
-              This record combines Program Head-approved PTC grades and
-              completed, officially credited transfer subjects. Previous-school
-              grades remain external source grades and are never converted into
-              PTC Final Rating values.
+              Only available official grade data is shown. PTC grades come from
+              approved records, while credited transfer subjects keep their
+              original external source grade.
             </p>
           </div>
         </section>
-
         {student && (
           <section className="student-record-profile">
             <div className="student-record-profile-primary">
               <span>Student</span>
-
               <strong>{student.student_name}</strong>
-
               <small>{student.student_number}</small>
             </div>
-
             <div>
               <span>Program</span>
-
               <strong>{student.course.course_code}</strong>
-
               <small>{student.course.course_name}</small>
             </div>
-
             <div>
               <span>Current Year Level</span>
-
               <strong>Year {student.year_level}</strong>
             </div>
-
             <div>
               <span>Student Status</span>
-
               <strong>{student.status}</strong>
             </div>
-
             <div>
               <span>Curriculum</span>
-
               <strong>{student.curriculum?.curriculum_name || "—"}</strong>
-
               {student.curriculum?.effective_year !== null &&
                 student.curriculum?.effective_year !== undefined && (
                   <small>Effective {student.curriculum.effective_year}</small>
@@ -1194,57 +949,82 @@ export default function StudentRecord() {
             </div>
           </section>
         )}
-
-        <section className="student-record-summary">
-          <div>
-            <span>Official Records</span>
-            <strong>{summary.total}</strong>
+        <section className="student-record-summary" aria-label="Academic record summary">
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <FileText size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Official Records</span>
+              <strong>{summary.total}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>Earned Units</span>
-            <strong>{summary.earnedUnits}</strong>
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <BookOpenCheck size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Earned Units</span>
+              <strong>{summary.earnedUnits}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>PTC Passed</span>
-            <strong>{summary.passed}</strong>
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <CheckCircle2 size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>PTC Passed</span>
+              <strong>{summary.passed}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>Transfer Credits</span>
-            <strong>{summary.transferCredits}</strong>
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <ArrowLeftRight size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Transfer Credits</span>
+              <strong>{summary.transferCredits}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>Incomplete</span>
-            <strong>{summary.incomplete}</strong>
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <Clock3 size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Incomplete</span>
+              <strong>{summary.incomplete}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>Failed</span>
-            <strong>{summary.failed}</strong>
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <XCircle size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Failed</span>
+              <strong>{summary.failed}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>Retake Required</span>
-            <strong>{summary.retakes}</strong>
+          <div className="student-record-summary-card">
+            <span className="student-record-summary-icon">
+              <RotateCcw size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <span>Retake Required</span>
+              <strong>{summary.retakes}</strong>
+            </div>
           </div>
         </section>
-
         {!loading && !error && progressError && (
           <section className="student-progress-error">
             <div>
               <strong>Curriculum progress could not be loaded</strong>
               <p>{progressError}</p>
             </div>
-
             <button type="button" onClick={refresh}>
               Try Again
             </button>
           </section>
         )}
-
         {!loading &&
           !error &&
           curriculumProgress?.summary &&
@@ -1255,16 +1035,13 @@ export default function StudentRecord() {
                   <span className="student-progress-eyebrow">
                     Curriculum Progress
                   </span>
-
                   <h2>Degree Completion</h2>
-
                   <p>
                     Track every requirement in your active curriculum using only
                     official PTC grades and officially credited transfer
                     subjects.
                   </p>
                 </div>
-
                 <div className="student-progress-percentage">
                   <strong>
                     {curriculumProgress.summary.completion_percentage.toFixed(
@@ -1275,7 +1052,6 @@ export default function StudentRecord() {
                   <span>Completed</span>
                 </div>
               </div>
-
               <div className="student-progress-overview">
                 <div className="student-progress-primary-card">
                   <div className="student-progress-primary-topline">
@@ -1286,7 +1062,6 @@ export default function StudentRecord() {
                         {curriculumProgress.summary.total_subjects} subjects
                       </strong>
                     </div>
-
                     <span className="student-progress-context-badge">
                       Year{" "}
                       {curriculumProgress.current_academic_context
@@ -1297,7 +1072,6 @@ export default function StudentRecord() {
                         : ""}
                     </span>
                   </div>
-
                   <div
                     className="student-progress-bar"
                     role="progressbar"
@@ -1320,7 +1094,6 @@ export default function StudentRecord() {
                       }}
                     />
                   </div>
-
                   <div className="student-progress-unit-row">
                     <div>
                       <span>Completed Units</span>
@@ -1328,14 +1101,12 @@ export default function StudentRecord() {
                         {curriculumProgress.summary.completed_units}
                       </strong>
                     </div>
-
                     <div>
                       <span>Remaining Units</span>
                       <strong>
                         {curriculumProgress.summary.remaining_units}
                       </strong>
                     </div>
-
                     <div>
                       <span>Calculated Curriculum</span>
                       <strong>
@@ -1344,7 +1115,6 @@ export default function StudentRecord() {
                     </div>
                   </div>
                 </div>
-
                 <div className="student-progress-status-grid">
                   <div className="completed">
                     <span>Completed</span>
@@ -1353,7 +1123,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Officially satisfied</small>
                   </div>
-
                   <div className="ptc">
                     <span>PTC Grade</span>
                     <strong>
@@ -1361,7 +1130,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Completed at PTC</small>
                   </div>
-
                   <div className="transfer">
                     <span>Transfer Credit</span>
                     <strong>
@@ -1369,7 +1137,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Officially credited</small>
                   </div>
-
                   <div className="retake">
                     <span>Retake Required</span>
                     <strong>
@@ -1377,7 +1144,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Failed or incomplete</small>
                   </div>
-
                   <div className="eligible">
                     <span>Eligible</span>
                     <strong>
@@ -1385,7 +1151,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Can be taken now</small>
                   </div>
-
                   <div className="blocked">
                     <span>Blocked</span>
                     <strong>
@@ -1393,7 +1158,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Missing prerequisite</small>
                   </div>
-
                   <div className="future">
                     <span>Not Yet Due</span>
                     <strong>
@@ -1401,7 +1165,6 @@ export default function StudentRecord() {
                     </strong>
                     <small>Future curriculum term</small>
                   </div>
-
                   <div className="remaining">
                     <span>Remaining</span>
                     <strong>
@@ -1411,11 +1174,9 @@ export default function StudentRecord() {
                   </div>
                 </div>
               </div>
-
               {curriculumProgress.summary.curriculum_unit_mismatch && (
                 <div className="student-progress-unit-warning">
                   <div className="student-progress-unit-warning-icon">!</div>
-
                   <div>
                     <strong>
                       Curriculum unit total needs administrative review
@@ -1435,7 +1196,6 @@ export default function StudentRecord() {
                   </div>
                 </div>
               )}
-
               <div className="student-progress-subjects">
                 <div className="student-progress-subjects-header">
                   <div>
@@ -1445,19 +1205,16 @@ export default function StudentRecord() {
                       requirements across the full curriculum.
                     </p>
                   </div>
-
                   <span>
                     {filteredCurriculumSubjects.length} of{" "}
                     {curriculumProgress.subjects.length} subjects
                   </span>
                 </div>
-
                 <div className="student-progress-filters">
                   <div>
                     <label htmlFor="curriculum-progress-search">
                       Search Curriculum
                     </label>
-
                     <input
                       id="curriculum-progress-search"
                       type="text"
@@ -1468,12 +1225,10 @@ export default function StudentRecord() {
                       placeholder="Subject code, title, semester, status..."
                     />
                   </div>
-
                   <div>
                     <label htmlFor="curriculum-status-filter">
                       Progress Status
                     </label>
-
                     <select
                       id="curriculum-status-filter"
                       value={curriculumStatusFilter}
@@ -1495,7 +1250,6 @@ export default function StudentRecord() {
                       <option value="UNRESOLVED">Unresolved</option>
                     </select>
                   </div>
-
                   <button
                     type="button"
                     onClick={clearCurriculumFilters}
@@ -1507,7 +1261,6 @@ export default function StudentRecord() {
                     Clear
                   </button>
                 </div>
-
                 {filteredCurriculumSubjects.length === 0 ? (
                   <div className="student-progress-empty">
                     <strong>No matching curriculum subjects</strong>
@@ -1517,222 +1270,229 @@ export default function StudentRecord() {
                   </div>
                 ) : (
                   <div className="student-progress-years">
-                    {curriculumProgressGroups.map((year) => (
-                      <article
-                        className="student-progress-year"
-                        key={`progress-year-${year.yearLevel}`}
-                      >
-                        <div className="student-progress-year-header">
-                          <div>
-                            <span>Curriculum Year</span>
-                            <h4>Year {year.yearLevel}</h4>
-                          </div>
-
-                          <strong>
-                            {year.semesters.reduce(
-                              (total, semester) =>
-                                total + semester.subjects.length,
-                              0,
-                            )}{" "}
-                            subject
-                            {year.semesters.reduce(
-                              (total, semester) =>
-                                total + semester.subjects.length,
-                              0,
-                            ) === 1
-                              ? ""
-                              : "s"}
-                          </strong>
-                        </div>
-
-                        {year.semesters.map((semester) => (
-                          <section
-                            className="student-progress-semester"
-                            key={semester.key}
+                    {curriculumProgressGroups.map((year) => {
+                      const subjectCount = year.semesters.reduce(
+                        (total, semester) =>
+                          total + semester.subjects.length,
+                        0,
+                      );
+                      const isExpanded =
+                        expandedCurriculumYear === year.yearLevel;
+                      return (
+                        <article
+                          className={`student-progress-year ${
+                            isExpanded ? "is-expanded" : "is-collapsed"
+                          }`}
+                          key={`progress-year-${year.yearLevel}`}
+                        >
+                          <button
+                            type="button"
+                            className={`student-progress-year-header ${
+                              isExpanded ? "is-expanded" : ""
+                            }`}
+                            onClick={() =>
+                              toggleCurriculumYear(year.yearLevel)
+                            }
+                            aria-expanded={isExpanded}
+                            aria-controls={`curriculum-year-${year.yearLevel}-content`}
                           >
-                            <div className="student-progress-semester-header">
-                              <div>
-                                <h5>{semester.semesterName}</h5>
-                                <span>
-                                  {semester.subjects.length} subject
-                                  {semester.subjects.length === 1 ? "" : "s"}
-                                </span>
-                              </div>
-
-                              <div>
-                                <span>
-                                  Completed{" "}
-                                  <strong>
-                                    {
-                                      semester.subjects.filter(
-                                        (subject) => subject.completed,
-                                      ).length
-                                    }
-                                  </strong>
-                                </span>
-                                <span>
-                                  Units{" "}
-                                  <strong>
-                                    {semester.subjects.reduce(
-                                      (total, subject) =>
-                                        total + Number(subject.units || 0),
-                                      0,
-                                    )}
-                                  </strong>
-                                </span>
-                              </div>
+                            <div>
+                              <span>Curriculum Year</span>
+                              <h4>Year {year.yearLevel}</h4>
                             </div>
-
-                            <div className="student-progress-table-wrapper">
-                              <table className="student-progress-table">
-                                <thead>
-                                  <tr>
-                                    <th>Subject</th>
-                                    <th>Units</th>
-                                    <th>Status</th>
-                                    <th>Prerequisite</th>
-                                    <th>Academic Detail</th>
-                                  </tr>
-                                </thead>
-
-                                <tbody>
-                                  {semester.subjects.map((subject) => (
-                                    <tr key={subject.curriculum_subject_id}>
-                                      <td>
-                                        <div className="student-progress-subject-name">
-                                          <strong>
-                                            {subject.subject_code}
-                                          </strong>
-                                          <span>{subject.subject_name}</span>
-                                          <small>
-                                            {subject.is_required
-                                              ? "Required subject"
-                                              : "Non-required subject"}
-                                          </small>
-                                        </div>
-                                      </td>
-
-                                      <td>
-                                        <strong className="student-progress-units">
-                                          {subject.units}
-                                        </strong>
-                                      </td>
-
-                                      <td>
-                                        <span
-                                          className={`student-progress-status ${getProgressStatusClass(
-                                            subject.progress_status,
-                                          )}`}
-                                        >
-                                          {getProgressStatusLabel(
-                                            subject.progress_status,
-                                          )}
-                                        </span>
-                                      </td>
-
-                                      <td>
-                                        {subject.prerequisites.length === 0 ? (
-                                          <span className="student-progress-no-prereq">
-                                            None
-                                          </span>
-                                        ) : (
-                                          <div className="student-progress-prerequisites">
-                                            {subject.prerequisites.map(
-                                              (prerequisite) => (
-                                                <span
-                                                  className={
-                                                    prerequisite.is_satisfied
-                                                      ? "satisfied"
-                                                      : "missing"
-                                                  }
-                                                  key={
-                                                    prerequisite.prerequisite_id
-                                                  }
-                                                >
-                                                  {
-                                                    prerequisite.prerequisite_subject_code
-                                                  }
-                                                  {prerequisite.is_satisfied
-                                                    ? " ✓"
-                                                    : " • Required"}
-                                                </span>
-                                              ),
-                                            )}
-                                          </div>
-                                        )}
-                                      </td>
-
-                                      <td>
-                                        <div className="student-progress-detail">
-                                          <strong>
-                                            {getProgressAcademicDetail(subject)}
-                                          </strong>
-
-                                          {subject.progress_status ===
-                                            "COMPLETED_TRANSFER" &&
-                                            subject.transfer_credit && (
-                                              <small>
-                                                {subject.transfer_credit
-                                                  .source_school ||
-                                                  "Previous School"}
-                                                {subject.transfer_credit
-                                                  .official_record_count &&
-                                                subject.transfer_credit
-                                                  .official_record_count > 1
-                                                  ? ` • ${subject.transfer_credit.official_record_count} official records, counted once`
-                                                  : ""}
-                                              </small>
-                                            )}
-                                        </div>
-                                      </td>
+                            <div className="student-progress-year-header-actions">
+                              <strong>
+                                {subjectCount} subject
+                                {subjectCount === 1 ? "" : "s"}
+                              </strong>
+                              <span
+                                className="student-progress-year-toggle"
+                                aria-hidden="true"
+                              >
+                                ⌄
+                              </span>
+                            </div>
+                          </button>
+                          {isExpanded && (
+                            <div
+                              id={`curriculum-year-${year.yearLevel}-content`}
+                              className="student-progress-year-content"
+                            >
+                          {year.semesters.map((semester) => (
+                            <section
+                              className="student-progress-semester"
+                              key={semester.key}
+                            >
+                              <div className="student-progress-semester-header">
+                                <div>
+                                  <h5>{semester.semesterName}</h5>
+                                  <span>
+                                    {semester.subjects.length} subject
+                                    {semester.subjects.length === 1 ? "" : "s"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span>
+                                    Completed{" "}
+                                    <strong>
+                                      {
+                                        semester.subjects.filter(
+                                          (subject) => subject.completed,
+                                        ).length
+                                      }
+                                    </strong>
+                                  </span>
+                                  <span>
+                                    Units{" "}
+                                    <strong>
+                                      {semester.subjects.reduce(
+                                        (total, subject) =>
+                                          total + Number(subject.units || 0),
+                                        0,
+                                      )}
+                                    </strong>
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="student-progress-table-wrapper">
+                                <table className="student-progress-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Subject</th>
+                                      <th>Units</th>
+                                      <th>Status</th>
+                                      <th>Prerequisite</th>
+                                      <th>Academic Detail</th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                  </thead>
+                                  <tbody>
+                                    {semester.subjects.map((subject) => (
+                                      <tr key={subject.curriculum_subject_id}>
+                                        <td>
+                                          <div className="student-progress-subject-name">
+                                            <strong>
+                                              {subject.subject_code}
+                                            </strong>
+                                            <span>{subject.subject_name}</span>
+                                            <small>
+                                              {subject.is_required
+                                                ? "Required subject"
+                                                : "Non-required subject"}
+                                            </small>
+                                          </div>
+                                        </td>
+                                        <td>
+                                          <strong className="student-progress-units">
+                                            {subject.units}
+                                          </strong>
+                                        </td>
+                                        <td>
+                                          <span
+                                            className={`student-progress-status ${getProgressStatusClass(
+                                              subject.progress_status,
+                                            )}`}
+                                          >
+                                            {getProgressStatusLabel(
+                                              subject.progress_status,
+                                            )}
+                                          </span>
+                                        </td>
+                                        <td>
+                                          {subject.prerequisites.length === 0 ? (
+                                            <span className="student-progress-no-prereq">
+                                              None
+                                            </span>
+                                          ) : (
+                                            <div className="student-progress-prerequisites">
+                                              {subject.prerequisites.map(
+                                                (prerequisite) => (
+                                                  <span
+                                                    className={
+                                                      prerequisite.is_satisfied
+                                                        ? "satisfied"
+                                                        : "missing"
+                                                    }
+                                                    key={
+                                                      prerequisite.prerequisite_id
+                                                    }
+                                                  >
+                                                    {
+                                                      prerequisite.prerequisite_subject_code
+                                                    }
+                                                    {prerequisite.is_satisfied
+                                                      ? " ✓"
+                                                      : " • Required"}
+                                                  </span>
+                                                ),
+                                              )}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td>
+                                          <div className="student-progress-detail">
+                                            <strong>
+                                              {getProgressAcademicDetail(subject)}
+                                            </strong>
+                                            {subject.progress_status ===
+                                              "COMPLETED_TRANSFER" &&
+                                              subject.transfer_credit && (
+                                                <small>
+                                                  {subject.transfer_credit
+                                                    .source_school ||
+                                                    "Previous School"}
+                                                  {subject.transfer_credit
+                                                    .official_record_count &&
+                                                  subject.transfer_credit
+                                                    .official_record_count > 1
+                                                    ? ` • ${subject.transfer_credit.official_record_count} official records, counted once`
+                                                    : ""}
+                                                </small>
+                                              )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </section>
+                          ))}
                             </div>
-                          </section>
-                        ))}
-                      </article>
-                    ))}
+                          )}
+                        </article>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </section>
           )}
-
         {error && (
           <section className="student-record-error">
             <div>
               <strong>Academic record could not be loaded</strong>
-
               <p>{error}</p>
             </div>
-
             <button type="button" onClick={refresh}>
               Try Again
             </button>
           </section>
         )}
-
         {loading && (
           <section className="student-record-loading">
             <div className="student-record-spinner" />
-
             <div>
               <strong>Loading official academic record</strong>
-
               <span>
                 Retrieving academic history and curriculum progress...
               </span>
             </div>
           </section>
         )}
-
         {!loading && !error && (
           <section className="student-record-filters">
             <div className="student-record-search">
               <label htmlFor="academic-record-search">Search Subject</label>
-
               <input
                 id="academic-record-search"
                 type="text"
@@ -1741,16 +1501,13 @@ export default function StudentRecord() {
                 placeholder="PTC subject, previous subject, school..."
               />
             </div>
-
             <div>
               <label>Academic Year</label>
-
               <select
                 value={academicYearFilter}
                 onChange={(event) => setAcademicYearFilter(event.target.value)}
               >
                 <option value="All">All Academic Years</option>
-
                 {academicYears.map((label) => (
                   <option key={label} value={label}>
                     {label}
@@ -1758,16 +1515,13 @@ export default function StudentRecord() {
                 ))}
               </select>
             </div>
-
             <div>
               <label>Semester</label>
-
               <select
                 value={semesterFilter}
                 onChange={(event) => setSemesterFilter(event.target.value)}
               >
                 <option value="All">All Semesters</option>
-
                 {semesters.map((label) => (
                   <option key={label} value={label}>
                     {label}
@@ -1775,26 +1529,19 @@ export default function StudentRecord() {
                 ))}
               </select>
             </div>
-
             <div>
               <label>Academic Result</label>
-
               <select
                 value={resultFilter}
                 onChange={(event) => setResultFilter(event.target.value)}
               >
                 <option value="All">All Results</option>
-
                 <option value="Passed">Passed</option>
-
                 <option value="Credited">Credited</option>
-
                 <option value="Incomplete">Incomplete</option>
-
                 <option value="Failed">Failed</option>
               </select>
             </div>
-
             <button
               type="button"
               className="student-record-clear-filter"
@@ -1804,66 +1551,57 @@ export default function StudentRecord() {
             </button>
           </section>
         )}
-
         {!loading && !error && records.length === 0 && (
           <section className="student-record-empty">
-            <div className="student-record-empty-icon">✓</div>
-
+            <div className="student-record-empty-icon">
+              <CheckCircle2 size={21} aria-hidden="true" />
+            </div>
             <strong>No official academic records yet</strong>
-
             <p>
               Approved PTC grades and completed transfer credits will appear
               here when they become official.
             </p>
           </section>
         )}
-
         {!loading &&
           !error &&
           records.length > 0 &&
           filteredRecords.length === 0 && (
             <section className="student-record-empty">
               <strong>No matching academic records</strong>
-
               <p>
                 No official PTC grade or transfer-credit record matches the
                 current filters.
               </p>
-
               <button type="button" onClick={clearFilters}>
                 Clear Filters
               </button>
             </section>
           )}
-
         {!loading && !error && groupedRecords.length > 0 && (
           <section className="student-record-history">
             <div className="student-record-history-header">
               <div>
-                <h2>Academic History</h2>
-
+                <h2>Grade History</h2>
                 <p>
-                  Official PTC grades and credited previous-school subjects
-                  grouped by academic year and semester.
+                  Review available grades by academic year and semester,
+                  including Midterm, Finals, official grade, remarks, and
+                  academic status.
                 </p>
               </div>
-
               <span>
                 {filteredRecords.length} record
                 {filteredRecords.length === 1 ? "" : "s"}
               </span>
             </div>
-
             <div className="student-record-years">
               {groupedRecords.map((year) => (
                 <article className="student-record-year" key={year.key}>
                   <header className="student-record-year-header">
                     <div>
                       <span>Academic Year</span>
-
                       <h3>{year.academicYear}</h3>
                     </div>
-
                     <strong>
                       {year.semesters.reduce(
                         (total, semester) => total + semester.records.length,
@@ -1878,20 +1616,17 @@ export default function StudentRecord() {
                         : "s"}
                     </strong>
                   </header>
-
                   {year.semesters.map((semester) => {
                     const semesterUnits = semester.records.reduce(
                       (total, record) => total + Number(record.units || 0),
                       0,
                     );
-
                     const satisfiedCount = semester.records.filter(
                       (record) =>
                         record.curriculum_satisfied === true ||
                         getClassification(record) === "Passed" ||
                         getClassification(record) === "Credited",
                     ).length;
-
                     return (
                       <section
                         className="student-record-semester"
@@ -1900,65 +1635,51 @@ export default function StudentRecord() {
                         <div className="student-record-semester-header">
                           <div>
                             <h4>{semester.semesterName}</h4>
-
                             <span>
                               {semester.records.length} record
                               {semester.records.length === 1 ? "" : "s"}
                             </span>
                           </div>
-
                           <div className="student-record-semester-stats">
                             <span>
                               Recorded Units <strong>{semesterUnits}</strong>
                             </span>
-
                             <span>
                               Satisfied <strong>{satisfiedCount}</strong>
                             </span>
                           </div>
                         </div>
-
                         <div className="student-record-table-wrapper">
                           <table className="student-record-table">
                             <thead>
+                              <tr className="student-record-table-groups">
+                                <th rowSpan={2}>Subject</th>
+                                <th rowSpan={2}>Academic Source</th>
+                                <th rowSpan={2}>Units</th>
+                                <th colSpan={3}>Term Grades</th>
+                                <th colSpan={3}>Official Result</th>
+                                <th rowSpan={2}>Review</th>
+                              </tr>
                               <tr>
-                                <th>Subject</th>
-
-                                <th>Academic Source</th>
-
-                                <th>Units</th>
-
                                 <th>Prelim</th>
-
                                 <th>Midterm</th>
-
-                                <th>Final</th>
-
-                                <th>Rating / Source Grade</th>
-
-                                <th>Result</th>
-
+                                <th>Finals</th>
+                                <th>Official Grade</th>
+                                <th>Remarks</th>
                                 <th>Academic Status</th>
-
-                                <th>Review</th>
                               </tr>
                             </thead>
-
                             <tbody>
                               {semester.records.map((record) => {
                                 const classification =
                                   getClassification(record);
-
                                 const transfer = isTransferCredit(record);
-
                                 return (
                                   <tr key={getRecordKey(record)}>
                                     <td>
                                       <div className="student-record-subject">
                                         <strong>{record.subject_code}</strong>
-
                                         <span>{record.subject_name}</span>
-
                                         {transfer ? (
                                           <small>PTC equivalent subject</small>
                                         ) : record.enrollment_subject_id !==
@@ -1968,7 +1689,6 @@ export default function StudentRecord() {
                                           </small>
                                         ) : null}
                                       </div>
-
                                       {transfer && record.transfer_source && (
                                         <div className="student-record-subject">
                                           <small>
@@ -1984,17 +1704,14 @@ export default function StudentRecord() {
                                         </div>
                                       )}
                                     </td>
-
                                     <td>
                                       {transfer ? (
                                         <div className="student-record-subject">
                                           <strong>Transfer Credit</strong>
-
                                           <span>
                                             {record.transfer_source?.school ||
                                               "Previous School"}
                                           </span>
-
                                           {record.transfer_source?.course && (
                                             <small>
                                               {record.transfer_source.course}
@@ -2004,7 +1721,6 @@ export default function StudentRecord() {
                                       ) : (
                                         <div className="student-record-subject">
                                           <strong>PTC Grade</strong>
-
                                           {record.faculty?.faculty_name && (
                                             <small>
                                               {record.faculty.faculty_name}
@@ -2013,63 +1729,69 @@ export default function StudentRecord() {
                                         </div>
                                       )}
                                     </td>
-
                                     <td>
                                       <strong className="student-record-units">
                                         {record.units}
                                       </strong>
                                     </td>
-
-                                    <td>
-                                      {transfer
-                                        ? "—"
-                                        : formatGrade(record.prelim_grade)}
+                                    <td className="student-record-grade-cell">
+                                      <span className="student-record-grade-value">
+                                        {transfer
+                                          ? "—"
+                                          : formatGrade(record.prelim_grade)}
+                                      </span>
                                     </td>
-
-                                    <td>
-                                      {transfer
-                                        ? "—"
-                                        : formatGrade(record.midterm_grade)}
+                                    <td className="student-record-grade-cell">
+                                      <span className="student-record-grade-value">
+                                        {transfer
+                                          ? "—"
+                                          : formatGrade(record.midterm_grade)}
+                                      </span>
                                     </td>
-
-                                    <td>
-                                      {transfer
-                                        ? "—"
-                                        : formatGrade(record.final_grade)}
+                                    <td className="student-record-grade-cell">
+                                      <span className="student-record-grade-value">
+                                        {transfer
+                                          ? "—"
+                                          : formatGrade(record.final_grade)}
+                                      </span>
                                     </td>
-
-                                    <td>
+                                    <td className="student-record-grade-cell">
                                       {transfer ? (
-                                        <div className="student-record-subject">
+                                        <div className="student-record-official-grade">
                                           <strong className="student-record-final-rating">
                                             {formatGrade(record.source_grade)}
                                           </strong>
-
                                           <small>External source grade</small>
                                         </div>
                                       ) : (
-                                        <strong className="student-record-final-rating">
-                                          {formatGrade(record.final_rating)}
-                                        </strong>
+                                        <div className="student-record-official-grade">
+                                          <strong className="student-record-final-rating">
+                                            {formatGrade(record.final_rating)}
+                                          </strong>
+                                          <small>Official grade</small>
+                                        </div>
                                       )}
                                     </td>
-
                                     <td>
-                                      <span
-                                        className={`student-record-result ${getResultClass(
-                                          classification,
-                                        )}`}
-                                      >
-                                        {classification}
-                                      </span>
-
-                                      {requiresRetake(record) && (
-                                        <small className="student-record-retake">
-                                          Retake required
-                                        </small>
-                                      )}
+                                      <div className="student-record-outcome">
+                                        <span
+                                          className={`student-record-result ${getResultClass(
+                                            classification,
+                                          )}`}
+                                        >
+                                          {record.remarks || classification}
+                                        </span>
+                                        {record.remarks &&
+                                          record.remarks !== classification && (
+                                            <small>{classification}</small>
+                                          )}
+                                        {requiresRetake(record) && (
+                                          <small className="student-record-retake">
+                                            Retake required
+                                          </small>
+                                        )}
+                                      </div>
                                     </td>
-
                                     <td>
                                       <span
                                         className={`student-record-subject-status ${getSubjectStatusClass(
@@ -2079,13 +1801,11 @@ export default function StudentRecord() {
                                         {record.subject_status}
                                       </span>
                                     </td>
-
                                     <td>
                                       <div className="student-record-approval">
                                         <span className="student-record-approved-badge">
                                           {transfer ? "Credited" : "Approved"}
                                         </span>
-
                                         {record.approval
                                           ?.reviewed_by_username && (
                                           <small>
@@ -2096,7 +1816,6 @@ export default function StudentRecord() {
                                             }
                                           </small>
                                         )}
-
                                         {record.approval?.reviewed_at && (
                                           <small>
                                             {formatDateTime(
@@ -2104,7 +1823,6 @@ export default function StudentRecord() {
                                             )}
                                           </small>
                                         )}
-
                                         {transfer &&
                                           record.transfer_completion
                                             ?.completed_at && (
@@ -2132,66 +1850,52 @@ export default function StudentRecord() {
             </div>
           </section>
         )}
-
         {!loading && !error && (
           <section className="student-record-legend">
             <div className="student-record-legend-header">
               <span>Academic Result Guide</span>
-
               <strong>Official Academic Sources</strong>
             </div>
-
             <div className="student-record-legend-items">
               <div>
                 <span className="student-record-legend-rating passed">
                   1.00–3.00
                 </span>
-
                 <div>
                   <strong>PTC Passed</strong>
-
                   <p>
                     Approved PTC Final Rating successfully completes the
                     subject.
                   </p>
                 </div>
               </div>
-
               <div>
                 <span className="student-record-legend-rating passed">
                   Credit
                 </span>
-
                 <div>
                   <strong>Transfer Credit</strong>
-
                   <p>
                     Completed and Credited transfer evaluation satisfies the
                     mapped PTC curriculum subject.
                   </p>
                 </div>
               </div>
-
               <div>
                 <span className="student-record-legend-rating incomplete">
                   4.00
                 </span>
-
                 <div>
                   <strong>Incomplete</strong>
-
                   <p>Subject remains a retake candidate.</p>
                 </div>
               </div>
-
               <div>
                 <span className="student-record-legend-rating failed">
                   5.00
                 </span>
-
                 <div>
                   <strong>Failed</strong>
-
                   <p>
                     Subject must be retaken according to enrollment eligibility
                     rules.
@@ -2201,12 +1905,10 @@ export default function StudentRecord() {
             </div>
           </section>
         )}
-
         {!loading && !error && records.length > 0 && (
           <section className="student-record-footer">
             <div>
               <strong>Official Academic History</strong>
-
               <p>
                 This page combines official PTC grades and official transfer
                 credits. Transfer source grades remain external and are not
@@ -2214,12 +1916,9 @@ export default function StudentRecord() {
                 and future enrollment requirements when officially completed.
               </p>
             </div>
-
             <div className="student-record-footer-stat">
               <span>Total Recorded Units</span>
-
               <strong>{summary.totalRecordedUnits}</strong>
-
               {summary.transferCreditedUnits > 0 && (
                 <small>
                   {summary.transferCreditedUnits} transfer-credit unit

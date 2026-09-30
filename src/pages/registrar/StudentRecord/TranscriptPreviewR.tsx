@@ -3,10 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 
 import "../../../styles/RegistrarTranscriptPreview.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/students";
+const API_BASE_URL = apiUrl("/api/registrar/students");
 
 type AcademicRecordType = "PTC_GRADE" | "TRANSFER_CREDIT";
 
@@ -14,6 +15,7 @@ type AcademicClassification =
   | "Passed"
   | "Incomplete"
   | "Failed"
+  | "Unofficial Drop"
   | "Credited"
   | "Unknown";
 
@@ -91,7 +93,6 @@ interface AcademicRecord {
 
   subject_status: string;
 
-  prelim_grade: number | null;
   midterm_grade: number | null;
   final_grade: number | null;
 
@@ -257,6 +258,10 @@ function classifyFinalRating(
     return "Failed";
   }
 
+  if (rating === 6) {
+    return "Unofficial Drop";
+  }
+
   return "Unknown";
 }
 
@@ -268,7 +273,8 @@ function getClassification(record: AcademicRecord): AcademicClassification {
   if (
     record.academic_result === "Passed" ||
     record.academic_result === "Incomplete" ||
-    record.academic_result === "Failed"
+    record.academic_result === "Failed" ||
+    record.academic_result === "Unofficial Drop"
   ) {
     return record.academic_result;
   }
@@ -276,7 +282,8 @@ function getClassification(record: AcademicRecord): AcademicClassification {
   if (
     record.classification === "Passed" ||
     record.classification === "Incomplete" ||
-    record.classification === "Failed"
+    record.classification === "Failed" ||
+    record.classification === "Unofficial Drop"
   ) {
     return record.classification;
   }

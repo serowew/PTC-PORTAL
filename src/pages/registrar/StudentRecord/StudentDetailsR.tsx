@@ -20,14 +20,14 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-
+import { apiUrl } from "../../../services/api";
 import "../../../styles/RegistrarStudentDetails.css";
 
 // =====================================================
 // API
 // =====================================================
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/students";
+const API_BASE_URL = apiUrl("/api/registrar/students");
 
 // =====================================================
 // TYPES
@@ -74,12 +74,7 @@ interface StudentResponse {
   student?: Student;
 }
 
-type StatusVariant =
-  | "active"
-  | "graduated"
-  | "warning"
-  | "danger"
-  | "neutral";
+type StatusVariant = "active" | "graduated" | "warning" | "danger" | "neutral";
 
 // =====================================================
 // HELPERS
@@ -490,7 +485,10 @@ export default function StudentDetailsR() {
 
                   <p className="registrar-student-details__student-number">
                     <Hash size={14} />
-                    {getDisplayValue(student.student_number, "No student number")}
+                    {getDisplayValue(
+                      student.student_number,
+                      "No student number",
+                    )}
                   </p>
 
                   <div className="registrar-student-details__identity-tags">
@@ -572,7 +570,9 @@ export default function StudentDetailsR() {
                   </span>
                   <h2>Student Record Actions</h2>
                 </div>
-                <p>Open the related record without returning to the student list.</p>
+                <p>
+                  Open the related record without returning to the student list.
+                </p>
               </div>
 
               <div className="registrar-student-details__action-grid">
@@ -592,7 +592,9 @@ export default function StudentDetailsR() {
                     <strong>Academic Records</strong>
                     <small>Review grades and official academic history</small>
                   </span>
-                  <span className="registrar-student-details__action-arrow">→</span>
+                  <span className="registrar-student-details__action-arrow">
+                    →
+                  </span>
                 </button>
 
                 <button
@@ -611,7 +613,9 @@ export default function StudentDetailsR() {
                     <strong>Student COG</strong>
                     <small>Open the student&apos;s certificate of grades</small>
                   </span>
-                  <span className="registrar-student-details__action-arrow">→</span>
+                  <span className="registrar-student-details__action-arrow">
+                    →
+                  </span>
                 </button>
 
                 <button
@@ -628,9 +632,13 @@ export default function StudentDetailsR() {
                   </span>
                   <span className="registrar-student-details__action-copy">
                     <strong>Transfer Evaluation</strong>
-                    <small>Review transferred subjects and credited records</small>
+                    <small>
+                      Review transferred subjects and credited records
+                    </small>
                   </span>
-                  <span className="registrar-student-details__action-arrow">→</span>
+                  <span className="registrar-student-details__action-arrow">
+                    →
+                  </span>
                 </button>
               </div>
             </section>
@@ -652,7 +660,9 @@ export default function StudentDetailsR() {
                       <h2>Personal Information</h2>
                     </div>
                   </div>
-                  <p>Basic identity and contact details on the student record.</p>
+                  <p>
+                    Basic identity and contact details on the student record.
+                  </p>
                 </div>
 
                 <div className="registrar-student-details__details-grid">
@@ -793,7 +803,9 @@ export default function StudentDetailsR() {
                       <h2>Address Information</h2>
                     </div>
                   </div>
-                  <p>Residential address currently saved on the student profile.</p>
+                  <p>
+                    Residential address currently saved on the student profile.
+                  </p>
                 </div>
 
                 <div className="registrar-student-details__details-grid registrar-student-details__details-grid--address">
@@ -833,7 +845,9 @@ export default function StudentDetailsR() {
                     </span>
                     <div>
                       <span>Complete Address</span>
-                      <strong>{fullAddress || "No complete address on file"}</strong>
+                      <strong>
+                        {fullAddress || "No complete address on file"}
+                      </strong>
                     </div>
                   </div>
                 </div>

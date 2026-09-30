@@ -16,10 +16,9 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
+import { fileService } from "../../../services/file.service";
 import "../../../styles/announcementDetailsStudent.css";
-
-const API_BASE_URL = "http://localhost:3000";
-const FILE_BASE_URL = "http://localhost:3000";
 
 interface Attachment {
   file_id: number;
@@ -84,7 +83,9 @@ function includesStudentAudience(recipients: Recipient[] | undefined) {
     Array.isArray(recipients) &&
     recipients.some(
       (recipient) =>
-        String(recipient.role_name || "").trim().toLowerCase() === "student",
+        String(recipient.role_name || "")
+          .trim()
+          .toLowerCase() === "student",
     )
   );
 }
@@ -124,7 +125,9 @@ function formatFileSize(bytes: number) {
 }
 
 function formatFileType(mimeType: string) {
-  const value = String(mimeType || "").trim().toLowerCase();
+  const value = String(mimeType || "")
+    .trim()
+    .toLowerCase();
 
   if (!value) {
     return "File";
@@ -151,12 +154,6 @@ function formatFileType(mimeType: string) {
   }
 
   return mimeType;
-}
-
-function buildFileUrl(path: string) {
-  const normalized = path.replace(/\\/g, "/").replace(/^\/+/, "");
-
-  return `${FILE_BASE_URL}/${normalized}`;
 }
 
 export default function AnnouncementDetailsS() {
@@ -207,7 +204,7 @@ export default function AnnouncementDetailsS() {
         }
 
         const response = await authService.authFetch(
-          `${API_BASE_URL}/api/announcements/${announcementId}`,
+          apiUrl(`/api/announcements/${announcementId}`),
           {
             method: "GET",
             signal: controller.signal,
@@ -242,18 +239,14 @@ export default function AnnouncementDetailsS() {
 
         if (response.status === 403) {
           const message =
-            "announcement_id" in data
-              ? undefined
-              : data.message || data.error;
+            "announcement_id" in data ? undefined : data.message || data.error;
 
           throw new Error(message || "Student access is required.");
         }
 
         if (!response.ok) {
           const message =
-            "announcement_id" in data
-              ? undefined
-              : data.message || data.error;
+            "announcement_id" in data ? undefined : data.message || data.error;
 
           throw new Error(message || "Announcement could not be loaded.");
         }
@@ -304,7 +297,7 @@ export default function AnnouncementDetailsS() {
 
         if (requestError instanceof TypeError) {
           setError(
-            "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
+            "Unable to connect to the announcement server. Please make sure the backend server is running.",
           );
           return;
         }
@@ -474,9 +467,7 @@ export default function AnnouncementDetailsS() {
 
                     <div>
                       <small>Audience</small>
-                      <strong>
-                        {formatAudience(announcement.recipients)}
-                      </strong>
+                      <strong>{formatAudience(announcement.recipients)}</strong>
                     </div>
                   </div>
 
@@ -562,12 +553,26 @@ export default function AnnouncementDetailsS() {
 
                 <div className="student-announcement-detail__attachment-list">
                   {announcement.attachments?.map((file) => (
-                    <a
+                    <button
                       key={file.file_id}
-                      href={buildFileUrl(file.file_path)}
-                      target="_blank"
-                      rel="noreferrer"
+                      type="button"
                       className="student-announcement-detail__attachment"
+                      onClick={async () => {
+                        try {
+                          await fileService.openFile(file.file_id);
+                        } catch (fileError) {
+                          console.error(
+                            "OPEN STUDENT ANNOUNCEMENT ATTACHMENT ERROR:",
+                            fileError,
+                          );
+
+                          window.alert(
+                            fileError instanceof Error
+                              ? fileError.message
+                              : "Unable to open attachment.",
+                          );
+                        }
+                      }}
                     >
                       <span className="student-announcement-detail__file-icon">
                         <FileText size={17} />
@@ -588,7 +593,7 @@ export default function AnnouncementDetailsS() {
                         Open
                         <ExternalLink size={14} />
                       </span>
-                    </a>
+                    </button>
                   ))}
                 </div>
               </section>

@@ -18,9 +18,8 @@ import {
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
+import { apiUrl } from "../../services/api";
 import "../../styles/StudentSelfProfile.css";
-
-const API_BASE_URL = "http://localhost:3000";
 
 interface StudentProfileData {
   photo: string | null;
@@ -113,10 +112,7 @@ function formatDate(value: string | null | undefined) {
 }
 
 function getInitials(fullName: string) {
-  const parts = fullName
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
 
   if (parts.length === 0) return "ST";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -138,9 +134,7 @@ function getStatusClass(value: string | null | undefined) {
     return "pending";
   }
 
-  if (
-    ["rejected", "dropped", "inactive", "transferred"].includes(normalized)
-  ) {
+  if (["rejected", "dropped", "inactive", "transferred"].includes(normalized)) {
     return "negative";
   }
 
@@ -160,7 +154,7 @@ function buildPhotoUrl(photo: string | null) {
 
   const normalized = trimmed.replace(/\\/g, "/").replace(/^\/+/, "");
 
-  return `${API_BASE_URL}/${normalized}`;
+  return apiUrl(normalized);
 }
 
 export default function StudentProfile() {
@@ -212,7 +206,7 @@ export default function StudentProfile() {
         setError("");
 
         const response = await authService.authFetch(
-          `${API_BASE_URL}/api/student/profile`,
+          apiUrl("/api/student/profile"),
           {
             method: "GET",
             signal: controller.signal,
@@ -259,7 +253,9 @@ export default function StudentProfile() {
         }
 
         if (!data.profile) {
-          throw new Error("Student profile data was not returned by the server.");
+          throw new Error(
+            "Student profile data was not returned by the server.",
+          );
         }
 
         setProfile(data.profile);
@@ -331,8 +327,8 @@ export default function StudentProfile() {
 
             <h1>Student Profile</h1>
             <p>
-              View your personal, academic, and guardian information recorded
-              in the PTC Portal.
+              View your personal, academic, and guardian information recorded in
+              the PTC Portal.
             </p>
           </div>
 
@@ -342,10 +338,7 @@ export default function StudentProfile() {
             onClick={() => setRefreshKey((current) => current + 1)}
             disabled={loading || refreshing}
           >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "is-spinning" : ""}
-            />
+            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </section>
@@ -422,9 +415,7 @@ export default function StudentProfile() {
               <div className="student-self-profile__identity-details">
                 <div>
                   <span>Section</span>
-                  <strong>
-                    {formatValue(profile.section.section_name)}
-                  </strong>
+                  <strong>{formatValue(profile.section.section_name)}</strong>
                 </div>
 
                 <div>
@@ -591,9 +582,7 @@ export default function StudentProfile() {
                     <div>
                       <span>Academic Year</span>
                       <strong>
-                        {formatValue(
-                          profile.academic_year.academic_year,
-                        )}
+                        {formatValue(profile.academic_year.academic_year)}
                       </strong>
                     </div>
                   </div>

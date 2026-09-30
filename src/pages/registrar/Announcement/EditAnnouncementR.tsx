@@ -23,11 +23,11 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/announcementEditR.css";
 
-const ANNOUNCEMENT_API_URL =
-  "http://localhost:3000/api/announcement-management";
-const FILE_UPLOAD_URL = "http://localhost:3000/api/files/upload";
+const ANNOUNCEMENT_API_URL = apiUrl("/api/announcement-management");
+const FILE_UPLOAD_URL = apiUrl("/api/files/upload");
 
 // =====================================================
 // TYPES
@@ -574,7 +574,9 @@ export default function AnnouncementEditR() {
               className="registrar-announcement-edit__button registrar-announcement-edit__button--secondary"
               onClick={() =>
                 Number.isInteger(announcementId) && announcementId > 0
-                  ? navigate(`/registrar/announcement/DetailR/${announcementId}`)
+                  ? navigate(
+                      `/registrar/announcement/DetailR/${announcementId}`,
+                    )
                   : navigate("/registrar/announcement/listR")
               }
               disabled={saving}
@@ -586,7 +588,10 @@ export default function AnnouncementEditR() {
         </header>
 
         {loading ? (
-          <div className="registrar-announcement-edit__loading" aria-live="polite">
+          <div
+            className="registrar-announcement-edit__loading"
+            aria-live="polite"
+          >
             <div className="registrar-announcement-edit__skeleton registrar-announcement-edit__skeleton--main" />
             <div className="registrar-announcement-edit__skeleton registrar-announcement-edit__skeleton--side" />
           </div>
@@ -659,7 +664,9 @@ export default function AnnouncementEditR() {
                           disabled={saving}
                           required
                         />
-                        <small>{content.length.toLocaleString()} characters</small>
+                        <small>
+                          {content.length.toLocaleString()} characters
+                        </small>
                       </label>
                     </div>
                   </section>
@@ -674,7 +681,10 @@ export default function AnnouncementEditR() {
                           Audience
                         </span>
                         <h2>Recipients</h2>
-                        <p>Select every portal role that should receive this announcement.</p>
+                        <p>
+                          Select every portal role that should receive this
+                          announcement.
+                        </p>
                       </div>
                     </div>
 
@@ -703,7 +713,11 @@ export default function AnnouncementEditR() {
                               disabled={saving}
                             />
                             <span className="registrar-announcement-edit__recipient-check">
-                              {selected ? <Check size={14} /> : <UserRound size={14} />}
+                              {selected ? (
+                                <Check size={14} />
+                              ) : (
+                                <UserRound size={14} />
+                              )}
                             </span>
                             <span>
                               <strong>{role.role_name}</strong>
@@ -730,7 +744,10 @@ export default function AnnouncementEditR() {
                           Files
                         </span>
                         <h2>Attachments</h2>
-                        <p>Keep or remove existing files and optionally add one new file.</p>
+                        <p>
+                          Keep or remove existing files and optionally add one
+                          new file.
+                        </p>
                       </div>
                     </div>
 
@@ -746,12 +763,16 @@ export default function AnnouncementEditR() {
                             </span>
                             <span>
                               <strong>{file.original_name}</strong>
-                              <small>Existing attachment · File #{file.file_id}</small>
+                              <small>
+                                Existing attachment · File #{file.file_id}
+                              </small>
                             </span>
                             <button
                               type="button"
                               className="registrar-announcement-edit__remove-button"
-                              onClick={() => handleRemoveAttachment(file.file_id)}
+                              onClick={() =>
+                                handleRemoveAttachment(file.file_id)
+                              }
                               disabled={saving}
                             >
                               <Trash2 size={15} />
@@ -774,7 +795,9 @@ export default function AnnouncementEditR() {
                         </span>
                         <div>
                           <strong>Add Attachment</strong>
-                          <small>Select one file to upload with this update.</small>
+                          <small>
+                            Select one file to upload with this update.
+                          </small>
                         </div>
                       </div>
 
@@ -843,7 +866,11 @@ export default function AnnouncementEditR() {
                             : "registrar-announcement-edit__status-preview--inactive"
                         }`}
                       >
-                        {isActive ? <CheckCircle2 size={18} /> : <CircleOff size={18} />}
+                        {isActive ? (
+                          <CheckCircle2 size={18} />
+                        ) : (
+                          <CircleOff size={18} />
+                        )}
                         <div>
                           <strong>{isActive ? "Active" : "Inactive"}</strong>
                           <p>
@@ -862,7 +889,9 @@ export default function AnnouncementEditR() {
                           id="announcement-edit-publish-date"
                           type="date"
                           value={publishDate}
-                          onChange={(event) => setPublishDate(event.target.value)}
+                          onChange={(event) =>
+                            setPublishDate(event.target.value)
+                          }
                           disabled={saving}
                           required
                         />
@@ -876,11 +905,15 @@ export default function AnnouncementEditR() {
                           id="announcement-edit-expiry-date"
                           type="date"
                           value={expiryDate}
-                          onChange={(event) => setExpiryDate(event.target.value)}
+                          onChange={(event) =>
+                            setExpiryDate(event.target.value)
+                          }
                           min={publishDate || undefined}
                           disabled={saving}
                         />
-                        <small>Optional. Leave empty for no configured expiry.</small>
+                        <small>
+                          Optional. Leave empty for no configured expiry.
+                        </small>
                       </label>
                     </div>
                   </section>
@@ -893,7 +926,11 @@ export default function AnnouncementEditR() {
                       <div>
                         <strong>Save Changes</strong>
                         <p>
-                          This updates announcement #{Number.isInteger(announcementId) ? announcementId : "—"} using the existing management API.
+                          This updates announcement #
+                          {Number.isInteger(announcementId)
+                            ? announcementId
+                            : "—"}{" "}
+                          using the existing management API.
                         </p>
                       </div>
                     </div>
@@ -902,7 +939,9 @@ export default function AnnouncementEditR() {
                       <button
                         type="button"
                         className="registrar-announcement-edit__button registrar-announcement-edit__button--secondary"
-                        onClick={() => navigate("/registrar/announcement/listR")}
+                        onClick={() =>
+                          navigate("/registrar/announcement/listR")
+                        }
                         disabled={saving}
                       >
                         Cancel
@@ -910,12 +949,17 @@ export default function AnnouncementEditR() {
 
                       <button
                         type="submit"
-                        disabled={saving || !authenticated || userRole !== "Registrar"}
+                        disabled={
+                          saving || !authenticated || userRole !== "Registrar"
+                        }
                         className="registrar-announcement-edit__button registrar-announcement-edit__button--primary"
                       >
                         {saving ? (
                           <>
-                            <Loader2 size={17} className="registrar-announcement-edit__spin" />
+                            <Loader2
+                              size={17}
+                              className="registrar-announcement-edit__spin"
+                            />
                             Updating...
                           </>
                         ) : (

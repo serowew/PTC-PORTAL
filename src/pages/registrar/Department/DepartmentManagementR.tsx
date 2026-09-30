@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -14,11 +14,12 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import DepartmentModal from "./DepartmentModal";
 import type { Department } from "./DepartmentModal";
 import "../../../styles/DepartmentManagementR.css";
 
-const API_BASE_URL = "http://localhost:3000/api/registrar/departments";
+const API_BASE_URL = apiUrl("/api/registrar/departments");
 
 interface DepartmentResponse {
   success: boolean;
@@ -181,7 +182,8 @@ export default function DepartmentManagementR() {
       const latestTime = new Date(latest.created_at).getTime();
 
       if (Number.isNaN(currentTime)) return latest;
-      if (Number.isNaN(latestTime) || currentTime > latestTime) return department;
+      if (Number.isNaN(latestTime) || currentTime > latestTime)
+        return department;
       return latest;
     }, null);
   }, [departments]);
@@ -278,7 +280,9 @@ export default function DepartmentManagementR() {
             <div>
               <span>Showing</span>
               <strong>{loading ? "—" : filteredDepartments.length}</strong>
-              <small>{search.trim() ? "Matching your search" : "All records visible"}</small>
+              <small>
+                {search.trim() ? "Matching your search" : "All records visible"}
+              </small>
             </div>
           </article>
 
@@ -481,7 +485,9 @@ export default function DepartmentManagementR() {
 
                       <td>
                         <div className="registrar-department-management__name-cell">
-                          <strong>{department.department_name || "Unnamed department"}</strong>
+                          <strong>
+                            {department.department_name || "Unnamed department"}
+                          </strong>
                           <span>Academic department</span>
                         </div>
                       </td>

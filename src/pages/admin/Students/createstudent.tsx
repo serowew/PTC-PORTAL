@@ -8,6 +8,7 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 
 import "../../../styles/addeditdrop.css";
@@ -16,7 +17,7 @@ import "../../../styles/addeditdrop.css";
 // API
 // =====================================================
 
-const API_BASE_URL = "http://localhost:3000/api/students";
+const API_BASE_URL = apiUrl("/api/students");
 
 // =====================================================
 // STATIC OPTIONS

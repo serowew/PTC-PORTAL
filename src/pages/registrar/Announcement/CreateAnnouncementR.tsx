@@ -21,11 +21,11 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import { apiUrl } from "../../../services/api";
 import "../../../styles/announcementCreateR.css";
 
-const ANNOUNCEMENT_API_URL =
-  "http://localhost:3000/api/announcement-management";
-const FILE_UPLOAD_URL = "http://localhost:3000/api/files/upload";
+const ANNOUNCEMENT_API_URL = apiUrl("/api/announcement-management");
+const FILE_UPLOAD_URL = apiUrl("/api/files/upload");
 
 // =====================================================
 // TYPES
@@ -325,7 +325,7 @@ export default function AnnouncementCreateR() {
 
       if (err instanceof TypeError) {
         setError(
-          "Unable to connect to the server. Make sure the backend is running on port 3000.",
+          "Unable to connect to the server. Please make sure the backend server is running.",
         );
         return;
       }
@@ -369,8 +369,8 @@ export default function AnnouncementCreateR() {
             </div>
             <h1>Create Announcement</h1>
             <p>
-              Prepare and publish an official portal announcement for the selected
-              PTC audiences.
+              Prepare and publish an official portal announcement for the
+              selected PTC audiences.
             </p>
           </div>
 
@@ -418,8 +418,8 @@ export default function AnnouncementCreateR() {
                     </span>
                     <h2>Write the announcement</h2>
                     <p>
-                      Keep the title clear and use the content area for the complete
-                      message students and staff should receive.
+                      Keep the title clear and use the content area for the
+                      complete message students and staff should receive.
                     </p>
                   </div>
                 </div>
@@ -544,8 +544,8 @@ export default function AnnouncementCreateR() {
                     </span>
                     <h2>Add an optional file</h2>
                     <p>
-                      The selected file will be uploaded first and attached to the
-                      announcement when it is created.
+                      The selected file will be uploaded first and attached to
+                      the announcement when it is created.
                     </p>
                   </div>
                 </div>
@@ -579,7 +579,8 @@ export default function AnnouncementCreateR() {
                       <span>
                         {(selectedFile.size / 1024).toLocaleString(undefined, {
                           maximumFractionDigits: 1,
-                        })} KB selected
+                        })}{" "}
+                        KB selected
                       </span>
                     </div>
                     <button
@@ -640,7 +641,11 @@ export default function AnnouncementCreateR() {
                       <CircleOff size={18} />
                     )}
                     <div>
-                      <strong>{isActive ? "Active announcement" : "Inactive announcement"}</strong>
+                      <strong>
+                        {isActive
+                          ? "Active announcement"
+                          : "Inactive announcement"}
+                      </strong>
                       <p>
                         {isActive
                           ? "The announcement is enabled according to its publication dates."
@@ -682,8 +687,8 @@ export default function AnnouncementCreateR() {
                       disabled={loading}
                     />
                     <small className="registrar-announcement-create__field-note">
-                      Optional. Leave blank if the announcement should not have an
-                      expiry date.
+                      Optional. Leave blank if the announcement should not have
+                      an expiry date.
                     </small>
                   </label>
                 </div>
@@ -710,7 +715,9 @@ export default function AnnouncementCreateR() {
                     <p>Announcement content</p>
                   </div>
                   <div className={recipients.length > 0 ? "is-complete" : ""}>
-                    <span>{recipients.length > 0 ? <Check size={13} /> : "3"}</span>
+                    <span>
+                      {recipients.length > 0 ? <Check size={13} /> : "3"}
+                    </span>
                     <p>At least one recipient</p>
                   </div>
                   <div className={publishDate ? "is-complete" : ""}>
@@ -730,8 +737,8 @@ export default function AnnouncementCreateR() {
                   </span>
                   <h2>Ready to publish?</h2>
                   <p>
-                    Review the content, audience, and publication settings before
-                    creating the announcement.
+                    Review the content, audience, and publication settings
+                    before creating the announcement.
                   </p>
                 </div>
 

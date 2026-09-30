@@ -30,12 +30,21 @@
   min-height: 100%;
   padding: 28px 30px 40px;
   background:
-    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    radial-gradient(
+      circle at top right,
+      rgba(21, 148, 82, 0.06),
+      transparent 30%
+    ),
     var(--rar-bg);
   color: var(--rar-text-950);
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .registrar-academic-record *,
@@ -180,7 +189,11 @@
 .registrar-academic-record__button--primary {
   border: 1px solid var(--rar-green-700);
   color: #fff;
-  background: linear-gradient(145deg, var(--rar-green-700), var(--rar-green-900));
+  background: linear-gradient(
+    145deg,
+    var(--rar-green-700),
+    var(--rar-green-900)
+  );
   box-shadow: 0 5px 14px rgba(10, 75, 45, 0.16);
 }
 
@@ -347,7 +360,12 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.72),
+    transparent
+  );
   animation: registrar-academic-record-shimmer 1.3s infinite;
 }
 
@@ -411,7 +429,11 @@
   border: 4px solid #eaf6ee;
   border-radius: 19px;
   color: #fff;
-  background: linear-gradient(145deg, var(--rar-green-700), var(--rar-green-950));
+  background: linear-gradient(
+    145deg,
+    var(--rar-green-700),
+    var(--rar-green-950)
+  );
   box-shadow: 0 8px 18px rgba(10, 75, 45, 0.15);
   font-size: 21px;
   font-weight: 780;
@@ -440,7 +462,7 @@
   font-size: 10.5px;
   font-weight: 680;
   text-transform: uppercase;
-  letter-spacing: .055em;
+  letter-spacing: 0.055em;
 }
 
 .registrar-academic-record__identity-heading h2 {
@@ -529,7 +551,7 @@
   font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .045em;
+  letter-spacing: 0.045em;
 }
 
 .registrar-academic-record__current-info strong {
@@ -586,7 +608,8 @@
   min-width: 0;
 }
 
-.registrar-academic-record__summary-card span:not(.registrar-academic-record__summary-icon) {
+.registrar-academic-record__summary-card
+  span:not(.registrar-academic-record__summary-icon) {
   display: block;
   color: var(--rar-text-600);
   font-size: 10px;
@@ -731,7 +754,10 @@
 
 .registrar-academic-record__filters {
   display: grid;
-  grid-template-columns: minmax(260px, 1.55fr) repeat(3, minmax(145px, 0.7fr)) auto;
+  grid-template-columns: minmax(260px, 1.55fr) repeat(
+      3,
+      minmax(145px, 0.7fr)
+    ) auto;
   align-items: end;
   gap: 9px;
   padding: 13px 22px;
@@ -763,12 +789,14 @@
   border: 1px solid var(--rar-border-strong);
   border-radius: 9px;
   background: #fff;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .registrar-academic-record__input-shell:focus-within {
-  border-color: rgba(15, 122, 69, .55);
-  box-shadow: 0 0 0 3px rgba(15, 122, 69, .09);
+  border-color: rgba(15, 122, 69, 0.55);
+  box-shadow: 0 0 0 3px rgba(15, 122, 69, 0.09);
 }
 
 .registrar-academic-record__input-shell > svg {
@@ -821,8 +849,8 @@
 }
 
 .registrar-academic-record__filter-field select:focus {
-  border-color: rgba(15, 122, 69, .55);
-  box-shadow: 0 0 0 3px rgba(15, 122, 69, .09);
+  border-color: rgba(15, 122, 69, 0.55);
+  box-shadow: 0 0 0 3px rgba(15, 122, 69, 0.09);
 }
 
 .registrar-academic-record__clear-button {
@@ -842,13 +870,13 @@
 }
 
 .registrar-academic-record__clear-button:hover:not(:disabled) {
-  border-color: rgba(15, 122, 69, .35);
+  border-color: rgba(15, 122, 69, 0.35);
   color: var(--rar-green-800);
   background: var(--rar-green-50);
 }
 
 .registrar-academic-record__clear-button:disabled {
-  opacity: .45;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -980,7 +1008,7 @@
   font-size: 8.5px;
   font-weight: 750;
   text-transform: uppercase;
-  letter-spacing: .065em;
+  letter-spacing: 0.065em;
 }
 
 .registrar-academic-record__year-header h3 {
@@ -1097,17 +1125,34 @@
   font-weight: 760;
   line-height: 1.25;
   text-transform: uppercase;
-  letter-spacing: .045em;
+  letter-spacing: 0.045em;
 }
 
-.registrar-academic-record__table th:nth-child(1) { width: 185px; }
-.registrar-academic-record__table th:nth-child(2) { width: 195px; }
-.registrar-academic-record__table th:nth-child(3) { width: 150px; }
-.registrar-academic-record__table th:nth-child(4) { width: 58px; text-align: center; }
-.registrar-academic-record__table th:nth-child(5) { width: 190px; }
-.registrar-academic-record__table th:nth-child(6) { width: 120px; }
-.registrar-academic-record__table th:nth-child(7) { width: 125px; }
-.registrar-academic-record__table th:nth-child(8) { width: 160px; }
+.registrar-academic-record__table th:nth-child(1) {
+  width: 185px;
+}
+.registrar-academic-record__table th:nth-child(2) {
+  width: 195px;
+}
+.registrar-academic-record__table th:nth-child(3) {
+  width: 150px;
+}
+.registrar-academic-record__table th:nth-child(4) {
+  width: 58px;
+  text-align: center;
+}
+.registrar-academic-record__table th:nth-child(5) {
+  width: 190px;
+}
+.registrar-academic-record__table th:nth-child(6) {
+  width: 120px;
+}
+.registrar-academic-record__table th:nth-child(7) {
+  width: 125px;
+}
+.registrar-academic-record__table th:nth-child(8) {
+  width: 160px;
+}
 
 .registrar-academic-record__table td:nth-child(4) {
   text-align: center;
@@ -1153,7 +1198,8 @@
 .registrar-academic-record__class-cell > span,
 .registrar-academic-record__rating-cell > small,
 .registrar-academic-record__review-cell > small,
-.registrar-academic-record__review-cell > span:not(.registrar-academic-record__review-status) {
+.registrar-academic-record__review-cell
+  > span:not(.registrar-academic-record__review-status) {
   overflow-wrap: anywhere;
   color: var(--rar-text-500);
   font-size: 8.3px;
@@ -1359,7 +1405,7 @@
   font-size: 8.5px;
   font-weight: 740;
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
 }
 
 .registrar-academic-record__guide-heading h2 {
@@ -1519,7 +1565,10 @@
   font-weight: 690;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
 }
 
 .registrar-academic-record__actions button:hover {
@@ -1539,7 +1588,7 @@
 .registrar-academic-record button:focus-visible,
 .registrar-academic-record input:focus-visible,
 .registrar-academic-record select:focus-visible {
-  outline: 2px solid rgba(15, 122, 69, .5);
+  outline: 2px solid rgba(15, 122, 69, 0.5);
   outline-offset: 2px;
 }
 
@@ -1732,5 +1781,97 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   TWO-TERM GRADING / SPECIAL OUTCOMES
+========================================================= */
+
+.registrar-academic-record__result--unofficial-drop {
+  border-color: #d9c8ef;
+  color: #6f42a8;
+  background: #f5effc;
+}
+
+.registrar-academic-record__subject-status--unofficial-drop {
+  color: #6f42a8;
+}
+
+.registrar-academic-record__outcome {
+  width: max-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 7px;
+  border: 1px solid var(--rar-border);
+  border-radius: 999px;
+  font-size: 7.7px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.registrar-academic-record__outcome--numeric {
+  border-color: #c9ded1;
+  color: var(--rar-green-800);
+  background: var(--rar-green-50);
+}
+
+.registrar-academic-record__outcome--incomplete {
+  border-color: #ead3ab;
+  color: var(--rar-warning);
+  background: var(--rar-warning-bg);
+}
+
+.registrar-academic-record__outcome--unofficial-drop {
+  border-color: #d9c8ef;
+  color: #6f42a8;
+  background: #f5effc;
+}
+
+.registrar-academic-record__outcome-reason {
+  display: block;
+  margin-top: 2px;
+  padding: 5px 6px;
+  border-left: 2px solid #d9c8ef;
+  border-radius: 4px;
+  color: var(--rar-text-600);
+  background: #faf8fd;
+  font-size: 7.8px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.registrar-academic-record__guide-rating--unofficial-drop {
+  color: #6f42a8;
+  background: #f1e9fb;
+}
+
+/* Give the result/outcome cell enough room for the reason text. */
+.registrar-academic-record__table {
+  min-width: 1240px;
+}
+
+.registrar-academic-record__table th:nth-child(7) {
+  width: 175px;
+}
+
+.registrar-academic-record__table th:nth-child(8) {
+  width: 165px;
+}
+
+.registrar-academic-record__guide-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1180px) {
+  .registrar-academic-record__guide-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .registrar-academic-record__guide-grid {
+    grid-template-columns: 1fr;
   }
 }
