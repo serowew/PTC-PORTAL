@@ -1,0 +1,947 @@
+.my-transactions,
+.my-transactions * {
+  box-sizing: border-box;
+}
+.my-transactions {
+  --mt-green-950: #073b24;
+  --mt-green-900: #0a4b2d;
+  --mt-green-800: #0d653b;
+  --mt-green-700: #0f7a45;
+  --mt-green-600: #159452;
+  --mt-green-100: #dcf5e6;
+  --mt-green-50: #f1fbf5;
+  --mt-text-950: #151515;
+  --mt-text-900: #202020;
+  --mt-text-700: #333333;
+  --mt-text-600: #444444;
+  --mt-text-500: #5a5a5a;
+  --mt-text-400: #707070;
+  --mt-border: #dfe8e2;
+  --mt-border-strong: #cfdcd3;
+  --mt-border-soft: #edf2ee;
+  --mt-surface: #ffffff;
+  --mt-surface-soft: #f8fbf9;
+  --mt-bg: #f5f8f6;
+  --mt-success: #18794e;
+  --mt-success-soft: #effaf3;
+  --mt-warning: #946200;
+  --mt-warning-soft: #fff8e6;
+  --mt-danger: #b42318;
+  --mt-danger-soft: #fff3f1;
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  gap: 16px;
+  padding: 28px 30px 38px;
+  color: var(--mt-text-950);
+  background:
+    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    var(--mt-bg);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.my-transactions button,
+.my-transactions input,
+.my-transactions select {
+  font: inherit;
+}
+.my-transactions button {
+  cursor: pointer;
+}
+/* Hero */
+.my-transactions__hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(15, 122, 69, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.99) 0%,
+    rgba(247, 253, 249, 0.99) 66%,
+    rgba(230, 247, 237, 0.99) 100%
+  );
+  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+}
+.my-transactions__hero::after {
+  content: "";
+  position: absolute;
+  top: -92px;
+  right: -70px;
+  width: 230px;
+  height: 230px;
+  border: 38px solid rgba(15, 122, 69, 0.055);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.my-transactions__hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 25px 28px;
+}
+.my-transactions__hero-copy {
+  min-width: 0;
+  max-width: 760px;
+}
+.my-transactions__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: var(--mt-green-800);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.my-transactions__eyebrow-icon {
+  display: inline-flex;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: var(--mt-green-700);
+  background: var(--mt-green-100);
+}
+.my-transactions__hero h1 {
+  margin: 0;
+  color: var(--mt-text-950);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 770;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.my-transactions__hero-copy > p {
+  max-width: 710px;
+  margin: 9px 0 0;
+  color: var(--mt-text-600);
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+.my-transactions__student-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  color: var(--mt-text-500);
+  font-size: 9.7px;
+  font-weight: 680;
+}
+.my-transactions__student-number {
+  color: var(--mt-text-700);
+  font-weight: 750;
+}
+.my-transactions__student-name {
+  color: var(--mt-text-500);
+}
+.my-transactions__hero-refresh {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 8px 12px;
+  border: 1px solid var(--mt-green-800);
+  border-radius: 9px;
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--mt-green-700), var(--mt-green-900));
+  box-shadow: 0 5px 14px rgba(13, 101, 59, 0.13);
+  font-size: 10.5px;
+  font-weight: 730;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+.my-transactions__hero-refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(13, 101, 59, 0.18);
+}
+.my-transactions__hero-refresh:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+.my-transactions__hero-refresh .is-spinning {
+  animation: transactionSpin 0.8s linear infinite;
+}
+/* Summary */
+.my-transactions__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+}
+.my-transactions__summary-card {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 94px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+  padding: 14px 15px;
+  border: 1px solid var(--mt-border);
+  border-radius: 14px;
+  background: var(--mt-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.my-transactions__summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--mt-green-700);
+}
+.my-transactions__summary-card:nth-child(2)::before {
+  background: #c98b18;
+}
+.my-transactions__summary-card:nth-child(3)::before {
+  background: #1f8b58;
+}
+.my-transactions__summary-card:nth-child(4)::before {
+  background: #3778b8;
+}
+.my-transactions__summary-copy {
+  min-width: 0;
+}
+.my-transactions__summary-title,
+.my-transactions__summary-subtitle {
+  margin: 0;
+}
+.my-transactions__summary-title {
+  color: var(--mt-text-700);
+  font-size: 10px;
+  font-weight: 750;
+}
+.my-transactions__summary-value {
+  margin-top: 4px;
+  color: var(--mt-text-950);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.my-transactions__summary-subtitle {
+  margin-top: 4px;
+  color: var(--mt-text-500);
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+.my-transactions__summary-icon {
+  display: inline-flex;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dceee2;
+  border-radius: 11px;
+  color: var(--mt-green-700);
+  background: var(--mt-green-50);
+}
+/* Alerts and filters */
+.my-transactions__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.my-transactions__alert--error {
+  border: 1px solid #f1c9c3;
+  color: var(--mt-danger);
+  background: var(--mt-danger-soft);
+}
+.my-transactions__history-card {
+  padding: 20px;
+  border: 1px solid var(--mt-border);
+  border-radius: 14px;
+  background: var(--mt-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.my-transactions__history-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+.my-transactions__section-kicker {
+  display: block;
+  color: var(--mt-green-700);
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.my-transactions__history-heading h2 {
+  margin: 4px 0 0;
+  color: var(--mt-text-950);
+  font-size: 20px;
+  font-weight: 760;
+}
+.my-transactions__history-heading p {
+  margin: 4px 0 0;
+  color: var(--mt-text-500);
+  font-size: 10.5px;
+}
+.my-transactions__filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(170px, 220px);
+  gap: 9px;
+}
+.my-transactions__search {
+  position: relative;
+  min-width: 0;
+}
+.my-transactions__search svg {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  color: var(--mt-text-400);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.my-transactions__search input,
+.my-transactions__status-select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--mt-border-strong);
+  border-radius: 9px;
+  outline: 0;
+  color: var(--mt-text-900);
+  background: #ffffff;
+  font-size: 10.8px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.my-transactions__search input {
+  padding: 8px 11px 8px 35px;
+}
+.my-transactions__status-select {
+  padding: 8px 34px 8px 10px;
+  font-weight: 680;
+}
+.my-transactions__search input::placeholder {
+  color: #9aa7a0;
+}
+.my-transactions__search input:focus,
+.my-transactions__status-select:focus {
+  border-color: var(--mt-green-600);
+  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.1);
+}
+/* Loading and empty */
+.my-transactions__state-card {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  padding: 30px 22px;
+  border: 1px solid var(--mt-border);
+  border-radius: 14px;
+  background: var(--mt-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+  text-align: center;
+}
+.my-transactions__state-content {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  color: var(--mt-green-700);
+}
+.my-transactions__state-content strong,
+.my-transactions__state-card h3 {
+  margin: 0;
+  color: var(--mt-text-800);
+  font-size: 12px;
+  font-weight: 750;
+}
+.my-transactions__state-content span,
+.my-transactions__state-card p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--mt-text-500);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.my-transactions__empty-icon {
+  display: inline-flex;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 7px;
+  border: 1px solid #dce8df;
+  border-radius: 12px;
+  color: var(--mt-green-700);
+  background: var(--mt-green-50);
+}
+/* Transaction list */
+.my-transactions__list {
+  display: grid;
+  gap: 10px;
+}
+.my-transactions__transaction-card {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 16px;
+  border: 1px solid #dfe9e2;
+  border-radius: 13px;
+  color: inherit;
+  background: #ffffff;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(20, 55, 34, 0.035);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+.my-transactions__transaction-card:hover {
+  transform: translateY(-1px);
+  border-color: #b7d4c1;
+  background: #fcfefc;
+  box-shadow: 0 7px 18px rgba(20, 55, 34, 0.065);
+}
+.my-transactions__transaction-card:focus-visible {
+  outline: 3px solid rgba(21, 148, 82, 0.14);
+  outline-offset: 2px;
+}
+.my-transactions__transaction-card-icon {
+  display: inline-flex;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+}
+.my-transactions__transaction-card-icon.is-document,
+.my-transactions__modal-icon.is-document {
+  color: var(--mt-green-700);
+  background: var(--mt-green-50);
+}
+.my-transactions__transaction-card-icon.is-finance,
+.my-transactions__modal-icon.is-finance {
+  color: #2563eb;
+  background: #eff6ff;
+}
+.my-transactions__transaction-card-content {
+  min-width: 0;
+  flex: 1;
+}
+.my-transactions__transaction-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.my-transactions__transaction-card-heading > div {
+  min-width: 0;
+}
+.my-transactions__transaction-code {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--mt-green-700);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+.my-transactions__ticket-number {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid var(--mt-border);
+  border-radius: 7px;
+  color: var(--mt-text-600);
+  background: var(--mt-surface-soft);
+  font-size: 8.8px;
+  font-weight: 740;
+  white-space: nowrap;
+}
+.my-transactions__transaction-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mt-border-soft);
+}
+.my-transactions__transaction-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mt-text-500);
+  font-size: 8.9px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.my-transactions__transaction-meta svg {
+  flex: 0 0 auto;
+  color: var(--mt-green-700);
+}
+.my-transactions__transaction-card-content h3 {
+  margin: 0;
+  color: var(--mt-text-900);
+  font-size: 12.5px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+.my-transactions__transaction-card-content p {
+  margin: 4px 0 0;
+  color: var(--mt-text-500);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.my-transactions__transaction-card-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Status badges */
+.my-transactions__status-badge,
+.my-transactions__registrar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 25px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.my-transactions__status-badge--compact {
+  min-height: 23px;
+  padding: 3px 7px;
+  font-size: 9px;
+}
+.my-transactions__status-badge.is-paid,
+.my-transactions__registrar-badge.is-done {
+  border-color: #c8e9d3;
+  color: #146c43;
+  background: #edf9f1;
+}
+.my-transactions__status-badge.is-pending,
+.my-transactions__registrar-badge.is-pending {
+  border-color: #efd99b;
+  color: #8a5b00;
+  background: #fff8e7;
+}
+.my-transactions__status-badge.is-cancelled,
+.my-transactions__registrar-badge.is-cancelled {
+  border-color: #f0d0cb;
+  color: #a52318;
+  background: #fff1ef;
+}
+.my-transactions__status-badge.is-refunded {
+  border-color: #ddd6fe;
+  color: #6d28d9;
+  background: #f5f3ff;
+}
+.my-transactions__registrar-badge.is-processing {
+  border-color: #cfe4f6;
+  color: #245f96;
+  background: #eef7ff;
+}
+.my-transactions__status-badge.is-default,
+.my-transactions__registrar-badge.is-default {
+  border-color: var(--mt-border);
+  color: var(--mt-text-600);
+  background: #f4f7f5;
+}
+/* Guide */
+.my-transactions__guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #dcebe1;
+  border-radius: 12px;
+  background: var(--mt-green-50);
+}
+.my-transactions__guide-icon {
+  display: inline-flex;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dceee2;
+  border-radius: 9px;
+  color: var(--mt-green-700);
+  background: #ffffff;
+}
+.my-transactions__guide strong {
+  display: block;
+  color: var(--mt-text-800);
+  font-size: 10.5px;
+  font-weight: 760;
+}
+.my-transactions__guide p {
+  margin: 3px 0 0;
+  color: var(--mt-text-600);
+  font-size: 9.8px;
+  line-height: 1.5;
+}
+/* Modal */
+.my-transactions__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(3px);
+  animation: transactionModalFade 0.16s ease;
+}
+.my-transactions__modal {
+  width: min(820px, 100%);
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dbe6de;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+  animation: transactionModalOpen 0.18s ease;
+}
+.my-transactions__modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--mt-border-soft);
+  background: linear-gradient(90deg, #ffffff, #fbfdfc);
+}
+.my-transactions__modal-header-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.my-transactions__modal-icon {
+  display: inline-flex;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+}
+.my-transactions__modal-header h2 {
+  margin: 0;
+  color: var(--mt-text-900);
+  font-size: 16px;
+  font-weight: 770;
+  line-height: 1.35;
+}
+.my-transactions__modal-header p {
+  margin: 4px 0 0;
+  color: var(--mt-text-500);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+.my-transactions__modal-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.my-transactions__modal-close {
+  display: inline-flex;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--mt-border);
+  border-radius: 9px;
+  color: var(--mt-text-600);
+  background: #ffffff;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+.my-transactions__modal-close:hover {
+  border-color: #bdd6c6;
+  color: var(--mt-green-800);
+  background: var(--mt-green-50);
+}
+.my-transactions__modal-body {
+  overflow-y: auto;
+  padding: 16px 20px 18px;
+}
+.my-transactions__modal-section + .my-transactions__modal-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--mt-border-soft);
+}
+.my-transactions__modal-section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: var(--mt-green-700);
+}
+.my-transactions__modal-section-title h3 {
+  margin: 0;
+  color: var(--mt-text-800);
+  font-size: 11.5px;
+  font-weight: 760;
+}
+.my-transactions__modal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+.my-transactions__detail-item {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--mt-border-soft);
+  border-radius: 9px;
+  background: #fafcfb;
+}
+.my-transactions__detail-label {
+  color: var(--mt-text-400);
+  font-size: 8.8px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.my-transactions__detail-value {
+  margin-top: 4px;
+  color: var(--mt-text-900);
+  font-size: 10.5px;
+  font-weight: 720;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.my-transactions__modal-purpose {
+  margin-top: 10px;
+  padding: 10px 11px;
+  border: 1px solid var(--mt-border-soft);
+  border-radius: 9px;
+  background: #fafcfb;
+}
+.my-transactions__modal-purpose > span {
+  display: block;
+  color: var(--mt-text-400);
+  font-size: 8.8px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.my-transactions__modal-purpose p {
+  margin: 4px 0 0;
+  color: var(--mt-text-700);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.my-transactions__remarks-note,
+.my-transactions__cancellation-note {
+  margin-top: 10px;
+  padding: 10px 11px;
+  border-radius: 9px;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.my-transactions__remarks-note {
+  border: 1px solid #d6e7f7;
+  color: #334155;
+  background: #f8fbff;
+}
+.my-transactions__cancellation-note {
+  border: 1px solid #f1d0cb;
+  color: #991b1b;
+  background: #fff7f7;
+}
+.my-transactions__modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--mt-border-soft);
+  background: #ffffff;
+}
+.my-transactions__modal-done {
+  min-width: 88px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--mt-green-800);
+  border-radius: 9px;
+  color: #ffffff;
+  background: var(--mt-green-800);
+  font-size: 10.5px;
+  font-weight: 730;
+  transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+.my-transactions__modal-done:hover {
+  transform: translateY(-1px);
+  background: var(--mt-green-900);
+  box-shadow: 0 5px 13px rgba(13, 101, 59, 0.13);
+}
+/* Motion */
+.is-spinning {
+  animation: transactionSpin 0.8s linear infinite;
+}
+@keyframes transactionSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes transactionModalFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes transactionModalOpen {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Responsive */
+@media (max-width: 1180px) {
+  .my-transactions__summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .my-transactions__modal-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 860px) {
+  .my-transactions__hero-content {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .my-transactions__filters {
+    grid-template-columns: 1fr;
+  }
+  .my-transactions__modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .my-transactions__modal-header {
+    flex-direction: column;
+  }
+  .my-transactions__modal-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .my-transactions__modal-close {
+    margin-left: auto;
+  }
+}
+@media (max-width: 620px) {
+  .my-transactions__transaction-card-heading {
+    gap: 8px;
+  }
+  .my-transactions__ticket-number {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .my-transactions {
+    gap: 14px;
+    padding: 18px 14px 28px;
+  }
+  .my-transactions__hero-content {
+    padding: 21px 19px;
+  }
+  .my-transactions__hero {
+    border-radius: 15px;
+  }
+  .my-transactions__hero h1 {
+    font-size: 25px;
+  }
+  .my-transactions__summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .my-transactions__history-card {
+    padding: 16px;
+  }
+  .my-transactions__transaction-card {
+    align-items: flex-start;
+    padding: 13px;
+  }
+  .my-transactions__transaction-card-status {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .my-transactions__modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .my-transactions__modal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+  }
+  .my-transactions__modal-header {
+    padding: 16px;
+  }
+  .my-transactions__modal-body {
+    padding: 14px 16px 16px;
+  }
+  .my-transactions__modal-grid {
+    grid-template-columns: 1fr;
+  }
+  .my-transactions__modal-footer {
+    padding: 12px 16px;
+  }
+  .my-transactions__modal-done {
+    width: 100%;
+  }
+}
+@media (max-width: 460px) {
+  .my-transactions__transaction-card-heading {
+    flex-direction: column;
+  }
+  .my-transactions__ticket-number {
+    max-width: 100%;
+  }
+  .my-transactions__transaction-card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .my-transactions__transaction-card-status {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  .my-transactions__modal-header-left {
+    align-items: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-transactions *,
+  .my-transactions *::before,
+  .my-transactions *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
