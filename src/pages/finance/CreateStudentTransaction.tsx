@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
 import type { FormEvent, ReactNode } from "react";
-
 import { useNavigate } from "react-router-dom";
-
 import {
   AlertCircle,
   CheckCircle2,
@@ -12,24 +9,21 @@ import {
   FileText,
   Loader2,
   ReceiptText,
+  RefreshCw,
   Search,
   UserRound,
   WalletCards,
   X,
 } from "lucide-react";
-
 import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
 import "../../styles/FinanceCreateStudentTransaction.css";
 
 const STUDENT_SEARCH_API = "http://localhost:3000/api/finance/tickets/students";
-
 const TRANSACTION_TYPES_API =
   "http://localhost:3000/api/finance/tickets/transaction-types";
-
 const CREATE_TRANSACTION_API =
   "http://localhost:3000/api/finance/tickets/manual";
-
 // ============================================================
 // TYPES
 // ============================================================
@@ -44,35 +38,25 @@ interface StudentSearchResponse {
   success?: boolean;
   code?: string;
   message?: string;
-
   query?: string | null;
   count?: number;
-
   students?: FinanceStudent[];
 }
 
 interface FinanceTransactionType {
   transaction_type_id: number;
-
   transaction_code: string;
   transaction_name: string;
-
   description: string | null;
-
   requires_grade_reference: boolean;
-
   workflow_type:
     | "FINANCE_ONLY"
     | "DOCUMENT_REQUEST"
     | "INCOMPLETE_GRADE"
     | string;
-
   allow_manual_creation: boolean;
-
   allow_amount_override: boolean;
-
   default_amount: number | null;
-
   is_active: boolean;
 }
 
@@ -80,40 +64,32 @@ interface TransactionTypesResponse {
   success?: boolean;
   code?: string;
   message?: string;
-
   transaction_types?: FinanceTransactionType[];
 }
 
 interface CreatedTicket {
   ticket_id: number;
-
   ticket_number: string;
-
   source_type: string;
-
   student: {
     student_id: number;
     student_number: string;
     student_name: string;
   };
-
   transaction: {
     transaction_type_id: number;
     transaction_code: string;
     transaction_name: string;
     workflow_type: string;
   };
-
   payment: {
     amount_due: number;
     amount_paid: number;
     payment_status: string;
   };
-
   registrar: {
     status: string;
   };
-
   remarks: string | null;
 }
 
@@ -121,10 +97,8 @@ interface CreateTransactionResponse {
   success?: boolean;
   code?: string;
   message?: string;
-
   ticket?: CreatedTicket;
 }
-
 // ============================================================
 // FORMAT MONEY
 // ============================================================
@@ -133,7 +107,6 @@ function formatMoney(value: number | null | undefined) {
   if (value === null || value === undefined) {
     return "Not configured";
   }
-
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
@@ -143,64 +116,42 @@ function formatMoney(value: number | null | undefined) {
 
 export default function CreateStudentTransaction() {
   const navigate = useNavigate();
-
   const session = authService.getSession();
   const token = authService.getToken();
-
   const role = session?.role ?? null;
-
   const isFinance = role === "Finance" && Boolean(token);
-
   // ==========================================================
   // STUDENT SEARCH
   // ==========================================================
-
   const [studentQuery, setStudentQuery] = useState("");
-
   const [studentResults, setStudentResults] = useState<FinanceStudent[]>([]);
-
   const [selectedStudent, setSelectedStudent] = useState<FinanceStudent | null>(
     null,
   );
-
   const [searchingStudents, setSearchingStudents] = useState(false);
-
   const [studentSearchMessage, setStudentSearchMessage] = useState("");
-
   // ==========================================================
   // TRANSACTION TYPES
   // ==========================================================
-
   const [transactionTypes, setTransactionTypes] = useState<
     FinanceTransactionType[]
   >([]);
-
   const [selectedTransactionCode, setSelectedTransactionCode] = useState("");
-
   const [loadingTypes, setLoadingTypes] = useState(true);
-
   // ==========================================================
   // FORM
   // ==========================================================
-
   const [amountDue, setAmountDue] = useState("");
-
   const [remarks, setRemarks] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
-
   const [successMessage, setSuccessMessage] = useState("");
-
   const [createdTicket, setCreatedTicket] = useState<CreatedTicket | null>(
     null,
   );
-
   // ==========================================================
   // AUTH GUARD
   // ==========================================================
-
   useEffect(() => {
     if (!isFinance) {
       navigate("/login", {
@@ -208,11 +159,9 @@ export default function CreateStudentTransaction() {
       });
     }
   }, [isFinance, navigate]);
-
   // ==========================================================
   // SELECTED TRANSACTION TYPE
   // ==========================================================
-
   const selectedTransactionType = useMemo(() => {
     return (
       transactionTypes.find(
@@ -220,58 +169,44 @@ export default function CreateStudentTransaction() {
       ) ?? null
     );
   }, [transactionTypes, selectedTransactionCode]);
-
   // ==========================================================
   // LOAD TRANSACTION TYPES
   // ==========================================================
-
   const loadTransactionTypes = useCallback(async () => {
     if (!isFinance) {
       return;
     }
-
     setLoadingTypes(true);
     setErrorMessage("");
-
     try {
       const response = await authService.authFetch(TRANSACTION_TYPES_API, {
         method: "GET",
-
         headers: {
           Accept: "application/json",
         },
       });
-
       if (response.status === 401) {
         authService.logout();
-
         navigate("/login", {
           replace: true,
         });
-
         return;
       }
-
       if (response.status === 403) {
         navigate("/login", {
           replace: true,
         });
-
         return;
       }
-
       const data = (await response.json()) as TransactionTypesResponse;
-
       if (!response.ok || !data.success) {
         throw new Error(
           data.message || "Unable to load Finance transaction types.",
         );
       }
-
       const loadedTypes = Array.isArray(data.transaction_types)
         ? data.transaction_types
         : [];
-
       /*
        * Finance manual assignment must ONLY use:
        *
@@ -291,7 +226,6 @@ export default function CreateStudentTransaction() {
       );
     } catch (error) {
       console.error("LOAD FINANCE TRANSACTION TYPES ERROR:", error);
-
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -301,88 +235,65 @@ export default function CreateStudentTransaction() {
       setLoadingTypes(false);
     }
   }, [isFinance, navigate]);
-
   useEffect(() => {
     if (!isFinance) {
       return;
     }
-
     void loadTransactionTypes();
   }, [isFinance, loadTransactionTypes]);
-
   // ==========================================================
   // SEARCH STUDENTS
   //
   // Debounced so the backend is not called every keystroke.
   // ==========================================================
-
   useEffect(() => {
     if (!isFinance || selectedStudent) {
       return;
     }
-
     const query = studentQuery.trim();
-
     if (query.length < 2) {
       setStudentResults([]);
       setStudentSearchMessage("");
-
       return;
     }
-
     const timer = window.setTimeout(async () => {
       setSearchingStudents(true);
-
       setStudentSearchMessage("");
-
       try {
         const response = await authService.authFetch(
           `${STUDENT_SEARCH_API}?q=${encodeURIComponent(query)}`,
           {
             method: "GET",
-
             headers: {
               Accept: "application/json",
             },
           },
         );
-
         if (response.status === 401) {
           authService.logout();
-
           navigate("/login", {
             replace: true,
           });
-
           return;
         }
-
         if (response.status === 403) {
           navigate("/login", {
             replace: true,
           });
-
           return;
         }
-
         const data = (await response.json()) as StudentSearchResponse;
-
         if (!response.ok || !data.success) {
           throw new Error(data.message || "Unable to search students.");
         }
-
         const students = Array.isArray(data.students) ? data.students : [];
-
         setStudentResults(students);
-
         if (students.length === 0) {
           setStudentSearchMessage("No students matched your search.");
         }
       } catch (error) {
         console.error("FINANCE STUDENT SEARCH ERROR:", error);
-
         setStudentResults([]);
-
         setStudentSearchMessage(
           error instanceof Error ? error.message : "Unable to search students.",
         );
@@ -390,32 +301,25 @@ export default function CreateStudentTransaction() {
         setSearchingStudents(false);
       }
     }, 350);
-
     return () => {
       window.clearTimeout(timer);
     };
   }, [isFinance, studentQuery, selectedStudent, navigate]);
-
   // ==========================================================
   // TRANSACTION TYPE CHANGE
   // ==========================================================
-
   const handleTransactionTypeChange = (transactionCode: string) => {
     setSelectedTransactionCode(transactionCode);
-
     setErrorMessage("");
     setSuccessMessage("");
     setCreatedTicket(null);
-
     const selectedType = transactionTypes.find(
       (item) => item.transaction_code === transactionCode,
     );
-
     if (!selectedType) {
       setAmountDue("");
       return;
     }
-
     if (
       selectedType.default_amount !== null &&
       selectedType.default_amount !== undefined
@@ -425,82 +329,57 @@ export default function CreateStudentTransaction() {
       setAmountDue("");
     }
   };
-
   // ==========================================================
   // SELECT STUDENT
   // ==========================================================
-
   const selectStudent = (student: FinanceStudent) => {
     setSelectedStudent(student);
-
     setStudentQuery(`${student.student_number} — ${student.student_name}`);
-
     setStudentResults([]);
-
     setStudentSearchMessage("");
-
     setErrorMessage("");
     setSuccessMessage("");
     setCreatedTicket(null);
   };
-
   // ==========================================================
   // CLEAR STUDENT
   // ==========================================================
-
   const clearStudent = () => {
     setSelectedStudent(null);
-
     setStudentQuery("");
-
     setStudentResults([]);
-
     setStudentSearchMessage("");
-
     setCreatedTicket(null);
-
     setSuccessMessage("");
     setErrorMessage("");
   };
-
   // ==========================================================
   // CREATE STUDENT TRANSACTION
   // ==========================================================
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (submitting) {
       return;
     }
-
     setErrorMessage("");
     setSuccessMessage("");
     setCreatedTicket(null);
-
     if (!selectedStudent) {
       setErrorMessage("Please select a student.");
-
       return;
     }
-
     if (!selectedTransactionType) {
       setErrorMessage("Please select a Finance transaction type.");
-
       return;
     }
-
     const parsedAmount = amountDue.trim() === "" ? null : Number(amountDue);
-
     if (
       parsedAmount !== null &&
       (!Number.isFinite(parsedAmount) || parsedAmount <= 0)
     ) {
       setErrorMessage("Amount due must be greater than zero.");
-
       return;
     }
-
     /*
      * If there is no configured default,
      * Finance MUST enter an amount.
@@ -512,10 +391,8 @@ export default function CreateStudentTransaction() {
       setErrorMessage(
         "This transaction type has no default amount. Enter the amount due.",
       );
-
       return;
     }
-
     /*
      * Fixed transaction type:
      * amount must remain exactly the configured default.
@@ -530,13 +407,10 @@ export default function CreateStudentTransaction() {
           selectedTransactionType.default_amount,
         )}.`,
       );
-
       return;
     }
-
     try {
       setSubmitting(true);
-
       const body: {
         student_id: number;
         transaction_code: string;
@@ -544,10 +418,8 @@ export default function CreateStudentTransaction() {
         remarks?: string;
       } = {
         student_id: selectedStudent.student_id,
-
         transaction_code: selectedTransactionType.transaction_code,
       };
-
       /*
        * Send amount_due only when an actual value exists.
        *
@@ -556,68 +428,50 @@ export default function CreateStudentTransaction() {
       if (parsedAmount !== null) {
         body.amount_due = parsedAmount;
       }
-
       if (remarks.trim()) {
         body.remarks = remarks.trim();
       }
-
       const response = await authService.authFetch(CREATE_TRANSACTION_API, {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
-
           Accept: "application/json",
         },
-
         body: JSON.stringify(body),
       });
-
       if (response.status === 401) {
         authService.logout();
-
         navigate("/login", {
           replace: true,
         });
-
         return;
       }
-
       if (response.status === 403) {
         const data = (await response.json()) as CreateTransactionResponse;
-
         throw new Error(
           data.message ||
             "This transaction cannot be manually assigned by Finance.",
         );
       }
-
       const data = (await response.json()) as CreateTransactionResponse;
-
       if (!response.ok || !data.success || !data.ticket) {
         throw new Error(
           data.message || "Unable to create the student Finance transaction.",
         );
       }
-
       setCreatedTicket(data.ticket);
-
       setSuccessMessage(
         data.message || "Student Finance transaction created successfully.",
       );
-
       /*
        * Keep student selected so Finance can quickly
        * assign another transaction to the same student.
        */
       setSelectedTransactionCode("");
-
       setAmountDue("");
-
       setRemarks("");
     } catch (error) {
       console.error("CREATE STUDENT FINANCE TRANSACTION ERROR:", error);
-
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -627,107 +481,96 @@ export default function CreateStudentTransaction() {
       setSubmitting(false);
     }
   };
-
   // ==========================================================
   // AUTHORIZED RENDER ONLY
   // ==========================================================
-
   if (!isFinance) {
     return null;
   }
-
   return (
     <DashboardLayout>
       <main className="finance-create-transaction">
         {/* =================================================
             HEADER
         ================================================= */}
-
         <section className="finance-create-transaction__hero">
           <div className="finance-create-transaction__hero-copy">
             <div className="finance-create-transaction__eyebrow">
-              <WalletCards size={16} aria-hidden="true" />
-              Finance
+              <span className="finance-create-transaction__eyebrow-icon">
+                <WalletCards size={16} aria-hidden="true" />
+              </span>
+              <span>Finance Office</span>
             </div>
-
             <h1>Create Student Transaction</h1>
-
             <p>
               Assign a Finance-only transaction to a specific student. The
               system automatically generates a Finance ticket for the new
               transaction.
             </p>
           </div>
-
-          <div
-            className="finance-create-transaction__hero-icon"
-            aria-hidden="true"
+          <button
+            type="button"
+            className="finance-create-transaction__refresh"
+            onClick={() => void loadTransactionTypes()}
+            disabled={loadingTypes || submitting}
           >
-            <CreditCard size={28} strokeWidth={1.9} />
-          </div>
+            <RefreshCw
+              size={16}
+              className={loadingTypes ? "is-spinning" : ""}
+              aria-hidden="true"
+            />
+            {loadingTypes ? "Refreshing..." : "Refresh"}
+          </button>
         </section>
-
         {/* =================================================
             ERROR
         ================================================= */}
-
         {errorMessage && (
           <section
             className="finance-create-transaction__message finance-create-transaction__message--error"
             role="alert"
           >
             <AlertCircle size={19} aria-hidden="true" />
-
             <div>{errorMessage}</div>
           </section>
         )}
-
         {/* =================================================
             SUCCESS
         ================================================= */}
-
         {successMessage && createdTicket && (
           <section className="finance-create-transaction__success-card">
             <div className="finance-create-transaction__success-header">
               <div className="finance-create-transaction__success-icon">
                 <CheckCircle2 size={22} aria-hidden="true" />
               </div>
-
               <div>
                 <span className="finance-create-transaction__section-kicker">
                   Transaction Complete
                 </span>
-
                 <h2>Transaction Created</h2>
-
                 <p>{successMessage}</p>
               </div>
             </div>
-
             <div className="finance-create-transaction__info-grid">
               <InfoBox
                 label="Finance Ticket"
                 value={createdTicket.ticket_number}
                 icon={<ReceiptText size={13} />}
               />
-
               <InfoBox
                 label="Student"
                 value={`${createdTicket.student.student_number} — ${createdTicket.student.student_name}`}
                 icon={<UserRound size={13} />}
               />
-
               <InfoBox
                 label="Transaction"
                 value={createdTicket.transaction.transaction_name}
               />
-
               <InfoBox
                 label="Amount Due"
                 value={formatMoney(createdTicket.payment.amount_due)}
                 icon={<CircleDollarSign size={13} />}
               />
-
               <InfoBox
                 label="Payment Status"
                 value={
@@ -736,7 +579,6 @@ export default function CreateStudentTransaction() {
                   </span>
                 }
               />
-
               <InfoBox
                 label="Registrar"
                 value={
@@ -746,7 +588,6 @@ export default function CreateStudentTransaction() {
                 }
               />
             </div>
-
             <div className="finance-create-transaction__success-note">
               The student can now see this ticket in their{" "}
               <strong>My Transactions</strong> page. Payment remains pending
@@ -754,11 +595,9 @@ export default function CreateStudentTransaction() {
             </div>
           </section>
         )}
-
         {/* =================================================
             CREATE TRANSACTION FORM
         ================================================= */}
-
         <form
           onSubmit={handleSubmit}
           className="finance-create-transaction__form"
@@ -766,27 +605,23 @@ export default function CreateStudentTransaction() {
           {/* ===============================================
               STEP 1 — STUDENT
           =============================================== */}
-
           <section className="finance-create-transaction__panel">
             <StepHeader
               step="1"
               title="Select Student"
               description="Search using the student number or student name."
             />
-
             {selectedStudent ? (
               <div className="finance-create-transaction__selected-student">
                 <div className="finance-create-transaction__selected-student-info">
                   <div className="finance-create-transaction__student-icon">
                     <UserRound size={20} aria-hidden="true" />
                   </div>
-
                   <div>
                     <strong>{selectedStudent.student_name}</strong>
                     <span>{selectedStudent.student_number}</span>
                   </div>
                 </div>
-
                 <button
                   type="button"
                   onClick={clearStudent}
@@ -805,7 +640,6 @@ export default function CreateStudentTransaction() {
                     className="finance-create-transaction__search-icon"
                     aria-hidden="true"
                   />
-
                   <input
                     type="search"
                     value={studentQuery}
@@ -813,7 +647,6 @@ export default function CreateStudentTransaction() {
                     placeholder="Search student number or name..."
                     autoComplete="off"
                   />
-
                   {searchingStudents && (
                     <Loader2
                       size={17}
@@ -822,7 +655,6 @@ export default function CreateStudentTransaction() {
                     />
                   )}
                 </div>
-
                 {studentResults.length > 0 && (
                   <div className="finance-create-transaction__student-results">
                     {studentResults.map((student) => (
@@ -835,7 +667,6 @@ export default function CreateStudentTransaction() {
                         <div className="finance-create-transaction__student-result-icon">
                           <UserRound size={17} aria-hidden="true" />
                         </div>
-
                         <div>
                           <strong>{student.student_name}</strong>
                           <span>{student.student_number}</span>
@@ -844,7 +675,6 @@ export default function CreateStudentTransaction() {
                     ))}
                   </div>
                 )}
-
                 {studentSearchMessage && (
                   <div className="finance-create-transaction__search-message">
                     {studentSearchMessage}
@@ -853,21 +683,17 @@ export default function CreateStudentTransaction() {
               </div>
             )}
           </section>
-
           {/* ===============================================
               STEP 2 — TRANSACTION
           =============================================== */}
-
           <section className="finance-create-transaction__panel">
             <StepHeader
               step="2"
               title="Select Transaction"
               description="Only active manual Finance-only transaction types are available."
             />
-
             <label className="finance-create-transaction__field">
               <span>Transaction Type</span>
-
               <select
                 value={selectedTransactionCode}
                 onChange={(event) =>
@@ -883,7 +709,6 @@ export default function CreateStudentTransaction() {
                       ? "No manual Finance transaction types available"
                       : "Select transaction type"}
                 </option>
-
                 {transactionTypes.map((item) => (
                   <option
                     key={item.transaction_type_id}
@@ -894,34 +719,27 @@ export default function CreateStudentTransaction() {
                 ))}
               </select>
             </label>
-
             {selectedTransactionType && (
               <div className="finance-create-transaction__type-preview">
                 <div className="finance-create-transaction__type-preview-header">
                   <div>
                     <strong>{selectedTransactionType.transaction_name}</strong>
-
                     <span>{selectedTransactionType.transaction_code}</span>
                   </div>
-
                   <CreditCard size={19} aria-hidden="true" />
                 </div>
-
                 {selectedTransactionType.description && (
                   <p>{selectedTransactionType.description}</p>
                 )}
-
                 <div className="finance-create-transaction__type-tags">
                   <span className="finance-create-transaction__tag finance-create-transaction__tag--blue">
                     Finance Only
                   </span>
-
                   <span className="finance-create-transaction__tag finance-create-transaction__tag--green">
                     {selectedTransactionType.allow_amount_override
                       ? "Amount Can Be Overridden"
                       : "Fixed Amount"}
                   </span>
-
                   <span className="finance-create-transaction__tag finance-create-transaction__tag--neutral">
                     {selectedTransactionType.default_amount === null
                       ? "No Default Amount"
@@ -933,22 +751,18 @@ export default function CreateStudentTransaction() {
               </div>
             )}
           </section>
-
           {/* ===============================================
               STEP 3 — AMOUNT / REMARKS
           =============================================== */}
-
           <section className="finance-create-transaction__panel">
             <StepHeader
               step="3"
               title="Amount and Remarks"
               description="Confirm the amount and add any optional Finance note before assigning the transaction."
             />
-
             <div className="finance-create-transaction__details-form">
               <label className="finance-create-transaction__field">
                 <span>Amount Due</span>
-
                 <input
                   type="number"
                   min="0.01"
@@ -970,7 +784,6 @@ export default function CreateStudentTransaction() {
                       : ""
                   }
                 />
-
                 {selectedTransactionType && (
                   <small>
                     {selectedTransactionType.default_amount === null
@@ -985,10 +798,8 @@ export default function CreateStudentTransaction() {
                   </small>
                 )}
               </label>
-
               <label className="finance-create-transaction__field">
                 <span>Finance Remarks</span>
-
                 <textarea
                   value={remarks}
                   onChange={(event) => setRemarks(event.target.value)}
@@ -997,22 +808,18 @@ export default function CreateStudentTransaction() {
                   disabled={submitting}
                   placeholder="Optional remarks about this transaction..."
                 />
-
                 <small>{remarks.length}/500 characters</small>
               </label>
             </div>
           </section>
-
           {/* ===============================================
               SUBMIT
           =============================================== */}
-
           <section className="finance-create-transaction__submit-panel">
             <div className="finance-create-transaction__submit-note">
               <div className="finance-create-transaction__submit-note-icon">
                 <FileText size={17} aria-hidden="true" />
               </div>
-
               <span>
                 Creating the transaction generates exactly one Finance ticket.
                 Payment starts as <strong>Pending Payment</strong>, while
@@ -1020,7 +827,6 @@ export default function CreateStudentTransaction() {
                 manually assigned transactions are Finance-only.
               </span>
             </div>
-
             <button
               type="submit"
               className="finance-create-transaction__submit-button"
@@ -1063,7 +869,6 @@ function StepHeader({
   return (
     <div className="finance-create-transaction__step-header">
       <div className="finance-create-transaction__step-number">{step}</div>
-
       <div>
         <h2>{title}</h2>
         <p>{description}</p>
@@ -1087,7 +892,6 @@ function InfoBox({
         {icon}
         {label}
       </div>
-
       <div className="finance-create-transaction__info-value">{value}</div>
     </div>
   );

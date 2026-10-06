@@ -14,7 +14,7 @@ import {
   FileText,
   Loader2,
   ReceiptText,
-  RefreshCcw,
+  RefreshCw,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
@@ -23,10 +23,6 @@ import "../../styles/FinanceReports.css";
 
 const FINANCE_REPORT_API =
   "http://localhost:3000/api/finance/tickets/reports/summary";
-
-// ============================================================
-// TYPES
-// ============================================================
 
 interface FinanceReportSummary {
   total_tickets: number;
@@ -80,10 +76,6 @@ interface FinanceReportResponse {
 
   daily_collections?: DailyCollectionRow[];
 }
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 function formatMoney(value: number | null | undefined) {
   return new Intl.NumberFormat("en-PH", {
@@ -152,7 +144,6 @@ function workflowLabel(value: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-
 export default function FinanceReports() {
   const navigate = useNavigate();
 
@@ -192,10 +183,6 @@ export default function FinanceReports() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  // ==========================================================
-  // AUTH
-  // ==========================================================
-
   useEffect(() => {
     if (!isFinance) {
       navigate("/login", {
@@ -203,10 +190,6 @@ export default function FinanceReports() {
       });
     }
   }, [isFinance, navigate]);
-
-  // ==========================================================
-  // LOAD REPORT
-  // ==========================================================
 
   const loadReport = useCallback(
     async (initial = true) => {
@@ -310,10 +293,6 @@ export default function FinanceReports() {
     void loadReport(true);
   }, [isFinance, loadReport]);
 
-  // ==========================================================
-  // MAX VALUES FOR BARS
-  // ==========================================================
-
   const maxTransactionCollection = useMemo(() => {
     return Math.max(
       1,
@@ -339,64 +318,38 @@ export default function FinanceReports() {
     return null;
   }
 
-
   return (
     <DashboardLayout>
       <main className="finance-reports">
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <section className="finance-reports__hero">
           <div className="finance-reports__hero-copy">
             <div className="finance-reports__eyebrow">
-              <BarChart3 size={16} aria-hidden="true" />
-              Finance Analytics
+              <span className="finance-reports__eyebrow-icon">
+                <BarChart3 size={16} aria-hidden="true" />
+              </span>
+              <span>Finance Analytics</span>
             </div>
-
             <h1>Finance Reports</h1>
-
             <p>
               Review Finance ticket activity, collections, transaction
               breakdowns, payment methods, and recent daily collection trends.
             </p>
-
             {generatedAt && (
               <span className="finance-reports__generated-at">
                 Report generated: {formatDateTime(generatedAt)}
               </span>
             )}
           </div>
-
-          <div className="finance-reports__hero-actions">
-            <button
-              type="button"
-              className="finance-reports__button finance-reports__button--secondary"
-              onClick={() => void loadReport(false)}
-              disabled={refreshing}
-            >
-              {refreshing ? (
-                <Loader2
-                  size={16}
-                  className="finance-reports__spinner"
-                  aria-hidden="true"
-                />
-              ) : (
-                <RefreshCcw size={16} aria-hidden="true" />
-              )}
-
-              {refreshing ? "Refreshing..." : "Refresh Report"}
-            </button>
-
-            <div className="finance-reports__hero-icon" aria-hidden="true">
-              <BarChart3 size={28} strokeWidth={1.9} />
-            </div>
-          </div>
+          <button
+            type="button"
+            className="finance-reports__refresh"
+            onClick={() => void loadReport(false)}
+            disabled={refreshing}
+          >
+            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
         </section>
-
-        {/* =================================================
-            ERROR
-        ================================================= */}
 
         {errorMessage && (
           <section
@@ -406,10 +359,6 @@ export default function FinanceReports() {
             {errorMessage}
           </section>
         )}
-
-        {/* =================================================
-            LOADING
-        ================================================= */}
 
         {loading ? (
           <section className="finance-reports__panel finance-reports__loading">
@@ -424,9 +373,6 @@ export default function FinanceReports() {
           </section>
         ) : (
           <>
-            {/* ===============================================
-                COLLECTION SUMMARY
-            =============================================== */}
 
             <section
               className="finance-reports__summary-grid"
@@ -456,10 +402,6 @@ export default function FinanceReports() {
                 icon={<CheckCircle2 size={20} />}
               />
             </section>
-
-            {/* ===============================================
-                TICKET SUMMARY
-            =============================================== */}
 
             <section className="finance-reports__panel">
               <SectionTitle
@@ -501,10 +443,6 @@ export default function FinanceReports() {
                 />
               </div>
             </section>
-
-            {/* ===============================================
-                TRANSACTION BREAKDOWN
-            =============================================== */}
 
             <section className="finance-reports__panel">
               <SectionTitle
@@ -575,10 +513,6 @@ export default function FinanceReports() {
               </div>
             </section>
 
-            {/* ===============================================
-                PAYMENT METHODS
-            =============================================== */}
-
             <section className="finance-reports__panel">
               <SectionTitle
                 icon={<CreditCard size={19} />}
@@ -622,10 +556,6 @@ export default function FinanceReports() {
                 )}
               </div>
             </section>
-
-            {/* ===============================================
-                RECENT DAILY COLLECTIONS
-            =============================================== */}
 
             <section className="finance-reports__panel">
               <SectionTitle
