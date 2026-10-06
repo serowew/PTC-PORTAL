@@ -13,14 +13,11 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-import { apiUrl } from "../../../services/api";
+import { api } from "../../../services/api";
 import "../../../styles/RegistrarStudentlist.css";
-
-const API_BASE_URL = apiUrl("/api/registrar/students");
-
+const API_BASE_URL = `${api.baseUrl}/api/registrar/students`;
 interface Student {
   student_id: number;
   student_number: string;
@@ -46,7 +43,6 @@ interface Student {
   province: string | null;
   zip_code: string | null;
 }
-
 interface StudentResponse {
   success: boolean;
   message?: string;
@@ -58,45 +54,37 @@ interface StudentResponse {
   totalPages: number;
   students: Student[];
 }
-
 interface Statistics {
   total: number;
   regular: number;
   executive: number;
   scholarship: number;
 }
-
 const getStudentInitials = (student: Student) => {
   const first = student.first_name?.trim().charAt(0) || "";
   const last = student.last_name?.trim().charAt(0) || "";
   return `${first}${last}`.toUpperCase() || "S";
 };
-
 const getStudentName = (student: Student) => {
   const middleInitial = student.middle_name?.trim()
     ? `${student.middle_name.trim().charAt(0)}.`
     : "";
-
   return [student.first_name, middleInitial, student.last_name]
     .filter(Boolean)
     .join(" ");
 };
-
 const getStatusClass = (status: string) =>
   (status || "unknown")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-
 export default function StudentListR() {
   const navigate = useNavigate();
-
   const user = authService.getSession();
   const token = authService.getToken();
   const userRole = user?.role;
   const authenticated = Boolean(user && token);
-
   const [students, setStudents] = useState<Student[]>([]);
   const [statistics, setStatistics] = useState<Statistics>({
     total: 0,
@@ -106,24 +94,20 @@ export default function StudentListR() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
   const [selectedSection, setSelectedSection] = useState("All");
-
   const studentsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
       navigate("/login", { replace: true });
       return;
     }
-
     if (userRole !== "Registrar") {
       if (user) {
         navigate(authService.getDashboardRoute(user.role), { replace: true });
@@ -132,39 +116,31 @@ export default function StudentListR() {
       }
     }
   }, [authenticated, userRole, navigate, user]);
-
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearch(searchInput.trim());
       setCurrentPage(1);
     }, 350);
-
     return () => window.clearTimeout(timer);
   }, [searchInput]);
-
   useEffect(() => {
     if (!authenticated || userRole !== "Registrar") {
       return;
     }
-
     const controller = new AbortController();
-
     const fetchStudents = async () => {
       try {
         setLoading(true);
         setError("");
-
         const params = new URLSearchParams();
         params.append("page", currentPage.toString());
         params.append("limit", studentsPerPage.toString());
-
         if (search) params.append("search", search);
         if (selectedCourse !== "All") params.append("course", selectedCourse);
         if (selectedYear !== "All") params.append("year", selectedYear);
         if (selectedSection !== "All") {
           params.append("section", selectedSection);
         }
-
         const response = await authService.authFetch(
           `${API_BASE_URL}?${params.toString()}`,
           {
@@ -173,10 +149,8 @@ export default function StudentListR() {
             headers: { Accept: "application/json" },
           },
         );
-
         let data: StudentResponse | null = null;
         const contentType = response.headers.get("content-type") || "";
-
         if (contentType.includes("application/json")) {
           data = await response.json();
         } else {
@@ -188,20 +162,17 @@ export default function StudentListR() {
             )}`,
           );
         }
-
         if (response.status === 401) {
           authService.logout();
           navigate("/login", { replace: true });
           return;
         }
-
         if (response.status === 403) {
           throw new Error(
             data?.message ||
               "You are not authorized to access student records.",
           );
         }
-
         if (!response.ok) {
           throw new Error(
             data?.message ||
@@ -209,23 +180,17 @@ export default function StudentListR() {
               `Failed to load students (${response.status}).`,
           );
         }
-
         if (!data?.success) {
           throw new Error(data?.message || "Failed to load students.");
         }
-
         const studentData = Array.isArray(data.students) ? data.students : [];
-
         setStudents(studentData);
         setTotalPages(Math.max(data.totalPages || 1, 1));
-
         let regular = 0;
         let executive = 0;
         let scholarship = 0;
-
         studentData.forEach((student) => {
           const course = (student.course_code || "").toLowerCase();
-
           if (course.includes("executive")) {
             executive += 1;
           } else if (course.includes("scholar")) {
@@ -234,7 +199,6 @@ export default function StudentListR() {
             regular += 1;
           }
         });
-
         setStatistics({
           total: data.totalStudents || 0,
           regular,
@@ -243,18 +207,15 @@ export default function StudentListR() {
         });
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
-
         console.error("GET REGISTRAR STUDENTS ERROR:", err);
         setStudents([]);
         setStatistics({ total: 0, regular: 0, executive: 0, scholarship: 0 });
-
         if (err instanceof TypeError) {
           setError(
             "Unable to connect to the student records server. Make sure the backend is running on port 3000.",
           );
           return;
         }
-
         setError(
           err instanceof Error
             ? err.message
@@ -264,9 +225,7 @@ export default function StudentListR() {
         if (!controller.signal.aborted) setLoading(false);
       }
     };
-
     void fetchStudents();
-
     return () => controller.abort();
   }, [
     authenticated,
@@ -278,7 +237,6 @@ export default function StudentListR() {
     selectedSection,
     navigate,
   ]);
-
   const courseOptions = useMemo(
     () => [
       "All",
@@ -288,7 +246,6 @@ export default function StudentListR() {
     ],
     [students],
   );
-
   const yearOptions = useMemo(
     () => [
       "All",
@@ -300,7 +257,6 @@ export default function StudentListR() {
     ],
     [students],
   );
-
   const sectionOptions = useMemo(
     () => [
       "All",
@@ -310,27 +266,22 @@ export default function StudentListR() {
     ],
     [students],
   );
-
   const hasActiveFilters =
     Boolean(searchInput.trim()) ||
     selectedCourse !== "All" ||
     selectedYear !== "All" ||
     selectedSection !== "All";
-
   const startRecord = students.length
     ? (currentPage - 1) * studentsPerPage + 1
     : 0;
   const endRecord = students.length ? startRecord + students.length - 1 : 0;
-
   const visiblePages = useMemo(() => {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, index) => index + 1);
     }
-
     const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
     return Array.from({ length: 5 }, (_, index) => start + index);
   }, [currentPage, totalPages]);
-
   const clearFilters = () => {
     setSearchInput("");
     setSearch("");
@@ -339,11 +290,9 @@ export default function StudentListR() {
     setSelectedSection("All");
     setCurrentPage(1);
   };
-
   if (!authenticated || !user || userRole !== "Registrar") {
     return null;
   }
-
   return (
     <DashboardLayout>
       <main className="registrar-student-list">
@@ -355,14 +304,12 @@ export default function StudentListR() {
               </span>
               Registrar · Student Records
             </div>
-
             <h1>Student List</h1>
             <p>
               View registered students, review their profiles, and access
               academic records and documents from one organized workspace.
             </p>
           </div>
-
           <div className="registrar-student-list__hero-badge">
             <span className="registrar-student-list__hero-badge-icon">
               <ShieldCheck size={18} />
@@ -373,7 +320,6 @@ export default function StudentListR() {
             </span>
           </div>
         </section>
-
         <section
           className="registrar-student-list__stats"
           aria-label="Student statistics"
@@ -388,7 +334,6 @@ export default function StudentListR() {
               <small>All registered records</small>
             </div>
           </article>
-
           <article className="registrar-student-list__stat-card">
             <div className="registrar-student-list__stat-icon">
               <UserRound size={21} />
@@ -399,7 +344,6 @@ export default function StudentListR() {
               <small>On this result page</small>
             </div>
           </article>
-
           <article className="registrar-student-list__stat-card">
             <div className="registrar-student-list__stat-icon">
               <BookOpen size={21} />
@@ -410,7 +354,6 @@ export default function StudentListR() {
               <small>On this result page</small>
             </div>
           </article>
-
           <article className="registrar-student-list__stat-card">
             <div className="registrar-student-list__stat-icon">
               <GraduationCap size={21} />
@@ -422,21 +365,18 @@ export default function StudentListR() {
             </div>
           </article>
         </section>
-
         <section className="registrar-student-list__panel">
           <div className="registrar-student-list__panel-heading">
             <div>
               <h2>Student Directory</h2>
               <p>Search and filter student records before opening a profile.</p>
             </div>
-
             <div className="registrar-student-list__record-count">
               {loading
                 ? "Loading records..."
                 : `${statistics.total.toLocaleString()} total records`}
             </div>
           </div>
-
           <div className="registrar-student-list__toolbar">
             <label className="registrar-student-list__search">
               <Search size={19} aria-hidden="true" />
@@ -458,13 +398,11 @@ export default function StudentListR() {
                 </button>
               )}
             </label>
-
             <div className="registrar-student-list__filters">
               <span className="registrar-student-list__filter-label">
                 <Filter size={16} />
                 Filters
               </span>
-
               <select
                 value={selectedCourse}
                 onChange={(event) => {
@@ -479,7 +417,6 @@ export default function StudentListR() {
                   </option>
                 ))}
               </select>
-
               <select
                 value={selectedYear}
                 onChange={(event) => {
@@ -494,7 +431,6 @@ export default function StudentListR() {
                   </option>
                 ))}
               </select>
-
               <select
                 value={selectedSection}
                 onChange={(event) => {
@@ -509,7 +445,6 @@ export default function StudentListR() {
                   </option>
                 ))}
               </select>
-
               {hasActiveFilters && (
                 <button
                   type="button"
@@ -522,7 +457,6 @@ export default function StudentListR() {
               )}
             </div>
           </div>
-
           {hasActiveFilters && !loading && !error && (
             <div className="registrar-student-list__filter-summary">
               Showing filtered student records
@@ -540,7 +474,6 @@ export default function StudentListR() {
               )}
             </div>
           )}
-
           <div className="registrar-student-list__table-shell">
             <div className="registrar-student-list__table-scroll">
               <table className="registrar-student-list__table">
@@ -557,7 +490,6 @@ export default function StudentListR() {
                     </th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {loading &&
                     Array.from({ length: 5 }, (_, index) => (
@@ -594,7 +526,6 @@ export default function StudentListR() {
                         </td>
                       </tr>
                     ))}
-
                   {!loading && error && (
                     <tr>
                       <td colSpan={7}>
@@ -608,7 +539,6 @@ export default function StudentListR() {
                       </td>
                     </tr>
                   )}
-
                   {!loading && !error && students.length === 0 && (
                     <tr>
                       <td colSpan={7}>
@@ -631,7 +561,6 @@ export default function StudentListR() {
                       </td>
                     </tr>
                   )}
-
                   {!loading &&
                     !error &&
                     students.map((student) => (
@@ -652,22 +581,18 @@ export default function StudentListR() {
                             </div>
                           </div>
                         </td>
-
                         <td>
                           <span className="registrar-student-list__student-number">
                             {student.student_number}
                           </span>
                         </td>
-
                         <td>
                           <span className="registrar-student-list__course-chip">
                             {student.course_code || "—"}
                           </span>
                         </td>
-
                         <td>Year {student.year_level || "—"}</td>
                         <td>{student.section_name || "Not Assigned"}</td>
-
                         <td>
                           <span
                             className={`registrar-student-list__status registrar-student-list__status--${getStatusClass(
@@ -678,7 +603,6 @@ export default function StudentListR() {
                             {student.status || "Unknown"}
                           </span>
                         </td>
-
                         <td>
                           <div className="registrar-student-list__actions">
                             <button
@@ -694,7 +618,6 @@ export default function StudentListR() {
                               <UserRound size={15} />
                               View
                             </button>
-
                             <button
                               type="button"
                               className="registrar-student-list__action"
@@ -708,7 +631,6 @@ export default function StudentListR() {
                               <BookOpen size={15} />
                               Records
                             </button>
-
                             <button
                               type="button"
                               className="registrar-student-list__action"
@@ -729,7 +651,6 @@ export default function StudentListR() {
                 </tbody>
               </table>
             </div>
-
             {!loading && !error && students.length > 0 && (
               <div className="registrar-student-list__pagination-bar">
                 <p>
@@ -737,7 +658,6 @@ export default function StudentListR() {
                   <strong>{endRecord}</strong> of{" "}
                   <strong>{statistics.total.toLocaleString()}</strong> students
                 </p>
-
                 <nav
                   className="registrar-student-list__pagination"
                   aria-label="Student list pagination"
@@ -754,7 +674,6 @@ export default function StudentListR() {
                     <ChevronLeft size={17} />
                     <span>Previous</span>
                   </button>
-
                   <div className="registrar-student-list__page-numbers">
                     {visiblePages.map((page) => (
                       <button
@@ -772,7 +691,6 @@ export default function StudentListR() {
                       </button>
                     ))}
                   </div>
-
                   <button
                     type="button"
                     className="registrar-student-list__page-btn registrar-student-list__page-btn--nav"

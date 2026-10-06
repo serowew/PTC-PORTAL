@@ -483,7 +483,7 @@
 }
 .finance-payment-history__badge--source {
   border: 1px solid #e2e8f0;
-  color: #64748b;
+  color: var(--finance-text-600);
   background: #f8fafc;
 }
 .finance-payment-history__ticket-number {
@@ -516,7 +516,7 @@
 }
 .finance-payment-history__amount > span {
   display: block;
-  color: var(--finance-text-400);
+  color: var(--finance-text-500);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.045em;
@@ -552,7 +552,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: var(--finance-text-400);
+  color: var(--finance-text-500);
   font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
