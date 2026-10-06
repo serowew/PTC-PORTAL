@@ -169,6 +169,7 @@ export default function CreateStudentTransaction() {
       ) ?? null
     );
   }, [transactionTypes, selectedTransactionCode]);
+
   // ==========================================================
   // LOAD TRANSACTION TYPES
   // ==========================================================
@@ -823,8 +824,7 @@ export default function CreateStudentTransaction() {
               <span>
                 Creating the transaction generates exactly one Finance ticket.
                 Payment starts as <strong>Pending Payment</strong>, while
-                Registrar remains <strong>Not Applicable</strong> because
-                manually assigned transactions are Finance-only.
+                Registrar starts as <strong>In Process</strong>.
               </span>
             </div>
             <button

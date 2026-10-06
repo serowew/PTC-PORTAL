@@ -23,7 +23,9 @@ import programHeadRouter from "./routes/programhead/index.js";
 
 import authenticate from "./middleware/authenticate.js";
 import requireRole from "./middleware/requireRole.js";
+
 import financeRouter from "./routes/finance/index.js";
+import manualPaymentVerificationsRouter from "./routes/manualPaymentVerifications.routes.js";
 
 const app = express();
 
@@ -151,6 +153,14 @@ app.use("/api/student", authenticate, requireRole("Student"), studentRoutes);
 // =====================================================
 
 app.use("/api/finance", authenticate, requireRole("Finance"), financeRouter);
+
+// MANUAL PAYMENT VERIFICATION ROUTES
+app.use(
+  "/api/manual-payment-verifications",
+  authenticate,
+  manualPaymentVerificationsRouter,
+);
+
 // =====================================================
 // SHARED AUTHENTICATED FILE ROUTES
 // =====================================================

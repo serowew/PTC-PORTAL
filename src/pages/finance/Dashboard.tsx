@@ -221,7 +221,8 @@ const financeWorkflowSteps = [
   {
     step: "04",
     title: "Forward the status",
-    description: "The completed payment becomes available for Registrar action.",
+    description:
+      "The completed payment becomes available for Registrar action.",
     icon: CheckCircle2,
   },
 ];
@@ -555,7 +556,10 @@ export default function FinanceDashboard() {
             </span>
           </div>
         </section>
-        <section className="finance-dashboard__quick-grid" aria-label="Finance quick access">
+        <section
+          className="finance-dashboard__quick-grid"
+          aria-label="Finance quick access"
+        >
           {financeQuickActions.map((action) => {
             const Icon = action.icon;
             return (
@@ -572,19 +576,28 @@ export default function FinanceDashboard() {
                   <strong>{action.title}</strong>
                   <small>{action.description}</small>
                 </span>
-                <ArrowRight className="finance-dashboard__quick-arrow" size={17} strokeWidth={2} />
+                <ArrowRight
+                  className="finance-dashboard__quick-arrow"
+                  size={17}
+                  strokeWidth={2}
+                />
               </button>
             );
           })}
         </section>
-        <section className="finance-dashboard__stats" aria-label="Finance summary">
+        <section
+          className="finance-dashboard__stats"
+          aria-label="Finance summary"
+        >
           <article className="finance-dashboard__stat-card finance-dashboard__stat-card--primary">
             <span className="finance-dashboard__stat-icon">
               <Clock3 size={20} strokeWidth={2.05} />
             </span>
             <span className="finance-dashboard__stat-copy">
               <small>Pending Tickets</small>
-              <strong>{dashboardLoading ? "..." : summary.pending_tickets}</strong>
+              <strong>
+                {dashboardLoading ? "..." : summary.pending_tickets}
+              </strong>
               <span>Tickets awaiting payment</span>
             </span>
           </article>
@@ -594,7 +607,9 @@ export default function FinanceDashboard() {
             </span>
             <span className="finance-dashboard__stat-copy">
               <small>Completed Today</small>
-              <strong>{dashboardLoading ? "..." : summary.completed_today}</strong>
+              <strong>
+                {dashboardLoading ? "..." : summary.completed_today}
+              </strong>
               <span>Payments completed today</span>
             </span>
           </article>
@@ -604,7 +619,9 @@ export default function FinanceDashboard() {
             </span>
             <span className="finance-dashboard__stat-copy">
               <small>Waiting for Registrar</small>
-              <strong>{dashboardLoading ? "..." : summary.waiting_for_registrar}</strong>
+              <strong>
+                {dashboardLoading ? "..." : summary.waiting_for_registrar}
+              </strong>
               <span>Paid tickets awaiting action</span>
             </span>
           </article>
@@ -626,10 +643,12 @@ export default function FinanceDashboard() {
                 type="button"
                 className="finance-dashboard__text-action"
                 onClick={() =>
-                  document.getElementById("finance-ticket-lookup")?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  })
+                  document
+                    .getElementById("finance-ticket-lookup")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    })
                 }
               >
                 Open ticket lookup
@@ -640,8 +659,13 @@ export default function FinanceDashboard() {
               {financeWorkflowSteps.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <article className="finance-dashboard__workflow-item" key={item.step}>
-                    <span className="finance-dashboard__workflow-number">{item.step}</span>
+                  <article
+                    className="finance-dashboard__workflow-item"
+                    key={item.step}
+                  >
+                    <span className="finance-dashboard__workflow-number">
+                      {item.step}
+                    </span>
                     <span className="finance-dashboard__workflow-icon">
                       <Icon size={18} strokeWidth={2.05} />
                     </span>
@@ -665,16 +689,26 @@ export default function FinanceDashboard() {
               </div>
             </div>
             <div className="finance-dashboard__workspace-actions">
-              <button type="button" onClick={() => navigate("/finance/payment-history")}>
-                <span><History size={18} strokeWidth={2.05} /></span>
+              <button
+                type="button"
+                onClick={() => navigate("/finance/payment-history")}
+              >
+                <span>
+                  <History size={18} strokeWidth={2.05} />
+                </span>
                 <div>
                   <strong>Payment History</strong>
                   <small>Review completed Finance payment records.</small>
                 </div>
                 <ArrowRight size={16} />
               </button>
-              <button type="button" onClick={() => navigate("/finance/reports")}>
-                <span><FileCheck2 size={18} strokeWidth={2.05} /></span>
+              <button
+                type="button"
+                onClick={() => navigate("/finance/reports")}
+              >
+                <span>
+                  <FileCheck2 size={18} strokeWidth={2.05} />
+                </span>
                 <div>
                   <strong>Finance Reports</strong>
                   <small>Open reports and review Finance records.</small>
@@ -696,10 +730,15 @@ export default function FinanceDashboard() {
             </div>
           </aside>
         </div>
-        <section id="finance-ticket-lookup" className="finance-dashboard__panel finance-dashboard__lookup-panel">
+        <section
+          id="finance-ticket-lookup"
+          className="finance-dashboard__panel finance-dashboard__lookup-panel"
+        >
           <div className="finance-dashboard__panel-header">
             <div>
-              <span className="finance-dashboard__section-kicker">Ticket Processing</span>
+              <span className="finance-dashboard__section-kicker">
+                Ticket Processing
+              </span>
               <h2>Cashier Ticket Lookup</h2>
               <p>Enter the Finance ticket number presented by the student.</p>
             </div>
@@ -709,44 +748,100 @@ export default function FinanceDashboard() {
               onClick={() => void loadDashboard()}
               disabled={dashboardLoading}
             >
-              <RefreshCcw size={16} className={dashboardLoading ? "finance-dashboard__spin" : undefined} />
+              <RefreshCcw
+                size={16}
+                className={
+                  dashboardLoading ? "finance-dashboard__spin" : undefined
+                }
+              />
               {dashboardLoading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
-          <form className="finance-dashboard__lookup-form" onSubmit={handleTicketSearch}>
+          <form
+            className="finance-dashboard__lookup-form"
+            onSubmit={handleTicketSearch}
+          >
             <label className="finance-dashboard__search-field">
               <Search size={17} aria-hidden="true" />
               <input
                 type="text"
                 value={ticketNumber}
-                onChange={(event) => setTicketNumber(event.target.value.toUpperCase())}
+                onChange={(event) =>
+                  setTicketNumber(event.target.value.toUpperCase())
+                }
                 placeholder="Example: FIN-COR-2026-000001"
                 disabled={searching}
                 aria-label="Finance ticket number"
               />
             </label>
-            <button type="submit" className="finance-dashboard__primary-button" disabled={searching}>
-              {searching ? <><Loader2 size={17} className="finance-dashboard__spin" />Searching...</> : <><Search size={17} />Search Ticket</>}
+            <button
+              type="submit"
+              className="finance-dashboard__primary-button"
+              disabled={searching}
+            >
+              {searching ? (
+                <>
+                  <Loader2 size={17} className="finance-dashboard__spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search size={17} />
+                  Search Ticket
+                </>
+              )}
             </button>
           </form>
-          {errorMessage && <div className="finance-dashboard__message finance-dashboard__message--error" role="alert">{errorMessage}</div>}
-          {successMessage && <div className="finance-dashboard__message finance-dashboard__message--success" role="status">{successMessage}</div>}
+          {errorMessage && (
+            <div
+              className="finance-dashboard__message finance-dashboard__message--error"
+              role="alert"
+            >
+              {errorMessage}
+            </div>
+          )}
+          {successMessage && (
+            <div
+              className="finance-dashboard__message finance-dashboard__message--success"
+              role="status"
+            >
+              {successMessage}
+            </div>
+          )}
         </section>
         {ticket && (
           <>
             <section className="finance-dashboard__panel finance-dashboard__panel--ticket">
               <div className="finance-dashboard__ticket-header">
                 <div>
-                  <div className="finance-dashboard__ticket-eyebrow"><ReceiptText size={16} />Finance Ticket</div>
+                  <div className="finance-dashboard__ticket-eyebrow">
+                    <ReceiptText size={16} />
+                    Finance Ticket
+                  </div>
                   <h2>{ticket.ticket_number}</h2>
                 </div>
                 <div className="finance-dashboard__ticket-badges">
-                  <StatusBadge label={ticket.payment.payment_status} variantClass={getPaymentBadgeClass(ticket.payment.payment_status)} />
-                  <StatusBadge label={ticket.registrar.status} variantClass={getRegistrarBadgeClass(ticket.registrar.status)} />
+                  <StatusBadge
+                    label={ticket.payment.payment_status}
+                    variantClass={getPaymentBadgeClass(
+                      ticket.payment.payment_status,
+                    )}
+                  />
+                  <StatusBadge
+                    label={ticket.registrar.status}
+                    variantClass={getRegistrarBadgeClass(
+                      ticket.registrar.status,
+                    )}
+                  />
                 </div>
               </div>
               <div className="finance-dashboard__student-card">
-                <div className="finance-dashboard__student-avatar" aria-hidden="true"><UserRound size={21} /></div>
+                <div
+                  className="finance-dashboard__student-avatar"
+                  aria-hidden="true"
+                >
+                  <UserRound size={21} />
+                </div>
                 <div className="finance-dashboard__student-copy">
                   <span>Student</span>
                   <strong>{ticket.student.student_name}</strong>
@@ -754,60 +849,178 @@ export default function FinanceDashboard() {
                 </div>
               </div>
               <div className="finance-dashboard__info-grid">
-                <InfoBox label="Transaction" value={ticket.transaction.transaction_name} />
-                <InfoBox label="Transaction Code" value={ticket.transaction.transaction_code} />
-                <InfoBox label="Request Number" value={ticket.document_request?.request_number ?? "—"} />
-                <InfoBox label="Copies" value={ticket.document_request?.copies !== undefined ? String(ticket.document_request.copies) : "—"} />
-                <InfoBox label="Amount Due" value={formatMoney(ticket.payment.amount_due)} emphasized />
-                <InfoBox label="Amount Paid" value={formatMoney(ticket.payment.amount_paid)} emphasized />
-                <InfoBox label="Payment Method" value={ticket.payment.payment_method ?? "—"} />
-                <InfoBox label="Receipt Number" value={ticket.payment.receipt_number ?? "—"} />
-                <InfoBox label="Paid At" value={formatDate(ticket.payment.paid_at)} />
-                <InfoBox label="Registrar Status" value={ticket.registrar.status} />
+                <InfoBox
+                  label="Transaction"
+                  value={ticket.transaction.transaction_name}
+                />
+                <InfoBox
+                  label="Transaction Code"
+                  value={ticket.transaction.transaction_code}
+                />
+                <InfoBox
+                  label="Request Number"
+                  value={ticket.document_request?.request_number ?? "—"}
+                />
+                <InfoBox
+                  label="Copies"
+                  value={
+                    ticket.document_request?.copies !== undefined
+                      ? String(ticket.document_request.copies)
+                      : "—"
+                  }
+                />
+                <InfoBox
+                  label="Amount Due"
+                  value={formatMoney(ticket.payment.amount_due)}
+                  emphasized
+                />
+                <InfoBox
+                  label="Amount Paid"
+                  value={formatMoney(ticket.payment.amount_paid)}
+                  emphasized
+                />
+                <InfoBox
+                  label="Payment Method"
+                  value={ticket.payment.payment_method ?? "—"}
+                />
+                <InfoBox
+                  label="Receipt Number"
+                  value={ticket.payment.receipt_number ?? "—"}
+                />
+                <InfoBox
+                  label="Paid At"
+                  value={formatDate(ticket.payment.paid_at)}
+                />
+                <InfoBox
+                  label="Registrar Status"
+                  value={ticket.registrar.status}
+                />
               </div>
               {ticket.document_request?.purpose && (
-                <div className="finance-dashboard__purpose-box"><span>Purpose</span><p>{ticket.document_request.purpose}</p></div>
+                <div className="finance-dashboard__purpose-box">
+                  <span>Purpose</span>
+                  <p>{ticket.document_request.purpose}</p>
+                </div>
               )}
             </section>
             <section className="finance-dashboard__panel finance-dashboard__panel--payment">
               <div className="finance-dashboard__payment-heading">
-                <div className="finance-dashboard__payment-heading-icon" aria-hidden="true"><WalletCards size={21} /></div>
+                <div
+                  className="finance-dashboard__payment-heading-icon"
+                  aria-hidden="true"
+                >
+                  <WalletCards size={21} />
+                </div>
                 <div>
-                  <span className="finance-dashboard__section-kicker">Cashier Action</span>
+                  <span className="finance-dashboard__section-kicker">
+                    Cashier Action
+                  </span>
                   <h2>Payment</h2>
                   <p>Record the student's payment for this transaction.</p>
                 </div>
               </div>
               {ticket.payment.payment_status === "Pending Payment" ? (
-                <form className="finance-dashboard__payment-form" onSubmit={handlePayment}>
+                <form
+                  className="finance-dashboard__payment-form"
+                  onSubmit={handlePayment}
+                >
                   <FieldLabel label="Amount Due">
-                    <input className="finance-dashboard__input" type="number" min="0.01" step="0.01" value={amountDue} onChange={(event) => { setAmountDue(event.target.value); if (ticket.payment.amount_due === null) setAmountPaid(event.target.value); }} disabled={paying || ticket.payment.amount_due !== null} />
+                    <input
+                      className="finance-dashboard__input"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={amountDue}
+                      onChange={(event) => {
+                        setAmountDue(event.target.value);
+                        if (ticket.payment.amount_due === null)
+                          setAmountPaid(event.target.value);
+                      }}
+                      disabled={paying || ticket.payment.amount_due !== null}
+                    />
                   </FieldLabel>
                   <FieldLabel label="Amount Paid">
-                    <input className="finance-dashboard__input" type="number" min="0.01" step="0.01" value={amountPaid} onChange={(event) => setAmountPaid(event.target.value)} disabled={paying} />
+                    <input
+                      className="finance-dashboard__input"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={amountPaid}
+                      onChange={(event) => setAmountPaid(event.target.value)}
+                      disabled={paying}
+                    />
                   </FieldLabel>
                   <FieldLabel label="Payment Method">
-                    <select className="finance-dashboard__input" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)} disabled={paying}>
-                      <option value="Cash">Cash</option><option value="GCash">GCash</option><option value="Bank">Bank</option><option value="Online">Online</option>
+                    <select
+                      className="finance-dashboard__input"
+                      value={paymentMethod}
+                      onChange={(event) =>
+                        setPaymentMethod(event.target.value as PaymentMethod)
+                      }
+                      disabled={paying}
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="GCash">GCash</option>
+                      <option value="Bank">Bank</option>
+                      <option value="Online">Online</option>
                     </select>
                   </FieldLabel>
                   <FieldLabel label="Receipt Number">
-                    <input className="finance-dashboard__input" type="text" value={receiptNumber} onChange={(event) => setReceiptNumber(event.target.value)} placeholder="Example: OR-000001" disabled={paying} />
+                    <input
+                      className="finance-dashboard__input"
+                      type="text"
+                      value={receiptNumber}
+                      onChange={(event) => setReceiptNumber(event.target.value)}
+                      placeholder="Example: OR-000001"
+                      disabled={paying}
+                    />
                   </FieldLabel>
                   <label className="finance-dashboard__field finance-dashboard__field--full">
                     <span>Finance Remarks</span>
-                    <textarea className="finance-dashboard__input finance-dashboard__textarea" rows={3} maxLength={500} value={remarks} onChange={(event) => setRemarks(event.target.value)} placeholder="Optional payment remarks..." disabled={paying} />
+                    <textarea
+                      className="finance-dashboard__input finance-dashboard__textarea"
+                      rows={3}
+                      maxLength={500}
+                      value={remarks}
+                      onChange={(event) => setRemarks(event.target.value)}
+                      placeholder="Optional payment remarks..."
+                      disabled={paying}
+                    />
                   </label>
                   <div className="finance-dashboard__form-actions">
-                    <button type="submit" className="finance-dashboard__primary-button finance-dashboard__primary-button--payment" disabled={paying}>
-                      {paying ? <><Loader2 size={17} className="finance-dashboard__spin" />Processing...</> : <><CheckCircle2 size={17} />Mark as Paid</>}
+                    <button
+                      type="submit"
+                      className="finance-dashboard__primary-button finance-dashboard__primary-button--payment"
+                      disabled={paying}
+                    >
+                      {paying ? (
+                        <>
+                          <Loader2
+                            size={17}
+                            className="finance-dashboard__spin"
+                          />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={17} />
+                          Mark as Paid
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
               ) : (
                 <div className="finance-dashboard__paid-state">
-                  <div className="finance-dashboard__paid-state-title"><CheckCircle2 size={22} /><strong>Payment already completed</strong></div>
-                  <p>This transaction has already been paid and is currently <strong>{ticket.registrar.status}</strong> on the Registrar side.</p>
+                  <div className="finance-dashboard__paid-state-title">
+                    <CheckCircle2 size={22} />
+                    <strong>Payment already completed</strong>
+                  </div>
+                  <p>
+                    This transaction has already been paid and is currently{" "}
+                    <strong>{ticket.registrar.status}</strong> on the Registrar
+                    side.
+                  </p>
                 </div>
               )}
             </section>
@@ -817,13 +1030,21 @@ export default function FinanceDashboard() {
           <div className="finance-dashboard__connection-status">
             <span className="finance-dashboard__connection-dot" />
             <div>
-              <span className="finance-dashboard__section-kicker">Workflow Status</span>
+              <span className="finance-dashboard__section-kicker">
+                Workflow Status
+              </span>
               <h2>Finance role connected</h2>
               <p>{statusMessage}</p>
             </div>
           </div>
           <div className="finance-dashboard__workflow-summary">
-            <span>Student / Faculty verification</span><strong>→</strong><span>Finance ticket</span><strong>→</strong><span>Payment completed</span><strong>→</strong><span>Registrar action</span>
+            <span>Student / Faculty verification</span>
+            <strong>→</strong>
+            <span>Finance ticket</span>
+            <strong>→</strong>
+            <span>Payment completed</span>
+            <strong>→</strong>
+            <span>Registrar action</span>
           </div>
         </section>
       </main>
@@ -844,8 +1065,9 @@ function InfoBox({
 }) {
   return (
     <div
-      className={`finance-dashboard__info-box ${emphasized ? "finance-dashboard__info-box--emphasized" : ""
-        }`}
+      className={`finance-dashboard__info-box ${
+        emphasized ? "finance-dashboard__info-box--emphasized" : ""
+      }`}
     >
       <span>{label}</span>
       <strong>{value}</strong>
@@ -861,9 +1083,7 @@ function StatusBadge({
   variantClass: string;
 }) {
   return (
-    <span
-      className={`finance-dashboard__status-badge ${variantClass}`}
-    >
+    <span className={`finance-dashboard__status-badge ${variantClass}`}>
       {label}
     </span>
   );
