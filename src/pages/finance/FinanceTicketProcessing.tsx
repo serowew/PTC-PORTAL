@@ -13,6 +13,7 @@ import {
   Search,
   UserRound,
   WalletCards,
+  X,
 } from "lucide-react";
 import DashboardLayout from "../../components/Layout/DashboardLayout";
 import { authService } from "../../services/auth.service";
@@ -196,6 +197,7 @@ export default function FinanceTicketProcessing() {
   const [selectedTicketNumber, setSelectedTicketNumber] = useState<
     string | null
   >(null);
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
   const [paymentFilter, setPaymentFilter] =
@@ -227,6 +229,23 @@ export default function FinanceTicketProcessing() {
       null
     );
   }, [tickets, selectedTicketNumber]);
+  useEffect(() => {
+    if (!transactionModalOpen || !selectedTicket) {
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeTransactionModal();
+      }
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [transactionModalOpen, selectedTicket]);
   const filteredTickets = useMemo(() => {
     return tickets.filter((item) => {
       if (
@@ -291,9 +310,13 @@ export default function FinanceTicketProcessing() {
   };
   const selectTicket = (loadedTicket: FinanceTicket) => {
     setSelectedTicketNumber(loadedTicket.ticket_number);
+    setTransactionModalOpen(true);
     resetPaymentForm(loadedTicket);
     setErrorMessage("");
     setSuccessMessage("");
+  };
+  const closeTransactionModal = () => {
+    setTransactionModalOpen(false);
   };
   const loadQueue = async (query = activeSearch, preserveSelection = true) => {
     if (!isFinance || loadingQueue) {
@@ -781,16 +804,65 @@ export default function FinanceTicketProcessing() {
             </div>
           )}
         </section>
-        {selectedTicket && (
-          <>
+        {selectedTicket && transactionModalOpen && (
+          <div
+            className="finance-requests__modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeTransactionModal();
+              }
+            }}
+          >
+            <section
+              className="finance-requests__modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="finance-selected-transaction-title"
+            >
+              <header className="finance-requests__modal-header">
+                <div>
+                  <span className="finance-requests__modal-header-icon">
+                    <ReceiptText size={17} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <span>Finance Transaction</span>
+                    <strong>Selected Transaction</strong>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="finance-requests__modal-close"
+                  onClick={closeTransactionModal}
+                  aria-label="Close selected transaction"
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
+              </header>
+              <div className="finance-requests__modal-body">
+                {errorMessage && (
+                  <div
+                    className="finance-requests__message finance-requests__message--error finance-requests__modal-message"
+                    role="alert"
+                  >
+                    {errorMessage}
+                  </div>
+                )}
+                {successMessage && (
+                  <div
+                    className="finance-requests__message finance-requests__message--success finance-requests__modal-message"
+                    role="status"
+                  >
+                    {successMessage}
+                  </div>
+                )}
             <section className="finance-requests__panel finance-requests__selected-panel">
               <div className="finance-requests__section-header">
                 <div>
-                  <div className="finance-requests__eyebrow">
-                    <ReceiptText size={16} aria-hidden="true" />
-                    Selected Transaction
-                  </div>
-                  <h2 className="finance-requests__selected-title">
+                  <h2
+                    id="finance-selected-transaction-title"
+                    className="finance-requests__selected-title"
+                  >
                     {selectedTicket.ticket_number}
                   </h2>
                   <p>{selectedTicket.transaction.transaction_name}</p>
@@ -1038,7 +1110,9 @@ export default function FinanceTicketProcessing() {
                   </div>
                 )}
             </section>
-          </>
+              </div>
+            </section>
+          </div>
         )}
       </main>
     </DashboardLayout>
