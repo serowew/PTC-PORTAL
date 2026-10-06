@@ -1,0 +1,730 @@
+.faculty-grade-history {
+  --fgh-green-950: #073b24;
+  --fgh-green-900: #0a4b2d;
+  --fgh-green-800: #0d653b;
+  --fgh-green-700: #0f7a45;
+  --fgh-green-600: #159452;
+  --fgh-green-100: #dcf5e6;
+  --fgh-green-50: #f1fbf5;
+  --fgh-text-950: #17201b;
+  --fgh-text-800: #28352d;
+  --fgh-text-700: #425047;
+  --fgh-text-600: #5e6b63;
+  --fgh-text-500: #76827b;
+  --fgh-border: #dfe8e2;
+  --fgh-border-soft: #edf2ee;
+  --fgh-border-strong: #cfdcd3;
+  --fgh-surface: #ffffff;
+  --fgh-surface-soft: #f8fbf9;
+  --fgh-bg: #f5f8f6;
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 30px 38px;
+  box-sizing: border-box;
+  color: var(--fgh-text-950);
+  background:
+    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    var(--fgh-bg);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+.faculty-grade-history *,
+.faculty-grade-history *::before,
+.faculty-grade-history *::after {
+  box-sizing: border-box;
+}
+.faculty-grade-history button,
+.faculty-grade-history input,
+.faculty-grade-history select {
+  font: inherit;
+}
+.faculty-grade-history__hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 25px 28px;
+  border: 1px solid rgba(15, 122, 69, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.99) 0%,
+    rgba(247, 253, 249, 0.99) 66%,
+    rgba(230, 247, 237, 0.99) 100%
+  );
+  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+}
+.faculty-grade-history__hero::after {
+  content: "";
+  position: absolute;
+  top: -92px;
+  right: -70px;
+  width: 230px;
+  height: 230px;
+  border: 38px solid rgba(15, 122, 69, 0.055);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.faculty-grade-history__hero-copy,
+.faculty-grade-history__refresh {
+  position: relative;
+  z-index: 1;
+}
+.faculty-grade-history__hero-copy {
+  min-width: 0;
+  max-width: 800px;
+}
+.faculty-grade-history__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: var(--fgh-green-800);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.faculty-grade-history__eyebrow > span {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: var(--fgh-green-700);
+  background: var(--fgh-green-100);
+}
+.faculty-grade-history__hero h1 {
+  margin: 0;
+  color: var(--fgh-text-950);
+  font-size: clamp(27px, 3vw, 35px);
+  font-weight: 780;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+}
+.faculty-grade-history__hero p {
+  max-width: 760px;
+  margin: 9px 0 0;
+  color: var(--fgh-text-600);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.faculty-grade-history__identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  margin-top: 12px;
+  padding: 5px 9px;
+  border: 1px solid #d8eade;
+  border-radius: 999px;
+  color: var(--fgh-text-600);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+}
+.faculty-grade-history__identity svg {
+  color: var(--fgh-green-700);
+}
+.faculty-grade-history__identity strong {
+  color: var(--fgh-text-800);
+  font-weight: 740;
+}
+.faculty-grade-history__identity > span {
+  padding-left: 7px;
+  border-left: 1px solid var(--fgh-border);
+}
+.faculty-grade-history__refresh {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 8px 12px;
+  border: 1px solid var(--fgh-green-800);
+  border-radius: 9px;
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--fgh-green-700), var(--fgh-green-900));
+  box-shadow: 0 5px 14px rgba(13, 101, 59, 0.13);
+  font-size: 10.5px;
+  font-weight: 730;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.faculty-grade-history__refresh:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+.faculty-grade-history__refresh .is-spinning {
+  animation: faculty-grade-history-spin 0.8s linear infinite;
+}
+.faculty-grade-history__notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 12px;
+}
+.faculty-grade-history__notice--error {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  border: 1px solid #efc8c4;
+  color: #993c36;
+  background: #fff7f6;
+}
+.faculty-grade-history__notice--warning {
+  border: 1px solid #ecdca9;
+  color: #835f12;
+  background: #fffbec;
+}
+.faculty-grade-history__notice strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 750;
+}
+.faculty-grade-history__notice p {
+  margin: 3px 0 0;
+  font-size: 9.8px;
+  line-height: 1.45;
+}
+.faculty-grade-history__notice button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #e2b4b0;
+  border-radius: 8px;
+  color: #8a3731;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.faculty-grade-history__overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.faculty-grade-history__overview article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  min-height: 86px;
+  padding: 13px 14px;
+  border: 1px solid var(--fgh-border);
+  border-radius: 14px;
+  background: var(--fgh-surface);
+  box-shadow: 0 4px 16px rgba(20, 55, 34, 0.035);
+}
+.faculty-grade-history__overview-icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d8eade;
+  border-radius: 11px;
+  color: var(--fgh-green-700);
+  background: var(--fgh-green-50);
+}
+.faculty-grade-history__overview article > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.faculty-grade-history__overview small {
+  color: var(--fgh-text-500);
+  font-size: 10px;
+  font-weight: 680;
+}
+.faculty-grade-history__overview strong {
+  color: var(--fgh-text-950);
+  font-size: 21px;
+  font-weight: 780;
+  line-height: 1.1;
+}
+.faculty-grade-history__overview article > div > span {
+  color: var(--fgh-text-600);
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+.faculty-grade-history__panel {
+  overflow: hidden;
+  border: 1px solid var(--fgh-border);
+  border-radius: 15px;
+  background: var(--fgh-surface);
+  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
+}
+.faculty-grade-history__panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--fgh-border-soft);
+}
+.faculty-grade-history__panel-header > div:first-child {
+  min-width: 0;
+}
+.faculty-grade-history__panel-header > div:first-child > span {
+  color: var(--fgh-green-800);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.faculty-grade-history__panel-header h2 {
+  margin: 3px 0 0;
+  color: var(--fgh-text-950);
+  font-size: 17px;
+  font-weight: 760;
+  letter-spacing: -0.015em;
+}
+.faculty-grade-history__panel-header p {
+  max-width: 760px;
+  margin: 5px 0 0;
+  color: var(--fgh-text-500);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.faculty-grade-history__panel-count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 26px;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid #cdebd7;
+  border-radius: 999px;
+  color: var(--fgh-green-800);
+  background: var(--fgh-green-50);
+  font-size: 9.5px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+.faculty-grade-history__filters {
+  display: grid;
+  grid-template-columns:
+    minmax(250px, 1.45fr)
+    minmax(190px, 1fr)
+    minmax(150px, 0.8fr)
+    minmax(150px, 0.8fr)
+    minmax(145px, 0.75fr)
+    auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--fgh-border-soft);
+  background: #fcfefc;
+}
+.faculty-grade-history__filters label {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+.faculty-grade-history__filters label > span {
+  color: var(--fgh-text-700);
+  font-size: 10px;
+  font-weight: 700;
+}
+.faculty-grade-history__search > div {
+  position: relative;
+}
+.faculty-grade-history__search svg {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  color: var(--fgh-text-500);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.faculty-grade-history__filters input,
+.faculty-grade-history__filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1.5px solid var(--fgh-border-strong);
+  border-radius: 9px;
+  outline: none;
+  color: var(--fgh-text-800);
+  background: #ffffff;
+  font-size: 11px;
+}
+.faculty-grade-history__search input {
+  padding-left: 35px;
+}
+.faculty-grade-history__filters input:focus,
+.faculty-grade-history__filters select:focus {
+  border-color: var(--fgh-green-600);
+  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.1);
+}
+.faculty-grade-history__filters select option {
+  color: var(--fgh-text-800);
+  background: #ffffff;
+}
+.faculty-grade-history__clear {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #ccd8d0;
+  border-radius: 9px;
+  color: var(--fgh-text-700);
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.faculty-grade-history__clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.faculty-grade-history__state {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  color: var(--fgh-text-500);
+  text-align: center;
+}
+.faculty-grade-history__state strong {
+  color: var(--fgh-text-700);
+  font-size: 12px;
+  font-weight: 740;
+}
+.faculty-grade-history__state span {
+  max-width: 480px;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.faculty-grade-history__state--empty > svg {
+  margin-bottom: 3px;
+  color: var(--fgh-green-700);
+}
+.faculty-grade-history__state--empty button {
+  min-height: 34px;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 1px solid #c9ddd0;
+  border-radius: 8px;
+  color: var(--fgh-green-800);
+  background: var(--fgh-green-50);
+  font-size: 10px;
+  font-weight: 710;
+  cursor: pointer;
+}
+.faculty-grade-history__spinner {
+  width: 29px;
+  height: 29px;
+  border: 3px solid #dce9e1;
+  border-top-color: var(--fgh-green-700);
+  border-radius: 50%;
+  animation: faculty-grade-history-spin 0.8s linear infinite;
+}
+.faculty-grade-history__table-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--fgh-border-soft);
+  color: var(--fgh-text-600);
+  background: #ffffff;
+  font-size: 10px;
+}
+.faculty-grade-history__table-meta strong {
+  color: var(--fgh-text-800);
+}
+.faculty-grade-history__table-meta small {
+  color: var(--fgh-text-500);
+  font-size: 9.5px;
+}
+.faculty-grade-history__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+}
+.faculty-grade-history__table {
+  width: 100%;
+  min-width: 1510px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.faculty-grade-history__table th {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--fgh-border);
+  color: var(--fgh-text-600);
+  background: var(--fgh-surface-soft);
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.faculty-grade-history__table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--fgh-border-soft);
+  color: var(--fgh-text-700);
+  font-size: 11px;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+.faculty-grade-history__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.faculty-grade-history__table tbody tr:hover {
+  background: #fbfefc;
+}
+.faculty-grade-history__table th:nth-child(1),
+.faculty-grade-history__table td:nth-child(1) {
+  width: 220px;
+}
+.faculty-grade-history__table th:nth-child(2),
+.faculty-grade-history__table td:nth-child(2) {
+  width: 205px;
+}
+.faculty-grade-history__table th:nth-child(3),
+.faculty-grade-history__table td:nth-child(3) {
+  width: 130px;
+}
+.faculty-grade-history__table th:nth-child(4),
+.faculty-grade-history__table td:nth-child(4) {
+  width: 145px;
+}
+.faculty-grade-history__table th:nth-child(5),
+.faculty-grade-history__table td:nth-child(5),
+.faculty-grade-history__table th:nth-child(6),
+.faculty-grade-history__table td:nth-child(6) {
+  width: 95px;
+}
+.faculty-grade-history__table th:nth-child(7),
+.faculty-grade-history__table td:nth-child(7) {
+  width: 115px;
+}
+.faculty-grade-history__table th:nth-child(8),
+.faculty-grade-history__table td:nth-child(8) {
+  width: 125px;
+}
+.faculty-grade-history__table th:nth-child(9),
+.faculty-grade-history__table td:nth-child(9) {
+  width: 110px;
+}
+.faculty-grade-history__table th:nth-child(10),
+.faculty-grade-history__table td:nth-child(10) {
+  width: 270px;
+}
+.faculty-grade-history__stack {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.faculty-grade-history__stack strong {
+  color: var(--fgh-text-950);
+  font-size: 11.5px;
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.faculty-grade-history__stack span {
+  color: var(--fgh-text-600);
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.faculty-grade-history__stack small {
+  color: var(--fgh-text-500);
+  font-size: 9.5px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.faculty-grade-history__grade-cell {
+  color: var(--fgh-text-800) !important;
+  font-size: 11.5px !important;
+  font-weight: 740;
+}
+.faculty-grade-history__rating {
+  display: grid;
+  gap: 2px;
+}
+.faculty-grade-history__rating strong {
+  color: var(--fgh-text-950);
+  font-size: 12px;
+  font-weight: 780;
+}
+.faculty-grade-history__rating small {
+  color: var(--fgh-text-500);
+  font-size: 9.5px;
+}
+.faculty-grade-history__result,
+.faculty-grade-history__status {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 760;
+  line-height: 1;
+  white-space: nowrap;
+}
+.faculty-grade-history__status--submitted {
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+.faculty-grade-history__status--returned {
+  border-color: #fde68a;
+  color: #92400e;
+  background: #fffbeb;
+}
+.faculty-grade-history__status--approved {
+  border-color: #bbf7d0;
+  color: #166534;
+  background: #f0fdf4;
+}
+.faculty-grade-history__result--passed {
+  border-color: #bbf7d0;
+  color: #166534;
+  background: #f0fdf4;
+}
+.faculty-grade-history__result--failed {
+  border-color: #fecaca;
+  color: #991b1b;
+  background: #fef2f2;
+}
+.faculty-grade-history__result--incomplete {
+  border-color: #fde68a;
+  color: #92400e;
+  background: #fffbeb;
+}
+.faculty-grade-history__result--drop,
+.faculty-grade-history__result--neutral {
+  border-color: #dfe8e2;
+  color: var(--fgh-text-600);
+  background: #f5f8f6;
+}
+.faculty-grade-history__timeline {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+.faculty-grade-history__timeline > span {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 6px;
+}
+.faculty-grade-history__timeline > span > svg {
+  margin-top: 2px;
+  color: var(--fgh-green-700);
+}
+.faculty-grade-history__timeline > span > span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.faculty-grade-history__timeline small {
+  color: var(--fgh-text-500);
+  font-size: 8.8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.faculty-grade-history__timeline strong {
+  color: var(--fgh-text-700);
+  font-size: 9.5px;
+  font-weight: 690;
+  line-height: 1.35;
+}
+.faculty-grade-history__timeline em {
+  color: var(--fgh-text-500);
+  font-size: 9px;
+  font-style: normal;
+  line-height: 1.35;
+}
+.faculty-grade-history__timeline p {
+  margin: 1px 0 0;
+  padding: 6px 7px;
+  border: 1px solid var(--fgh-border-soft);
+  border-radius: 7px;
+  color: var(--fgh-text-600);
+  background: var(--fgh-surface-soft);
+  font-size: 9.5px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+@keyframes faculty-grade-history-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 1180px) {
+  .faculty-grade-history__overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .faculty-grade-history__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .faculty-grade-history__search {
+    grid-column: 1 / -1;
+  }
+  .faculty-grade-history__clear {
+    width: 100%;
+  }
+}
+@media (max-width: 760px) {
+  .faculty-grade-history {
+    gap: 14px;
+    padding: 18px 16px 28px;
+  }
+  .faculty-grade-history__hero {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 18px;
+  }
+  .faculty-grade-history__hero h1 {
+    font-size: 1.5rem;
+  }
+  .faculty-grade-history__refresh {
+    width: 100%;
+  }
+  .faculty-grade-history__panel-header,
+  .faculty-grade-history__table-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .faculty-grade-history__panel-count {
+    width: fit-content;
+  }
+}
+@media (max-width: 540px) {
+  .faculty-grade-history__overview,
+  .faculty-grade-history__filters {
+    grid-template-columns: 1fr;
+  }
+  .faculty-grade-history__search {
+    grid-column: auto;
+  }
+  .faculty-grade-history__notice--error {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .faculty-grade-history__notice--error button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
