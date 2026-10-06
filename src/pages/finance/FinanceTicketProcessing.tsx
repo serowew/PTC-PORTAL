@@ -11,6 +11,7 @@ import {
   ReceiptText,
   RefreshCw,
   Search,
+  XCircle,
   UserRound,
   WalletCards,
   X,
@@ -110,6 +111,12 @@ interface PaymentResponse {
   ticket?: FinanceTicket;
 }
 
+interface DeclineResponse {
+  success?: boolean;
+  code?: string;
+  message?: string;
+}
+
 function formatDate(value: string | null | undefined) {
   if (!value) {
     return "—";
@@ -206,6 +213,7 @@ export default function FinanceTicketProcessing() {
     useState<TransactionFilter>("All");
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [amountDue, setAmountDue] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash");
@@ -536,6 +544,67 @@ export default function FinanceTicketProcessing() {
       );
     } finally {
       setPaying(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!selectedTicket || paying || cancelling) {
+      return;
+    }
+    if (selectedTicket.payment.payment_status !== "Pending Payment") {
+      return;
+    }
+
+    const reason = window.prompt(
+      "Enter the reason for cancelling this transaction:",
+    );
+
+    if (!reason || !reason.trim()) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setCancelling(true);
+
+    try {
+      const response = await authService.authFetch(
+        `${FINANCE_TICKETS_API}/${encodeURIComponent(
+          selectedTicket.ticket_number,
+        )}/decline`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ reason: reason.trim() }),
+        },
+      );
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const data = (await response.json()) as DeclineResponse;
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to cancel the transaction.");
+      }
+
+      await refreshSelectedTicket(selectedTicket.ticket_number);
+      setSuccessMessage(data.message || "Transaction cancelled successfully.");
+    } catch (error) {
+      console.error("DECLINE FINANCE TRANSACTION ERROR:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to cancel the transaction.",
+      );
+    } finally {
+      setCancelling(false);
     }
   };
   if (!isFinance) {
@@ -1085,7 +1154,7 @@ export default function FinanceTicketProcessing() {
                     <button
                       type="submit"
                       className="finance-requests__button finance-requests__button--primary finance-requests__button--pay"
-                      disabled={paying || paymentLocked}
+                      disabled={paying || cancelling || paymentLocked}
                     >
                       {paying ? (
                         <Loader2
@@ -1097,6 +1166,23 @@ export default function FinanceTicketProcessing() {
                         <WalletCards size={17} aria-hidden="true" />
                       )}
                       {paying ? "Processing..." : "Confirm Payment"}
+                    </button>
+                    <button
+                      type="button"
+                      className="finance-requests__button finance-requests__button--danger"
+                      onClick={() => void handleDecline()}
+                      disabled={paying || cancelling || paymentLocked}
+                    >
+                      {cancelling ? (
+                        <Loader2
+                          size={17}
+                          className="finance-requests__spinner"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <XCircle size={17} aria-hidden="true" />
+                      )}
+                      {cancelling ? "Cancelling..." : "Cancel Transaction"}
                     </button>
                   </div>
                 </form>

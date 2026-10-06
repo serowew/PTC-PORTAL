@@ -89,6 +89,11 @@ export const registrarNavGroups = [
         path: "/registrar/grade-change-requests",
         icon: "",
       },
+      {
+        label: "Other payment verification",
+        path: "/registrar/manual-payment",
+        icon: "",
+      },
     ],
   },
 ];

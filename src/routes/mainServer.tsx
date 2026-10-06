@@ -150,6 +150,7 @@ import FinanceTransactionTypes from "../pages/finance/FinanceTransactionTypes";
 import FinanceReports from "../pages/finance/FinanceReports";
 import GradeChangeRequests from "../pages/programhead/GradeApproval/GradeChangeRequests";
 import GradeChangeRequestsR from "../pages/registrar/StudentRecord/GradeChangeRequestsR";
+import ManualPaymentVerifications from "../pages/registrar/Documents/ManualPaymentVerifications";
 
 // ─── Role guard ───────────────────────────────────────────────
 function ProtectedRoute({
@@ -665,6 +666,11 @@ export default function AppRoutes() {
           path="/registrar/document-requests"
           element={<RegistrarRoute element={<DocumentRequest />} />}
         />
+        <Route
+          path="/registrar/manual-payment"
+          element={<RegistrarRoute element={<ManualPaymentVerifications />} />}
+        />
+
         {/* ── Finance ── */}
         <Route
           path="/finance/dashboard"

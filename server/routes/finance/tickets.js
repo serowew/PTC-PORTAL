@@ -1,5 +1,3 @@
-// server/routes/finance/tickets.js
-
 import express from "express";
 import db from "../../db.js";
 
@@ -151,6 +149,7 @@ router.get("/", async (req, res) => {
         SELECT
           ft.ticket_id,
           ft.ticket_number,
+          ft.source_type,
 
           ft.student_id,
           s.student_number,
@@ -165,6 +164,7 @@ router.get("/", async (req, res) => {
           ftt.transaction_type_id,
           ftt.transaction_code,
           ftt.transaction_name,
+          ftt.workflow_type,
 
           ft.document_request_id,
 
@@ -233,6 +233,7 @@ router.get("/", async (req, res) => {
     const tickets = rows.map((ticket) => ({
       ticket_id: Number(ticket.ticket_id),
       ticket_number: ticket.ticket_number,
+      source_type: ticket.source_type,
 
       student: {
         student_id: Number(ticket.student_id),
@@ -244,6 +245,7 @@ router.get("/", async (req, res) => {
         transaction_type_id: Number(ticket.transaction_type_id),
         transaction_code: ticket.transaction_code,
         transaction_name: ticket.transaction_name,
+        workflow_type: ticket.workflow_type,
       },
 
       document_request:
@@ -1585,24 +1587,207 @@ router.get("/payment-history", async (req, res) => {
   }
 });
 
-// ============================================================
-// CREATE MANUAL STUDENT FINANCE TRANSACTION
-//
-// POST /api/finance/tickets/manual
-//
-// Only FINANCE_ONLY transaction types with
-// allow_manual_creation = 1 can be used here.
-//
-// Example body:
-// {
-//   "student_id": 126,
-//   "transaction_code": "PROCESS_FEE",
-//   "remarks": "General processing fee"
-// }
-//
-// amount_due is optional.
-// If omitted, the transaction type default_amount is used.
-// ============================================================
+router.get("/:ticketNumber", async (req, res) => {
+  const financeUserId = getFinanceUserId(req, res);
+
+  if (!financeUserId) {
+    return;
+  }
+
+  const ticketNumber = cleanTicketNumber(req.params.ticketNumber);
+
+  if (!ticketNumber) {
+    return res.status(400).json({
+      success: false,
+      code: "TICKET_NUMBER_REQUIRED",
+      message: "Ticket number is required.",
+    });
+  }
+
+  try {
+    const [rows] = await db.execute(
+      `
+        SELECT
+          ft.ticket_id,
+          ft.ticket_number,
+          ft.source_type,
+          ft.student_id,
+          s.student_number,
+
+          CONCAT_WS(
+            ' ',
+            s.first_name,
+            NULLIF(s.middle_name, ''),
+            s.last_name
+          ) AS student_name,
+
+          ftt.transaction_type_id,
+          ftt.transaction_code,
+          ftt.transaction_name,
+          ftt.workflow_type,
+
+          ft.document_request_id,
+          sdr.request_number,
+          sdr.document_type,
+          sdr.enrollment_id,
+
+          e.academic_year_id,
+          ay.academic_year,
+          e.semester_id,
+          sem.semester_name,
+          e.enrollment_status,
+
+          sdr.purpose,
+          sdr.copies,
+          sdr.requested_at,
+          sdr.cancelled_at,
+          sdr.cancellation_reason,
+
+          ft.grade_id,
+          ft.amount_due,
+          ft.amount_paid,
+          ft.payment_method,
+          ft.receipt_number,
+          ft.payment_status,
+          ft.finance_remarks,
+
+          ft.registrar_remarks,
+          ft.paid_by,
+          ft.paid_at,
+          ft.registrar_processed_by,
+          ft.registrar_started_at,
+          ft.registrar_completed_at,
+          ft.created_at,
+          ft.updated_at
+
+        FROM finance_tickets ft
+
+        INNER JOIN students s
+          ON s.student_id = ft.student_id
+
+        INNER JOIN finance_transaction_types ftt
+          ON ftt.transaction_type_id = ft.transaction_type_id
+
+        LEFT JOIN student_document_requests sdr
+          ON sdr.request_id = ft.document_request_id
+
+        LEFT JOIN enrollments e
+          ON e.enrollment_id = sdr.enrollment_id
+
+        LEFT JOIN academic_years ay
+          ON ay.academic_year_id = e.academic_year_id
+
+        LEFT JOIN semesters sem
+          ON sem.semester_id = e.semester_id
+
+        WHERE ft.ticket_number = ?
+
+        LIMIT 1
+      `,
+      [ticketNumber],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        code: "FINANCE_TICKET_NOT_FOUND",
+        message: "Finance ticket was not found.",
+      });
+    }
+
+    const row = rows[0];
+
+    const ticket = {
+      ticket_id: Number(row.ticket_id),
+      ticket_number: row.ticket_number,
+      source_type: row.source_type,
+
+      student: {
+        student_id: Number(row.student_id),
+        student_number: row.student_number,
+        student_name: row.student_name,
+      },
+
+      transaction: {
+        transaction_type_id: Number(row.transaction_type_id),
+        transaction_code: row.transaction_code,
+        transaction_name: row.transaction_name,
+        workflow_type: row.workflow_type,
+      },
+
+      document_request:
+        row.document_request_id !== null
+          ? {
+              request_id: Number(row.document_request_id),
+              request_number: row.request_number,
+              document_type: row.document_type,
+              enrollment_id:
+                row.enrollment_id === null ? null : Number(row.enrollment_id),
+              academic_period:
+                row.enrollment_id !== null
+                  ? {
+                      academic_year_id: row.academic_year_id
+                        ? Number(row.academic_year_id)
+                        : null,
+                      academic_year: row.academic_year || null,
+                      semester_id: row.semester_id
+                        ? Number(row.semester_id)
+                        : null,
+                      semester_name: row.semester_name || null,
+                      enrollment_status: row.enrollment_status || null,
+                    }
+                  : null,
+              purpose: row.purpose,
+              copies: Number(row.copies ?? 1),
+              requested_at: row.requested_at,
+              cancelled_at: row.cancelled_at,
+              cancellation_reason: row.cancellation_reason,
+            }
+          : null,
+
+      grade_id: row.grade_id === null ? null : Number(row.grade_id),
+
+      payment: {
+        amount_due: row.amount_due === null ? null : Number(row.amount_due),
+        amount_paid: Number(row.amount_paid ?? 0),
+        payment_method: row.payment_method,
+        receipt_number: row.receipt_number,
+        payment_status: row.payment_status,
+        finance_remarks: row.finance_remarks,
+        paid_by: row.paid_by === null ? null : Number(row.paid_by),
+        paid_at: row.paid_at,
+      },
+
+      registrar: {
+        status: row.registrar_status,
+        remarks: row.registrar_remarks,
+        processed_by:
+          row.registrar_processed_by === null
+            ? null
+            : Number(row.registrar_processed_by),
+        started_at: row.registrar_started_at,
+        completed_at: row.registrar_completed_at,
+      },
+
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+
+    return res.status(200).json({
+      success: true,
+      code: "FINANCE_TICKET_RETRIEVED",
+      ticket,
+    });
+  } catch (error) {
+    console.error("GET FINANCE TICKET ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      code: "FINANCE_TICKET_LOAD_FAILED",
+      message: "Failed to load the Finance ticket.",
+    });
+  }
+});
 
 router.post("/manual", async (req, res) => {
   const financeUserId = getFinanceUserId(req, res);
@@ -1664,10 +1849,6 @@ router.post("/manual", async (req, res) => {
     await connection.beginTransaction();
     transactionActive = true;
 
-    // --------------------------------------------------------
-    // 1. Verify student
-    // --------------------------------------------------------
-
     const [studentRows] = await connection.execute(
       `
         SELECT
@@ -1676,11 +1857,8 @@ router.post("/manual", async (req, res) => {
           first_name,
           middle_name,
           last_name
-
         FROM students
-
         WHERE student_id = ?
-
         LIMIT 1
       `,
       [studentId],
@@ -1699,10 +1877,6 @@ router.post("/manual", async (req, res) => {
 
     const student = studentRows[0];
 
-    // --------------------------------------------------------
-    // 2. Verify transaction type
-    // --------------------------------------------------------
-
     const [typeRows] = await connection.execute(
       `
         SELECT
@@ -1710,18 +1884,13 @@ router.post("/manual", async (req, res) => {
           transaction_code,
           transaction_name,
           description,
-
           workflow_type,
           allow_manual_creation,
           allow_amount_override,
-
           default_amount,
           is_active
-
         FROM finance_transaction_types
-
         WHERE transaction_code = ?
-
         LIMIT 1
       `,
       [transactionCode],
@@ -1766,10 +1935,6 @@ router.post("/manual", async (req, res) => {
       });
     }
 
-    // --------------------------------------------------------
-    // 3. Determine amount due
-    // --------------------------------------------------------
-
     const defaultAmount =
       transactionType.default_amount === null
         ? null
@@ -1811,57 +1976,35 @@ router.post("/manual", async (req, res) => {
       });
     }
 
-    // --------------------------------------------------------
-    // 4. Create ticket
-    //
-    // Temporary ticket number is used because ticket_number
-    // is NOT NULL + UNIQUE before insertId is available.
-    // --------------------------------------------------------
-
     const [insertResult] = await connection.execute(
       `
         INSERT INTO finance_tickets
         (
           ticket_number,
-
           student_id,
           transaction_type_id,
-
           document_request_id,
           grade_id,
-
           source_type,
-
           amount_due,
           amount_paid,
-
           payment_status,
           registrar_status,
-
           finance_remarks,
-
           created_by
         )
-
         VALUES (
           CONCAT('TMP-', UUID()),
-
           ?,
           ?,
-
           NULL,
           NULL,
-
           'FINANCE_MANUAL',
-
           ?,
           0.00,
-
           'Pending Payment',
-          'Not Applicable',
-
+          'Pending',
           ?,
-
           ?
         )
       `,
@@ -1875,7 +2018,6 @@ router.post("/manual", async (req, res) => {
     );
 
     const ticketId = Number(insertResult.insertId);
-
     const year = new Date().getFullYear();
 
     const ticketNumber = `FIN-${transactionType.transaction_code}-${year}-${String(
@@ -1885,9 +2027,7 @@ router.post("/manual", async (req, res) => {
     await connection.execute(
       `
         UPDATE finance_tickets
-
         SET ticket_number = ?
-
         WHERE ticket_id = ?
       `,
       [ticketNumber, ticketId],
@@ -1906,16 +2046,11 @@ router.post("/manual", async (req, res) => {
 
     return res.status(201).json({
       success: true,
-
       code: "FINANCE_MANUAL_TRANSACTION_CREATED",
-
       message: "Student Finance transaction created successfully.",
-
       ticket: {
         ticket_id: ticketId,
-
         ticket_number: ticketNumber,
-
         source_type: "FINANCE_MANUAL",
 
         student: {
@@ -1926,11 +2061,8 @@ router.post("/manual", async (req, res) => {
 
         transaction: {
           transaction_type_id: Number(transactionType.transaction_type_id),
-
           transaction_code: transactionType.transaction_code,
-
           transaction_name: transactionType.transaction_name,
-
           workflow_type: transactionType.workflow_type,
         },
 
@@ -1941,7 +2073,7 @@ router.post("/manual", async (req, res) => {
         },
 
         registrar: {
-          status: "Not Applicable",
+          status: "Pending",
         },
 
         remarks: financeRemarks,
@@ -1972,6 +2104,195 @@ router.post("/manual", async (req, res) => {
     }
   }
 });
+
+// ============================================================
+// DECLINE A WRONG FINANCE TRANSACTION
+//
+// PATCH /api/finance/tickets/:ticketNumber/decline
+//
+// Finance may decline only unpaid Pending Payment tickets.
+// Declined tickets use the existing Cancelled status.
+// ============================================================
+
+router.patch("/:ticketNumber/decline", async (req, res) => {
+  const financeUserId = getFinanceUserId(req, res);
+
+  if (!financeUserId) {
+    return;
+  }
+
+  const ticketNumber = cleanTicketNumber(req.params.ticketNumber);
+  const declineReason = cleanRequiredText(
+    req.body?.reason ?? req.body?.remarks,
+    500,
+  );
+
+  if (!ticketNumber) {
+    return res.status(400).json({
+      success: false,
+      code: "TICKET_NUMBER_REQUIRED",
+      message: "Ticket number is required.",
+    });
+  }
+
+  if (!declineReason) {
+    return res.status(400).json({
+      success: false,
+      code: "DECLINE_REASON_REQUIRED",
+      message: "A reason is required when declining a transaction.",
+    });
+  }
+
+  let connection;
+  let transactionActive = false;
+
+  try {
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+    transactionActive = true;
+
+    const [ticketRows] = await connection.execute(
+      `
+        SELECT
+          ft.ticket_id,
+          ft.ticket_number,
+          ft.source_type,
+          ft.document_request_id,
+          ft.payment_status,
+          ft.registrar_status,
+          ftt.workflow_type
+        FROM finance_tickets ft
+        INNER JOIN finance_transaction_types ftt
+          ON ftt.transaction_type_id = ft.transaction_type_id
+        WHERE ft.ticket_number = ?
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [ticketNumber],
+    );
+
+    if (ticketRows.length === 0) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(404).json({
+        success: false,
+        code: "FINANCE_TICKET_NOT_FOUND",
+        message: "Finance ticket was not found.",
+      });
+    }
+
+    const ticket = ticketRows[0];
+
+    if (ticket.payment_status === "Paid") {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "PAID_TICKET_CANNOT_BE_DECLINED",
+        message:
+          "A paid transaction cannot be declined. Use the appropriate refund process instead.",
+      });
+    }
+
+    if (
+      ticket.payment_status === "Cancelled" ||
+      ticket.payment_status === "Refunded"
+    ) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "TICKET_ALREADY_CLOSED",
+        message: `This transaction is already ${ticket.payment_status}.`,
+      });
+    }
+
+    if (ticket.payment_status !== "Pending Payment") {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "INVALID_DECLINE_STATUS",
+        message:
+          "Only transactions with Pending Payment status can be declined.",
+        payment_status: ticket.payment_status,
+      });
+    }
+
+    const nextRegistrarStatus =
+      ticket.workflow_type === "FINANCE_ONLY" ? "Not Applicable" : "Cancelled";
+
+    await connection.execute(
+      `
+        UPDATE finance_tickets
+        SET
+          payment_status = 'Cancelled',
+          registrar_status = ?,
+          finance_remarks = ?,
+          paid_by = NULL,
+          paid_at = NULL
+        WHERE ticket_id = ?
+      `,
+      [nextRegistrarStatus, declineReason, Number(ticket.ticket_id)],
+    );
+
+    if (ticket.document_request_id !== null) {
+      await connection.execute(
+        `
+          UPDATE student_document_requests
+          SET
+            cancelled_at = COALESCE(cancelled_at, NOW()),
+            cancellation_reason = ?
+          WHERE request_id = ?
+        `,
+        [declineReason, Number(ticket.document_request_id)],
+      );
+    }
+
+    await connection.commit();
+    transactionActive = false;
+
+    return res.status(200).json({
+      success: true,
+      code: "FINANCE_TICKET_DECLINED",
+      message: "Finance transaction declined successfully.",
+      ticket: {
+        ticket_id: Number(ticket.ticket_id),
+        ticket_number: ticket.ticket_number,
+        payment_status: "Cancelled",
+        registrar_status: nextRegistrarStatus,
+        declined_by: financeUserId,
+        decline_reason: declineReason,
+      },
+    });
+  } catch (error) {
+    if (connection && transactionActive) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("DECLINE FINANCE TICKET ROLLBACK ERROR:", rollbackError);
+      }
+    }
+
+    console.error("DECLINE FINANCE TICKET ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      code: "FINANCE_TICKET_DECLINE_FAILED",
+      message: "Failed to decline the Finance transaction.",
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
 router.patch("/:ticketNumber/pay", async (req, res) => {
   const financeUserId = getFinanceUserId(req, res);
 
@@ -2251,24 +2572,25 @@ router.patch("/:ticketNumber/pay", async (req, res) => {
     // ========================================================
     // 5. VALIDATE WORKFLOW STATUS
     // ========================================================
-
     if (ticket.workflow_type === "FINANCE_ONLY") {
-      if (ticket.registrar_status !== "Not Applicable") {
+      if (
+        !["In Process", "Not Applicable", "Pending"].includes(
+          ticket.registrar_status,
+        )
+      ) {
         await connection.rollback();
-
         transactionActive = false;
 
         return res.status(409).json({
           success: false,
           code: "INVALID_REGISTRAR_STATUS",
           message:
-            "Finance-only transactions must have Registrar status Not Applicable.",
+            "Finance-only transactions must have Registrar status In Process.",
         });
       }
     } else {
       if (ticket.registrar_status !== "Pending") {
         await connection.rollback();
-
         transactionActive = false;
 
         return res.status(409).json({
