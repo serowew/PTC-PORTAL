@@ -573,51 +573,49 @@ export default function GradeChangeRequestsR() {
   }, [processRequest, processingId]);
 
   if (!authenticated || userRole !== "Registrar") return null;
-
   return (
     <DashboardLayout>
       <main className="registrar-grade-change-page">
-        <section className="registrar-grade-change-header">
-          <div>
+        <section className="registrar-grade-change-hero">
+          <div className="registrar-grade-change-hero-copy">
             <button
               type="button"
               className="registrar-grade-change-back"
               onClick={() => navigate("/registrar/dashboard")}
             >
-              <ArrowLeft size={15} /> Dashboard
+              <ArrowLeft size={15} />
+              Dashboard
             </button>
-
             <div className="registrar-grade-change-eyebrow">
-              <span>
+              <span className="registrar-grade-change-eyebrow-icon">
                 <FileCheck2 size={16} />
               </span>
               Registrar · Official Grade Changes
             </div>
-
             <h1>INC Completion Processing</h1>
             <p>
-              Post Program Head-approved INC completion requests to the official
-              academic record. Registrar processing does not recalculate the
-              grade; it posts the already approved proposed values
-              transactionally.
+              Verify Program Head-approved INC completion requests and post the
+              approved values to the student's official academic record.
+              Registrar processing does not recalculate the grade.
             </p>
           </div>
-
-          <button
-            type="button"
-            className="registrar-grade-change-refresh"
-            onClick={() => {
-              setNotice(null);
-              setRefreshKey((current) => current + 1);
-            }}
-            disabled={loading || refreshing || processingId !== null}
-          >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "registrar-grade-change-spin" : ""}
-            />
-            {refreshing ? "Refreshing..." : "Refresh Queue"}
-          </button>
+          <div className="registrar-grade-change-hero-actions">
+            <button
+              type="button"
+              className="registrar-grade-change-refresh"
+              onClick={() => {
+                setNotice(null);
+                setRefreshKey((current) => current + 1);
+              }}
+              disabled={loading || refreshing || processingId !== null}
+            >
+              <RefreshCw
+                size={16}
+                className={refreshing ? "registrar-grade-change-spin" : ""}
+              />
+              {refreshing ? "Refreshing..." : "Refresh Queue"}
+            </button>
+          </div>
         </section>
 
         {notice && (
@@ -625,11 +623,13 @@ export default function GradeChangeRequestsR() {
             className={`registrar-grade-change-notice ${notice.type}`}
             role="status"
           >
-            {notice.type === "success" ? (
-              <CheckCircle2 size={19} />
-            ) : (
-              <AlertCircle size={19} />
-            )}
+            <span className="registrar-grade-change-notice-icon">
+              {notice.type === "success" ? (
+                <CheckCircle2 size={18} />
+              ) : (
+                <AlertCircle size={18} />
+              )}
+            </span>
             <div>
               <strong>
                 {notice.type === "success"
@@ -641,14 +641,13 @@ export default function GradeChangeRequestsR() {
           </section>
         )}
 
-        <section className="registrar-grade-change-summary">
-          <article
-            className={
-              statusFilter === "For Registrar Processing" ? "active" : ""
-            }
-          >
-            <span>
-              <ShieldCheck size={18} />
+        <section
+          className="registrar-grade-change-stats"
+          aria-label="Grade change request summary"
+        >
+          <article className="registrar-grade-change-stat-card registrar-grade-change-stat-card--primary">
+            <span className="registrar-grade-change-stat-icon registrar-grade-change-stat-icon--primary">
+              <ShieldCheck size={19} />
             </span>
             <div>
               <small>Current Queue</small>
@@ -656,21 +655,27 @@ export default function GradeChangeRequestsR() {
               <p>{statusFilter}</p>
             </div>
           </article>
-
-          <article>
-            <span>
-              <FilePenLine size={18} />
+          <article className="registrar-grade-change-stat-card">
+            <span className="registrar-grade-change-stat-icon">
+              {statusFilter === "Completed" ? (
+                <History size={19} />
+              ) : (
+                <FilePenLine size={19} />
+              )}
             </span>
             <div>
-              <small>Workflow</small>
-              <strong>INC</strong>
-              <p>Approved grade completion</p>
+              <small>Queue View</small>
+              <strong>{statusFilter === "Completed" ? "History" : "Ready"}</strong>
+              <p>
+                {statusFilter === "Completed"
+                  ? "Processed grade changes"
+                  : "Program Head approved"}
+              </p>
             </div>
           </article>
-
-          <article>
-            <span>
-              <BadgeCheck size={18} />
+          <article className="registrar-grade-change-stat-card">
+            <span className="registrar-grade-change-stat-icon">
+              <BadgeCheck size={19} />
             </span>
             <div>
               <small>Registrar Rule</small>
@@ -680,285 +685,222 @@ export default function GradeChangeRequestsR() {
           </article>
         </section>
 
-        <section className="registrar-grade-change-filters">
-          <div className="registrar-grade-change-search">
-            <Search size={16} />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search student, subject, section, or Faculty..."
-            />
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(event) => {
-              setSearch("");
-              setNotice(null);
-              setStatusFilter(event.target.value as RegistrarRequestStatus);
-              setRefreshKey((current) => current + 1);
-            }}
-          >
-            <option value="For Registrar Processing">
-              For Registrar Processing
-            </option>
-            <option value="Completed">Completed History</option>
-          </select>
-
-          <button
-            type="button"
-            onClick={() => setSearch("")}
-            disabled={!search}
-          >
-            <RotateCcw size={14} /> Clear Search
-          </button>
-        </section>
-
-        {error && !loading && (
-          <section className="registrar-grade-change-error" role="alert">
-            <AlertCircle size={20} />
+        <section className="registrar-grade-change-panel">
+          <header className="registrar-grade-change-panel-heading">
             <div>
-              <strong>Grade change requests could not be loaded</strong>
-              <p>{error}</p>
+              <span>Official Record Queue</span>
+              <h2>Grade Change Requests</h2>
+              <p>
+                Review approved INC completion details before posting the exact
+                proposed grade to the official student record.
+              </p>
             </div>
+            <strong className="registrar-grade-change-count">
+              {loading ? "…" : filteredRequests.length}{" "}
+              {!loading && (filteredRequests.length === 1 ? "request" : "requests")}
+            </strong>
+          </header>
+
+          <div className="registrar-grade-change-toolbar">
+            <label className="registrar-grade-change-search">
+              <span>Search Requests</span>
+              <div>
+                <Search size={15} />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Student, subject, section, or Faculty..."
+                />
+              </div>
+            </label>
+            <label className="registrar-grade-change-filter-field">
+              <span>Request Status</span>
+              <select
+                value={statusFilter}
+                onChange={(event) => {
+                  setSearch("");
+                  setNotice(null);
+                  setStatusFilter(event.target.value as RegistrarRequestStatus);
+                  setRefreshKey((current) => current + 1);
+                }}
+              >
+                <option value="For Registrar Processing">For Registrar Processing</option>
+                <option value="Completed">Completed History</option>
+              </select>
+            </label>
             <button
               type="button"
-              onClick={() => setRefreshKey((current) => current + 1)}
+              className="registrar-grade-change-clear"
+              onClick={() => setSearch("")}
+              disabled={!search}
             >
-              Try Again
+              <RotateCcw size={14} />
+              Clear Search
             </button>
-          </section>
-        )}
+          </div>
 
-        {loading && (
-          <section className="registrar-grade-change-loading">
-            <div className="registrar-grade-change-spinner" />
-            <div>
-              <strong>Loading grade change requests</strong>
-              <span>Retrieving approved INC completion records...</span>
-            </div>
-          </section>
-        )}
-
-        {!loading && !error && filteredRequests.length === 0 && (
-          <section className="registrar-grade-change-empty">
-            {statusFilter === "Completed" ? (
-              <History size={26} />
-            ) : (
-              <CheckCircle2 size={26} />
-            )}
-            <strong>
-              {statusFilter === "Completed"
-                ? "No completed INC grade changes found"
-                : "No requests waiting for Registrar processing"}
-            </strong>
-            <p>
-              {requests.length === 0
-                ? statusFilter === "Completed"
-                  ? "Completed INC completion transactions will appear here."
-                  : "Program Head-approved INC completion requests will appear here."
-                : "No requests match your current search."}
-            </p>
-          </section>
-        )}
-
-        {!loading && !error && filteredRequests.length > 0 && (
-          <section className="registrar-grade-change-list">
-            <header>
+          {error && !loading && (
+            <div
+              className="registrar-grade-change-state registrar-grade-change-state--error"
+              role="alert"
+            >
+              <span className="registrar-grade-change-state-icon">
+                <AlertCircle size={21} />
+              </span>
               <div>
-                <span>Official Record Queue</span>
-                <h2>{statusFilter}</h2>
+                <strong>Grade change requests could not be loaded</strong>
+                <p>{error}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRefreshKey((current) => current + 1)}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {loading && (
+            <div className="registrar-grade-change-state registrar-grade-change-state--loading">
+              <div className="registrar-grade-change-spinner" />
+              <div>
+                <strong>Loading grade change requests</strong>
+                <p>Retrieving approved INC completion records...</p>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && filteredRequests.length === 0 && (
+            <div className="registrar-grade-change-state registrar-grade-change-state--empty">
+              <span className="registrar-grade-change-state-icon">
+                {statusFilter === "Completed" ? (
+                  <History size={24} />
+                ) : (
+                  <CheckCircle2 size={24} />
+                )}
+              </span>
+              <div>
+                <strong>
+                  {statusFilter === "Completed"
+                    ? "No completed INC grade changes found"
+                    : "No requests waiting for Registrar processing"}
+                </strong>
                 <p>
-                  Verify the approved request details before posting the exact
-                  proposed grade to the student's official record.
+                  {requests.length === 0
+                    ? statusFilter === "Completed"
+                      ? "Completed INC completion transactions will appear here."
+                      : "Program Head-approved INC completion requests will appear here."
+                    : "No requests match your current search."}
                 </p>
               </div>
-              <strong>
-                {filteredRequests.length} request
-                {filteredRequests.length === 1 ? "" : "s"}
-              </strong>
-            </header>
+            </div>
+          )}
 
-            <div className="registrar-grade-change-cards">
+          {!loading && !error && filteredRequests.length > 0 && (
+            <div className="registrar-grade-change-request-list">
               {filteredRequests.map((request) => (
                 <article
                   className="registrar-grade-change-card"
                   key={request.grade_change_request_id}
                 >
-                  <div className="registrar-grade-change-card-top">
+                  <header className="registrar-grade-change-card-header">
                     <div className="registrar-grade-change-student">
-                      <span>
+                      <span className="registrar-grade-change-student-icon">
                         <GraduationCap size={18} />
                       </span>
                       <div>
                         <strong>{request.student.full_name}</strong>
                         <p>{request.student.student_number}</p>
                         <small>
-                          Request #{request.grade_change_request_id} · Grade #
-                          {request.grade_id}
+                          Request #{request.grade_change_request_id} · Grade #{request.grade_id}
                         </small>
                       </div>
                     </div>
-
                     <span
-                      className={`registrar-grade-change-status ${request.status === "Completed" ? "completed" : "pending"}`}
+                      className={`registrar-grade-change-status ${
+                        request.status === "Completed"
+                          ? "registrar-grade-change-status--completed"
+                          : "registrar-grade-change-status--pending"
+                      }`}
                     >
+                      <span aria-hidden="true" />
                       {request.status}
                     </span>
-                  </div>
+                  </header>
 
                   <div className="registrar-grade-change-context">
-                    <div>
-                      <BookOpenCheck size={15} />
-                      <span>
+                    <div className="registrar-grade-change-context-item">
+                      <span className="registrar-grade-change-context-icon">
+                        <BookOpenCheck size={15} />
+                      </span>
+                      <div>
                         <small>Subject</small>
                         <strong>{request.class.subject.subject_code}</strong>
                         <p>{request.class.subject.subject_name}</p>
-                      </span>
+                      </div>
                     </div>
-
-                    <div>
-                      <UserRound size={15} />
-                      <span>
+                    <div className="registrar-grade-change-context-item">
+                      <span className="registrar-grade-change-context-icon">
+                        <UserRound size={15} />
+                      </span>
+                      <div>
                         <small>Faculty</small>
                         <strong>{request.faculty.faculty_name}</strong>
-                        <p>
-                          {request.faculty.employee_number || "Faculty request"}
-                        </p>
-                      </span>
+                        <p>{request.faculty.employee_number || "Faculty request"}</p>
+                      </div>
                     </div>
-
-                    <div>
-                      <Clock3 size={15} />
-                      <span>
-                        <small>Program Head Review</small>
-                        <strong>
-                          {request.reviewed_by_username || "Program Head"}
-                        </strong>
-                        <p>{formatDateTime(request.reviewed_at)}</p>
+                    <div className="registrar-grade-change-context-item">
+                      <span className="registrar-grade-change-context-icon">
+                        <Clock3 size={15} />
                       </span>
+                      <div>
+                        <small>Program Head Review</small>
+                        <strong>{request.reviewed_by_username || "Program Head"}</strong>
+                        <p>{formatDateTime(request.reviewed_at)}</p>
+                      </div>
                     </div>
                   </div>
 
                   <div className="registrar-grade-change-comparison">
-                    <section className="old">
+                    <section className="registrar-grade-change-grade-block registrar-grade-change-grade-block--original">
                       <header>
-                        <span>
-                          <ShieldCheck size={16} />
-                        </span>
+                        <span><ShieldCheck size={16} /></span>
                         <div>
                           <small>Original Request Snapshot</small>
                           <strong>Approved INC</strong>
                         </div>
                       </header>
-
                       <div className="registrar-grade-change-grade-grid">
-                        <div>
-                          <small>Midterm</small>
-                          <strong>
-                            {formatGrade(request.original_grade.midterm_grade)}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Final</small>
-                          <strong>
-                            {formatGrade(request.original_grade.final_grade)}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Overall</small>
-                          <strong>
-                            {formatPercentage(
-                              request.original_grade.overall_percentage,
-                            )}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Rating</small>
-                          <strong>
-                            {formatGrade(request.original_grade.final_rating)}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Outcome</small>
-                          <strong>
-                            {outcomeLabel(
-                              request.original_grade.grading_outcome,
-                            )}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Remarks</small>
-                          <strong>
-                            {request.original_grade.remarks || "—"}
-                          </strong>
-                        </div>
+                        <div><small>Midterm</small><strong>{formatGrade(request.original_grade.midterm_grade)}</strong></div>
+                        <div><small>Final</small><strong>{formatGrade(request.original_grade.final_grade)}</strong></div>
+                        <div><small>Overall</small><strong>{formatPercentage(request.original_grade.overall_percentage)}</strong></div>
+                        <div><small>Rating</small><strong>{formatGrade(request.original_grade.final_rating)}</strong></div>
+                        <div><small>Outcome</small><strong>{outcomeLabel(request.original_grade.grading_outcome)}</strong></div>
+                        <div><small>Remarks</small><strong>{request.original_grade.remarks || "—"}</strong></div>
                       </div>
-
                       <div className="registrar-grade-change-reason">
                         <small>INC Reason</small>
-                        <p>
-                          {request.original_grade.outcome_reason ||
-                            "No reason recorded."}
-                        </p>
+                        <p>{request.original_grade.outcome_reason || "No reason recorded."}</p>
                       </div>
                     </section>
 
-                    <section className="new">
+                    <section className="registrar-grade-change-grade-block registrar-grade-change-grade-block--approved">
                       <header>
-                        <span>
-                          <FilePenLine size={16} />
-                        </span>
+                        <span><FilePenLine size={16} /></span>
                         <div>
                           <small>Program Head-Approved Proposal</small>
                           <strong>Ready for Posting</strong>
                         </div>
                       </header>
-
                       <div className="registrar-grade-change-grade-grid">
-                        <div>
-                          <small>Midterm</small>
-                          <strong>
-                            {formatGrade(request.proposed_grade.midterm_grade)}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Final</small>
-                          <strong>
-                            {formatGrade(request.proposed_grade.final_grade)}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Overall</small>
-                          <strong>
-                            {formatPercentage(
-                              request.proposed_grade.overall_percentage,
-                            )}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Rating</small>
-                          <strong>
-                            {formatGrade(request.proposed_grade.final_rating)}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Outcome</small>
-                          <strong>
-                            {outcomeLabel(
-                              request.proposed_grade.grading_outcome,
-                            )}
-                          </strong>
-                        </div>
-                        <div>
-                          <small>Remarks</small>
-                          <strong>
-                            {request.proposed_grade.remarks || "—"}
-                          </strong>
-                        </div>
+                        <div><small>Midterm</small><strong>{formatGrade(request.proposed_grade.midterm_grade)}</strong></div>
+                        <div><small>Final</small><strong>{formatGrade(request.proposed_grade.final_grade)}</strong></div>
+                        <div><small>Overall</small><strong>{formatPercentage(request.proposed_grade.overall_percentage)}</strong></div>
+                        <div><small>Rating</small><strong>{formatGrade(request.proposed_grade.final_rating)}</strong></div>
+                        <div><small>Outcome</small><strong>{outcomeLabel(request.proposed_grade.grading_outcome)}</strong></div>
+                        <div><small>Remarks</small><strong>{request.proposed_grade.remarks || "—"}</strong></div>
                       </div>
-
                       <div className="registrar-grade-change-reason">
                         <small>Faculty Completion Remarks</small>
                         <p>{request.completion_remarks}</p>
@@ -966,81 +908,72 @@ export default function GradeChangeRequestsR() {
                     </section>
                   </div>
 
-                  <div className="registrar-grade-change-review-note">
-                    <ShieldCheck size={15} />
-                    <div>
-                      <strong>Current Official Grade Verification</strong>
-                      <p>
-                        Database record now shows{" "}
-                        <strong>
-                          {formatGrade(
-                            request.current_official_grade.final_rating,
-                          )}
+                  <div className="registrar-grade-change-review-grid">
+                    <div className="registrar-grade-change-review-note">
+                      <span><ShieldCheck size={15} /></span>
+                      <div>
+                        <strong>Current Official Grade Verification</strong>
+                        <p>
+                          Database record now shows{" "}
+                          <b>
+                            {formatGrade(request.current_official_grade.final_rating)}
+                            {" · "}
+                            {request.current_official_grade.remarks || "—"}
+                          </b>
                           {" · "}
-                          {request.current_official_grade.remarks || "—"}
-                        </strong>
-                        {" · "}
-                        {formatPercentage(
-                          request.current_official_grade.overall_percentage,
-                        )}
-                        {" · "}
-                        {request.current_official_grade.grade_status ||
-                          "status unavailable"}
-                        .
-                      </p>
+                          {formatPercentage(request.current_official_grade.overall_percentage)}
+                          {" · "}
+                          {request.current_official_grade.grade_status || "status unavailable"}.
+                        </p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="registrar-grade-change-review-note">
-                    <CheckCircle2 size={15} />
-                    <div>
-                      <strong>Program Head review</strong>
-                      <p>
-                        {request.review_remarks ||
-                          "No review remarks recorded."}
-                      </p>
+                    <div className="registrar-grade-change-review-note">
+                      <span><CheckCircle2 size={15} /></span>
+                      <div>
+                        <strong>Program Head Review</strong>
+                        <p>{request.review_remarks || "No review remarks recorded."}</p>
+                      </div>
                     </div>
                   </div>
 
                   {request.status === "Completed" && (
                     <div className="registrar-grade-change-completed-note">
-                      <BadgeCheck size={15} />
+                      <span><BadgeCheck size={15} /></span>
                       <div>
-                        <strong>
-                          Processed by{" "}
-                          {request.processed_by_username || "Registrar"}
-                        </strong>
-                        <p>
-                          {request.registrar_remarks ||
-                            "Official grade change completed."}
-                        </p>
+                        <strong>Processed by {request.processed_by_username || "Registrar"}</strong>
+                        <p>{request.registrar_remarks || "Official grade change completed."}</p>
                         <small>{formatDateTime(request.processed_at)}</small>
                       </div>
                     </div>
                   )}
 
-                  <footer className="registrar-grade-change-actions">
+                  <footer className="registrar-grade-change-card-footer">
+                    <div>
+                      <small>Section</small>
+                      <strong>{request.class.section.section_name}</strong>
+                    </div>
                     {request.status === "For Registrar Processing" ? (
                       <button
                         type="button"
+                        className="registrar-grade-change-process"
                         onClick={() => openProcessModal(request)}
-                        disabled={
-                          processingId === request.grade_change_request_id
-                        }
+                        disabled={processingId === request.grade_change_request_id}
                       >
-                        <FileCheck2 size={14} /> Process Official Grade Change
+                        <FileCheck2 size={14} />
+                        Process Official Grade Change
                       </button>
                     ) : (
-                      <span>
-                        <BadgeCheck size={14} /> Official grade change completed
+                      <span className="registrar-grade-change-complete-label">
+                        <BadgeCheck size={14} />
+                        Official grade change completed
                       </span>
                     )}
                   </footer>
                 </article>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {processRequest && (
           <div
@@ -1055,26 +988,23 @@ export default function GradeChangeRequestsR() {
               aria-modal="true"
               aria-labelledby="registrar-grade-change-modal-title"
             >
-              <header>
+              <header className="registrar-grade-change-modal-header">
                 <div>
-                  <span>
+                  <span className="registrar-grade-change-modal-icon">
                     <FileCheck2 size={18} />
                   </span>
                   <div>
                     <small>Registrar Processing</small>
-                    <h2 id="registrar-grade-change-modal-title">
-                      Post Approved INC Completion
-                    </h2>
+                    <h2 id="registrar-grade-change-modal-title">Post Approved INC Completion</h2>
                     <p>
-                      This will replace the current Approved INC with the exact
-                      Program Head-approved numeric grade and update the
-                      enrollment subject result.
+                      Replace the current Approved INC with the exact Program
+                      Head-approved numeric grade and update the enrollment subject result.
                     </p>
                   </div>
                 </div>
-
                 <button
                   type="button"
+                  className="registrar-grade-change-modal-close"
                   onClick={closeProcessModal}
                   disabled={processingId !== null}
                   aria-label="Close processing modal"
@@ -1100,29 +1030,22 @@ export default function GradeChangeRequestsR() {
                     {formatGrade(processRequest.proposed_grade.final_rating)} —{" "}
                     {processRequest.proposed_grade.remarks || "—"}
                   </strong>
-                  <span>
-                    {formatPercentage(
-                      processRequest.proposed_grade.overall_percentage,
-                    )}
-                  </span>
+                  <span>{formatPercentage(processRequest.proposed_grade.overall_percentage)}</span>
                 </div>
               </div>
 
               <div className="registrar-grade-change-modal-warning">
                 <ShieldCheck size={17} />
                 <p>
-                  Registrar does not change or recalculate the approved
-                  proposal. Processing posts the existing approved values to the
-                  official grade record and records the transaction in the audit
-                  trail.
+                  Registrar does not change or recalculate the approved proposal.
+                  Processing posts the existing approved values to the official grade
+                  record and records the transaction in the audit trail.
                 </p>
               </div>
 
               <div className="registrar-grade-change-modal-field">
                 <div>
-                  <label htmlFor="registrar-grade-change-remarks">
-                    Registrar Remarks
-                  </label>
+                  <label htmlFor="registrar-grade-change-remarks">Registrar Remarks</label>
                   <span>{registrarRemarks.length}/1000</span>
                 </div>
                 <textarea
@@ -1133,13 +1056,10 @@ export default function GradeChangeRequestsR() {
                   rows={5}
                   disabled={processingId !== null}
                 />
-
                 {processError && (
-                  <div
-                    className="registrar-grade-change-modal-error"
-                    role="alert"
-                  >
-                    <AlertCircle size={15} /> {processError}
+                  <div className="registrar-grade-change-modal-error" role="alert">
+                    <AlertCircle size={15} />
+                    {processError}
                   </div>
                 )}
               </div>
@@ -1160,9 +1080,7 @@ export default function GradeChangeRequestsR() {
                   disabled={processingId !== null}
                 >
                   <FileCheck2 size={14} />
-                  {processingId !== null
-                    ? "Processing..."
-                    : "Post Official Grade"}
+                  {processingId !== null ? "Processing..." : "Post Official Grade"}
                 </button>
               </footer>
             </section>

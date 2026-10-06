@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
   CheckCircle2,
   Clock3,
@@ -10,20 +9,16 @@ import {
   Loader2,
   PlayCircle,
   RefreshCcw,
+  RefreshCw,
   Search,
   UserRound,
   WalletCards,
 } from "lucide-react";
-
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
-import { apiUrl } from "../../../services/api";
 import "../../../styles/registrar-document-request.css";
-
-const REGISTRAR_DOCUMENT_REQUESTS_API = apiUrl(
-  "/api/registrar/document-requests",
-);
-
+const REGISTRAR_DOCUMENT_REQUESTS_API =
+  "http://localhost:3000/api/registrar/document-requests";
 type RegistrarStatus =
   | "Pending"
   | "Ready for Processing"
@@ -32,22 +27,18 @@ type RegistrarStatus =
   | "Rejected"
   | "Cancelled"
   | string;
-
 interface RegistrarDocumentRequest {
   ticket_id: number;
   ticket_number: string;
-
   student: {
     student_id: number;
     student_number: string;
     student_name: string;
   };
-
   transaction: {
     transaction_code: string;
     transaction_name: string;
   };
-
   document_request: {
     request_id: number;
     request_number: string;
@@ -64,7 +55,6 @@ interface RegistrarDocumentRequest {
     copies: number;
     requested_at: string | null;
   };
-
   payment: {
     amount_due: number | string | null;
     amount_paid: number | string | null;
@@ -73,7 +63,6 @@ interface RegistrarDocumentRequest {
     payment_status: string;
     paid_at: string | null;
   };
-
   registrar: {
     status: RegistrarStatus;
     remarks: string | null;
@@ -81,23 +70,19 @@ interface RegistrarDocumentRequest {
     started_at: string | null;
     completed_at: string | null;
   };
-
   created_at: string | null;
   updated_at: string | null;
 }
-
 interface QueueResponse {
   success?: boolean;
   code?: string;
   message?: string;
   requests?: RegistrarDocumentRequest[];
 }
-
 interface ActionResponse {
   success?: boolean;
   code?: string;
   message?: string;
-
   request?: {
     ticket_id: number;
     ticket_number: string;
@@ -110,20 +95,15 @@ interface ActionResponse {
     registrar_processed_by: number;
   };
 }
-
 type FilterStatus = "All" | "Ready for Processing" | "Processing" | "Done";
-
 function formatDate(value: string | null | undefined) {
   if (!value) {
     return "—";
   }
-
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-
   return date.toLocaleString("en-PH", {
     timeZone: "Asia/Manila",
     year: "numeric",
@@ -133,81 +113,60 @@ function formatDate(value: string | null | undefined) {
     minute: "2-digit",
   });
 }
-
 function formatMoney(value: number | string | null | undefined) {
   if (value === null || value === undefined || value === "") {
     return "—";
   }
-
   const amount = Number(value);
-
   if (!Number.isFinite(amount)) {
     return String(value);
   }
-
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
     minimumFractionDigits: 2,
   }).format(amount);
 }
-
 function statusClass(status: string) {
   if (status === "Ready for Processing") {
     return "registrar-doc-request__status--ready";
   }
-
   if (status === "Processing") {
     return "registrar-doc-request__status--processing";
   }
-
   if (status === "Done") {
     return "registrar-doc-request__status--done";
   }
-
   if (status === "Rejected" || status === "Cancelled") {
     return "registrar-doc-request__status--danger";
   }
-
   return "registrar-doc-request__status--default";
 }
-
 function formatAcademicPeriod(request: RegistrarDocumentRequest) {
   const period = request.document_request.academic_period;
-
   if (!period) {
     return "Legacy request — not recorded";
   }
-
   return `${period.academic_year ?? "—"} — ${period.semester_name ?? "—"}`;
 }
-
 export default function DocumentRequest() {
   const navigate = useNavigate();
-
   const session = authService.getSession();
   const token = authService.getToken();
-
   const role = session?.role ?? null;
   const isRegistrar = role === "Registrar" && Boolean(token);
-
   const [requests, setRequests] = useState<RegistrarDocumentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("All");
-
   const [selectedTicketNumber, setSelectedTicketNumber] = useState<
     string | null
   >(null);
-
   const [remarks, setRemarks] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
   useEffect(() => {
     if (!isRegistrar) {
       navigate("/login", {
@@ -215,21 +174,17 @@ export default function DocumentRequest() {
       });
     }
   }, [isRegistrar, navigate]);
-
   const loadRequests = useCallback(
     async (showRefreshLoader = false) => {
       if (!isRegistrar) {
         return;
       }
-
       if (showRefreshLoader) {
         setRefreshing(true);
       } else {
         setLoading(true);
       }
-
       setErrorMessage("");
-
       try {
         const response = await authService.authFetch(
           REGISTRAR_DOCUMENT_REQUESTS_API,
@@ -240,37 +195,28 @@ export default function DocumentRequest() {
             },
           },
         );
-
         if (response.status === 401) {
           authService.logout();
-
           navigate("/login", {
             replace: true,
           });
-
           return;
         }
-
         if (response.status === 403) {
           navigate("/login", {
             replace: true,
           });
-
           return;
         }
-
         const data = (await response.json()) as QueueResponse;
-
         if (!response.ok || !data.success) {
           throw new Error(
             data.message || "Unable to load Registrar document requests.",
           );
         }
-
         setRequests(Array.isArray(data.requests) ? data.requests : []);
       } catch (error) {
         console.error("LOAD REGISTRAR REQUESTS ERROR:", error);
-
         setErrorMessage(
           error instanceof Error
             ? error.message
@@ -283,34 +229,27 @@ export default function DocumentRequest() {
     },
     [isRegistrar, navigate],
   );
-
   useEffect(() => {
     if (!isRegistrar) {
       return;
     }
-
     void loadRequests();
   }, [isRegistrar, loadRequests]);
-
   const summary = useMemo(() => {
     let ready = 0;
     let processing = 0;
     let done = 0;
-
     for (const request of requests) {
       if (request.registrar.status === "Ready for Processing") {
         ready += 1;
       }
-
       if (request.registrar.status === "Processing") {
         processing += 1;
       }
-
       if (request.registrar.status === "Done") {
         done += 1;
       }
     }
-
     return {
       total: requests.length,
       ready,
@@ -318,19 +257,15 @@ export default function DocumentRequest() {
       done,
     };
   }, [requests]);
-
   const filteredRequests = useMemo(() => {
     const search = searchText.trim().toLowerCase();
-
     return requests.filter((request) => {
       if (statusFilter !== "All" && request.registrar.status !== statusFilter) {
         return false;
       }
-
       if (!search) {
         return true;
       }
-
       const searchable = [
         request.ticket_number,
         request.student.student_number,
@@ -344,46 +279,38 @@ export default function DocumentRequest() {
       ]
         .join(" ")
         .toLowerCase();
-
       return searchable.includes(search);
     });
   }, [requests, searchText, statusFilter]);
-
   const selectedRequest = useMemo(() => {
     if (!selectedTicketNumber) {
       return null;
     }
-
     return (
       requests.find(
         (request) => request.ticket_number === selectedTicketNumber,
       ) ?? null
     );
   }, [requests, selectedTicketNumber]);
-
   const selectRequest = (request: RegistrarDocumentRequest) => {
     setSelectedTicketNumber(request.ticket_number);
     setRemarks(request.registrar.remarks ?? "");
     setErrorMessage("");
     setSuccessMessage("");
   };
-
   const handleViewCOR = () => {
     if (!selectedRequest) {
       return;
     }
-
     if (selectedRequest.document_request.document_type !== "COR") {
       return;
     }
-
     if (selectedRequest.payment.payment_status !== "Paid") {
       setErrorMessage(
         "The COR cannot be opened until payment has been completed.",
       );
       return;
     }
-
     if (
       selectedRequest.registrar.status !== "Processing" &&
       selectedRequest.registrar.status !== "Done"
@@ -393,49 +320,39 @@ export default function DocumentRequest() {
       );
       return;
     }
-
     const enrollmentId = selectedRequest.document_request.enrollment_id;
-
     if (!enrollmentId) {
       setErrorMessage(
         "This COR request does not have a recorded academic period. It is a legacy request and cannot be opened as an exact requested COR.",
       );
       return;
     }
-
     setErrorMessage("");
-
     navigate(
       `/registrar/student/${selectedRequest.student.student_id}/CORR?enrollment_id=${encodeURIComponent(
         String(enrollmentId),
       )}&ticket_number=${encodeURIComponent(selectedRequest.ticket_number)}`,
     );
   };
-
   const handleStartProcessing = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!selectedRequest || actionLoading) {
       return;
     }
-
     if (selectedRequest.payment.payment_status !== "Paid") {
       setErrorMessage(
         "This request cannot be processed because payment is not complete.",
       );
       return;
     }
-
     if (selectedRequest.registrar.status !== "Ready for Processing") {
       setErrorMessage(
         "Only requests that are Ready for Processing can be started.",
       );
       return;
     }
-
     if (selectedRequest.document_request.document_type === "COR") {
       const enrollmentId = selectedRequest.document_request.enrollment_id;
-
       if (!enrollmentId) {
         setErrorMessage(
           "This COR request does not have a recorded academic period. The exact COR cannot be opened for this legacy request.",
@@ -443,11 +360,9 @@ export default function DocumentRequest() {
         return;
       }
     }
-
     setActionLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
-
     try {
       const response = await authService.authFetch(
         `${REGISTRAR_DOCUMENT_REQUESTS_API}/${encodeURIComponent(
@@ -464,28 +379,21 @@ export default function DocumentRequest() {
           }),
         },
       );
-
       if (response.status === 401) {
         authService.logout();
-
         navigate("/login", {
           replace: true,
         });
-
         return;
       }
-
       const data = (await response.json()) as ActionResponse;
-
       if (!response.ok || !data.success) {
         throw new Error(
           data.message || "Unable to start Registrar processing.",
         );
       }
-
       if (selectedRequest.document_request.document_type === "COR") {
         const enrollmentId = selectedRequest.document_request.enrollment_id;
-
         navigate(
           `/registrar/student/${selectedRequest.student.student_id}/CORR?enrollment_id=${encodeURIComponent(
             String(enrollmentId),
@@ -493,16 +401,12 @@ export default function DocumentRequest() {
             selectedRequest.ticket_number,
           )}`,
         );
-
         return;
       }
-
       setSuccessMessage(data.message || "Registrar processing has started.");
-
       await loadRequests(true);
     } catch (error) {
       console.error("START REGISTRAR PROCESSING ERROR:", error);
-
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -512,32 +416,26 @@ export default function DocumentRequest() {
       setActionLoading(false);
     }
   };
-
   const handleComplete = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!selectedRequest || actionLoading) {
       return;
     }
-
     if (selectedRequest.payment.payment_status !== "Paid") {
       setErrorMessage(
         "This request cannot be completed because payment is not complete.",
       );
       return;
     }
-
     if (selectedRequest.registrar.status !== "Processing") {
       setErrorMessage(
         "The request must be Processing before it can be marked Done.",
       );
       return;
     }
-
     setActionLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
-
     try {
       const response = await authService.authFetch(
         `${REGISTRAR_DOCUMENT_REQUESTS_API}/${encodeURIComponent(
@@ -554,31 +452,23 @@ export default function DocumentRequest() {
           }),
         },
       );
-
       if (response.status === 401) {
         authService.logout();
-
         navigate("/login", {
           replace: true,
         });
-
         return;
       }
-
       const data = (await response.json()) as ActionResponse;
-
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Unable to complete document request.");
       }
-
       setSuccessMessage(
         data.message || "Document request completed successfully.",
       );
-
       await loadRequests(true);
     } catch (error) {
       console.error("COMPLETE REGISTRAR REQUEST ERROR:", error);
-
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -588,69 +478,68 @@ export default function DocumentRequest() {
       setActionLoading(false);
     }
   };
-
   if (!isRegistrar) {
     return null;
   }
-
   return (
     <DashboardLayout>
       <main className="registrar-doc-request">
         <section className="registrar-doc-request__hero">
           <div className="registrar-doc-request__hero-inner">
-            <div>
+            <div className="registrar-doc-request__hero-copy">
               <div className="registrar-doc-request__eyebrow">
-                <FileCheck2 size={16} />
-                Registrar Office
+                <span className="registrar-doc-request__eyebrow-icon">
+                  <FileCheck2 size={16} aria-hidden="true" />
+                </span>
+                <span>Registrar Office</span>
               </div>
-
               <h1>Document Requests</h1>
-
               <p>
                 Process paid COR and COG requests forwarded by the Finance
                 Office.
               </p>
             </div>
-
-            <FileText
-              className="registrar-doc-request__hero-icon"
-              size={42}
-              aria-hidden="true"
-            />
+            <button
+              type="button"
+              className="registrar-doc-request__hero-refresh"
+              onClick={() => void loadRequests(true)}
+              disabled={loading || refreshing}
+            >
+              <RefreshCw
+                size={16}
+                className={refreshing ? "is-spinning" : ""}
+                aria-hidden="true"
+              />
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
           </div>
         </section>
-
         <section className="registrar-doc-request__summary-grid">
           <SummaryCard
             icon={<FileText size={23} />}
             label="Total Requests"
             value={summary.total}
           />
-
           <SummaryCard
             icon={<Clock3 size={23} />}
             label="Ready for Processing"
             value={summary.ready}
           />
-
           <SummaryCard
             icon={<PlayCircle size={23} />}
             label="Processing"
             value={summary.processing}
           />
-
           <SummaryCard
             icon={<CheckCircle2 size={23} />}
             label="Completed"
             value={summary.done}
           />
         </section>
-
         <section className="registrar-doc-request__toolbar-panel">
           <div className="registrar-doc-request__toolbar">
             <div className="registrar-doc-request__search">
               <Search size={17} aria-hidden="true" />
-
               <input
                 type="text"
                 value={searchText}
@@ -659,7 +548,6 @@ export default function DocumentRequest() {
                 className="registrar-doc-request__input registrar-doc-request__search-input"
               />
             </div>
-
             <select
               value={statusFilter}
               onChange={(event) =>
@@ -672,7 +560,6 @@ export default function DocumentRequest() {
               <option value="Processing">Processing</option>
               <option value="Done">Done</option>
             </select>
-
             <button
               type="button"
               onClick={() => void loadRequests(true)}
@@ -688,19 +575,16 @@ export default function DocumentRequest() {
             </button>
           </div>
         </section>
-
         {errorMessage && (
           <div className="registrar-doc-request__message registrar-doc-request__message--error">
             {errorMessage}
           </div>
         )}
-
         {successMessage && (
           <div className="registrar-doc-request__message registrar-doc-request__message--success">
             {successMessage}
           </div>
         )}
-
         <section className="registrar-doc-request__panel">
           <div className="registrar-doc-request__panel-heading">
             <h2>Registrar Queue</h2>
@@ -709,7 +593,6 @@ export default function DocumentRequest() {
               {filteredRequests.length === 1 ? "" : "s"} shown
             </p>
           </div>
-
           {loading ? (
             <div className="registrar-doc-request__loading-state">
               <Loader2 className="registrar-doc-request__spinner" size={20} />
@@ -725,7 +608,6 @@ export default function DocumentRequest() {
               {filteredRequests.map((request) => {
                 const isSelected =
                   selectedTicketNumber === request.ticket_number;
-
                 return (
                   <article
                     key={request.ticket_id}
@@ -742,45 +624,37 @@ export default function DocumentRequest() {
                           <FileText size={17} />
                           {request.transaction.transaction_name}
                         </div>
-
                         <div className="registrar-doc-request__request-meta">
                           {request.ticket_number} •{" "}
                           {request.document_request.request_number}
                         </div>
                       </div>
-
                       <StatusBadge
                         label={request.registrar.status}
                         className={statusClass(request.registrar.status)}
                       />
                     </div>
-
                     <div className="registrar-doc-request__info-grid">
                       <InfoBox
                         label="Student"
                         value={request.student.student_name}
                       />
-
                       <InfoBox
                         label="Student Number"
                         value={request.student.student_number}
                       />
-
                       <InfoBox
                         label="Academic Period"
                         value={formatAcademicPeriod(request)}
                       />
-
                       <InfoBox
                         label="Payment"
                         value={request.payment.payment_status}
                       />
-
                       <InfoBox
                         label="Paid Amount"
                         value={formatMoney(request.payment.amount_paid)}
                       />
-
                       <InfoBox
                         label="Paid At"
                         value={formatDate(request.payment.paid_at)}
@@ -792,7 +666,6 @@ export default function DocumentRequest() {
             </div>
           )}
         </section>
-
         {selectedRequest && (
           <section className="registrar-doc-request__panel registrar-doc-request__details">
             <div className="registrar-doc-request__details-header">
@@ -800,91 +673,74 @@ export default function DocumentRequest() {
                 <p className="registrar-doc-request__section-label">
                   Selected Request
                 </p>
-
                 <h2>{selectedRequest.ticket_number}</h2>
               </div>
-
               <StatusBadge
                 label={selectedRequest.registrar.status}
                 className={statusClass(selectedRequest.registrar.status)}
               />
             </div>
-
             <div className="registrar-doc-request__student-card">
               <div className="registrar-doc-request__student-icon">
                 <UserRound size={21} />
               </div>
-
               <div>
                 <strong>{selectedRequest.student.student_name}</strong>
                 <span>{selectedRequest.student.student_number}</span>
               </div>
             </div>
-
             <div className="registrar-doc-request__info-grid registrar-doc-request__info-grid--details">
               <InfoBox
                 label="Document"
                 value={selectedRequest.transaction.transaction_name}
               />
-
               <InfoBox
                 label="Request Number"
                 value={selectedRequest.document_request.request_number}
               />
-
               <InfoBox
                 label="Academic Period"
                 value={formatAcademicPeriod(selectedRequest)}
               />
-
               <InfoBox
                 label="Copies"
                 value={String(selectedRequest.document_request.copies)}
               />
-
               <InfoBox
                 label="Payment Status"
                 value={selectedRequest.payment.payment_status}
               />
-
               <InfoBox
                 label="Amount Paid"
                 value={formatMoney(selectedRequest.payment.amount_paid)}
               />
-
               <InfoBox
                 label="Payment Method"
                 value={selectedRequest.payment.payment_method ?? "—"}
               />
-
               <InfoBox
                 label="Receipt Number"
                 value={selectedRequest.payment.receipt_number ?? "—"}
               />
-
               <InfoBox
                 label="Paid At"
                 value={formatDate(selectedRequest.payment.paid_at)}
               />
-
               <InfoBox
                 label="Started At"
                 value={formatDate(selectedRequest.registrar.started_at)}
               />
-
               <InfoBox
                 label="Completed At"
                 value={formatDate(selectedRequest.registrar.completed_at)}
               />
             </div>
-
             {selectedRequest.document_request.purpose && (
               <div className="registrar-doc-request__purpose">
                 <div>Purpose</div>
                 <p>{selectedRequest.document_request.purpose}</p>
               </div>
             )}
-
             {selectedRequest.registrar.status === "Ready for Processing" && (
               <form
                 onSubmit={handleStartProcessing}
@@ -894,7 +750,6 @@ export default function DocumentRequest() {
                   <PlayCircle size={21} />
                   <strong>Start Registrar Processing</strong>
                 </div>
-
                 <label className="registrar-doc-request__field-label">
                   Registrar Remarks
                   <textarea
@@ -907,7 +762,6 @@ export default function DocumentRequest() {
                     className="registrar-doc-request__input registrar-doc-request__textarea"
                   />
                 </label>
-
                 <div className="registrar-doc-request__workflow-actions">
                   <ActionButton
                     loading={actionLoading}
@@ -926,7 +780,6 @@ export default function DocumentRequest() {
                 </div>
               </form>
             )}
-
             {selectedRequest.registrar.status === "Processing" && (
               <form
                 onSubmit={handleComplete}
@@ -936,7 +789,6 @@ export default function DocumentRequest() {
                   <FileCheck2 size={21} />
                   <strong>Complete Document Request</strong>
                 </div>
-
                 <label className="registrar-doc-request__field-label">
                   Completion Remarks
                   <textarea
@@ -949,7 +801,6 @@ export default function DocumentRequest() {
                     className="registrar-doc-request__input registrar-doc-request__textarea"
                   />
                 </label>
-
                 <div className="registrar-doc-request__workflow-actions registrar-doc-request__workflow-actions--multiple">
                   {selectedRequest.document_request.document_type === "COR" && (
                     <button
@@ -962,7 +813,6 @@ export default function DocumentRequest() {
                       View / Print COR
                     </button>
                   )}
-
                   <ActionButton
                     loading={actionLoading}
                     label="Mark as Done"
@@ -972,23 +822,19 @@ export default function DocumentRequest() {
                 </div>
               </form>
             )}
-
             {selectedRequest.registrar.status === "Done" && (
               <div className="registrar-doc-request__completed-card">
                 <div className="registrar-doc-request__completed-heading">
                   <CheckCircle2 size={21} />
                   <strong>Request Completed</strong>
                 </div>
-
                 <p>
                   This document request has already been completed by the
                   Registrar.
                 </p>
-
                 {selectedRequest.registrar.remarks && (
                   <p>Remarks: {selectedRequest.registrar.remarks}</p>
                 )}
-
                 {selectedRequest.document_request.document_type === "COR" && (
                   <div className="registrar-doc-request__completed-actions">
                     <button
@@ -1005,13 +851,10 @@ export default function DocumentRequest() {
             )}
           </section>
         )}
-
         <section className="registrar-doc-request__workflow-info">
           <WalletCards size={21} />
-
           <div>
             <strong>Registrar Workflow</strong>
-
             <p>
               Only Finance-paid requests appear in this queue. Registrar can
               move a request from Ready for Processing to Processing, then from
@@ -1024,7 +867,6 @@ export default function DocumentRequest() {
     </DashboardLayout>
   );
 }
-
 function SummaryCard({
   icon,
   label,
@@ -1037,7 +879,6 @@ function SummaryCard({
   return (
     <article className="registrar-doc-request__summary-card">
       <div className="registrar-doc-request__summary-icon">{icon}</div>
-
       <div>
         <span>{label}</span>
         <strong>{value}</strong>
@@ -1045,7 +886,6 @@ function SummaryCard({
     </article>
   );
 }
-
 function InfoBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="registrar-doc-request__info-box">
@@ -1054,7 +894,6 @@ function InfoBox({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
 function StatusBadge({
   label,
   className,
@@ -1068,7 +907,6 @@ function StatusBadge({
     </span>
   );
 }
-
 function ActionButton({
   loading,
   label,

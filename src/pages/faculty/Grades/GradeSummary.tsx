@@ -363,20 +363,20 @@ export default function GradeSummary() {
     <DashboardLayout>
       <main className="faculty-pending-grades-page">
         <section className="faculty-pending-grades-hero">
-          <div>
+          <div className="faculty-pending-grades-hero__copy">
             <span className="faculty-pending-grades-eyebrow">
+              <span>
+                <GraduationCap size={16} strokeWidth={2.2} aria-hidden="true" />
+              </span>
               Faculty · Grade Monitoring
             </span>
-
             <h1>Pending Grades</h1>
-
             <p>
               Students shown here are still enrolled in your assigned class but
               do not have a grade record yet. Draft, Submitted, Returned, and
               Approved grades are not included.
             </p>
           </div>
-
           <button
             type="button"
             className="faculty-pending-grades-refresh"
@@ -384,18 +384,17 @@ export default function GradeSummary() {
             disabled={loading}
           >
             <RefreshCw
-              size={15}
+              size={16}
               className={loading ? "is-spinning" : undefined}
+              aria-hidden="true"
             />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </section>
-
         <section className="faculty-pending-grades-faculty">
           <span className="faculty-pending-grades-faculty__icon">
-            <GraduationCap size={20} />
+            <GraduationCap size={20} aria-hidden="true" />
           </span>
-
           <div>
             <small>Faculty</small>
             <strong>{faculty?.faculty_name || "Faculty"}</strong>
@@ -404,11 +403,13 @@ export default function GradeSummary() {
             </span>
           </div>
         </section>
-
-        <section className="faculty-pending-grades-summary">
+        <section
+          className="faculty-pending-grades-summary"
+          aria-label="Pending grade summary"
+        >
           <article>
             <span className="faculty-pending-grades-summary__icon">
-              <CircleDashed size={18} />
+              <CircleDashed size={18} aria-hidden="true" />
             </span>
             <div>
               <small>Not Encoded</small>
@@ -416,10 +417,9 @@ export default function GradeSummary() {
               <span>Students without a grade record</span>
             </div>
           </article>
-
           <article>
             <span className="faculty-pending-grades-summary__icon">
-              <BookOpenCheck size={18} />
+              <BookOpenCheck size={18} aria-hidden="true" />
             </span>
             <div>
               <small>Classes with Pending</small>
@@ -427,10 +427,9 @@ export default function GradeSummary() {
               <span>Classes that still need grade encoding</span>
             </div>
           </article>
-
           <article>
             <span className="faculty-pending-grades-summary__icon">
-              <UsersRound size={18} />
+              <UsersRound size={18} aria-hidden="true" />
             </span>
             <div>
               <small>Assigned Classes</small>
@@ -438,10 +437,9 @@ export default function GradeSummary() {
               <span>Active teaching assignments</span>
             </div>
           </article>
-
           <article>
             <span className="faculty-pending-grades-summary__icon">
-              <FilePenLine size={18} />
+              <FilePenLine size={18} aria-hidden="true" />
             </span>
             <div>
               <small>No Pending</small>
@@ -450,14 +448,13 @@ export default function GradeSummary() {
             </div>
           </article>
         </section>
-
         <section className="faculty-pending-grades-filters">
           <div className="faculty-pending-grades-filters__heading">
             <div>
               <span>Filter Pending Records</span>
               <strong>Find students that still need grades</strong>
+              <p>Search pending records or narrow the list to one assigned class.</p>
             </div>
-
             {(search || classFilter !== "All") && (
               <button
                 type="button"
@@ -470,12 +467,11 @@ export default function GradeSummary() {
               </button>
             )}
           </div>
-
           <div className="faculty-pending-grades-filters__grid">
             <label>
               <span>Search</span>
               <div className="faculty-pending-grades-search">
-                <Search size={15} />
+                <Search size={15} aria-hidden="true" />
                 <input
                   type="text"
                   value={search}
@@ -484,7 +480,6 @@ export default function GradeSummary() {
                 />
               </div>
             </label>
-
             <label>
               <span>Assigned Class</span>
               <select
@@ -492,7 +487,6 @@ export default function GradeSummary() {
                 onChange={(event) => setClassFilter(event.target.value)}
               >
                 <option value="All">All Assigned Classes</option>
-
                 {classes.map((item) => (
                   <option
                     key={item.offering_id}
@@ -505,18 +499,17 @@ export default function GradeSummary() {
             </label>
           </div>
         </section>
-
         {error && (
           <section className="faculty-pending-grades-error" role="alert">
-            <AlertCircle size={19} />
-
+            <span className="faculty-pending-grades-error__icon">
+              <AlertCircle size={18} aria-hidden="true" />
+            </span>
             <div>
               <strong>Some pending grade data could not be loaded</strong>
               <p>{error}</p>
             </div>
           </section>
         )}
-
         <section className="faculty-pending-grades-list">
           <header>
             <div>
@@ -527,13 +520,11 @@ export default function GradeSummary() {
                 the faculty.
               </p>
             </div>
-
             <strong>
               {filteredRows.length}{" "}
               {filteredRows.length === 1 ? "record" : "records"}
             </strong>
           </header>
-
           {loading ? (
             <div className="faculty-pending-grades-loading">
               <div className="faculty-pending-grades-spinner" />
@@ -545,7 +536,7 @@ export default function GradeSummary() {
           ) : pendingRows.length === 0 ? (
             <div className="faculty-pending-grades-empty">
               <span>
-                <BookOpenCheck size={23} />
+                <BookOpenCheck size={23} aria-hidden="true" />
               </span>
               <strong>No pending grades</strong>
               <p>
@@ -555,7 +546,7 @@ export default function GradeSummary() {
           ) : filteredRows.length === 0 ? (
             <div className="faculty-pending-grades-empty">
               <span>
-                <Search size={23} />
+                <Search size={23} aria-hidden="true" />
               </span>
               <strong>No matching pending records</strong>
               <p>Try changing the search or assigned-class filter.</p>
@@ -574,7 +565,6 @@ export default function GradeSummary() {
                     <th>Action</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {filteredRows.map(({ offering, student }) => (
                     <tr key={student.enrollment_subject_id}>
@@ -585,12 +575,10 @@ export default function GradeSummary() {
                           <small>{student.email || "No email"}</small>
                         </div>
                       </td>
-
                       <td>
                         <strong>{offering.subject.subject_code}</strong>
                         <small>{offering.subject.subject_name}</small>
                       </td>
-
                       <td>
                         <strong>{offering.section.section_name}</strong>
                         <small>
@@ -598,27 +586,23 @@ export default function GradeSummary() {
                           {offering.section.year_level}
                         </small>
                       </td>
-
                       <td>
                         <strong>{offering.academic_period.academic_year}</strong>
                         <small>
                           {offering.academic_period.semester_name}
                         </small>
                       </td>
-
                       <td>
                         <strong>{formatDays(offering.schedule.days)}</strong>
                         <small>
                           {offering.schedule.time || "Not scheduled"}
                         </small>
                       </td>
-
                       <td>
                         <span className="faculty-pending-grades-status">
                           Not Encoded
                         </span>
                       </td>
-
                       <td>
                         <button
                           type="button"
@@ -627,7 +611,7 @@ export default function GradeSummary() {
                             openEnterGrades(offering.offering_id)
                           }
                         >
-                          <FilePenLine size={14} />
+                          <FilePenLine size={14} aria-hidden="true" />
                           Encode Grade
                         </button>
                       </td>

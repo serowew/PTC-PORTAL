@@ -637,7 +637,7 @@
 .finance-requests__status--neutral {
   border: 1px solid #e2e8f0;
   background: #f1f5f9;
-  color: #475569;
+  color: var(--finance-text-600);
 }
 
 .finance-requests__queue-grid {
@@ -657,7 +657,7 @@
 .finance-requests__info-box span,
 .finance-requests__purpose > span {
   display: block;
-  color: var(--finance-text-400);
+  color: var(--finance-text-500);
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.045em;

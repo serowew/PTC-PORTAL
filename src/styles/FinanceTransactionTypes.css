@@ -529,7 +529,7 @@
 }
 .finance-transaction-types__code-badge {
   border: 1px solid #e2e8f0;
-  color: #64748b;
+  color: var(--finance-text-600);
   background: #f8fafc;
 }
 .finance-transaction-types__status-badge--active {
@@ -556,7 +556,7 @@
 }
 .finance-transaction-types__badge {
   border: 1px solid #e2e8f0;
-  color: #64748b;
+  color: var(--finance-text-600);
   background: #f8fafc;
 }
 .finance-transaction-types__amount-panel {
@@ -567,7 +567,7 @@
 .finance-transaction-types__amount-label {
   display: block;
   margin-bottom: 5px;
-  color: var(--finance-text-400);
+  color: var(--finance-text-500);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.045em;
