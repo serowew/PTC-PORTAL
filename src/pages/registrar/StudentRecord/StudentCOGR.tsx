@@ -17,7 +17,6 @@ import {
   Layers3,
   Printer,
   RefreshCw,
-  School,
   ScrollText,
   ShieldCheck,
   UserRound,
@@ -27,6 +26,7 @@ import {
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
+import ptcLogo from "../../../assets/ptclogo.jpg";
 
 import "../../../styles/RegistrarCertificateOfGrades.css";
 
@@ -794,14 +794,13 @@ export default function CertificateOfGradesR() {
 
                 <article className="registrar-cog-document">
                   <header className="registrar-cog-document__header">
-                    <div
-                      className="registrar-cog-document__seal"
-                      aria-hidden="true"
-                    >
-                      <School size={28} />
-                    </div>
-                    <div>
-                      <p>Republic of the Philippines</p>
+                    <img
+                      src={ptcLogo}
+                      alt="Pateros Technological College Logo"
+                      className="registrar-cog-document__logo"
+                    />
+
+                    <div className="registrar-cog-document__school-info">
                       <h1>PATEROS TECHNOLOGICAL COLLEGE</h1>
                       <span>OFFICE OF THE REGISTRAR</span>
                     </div>

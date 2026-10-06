@@ -240,20 +240,16 @@ LEFT JOIN student_addresses addr
     ON addr.student_id =
        s.student_id
 `;
-// =====================================================
-// GET ALL STUDENTS
-// =====================================================
-
 router.get("/", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `${STUDENT_SELECT}
 
+WHERE s.is_archived = 0
+
 ORDER BY
-
-s.last_name,
-
-s.first_name`,
+  s.last_name,
+  s.first_name`,
     );
 
     res.json(rows);
@@ -2025,9 +2021,8 @@ router.put("/:id", async (req, res) => {
     }
   }
 });
-
 // =====================================================
-// DELETE STUDENT
+// ARCHIVE STUDENT
 // =====================================================
 
 router.delete("/:id", async (req, res) => {
@@ -2040,15 +2035,16 @@ router.delete("/:id", async (req, res) => {
 
     const [studentRows] = await conn.execute(
       `
-
-SELECT student_id,user_id
-
-FROM students
-
-WHERE student_number=?
-
-`,
-
+      SELECT
+        student_id,
+        user_id,
+        student_number,
+        is_archived
+      FROM students
+      WHERE student_number = ?
+      LIMIT 1
+      FOR UPDATE
+      `,
       [req.params.id],
     );
 
@@ -2056,72 +2052,105 @@ WHERE student_number=?
       await conn.rollback();
 
       return res.status(404).json({
-        error: "Student not found",
+        success: false,
+        message: "Student not found.",
       });
     }
 
-    const studentId = studentRows[0].student_id;
+    const student = studentRows[0];
 
-    const userId = studentRows[0].user_id;
+    const studentId = Number(student.student_id);
+    const userId = student.user_id ? Number(student.user_id) : null;
 
-    // delete address first because it references student
+    // Prevent archiving the same student twice
+    if (Number(student.is_archived) === 1) {
+      await conn.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "Student is already archived.",
+      });
+    }
+
+    // =====================================================
+    // ARCHIVE STUDENT
+    // =====================================================
 
     await conn.execute(
       `
-
-DELETE FROM student_addresses
-
-WHERE student_id=?
-
-`,
-
+      UPDATE students
+      SET
+        is_archived = 1,
+        archived_at = NOW(),
+        scheduled_deletion_at = DATE_ADD(NOW(), INTERVAL 3 YEAR)
+      WHERE student_id = ?
+      `,
       [studentId],
     );
 
-    // delete student
-
-    await conn.execute(
-      `
-
-DELETE FROM students
-
-WHERE student_id=?
-
-`,
-
-      [studentId],
-    );
-
-    // delete login account
+    // =====================================================
+    // DISABLE STUDENT LOGIN ACCOUNT
+    // =====================================================
 
     if (userId) {
       await conn.execute(
         `
+        UPDATE users
+        SET is_active = 0
+        WHERE user_id = ?
+        `,
+        [userId],
+      );
 
-DELETE FROM users
+      // Close active user sessions
+      await conn.execute(
+        `
+        UPDATE user_sessions
+        SET is_active = 0
+        WHERE user_id = ?
+        `,
+        [userId],
+      );
 
-WHERE user_id=?
-
-`,
-
+      // Close active login sessions
+      await conn.execute(
+        `
+        UPDATE login_sessions
+        SET
+          is_active = 0,
+          logout_time = NOW()
+        WHERE user_id = ?
+          AND is_active = 1
+        `,
         [userId],
       );
     }
 
     await conn.commit();
 
-    res.json({
+    return res.status(200).json({
       success: true,
+      message: "Student archived successfully.",
+      student: {
+        student_id: studentId,
+        student_number: student.student_number,
+      },
     });
   } catch (error) {
     if (conn) {
-      await conn.rollback();
+      try {
+        await conn.rollback();
+      } catch (rollbackError) {
+        console.error("ARCHIVE STUDENT ROLLBACK ERROR:", rollbackError);
+      }
     }
 
-    console.error(error);
+    console.error("ARCHIVE STUDENT ERROR:", error);
 
-    res.status(500).json({
-      error: "Delete failed",
+    return res.status(500).json({
+      success: false,
+      message: "Failed to archive student.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   } finally {
     if (conn) {
@@ -2129,5 +2158,4 @@ WHERE user_id=?
     }
   }
 });
-
 export default router;

@@ -81,52 +81,54 @@ router.get("/departments/options", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const [rows] = await db.execute(`
-      SELECT
-        u.user_id,
-        u.username,
-        u.email,
-        u.role_id,
-        r.role_name AS role,
-        u.is_active,
-        u.is_verified,
-        u.created_at,
+  SELECT
+    u.user_id,
+    u.username,
+    u.email,
+    u.role_id,
+    r.role_name AS role,
+    u.is_active,
+    u.is_verified,
+    u.created_at,
 
-        f.faculty_id,
-        f.employee_number,
-        f.first_name,
-        f.middle_name,
-        f.last_name,
+    f.faculty_id,
+    f.employee_number,
+    f.first_name,
+    f.middle_name,
+    f.last_name,
 
-        COALESCE(ph.department_id, f.department_id) AS department_id,
-        d.department_code,
-        d.department_name
+    COALESCE(ph.department_id, f.department_id) AS department_id,
+    d.department_code,
+    d.department_name
 
-      FROM users AS u
+  FROM users AS u
 
-      INNER JOIN roles AS r
-        ON r.role_id = u.role_id
+  INNER JOIN roles AS r
+    ON r.role_id = u.role_id
 
-      LEFT JOIN faculty AS f
-        ON f.user_id = u.user_id
+  LEFT JOIN faculty AS f
+    ON f.user_id = u.user_id
 
-      LEFT JOIN program_heads AS ph
-        ON ph.program_head_id = (
-          SELECT MAX(ph2.program_head_id)
-          FROM program_heads AS ph2
-          WHERE ph2.faculty_id = f.faculty_id
-            AND ph2.is_active = 1
-        )
+  LEFT JOIN program_heads AS ph
+    ON ph.program_head_id = (
+      SELECT MAX(ph2.program_head_id)
+      FROM program_heads AS ph2
+      WHERE ph2.faculty_id = f.faculty_id
+        AND ph2.is_active = 1
+    )
 
-      LEFT JOIN departments AS d
-        ON d.department_id = COALESCE(
-          ph.department_id,
-          f.department_id
-        )
+  LEFT JOIN departments AS d
+    ON d.department_id = COALESCE(
+      ph.department_id,
+      f.department_id
+    )
 
-      ORDER BY
-        u.created_at DESC,
-        u.user_id DESC
-    `);
+  WHERE u.is_archived = 0
+
+  ORDER BY
+    u.created_at DESC,
+    u.user_id DESC
+`);
 
     return res.json(rows);
   } catch (err) {
@@ -1070,6 +1072,142 @@ router.patch("/:id/reset-password", async (req, res) => {
       success: false,
       error: "Failed to reset password.",
     });
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
+| ARCHIVE USER
+|--------------------------------------------------------------------------
+*/
+
+router.delete("/:id", async (req, res) => {
+  const userId = Number(req.params.id);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID.",
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+
+    const [userRows] = await connection.execute(
+      `
+      SELECT
+        user_id,
+        username,
+        is_archived
+      FROM users
+      WHERE user_id = ?
+      LIMIT 1
+      FOR UPDATE
+      `,
+      [userId],
+    );
+
+    if (userRows.length === 0) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const targetUser = userRows[0];
+
+    if (Number(targetUser.is_archived) === 1) {
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "User is already archived.",
+      });
+    }
+
+    // Prevent currently logged-in admin from archiving themself
+    if (req.user && Number(req.user.user_id) === userId) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: "You cannot archive your own account.",
+      });
+    }
+
+    // Archive and deactivate account
+    await connection.execute(
+      `
+      UPDATE users
+      SET
+        is_active = 0,
+        is_archived = 1,
+        archived_at = NOW(),
+        scheduled_deletion_at = DATE_ADD(NOW(), INTERVAL 3 YEAR)
+      WHERE user_id = ?
+      `,
+      [userId],
+    );
+
+    // Close active sessions
+    await connection.execute(
+      `
+      UPDATE user_sessions
+      SET is_active = 0
+      WHERE user_id = ?
+      `,
+      [userId],
+    );
+
+    await connection.execute(
+      `
+      UPDATE login_sessions
+      SET
+        is_active = 0,
+        logout_time = NOW()
+      WHERE user_id = ?
+        AND is_active = 1
+      `,
+      [userId],
+    );
+
+    await connection.commit();
+
+    return res.status(200).json({
+      success: true,
+      message: "User archived successfully.",
+      user: {
+        user_id: userId,
+        username: targetUser.username,
+      },
+    });
+  } catch (err) {
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("ARCHIVE USER ROLLBACK ERROR:", rollbackError);
+      }
+    }
+
+    console.error("ARCHIVE USER ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to archive user.",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 

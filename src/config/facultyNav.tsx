@@ -6,6 +6,8 @@ export const facultyNavGroups = [
     children: [
       { label: "My Classes", path: "/faculty/classes" },
       { label: "Teaching Schedule ", path: "/faculty/classes/schedule" },
+      { label: "Pending Grades", path: "/faculty/grades/summary" },
+      { label: "Grading History ", path: "/faculty/grades/history" },
     ],
   },
 ];

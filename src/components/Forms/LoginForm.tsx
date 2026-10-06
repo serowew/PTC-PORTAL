@@ -33,17 +33,12 @@ export default function LoginForm() {
 
   useEffect(() => {
     const syncCountdown = () => {
-      setCooldownSeconds(
-        authService.getLoginCooldownRemaining(),
-      );
+      setCooldownSeconds(authService.getLoginCooldownRemaining());
     };
 
     syncCountdown();
 
-    const intervalId = window.setInterval(
-      syncCountdown,
-      1000,
-    );
+    const intervalId = window.setInterval(syncCountdown, 1000);
 
     return () => {
       window.clearInterval(intervalId);
@@ -111,8 +106,7 @@ export default function LoginForm() {
 
     const cleanUsername = username.trim();
 
-    const remainingCooldown =
-      authService.getLoginCooldownRemaining();
+    const remainingCooldown = authService.getLoginCooldownRemaining();
 
     if (remainingCooldown > 0) {
       setCooldownSeconds(remainingCooldown);
@@ -218,28 +212,23 @@ export default function LoginForm() {
         replace: true,
       });
     } catch (err) {
-  console.error("LOGIN ERROR:", err);
+      console.error("LOGIN ERROR:", err);
 
-  // Clear the incorrect password after a failed login.
-  setPassword("");
-  setShowPassword(false);
+      // Clear the incorrect password after a failed login.
+      setPassword("");
+      setShowPassword(false);
 
-  const remaining =
-    authService.getLoginCooldownRemaining();
+      const remaining = authService.getLoginCooldownRemaining();
 
-  if (remaining > 0) {
-    setCooldownSeconds(remaining);
-    setError("");
-  } else {
-    setError(
-      err instanceof Error
-        ? err.message
-        : "Login failed.",
-    );
-  }
-} finally {
-  setLoading(false);
-}
+      if (remaining > 0) {
+        setCooldownSeconds(remaining);
+        setError("");
+      } else {
+        setError(err instanceof Error ? err.message : "Login failed.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   // =====================================================
@@ -579,19 +568,14 @@ export default function LoginForm() {
             <button
               type="submit"
               disabled={
-                loading ||
-                cooldownSeconds > 0 ||
-                !username.trim() ||
-                !password
+                loading || cooldownSeconds > 0 || !username.trim() || !password
               }
               className={`${styles.submitBtn} ${loading ? styles.loading : ""}`}
             >
               {loading
                 ? "Sending OTP..."
                 : cooldownSeconds > 0
-                  ? `Try again in ${formatLoginCooldown(
-                      cooldownSeconds,
-                    )}`
+                  ? `Try again in ${formatLoginCooldown(cooldownSeconds)}`
                   : "Login"}
             </button>
           </form>
@@ -600,117 +584,97 @@ export default function LoginForm() {
               FORGOT PASSWORD
           ======================================== */}
 
-            <div className={styles.authlinks}>
-              <button
-                type="button"
-                onClick={() => navigate("/forgot-password")}
-                disabled={loading}
-              >
-                Forgot password?
-              </button>
-            </div>
+          <div className={styles.authlinks}>
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              disabled={loading}
+            >
+              Forgot password?
+            </button>
+          </div>
 
-        {/* ========================================
+          {/* ========================================
     DEVELOPMENT LOGIN
 ======================================== */}
 
-{showDevLogin && (
-  <div
-    style={{
-      marginTop: "20px",
-    }}
-  >
-    <h4>
-      For Development Access
-    </h4>
+          {showDevLogin && (
+            <div
+              style={{
+                marginTop: "20px",
+              }}
+            >
+              <h4>For Development Access</h4>
 
-    <div className={styles.devButtons}>
+              <div className={styles.devButtons}>
+                {/* ADMIN */}
 
-      {/* ADMIN */}
+                <button
+                  type="button"
+                  className={styles.devBtn}
+                  disabled={loading}
+                  onClick={() => handleDevLogin("admin")}
+                >
+                  Login as Admin
+                </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("admin")
-        }
-      >
-        Login as Admin
-      </button>
+                {/* REGISTRAR */}
 
-      {/* REGISTRAR */}
+                <button
+                  type="button"
+                  className={styles.devBtn}
+                  disabled={loading}
+                  onClick={() => handleDevLogin("registrar")}
+                >
+                  Login as Registrar
+                </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("registrar")
-        }
-      >
-        Login as Registrar
-      </button>
+                {/* PROGRAM HEAD */}
 
-      {/* PROGRAM HEAD */}
+                <button
+                  type="button"
+                  className={styles.devBtn}
+                  disabled={loading}
+                  onClick={() => handleDevLogin("proghead")}
+                >
+                  Login as Program Head
+                </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("proghead")
-        }
-      >
-        Login as Program Head
-      </button>
+                {/* FACULTY */}
 
-      {/* FACULTY */}
+                <button
+                  type="button"
+                  className={styles.devBtn}
+                  disabled={loading}
+                  onClick={() => handleDevLogin("faculty")}
+                >
+                  Login as Faculty
+                </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin("faculty")
-        }
-      >
-        Login as Faculty
-      </button>
+                {/* STUDENT */}
 
-      {/* STUDENT */}
+                <button
+                  type="button"
+                  className={styles.devBtn}
+                  disabled={loading}
+                  onClick={() => handleDevLogin("26BSIT-0008")}
+                >
+                  Login as Student
+                </button>
 
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin(
-            "26BSIT-0008",
-          )
-        }
-      >
-        Login as Student
-      </button>
+                {/* FINANCE */}
 
-      {/* FINANCE */}
-
-      <button
-        type="button"
-        className={styles.devBtn}
-        disabled={loading}
-        onClick={() =>
-          handleDevLogin(
-            "FINANCE CASIER",
-          )
-        }
-      >
-        Login as Finance
-      </button>
-
-    </div>
-  </div>
-)}
+                <button
+                  type="button"
+                  className={styles.devBtn}
+                  disabled={loading}
+                  onClick={() => handleDevLogin("MS.CASHIER")}
+                >
+                  Login as Finance
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -722,10 +686,7 @@ export default function LoginForm() {
           aria-label="Signing you in"
         >
           <div className={styles.loginLoadingPanel}>
-            <span
-              className={styles.loginLoadingSpinner}
-              aria-hidden="true"
-            />
+            <span className={styles.loginLoadingSpinner} aria-hidden="true" />
 
             <div className={styles.loginLoadingText}>
               <strong>Signing you in</strong>

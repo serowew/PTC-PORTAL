@@ -171,7 +171,6 @@ function safePositiveMoney(value: string) {
   return Number(amount.toFixed(2));
 }
 
-
 function getPaymentStatusClass(status: string) {
   if (status === "Paid") {
     return "finance-requests__status--paid";
@@ -629,7 +628,6 @@ export default function FinanceTicketProcessing() {
     return null;
   }
 
-
   return (
     <DashboardLayout>
       <main className="finance-requests">
@@ -647,8 +645,8 @@ export default function FinanceTicketProcessing() {
             <h1>Finance Requests</h1>
 
             <p>
-              Review student transaction requests, search Finance tickets, record
-              payments, and move completed requests forward for Registrar
+              Review student transaction requests, search Finance tickets,
+              record payments, and move completed requests forward for Registrar
               processing.
             </p>
           </div>
@@ -725,15 +723,11 @@ export default function FinanceTicketProcessing() {
               ) : (
                 <RefreshCcw size={16} aria-hidden="true" />
               )}
-
               Refresh
             </button>
           </div>
 
-          <form
-            onSubmit={handleSearch}
-            className="finance-requests__filters"
-          >
+          <form onSubmit={handleSearch} className="finance-requests__filters">
             <div className="finance-requests__search">
               <Search
                 size={17}
@@ -793,7 +787,6 @@ export default function FinanceTicketProcessing() {
               ) : (
                 <Search size={17} aria-hidden="true" />
               )}
-
               Search
             </button>
 
@@ -858,8 +851,7 @@ export default function FinanceTicketProcessing() {
           ) : (
             <div className="finance-requests__queue">
               {filteredTickets.map((item) => {
-                const selected =
-                  selectedTicketNumber === item.ticket_number;
+                const selected = selectedTicketNumber === item.ticket_number;
 
                 return (
                   <button
@@ -912,9 +904,7 @@ export default function FinanceTicketProcessing() {
                         label="Request"
                         value={
                           item.document_request?.request_number ??
-                          (item.grade_id
-                            ? `Grade ID ${item.grade_id}`
-                            : "—")
+                          (item.grade_id ? `Grade ID ${item.grade_id}` : "—")
                         }
                       />
 
@@ -1013,18 +1003,14 @@ export default function FinanceTicketProcessing() {
 
                 <InfoBox
                   label="Academic Period"
-                  value={formatAcademicPeriod(
-                    selectedTicket.document_request,
-                  )}
+                  value={formatAcademicPeriod(selectedTicket.document_request)}
                 />
 
                 <InfoBox
                   label="Enrollment ID"
                   value={
                     selectedTicket.document_request?.enrollment_id
-                      ? String(
-                          selectedTicket.document_request.enrollment_id,
-                        )
+                      ? String(selectedTicket.document_request.enrollment_id)
                       : "Not recorded"
                   }
                 />
@@ -1118,23 +1104,17 @@ export default function FinanceTicketProcessing() {
                   <div className="finance-requests__details-grid">
                     <InfoBox
                       label="Amount Paid"
-                      value={formatMoney(
-                        selectedTicket.payment.amount_paid,
-                      )}
+                      value={formatMoney(selectedTicket.payment.amount_paid)}
                     />
 
                     <InfoBox
                       label="Payment Method"
-                      value={
-                        selectedTicket.payment.payment_method || "—"
-                      }
+                      value={selectedTicket.payment.payment_method || "—"}
                     />
 
                     <InfoBox
                       label="Receipt Number"
-                      value={
-                        selectedTicket.payment.receipt_number || "—"
-                      }
+                      value={selectedTicket.payment.receipt_number || "—"}
                     />
 
                     <InfoBox
@@ -1159,9 +1139,7 @@ export default function FinanceTicketProcessing() {
                       min="0.01"
                       step="0.01"
                       value={amountDue}
-                      onChange={(event) =>
-                        setAmountDue(event.target.value)
-                      }
+                      onChange={(event) => setAmountDue(event.target.value)}
                       disabled={
                         paying ||
                         paymentLocked ||
@@ -1177,9 +1155,7 @@ export default function FinanceTicketProcessing() {
                       min="0.01"
                       step="0.01"
                       value={amountPaid}
-                      onChange={(event) =>
-                        setAmountPaid(event.target.value)
-                      }
+                      onChange={(event) => setAmountPaid(event.target.value)}
                       disabled={paying || paymentLocked}
                       placeholder="Enter amount paid"
                     />
@@ -1189,9 +1165,7 @@ export default function FinanceTicketProcessing() {
                     <select
                       value={paymentMethod}
                       onChange={(event) =>
-                        setPaymentMethod(
-                          event.target.value as PaymentMethod,
-                        )
+                        setPaymentMethod(event.target.value as PaymentMethod)
                       }
                       disabled={paying || paymentLocked}
                     >
@@ -1206,9 +1180,7 @@ export default function FinanceTicketProcessing() {
                     <input
                       type="text"
                       value={receiptNumber}
-                      onChange={(event) =>
-                        setReceiptNumber(event.target.value)
-                      }
+                      onChange={(event) => setReceiptNumber(event.target.value)}
                       disabled={paying || paymentLocked}
                       placeholder="Official receipt number"
                       maxLength={50}
@@ -1220,9 +1192,7 @@ export default function FinanceTicketProcessing() {
 
                     <textarea
                       value={remarks}
-                      onChange={(event) =>
-                        setRemarks(event.target.value)
-                      }
+                      onChange={(event) => setRemarks(event.target.value)}
                       disabled={paying || paymentLocked}
                       placeholder="Optional Finance remarks"
                       maxLength={500}
@@ -1246,9 +1216,7 @@ export default function FinanceTicketProcessing() {
                         <WalletCards size={17} aria-hidden="true" />
                       )}
 
-                      {paying
-                        ? "Processing..."
-                        : "Confirm Payment"}
+                      {paying ? "Processing..." : "Confirm Payment"}
                     </button>
                   </div>
                 </form>
@@ -1291,13 +1259,7 @@ function SummaryCard({
   );
 }
 
-function QueueInfo({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function QueueInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="finance-requests__queue-info">
       <span>{label}</span>
@@ -1306,13 +1268,7 @@ function QueueInfo({
   );
 }
 
-function InfoBox({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function InfoBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="finance-requests__info-box">
       <span>{label}</span>
@@ -1329,11 +1285,7 @@ function StatusPill({
   statusClass: string;
 }) {
   return (
-    <span
-      className={`finance-requests__status ${statusClass}`}
-    >
-      {value}
-    </span>
+    <span className={`finance-requests__status ${statusClass}`}>{value}</span>
   );
 }
 

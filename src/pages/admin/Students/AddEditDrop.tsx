@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Archive,
   BookOpen,
   CircleAlert,
   GraduationCap,
   LoaderCircle,
   Pencil,
   Plus,
+  RotateCcw,
   Search,
-  Trash2,
   UserRound,
   UsersRound,
   X,
@@ -45,7 +46,7 @@ interface StudentListResponse {
   error?: string;
 }
 
-interface DeleteStudentResponse {
+interface ArchiveStudentResponse {
   success?: boolean;
   message?: string;
   error?: string;
@@ -63,10 +64,22 @@ export default function AddEditDrop() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [deletingStudentId, setDeletingStudentId] = useState<string | null>(
+
+  // =====================================================
+  // ARCHIVE STATES
+  // =====================================================
+
+  const [archiveTarget, setArchiveTarget] = useState<Student | null>(null);
+
+  const [archivingStudentId, setArchivingStudentId] = useState<string | null>(
     null,
   );
+
+  const [archiveCountdown, setArchiveCountdown] = useState(10);
+
+  // =====================================================
+  // AUTHORIZATION
+  // =====================================================
 
   useEffect(() => {
     if (!authenticated) {
@@ -83,6 +96,10 @@ export default function AddEditDrop() {
       }
     }
   }, [authenticated, userRole, navigate]);
+
+  // =====================================================
+  // LOAD STUDENTS
+  // =====================================================
 
   useEffect(() => {
     if (!authenticated || userRole !== "Admin") {
@@ -105,6 +122,7 @@ export default function AddEditDrop() {
         });
 
         const contentType = response.headers.get("content-type") || "";
+
         let data: Student[] | StudentListResponse | null = null;
 
         if (contentType.includes("application/json")) {
@@ -163,12 +181,14 @@ export default function AddEditDrop() {
         }
 
         console.error("LOAD ADMIN STUDENTS ERROR:", error);
+
         setStudents([]);
 
         if (error instanceof TypeError) {
           setErrorMessage(
             "Unable to connect to the student server. Make sure the backend is running on port 3000.",
           );
+
           return;
         }
 
@@ -188,6 +208,37 @@ export default function AddEditDrop() {
       controller.abort();
     };
   }, [authenticated, userRole, navigate]);
+
+  // =====================================================
+  // 10 SECOND ARCHIVE COUNTDOWN
+  // =====================================================
+
+  useEffect(() => {
+    if (!archiveTarget) {
+      return;
+    }
+
+    if (archivingStudentId) {
+      return;
+    }
+
+    if (archiveCountdown <= 0) {
+      void archiveStudent();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setArchiveCountdown((current) => current - 1);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [archiveTarget, archiveCountdown, archivingStudentId]);
+
+  // =====================================================
+  // SEARCH
+  // =====================================================
 
   const filteredStudents = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -217,15 +268,27 @@ export default function AddEditDrop() {
     });
   }, [students, searchTerm]);
 
+  // =====================================================
+  // SUMMARY
+  // =====================================================
+
   const summary = useMemo(() => {
     const courses = new Set<string>();
     const yearLevels = new Set<string>();
     const sections = new Set<string>();
 
     students.forEach((student) => {
-      if (student.course) courses.add(student.course);
-      if (student.yearLevel) yearLevels.add(student.yearLevel);
-      if (student.section) sections.add(student.section);
+      if (student.course) {
+        courses.add(student.course);
+      }
+
+      if (student.yearLevel) {
+        yearLevels.add(student.yearLevel);
+      }
+
+      if (student.section) {
+        sections.add(student.section);
+      }
     });
 
     return {
@@ -235,6 +298,10 @@ export default function AddEditDrop() {
     };
   }, [students]);
 
+  // =====================================================
+  // NAVIGATION
+  // =====================================================
+
   const goToAddStudent = () => {
     navigate("/admin/students/createstudents");
   };
@@ -243,32 +310,55 @@ export default function AddEditDrop() {
     navigate(`/admin/students/editstudents/${encodeURIComponent(student.id)}`);
   };
 
-  const confirmDeleteStudent = (student: Student) => {
-    setDeleteTarget(student);
-    setErrorMessage(null);
-  };
+  // =====================================================
+  // START ARCHIVE COUNTDOWN
+  // =====================================================
 
-  const cancelDelete = () => {
-    if (deletingStudentId) {
+  const startArchiveStudent = (student: Student) => {
+    if (archivingStudentId) {
       return;
     }
 
-    setDeleteTarget(null);
+    setErrorMessage(null);
+    setArchiveTarget(student);
+    setArchiveCountdown(10);
   };
 
-  const deleteStudent = async () => {
-    if (!deleteTarget) {
+  // =====================================================
+  // UNDO ARCHIVE
+  // =====================================================
+
+  const undoArchive = () => {
+    if (archivingStudentId) {
+      return;
+    }
+
+    setArchiveTarget(null);
+    setArchiveCountdown(10);
+  };
+
+  // =====================================================
+  // ARCHIVE STUDENT
+  // =====================================================
+
+  const archiveStudent = async () => {
+    if (!archiveTarget) {
+      return;
+    }
+
+    if (archivingStudentId) {
       return;
     }
 
     if (!authenticated || userRole !== "Admin") {
       setErrorMessage(
-        "Your session has expired or you are not authorized to delete students.",
+        "Your session has expired or you are not authorized to archive students.",
       );
+
       return;
     }
 
-    const studentNumber = String(deleteTarget.id).trim();
+    const studentNumber = String(archiveTarget.id).trim();
 
     if (!studentNumber) {
       setErrorMessage("Invalid student ID.");
@@ -278,7 +368,7 @@ export default function AddEditDrop() {
     setErrorMessage(null);
 
     try {
-      setDeletingStudentId(studentNumber);
+      setArchivingStudentId(studentNumber);
 
       const response = await authService.authFetch(
         `${API_BASE_URL}/${encodeURIComponent(studentNumber)}`,
@@ -291,7 +381,8 @@ export default function AddEditDrop() {
       );
 
       const contentType = response.headers.get("content-type") || "";
-      let data: DeleteStudentResponse | null = null;
+
+      let data: ArchiveStudentResponse | null = null;
 
       if (contentType.includes("application/json")) {
         data = await response.json();
@@ -316,7 +407,7 @@ export default function AddEditDrop() {
         throw new Error(
           data?.message ||
             data?.error ||
-            "You are not authorized to delete students.",
+            "You are not authorized to archive students.",
         );
       }
 
@@ -324,31 +415,40 @@ export default function AddEditDrop() {
         throw new Error(
           data?.message ||
             data?.error ||
-            `Failed to delete student (${response.status}).`,
+            `Failed to archive student (${response.status}).`,
         );
       }
 
+      // Remove archived student from active list
       setStudents((current) =>
         current.filter((student) => student.id !== studentNumber),
       );
-      setDeleteTarget(null);
+
+      setArchiveTarget(null);
+      setArchiveCountdown(10);
     } catch (error) {
-      console.error("DELETE ADMIN STUDENT ERROR:", error);
+      console.error("ARCHIVE ADMIN STUDENT ERROR:", error);
 
       if (error instanceof TypeError) {
         setErrorMessage(
           "Unable to connect to the student server. Make sure the backend is running on port 3000.",
         );
-        return;
+      } else {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Failed to archive student.",
+        );
       }
 
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to delete student.",
-      );
+      setArchiveTarget(null);
+      setArchiveCountdown(10);
     } finally {
-      setDeletingStudentId(null);
+      setArchivingStudentId(null);
     }
   };
+
+  // =====================================================
+  // ACCESS CHECK
+  // =====================================================
 
   if (!authenticated || !user || userRole !== "Admin") {
     return null;
@@ -357,6 +457,10 @@ export default function AddEditDrop() {
   return (
     <DashboardLayout>
       <main className="admin-student-management">
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+
         <section className="admin-student-management__hero">
           <div className="admin-student-management__hero-copy">
             <div className="admin-student-management__eyebrow">
@@ -367,9 +471,11 @@ export default function AddEditDrop() {
             </div>
 
             <h1>Add / Edit Students</h1>
+
             <p>
-              Add new student records, update existing information, or remove
-              records that should no longer remain in the portal.
+              Add new student records, update existing information, or archive
+              student records that should no longer appear in the active student
+              list.
             </p>
           </div>
 
@@ -383,6 +489,10 @@ export default function AddEditDrop() {
           </button>
         </section>
 
+        {/* =====================================================
+            SUMMARY
+        ===================================================== */}
+
         <section
           className="admin-student-management__summary"
           aria-label="Student management overview"
@@ -391,8 +501,10 @@ export default function AddEditDrop() {
             <span className="admin-student-management__summary-icon">
               <UsersRound size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Total Students</small>
+
               <strong>
                 {isLoading ? "…" : students.length.toLocaleString()}
               </strong>
@@ -403,6 +515,7 @@ export default function AddEditDrop() {
             <span className="admin-student-management__summary-icon">
               <BookOpen size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Courses</small>
               <strong>{isLoading ? "…" : summary.courses}</strong>
@@ -413,6 +526,7 @@ export default function AddEditDrop() {
             <span className="admin-student-management__summary-icon">
               <GraduationCap size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Year Levels</small>
               <strong>{isLoading ? "…" : summary.yearLevels}</strong>
@@ -423,6 +537,7 @@ export default function AddEditDrop() {
             <span className="admin-student-management__summary-icon">
               <UserRound size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Sections</small>
               <strong>{isLoading ? "…" : summary.sections}</strong>
@@ -430,12 +545,21 @@ export default function AddEditDrop() {
           </article>
         </section>
 
+        {/* =====================================================
+            ERROR MESSAGE
+        ===================================================== */}
+
         {errorMessage && (
           <div className="admin-student-management__error" role="status">
             <CircleAlert size={18} aria-hidden="true" />
+
             <span>{errorMessage}</span>
           </div>
         )}
+
+        {/* =====================================================
+            STUDENT TABLE
+        ===================================================== */}
 
         <section className="admin-student-management__workspace">
           <header className="admin-student-management__workspace-header">
@@ -443,7 +567,9 @@ export default function AddEditDrop() {
               <span className="admin-student-management__section-kicker">
                 Student Records
               </span>
+
               <h2>Manage Students</h2>
+
               <p>
                 {isLoading
                   ? "Loading student records…"
@@ -455,6 +581,7 @@ export default function AddEditDrop() {
 
             <label className="admin-student-management__search">
               <Search size={16} aria-hidden="true" />
+
               <input
                 type="text"
                 placeholder="Search by ID, name, email, course, or section"
@@ -462,6 +589,7 @@ export default function AddEditDrop() {
                 onChange={(event) => setSearchTerm(event.target.value)}
                 aria-label="Search students"
               />
+
               {searchTerm && (
                 <button
                   type="button"
@@ -499,6 +627,7 @@ export default function AddEditDrop() {
                           className="admin-student-management__spinner"
                           aria-hidden="true"
                         />
+
                         <span>Loading students...</span>
                       </div>
                     </td>
@@ -508,13 +637,15 @@ export default function AddEditDrop() {
                     <td colSpan={8}>
                       <div className="admin-student-management__table-state">
                         <UsersRound size={21} aria-hidden="true" />
+
                         <span>No students found.</span>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredStudents.map((student) => {
-                    const deleting = deletingStudentId === student.id;
+                    const archiving = archivingStudentId === student.id;
+
                     const fullName = [
                       student.firstName,
                       student.middleName,
@@ -540,15 +671,20 @@ export default function AddEditDrop() {
 
                             <div>
                               <strong>{fullName || "Unnamed Student"}</strong>
+
                               <small>{student.gender || "Student"}</small>
                             </div>
                           </div>
                         </td>
 
                         <td>{student.email || "—"}</td>
+
                         <td>{student.contactNumber || "—"}</td>
+
                         <td>{student.course || "—"}</td>
+
                         <td>{student.yearLevel || "—"}</td>
+
                         <td>{student.section || "—"}</td>
 
                         <td>
@@ -557,7 +693,7 @@ export default function AddEditDrop() {
                               type="button"
                               className="admin-student-management__action admin-student-management__action--edit"
                               onClick={() => goToEditStudent(student)}
-                              disabled={deleting}
+                              disabled={archiving}
                             >
                               <Pencil size={14} aria-hidden="true" />
                               Edit
@@ -566,19 +702,20 @@ export default function AddEditDrop() {
                             <button
                               type="button"
                               className="admin-student-management__action admin-student-management__action--delete"
-                              onClick={() => confirmDeleteStudent(student)}
-                              disabled={deleting}
+                              onClick={() => startArchiveStudent(student)}
+                              disabled={archiving}
                             >
-                              {deleting ? (
+                              {archiving ? (
                                 <LoaderCircle
                                   size={14}
                                   className="admin-student-management__spinner"
                                   aria-hidden="true"
                                 />
                               ) : (
-                                <Trash2 size={14} aria-hidden="true" />
+                                <Archive size={14} aria-hidden="true" />
                               )}
-                              {deleting ? "Deleting..." : "Delete"}
+
+                              {archiving ? "Archiving..." : "Archive"}
                             </button>
                           </div>
                         </td>
@@ -591,52 +728,77 @@ export default function AddEditDrop() {
           </div>
         </section>
 
-        {deleteTarget && (
-          <Modal isOpen={Boolean(deleteTarget)} onClose={cancelDelete}>
+        {/* =====================================================
+            ARCHIVE UNDO MODAL
+        ===================================================== */}
+
+        {archiveTarget && (
+          <Modal isOpen={Boolean(archiveTarget)} onClose={undoArchive}>
             <div className="admin-student-management__delete-dialog">
               <span className="admin-student-management__delete-icon">
-                <Trash2 size={21} aria-hidden="true" />
+                {archivingStudentId ? (
+                  <LoaderCircle
+                    size={21}
+                    className="admin-student-management__spinner"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Archive size={21} aria-hidden="true" />
+                )}
               </span>
 
               <div>
-                <h2>Delete Student</h2>
-                <p>
-                  Are you sure you want to delete{" "}
-                  <strong>
-                    {deleteTarget.firstName} {deleteTarget.lastName}
-                  </strong>
-                  ? This action cannot be undone.
-                </p>
+                <h2>
+                  {archivingStudentId
+                    ? "Archiving Student"
+                    : "Student Pending Archive"}
+                </h2>
+
+                {archivingStudentId ? (
+                  <p>
+                    Archiving{" "}
+                    <strong>
+                      {archiveTarget.firstName} {archiveTarget.lastName}
+                    </strong>
+                    . Please do not close this window.
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      <strong>
+                        {archiveTarget.firstName} {archiveTarget.lastName}
+                      </strong>{" "}
+                      will be archived in{" "}
+                      <strong>{archiveCountdown} seconds</strong>.
+                    </p>
+
+                    <p>
+                      Press Undo before the countdown reaches zero to keep this
+                      student active.
+                    </p>
+
+                    <div
+                      className="admin-student-management__archive-countdown"
+                      aria-label={`${archiveCountdown} seconds remaining`}
+                    >
+                      {archiveCountdown}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="admin-student-management__modal-actions">
-                <button
-                  type="button"
-                  className="admin-student-management__modal-button"
-                  onClick={cancelDelete}
-                  disabled={Boolean(deletingStudentId)}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className="admin-student-management__modal-button admin-student-management__modal-button--danger"
-                  onClick={() => void deleteStudent()}
-                  disabled={Boolean(deletingStudentId)}
-                >
-                  {deletingStudentId ? (
-                    <LoaderCircle
-                      size={15}
-                      className="admin-student-management__spinner"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <Trash2 size={15} aria-hidden="true" />
-                  )}
-                  {deletingStudentId ? "Deleting..." : "Delete Student"}
-                </button>
-              </div>
+              {!archivingStudentId && (
+                <div className="admin-student-management__modal-actions">
+                  <button
+                    type="button"
+                    className="admin-student-management__modal-button"
+                    onClick={undoArchive}
+                  >
+                    <RotateCcw size={15} aria-hidden="true" />
+                    Undo Archive
+                  </button>
+                </div>
+              )}
             </div>
           </Modal>
         )}

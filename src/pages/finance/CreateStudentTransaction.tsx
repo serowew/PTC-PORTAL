@@ -141,7 +141,6 @@ function formatMoney(value: number | null | undefined) {
   }).format(Number(value));
 }
 
-
 export default function CreateStudentTransaction() {
   const navigate = useNavigate();
 
@@ -637,7 +636,6 @@ export default function CreateStudentTransaction() {
     return null;
   }
 
-
   return (
     <DashboardLayout>
       <main className="finance-create-transaction">
@@ -811,9 +809,7 @@ export default function CreateStudentTransaction() {
                   <input
                     type="search"
                     value={studentQuery}
-                    onChange={(event) =>
-                      setStudentQuery(event.target.value)
-                    }
+                    onChange={(event) => setStudentQuery(event.target.value)}
                     placeholder="Search student number or name..."
                     autoComplete="off"
                   />
@@ -903,13 +899,9 @@ export default function CreateStudentTransaction() {
               <div className="finance-create-transaction__type-preview">
                 <div className="finance-create-transaction__type-preview-header">
                   <div>
-                    <strong>
-                      {selectedTransactionType.transaction_name}
-                    </strong>
+                    <strong>{selectedTransactionType.transaction_name}</strong>
 
-                    <span>
-                      {selectedTransactionType.transaction_code}
-                    </span>
+                    <span>{selectedTransactionType.transaction_code}</span>
                   </div>
 
                   <CreditCard size={19} aria-hidden="true" />
@@ -1033,9 +1025,7 @@ export default function CreateStudentTransaction() {
               type="submit"
               className="finance-create-transaction__submit-button"
               disabled={
-                submitting ||
-                !selectedStudent ||
-                !selectedTransactionType
+                submitting || !selectedStudent || !selectedTransactionType
               }
             >
               {submitting ? (
@@ -1072,9 +1062,7 @@ function StepHeader({
 }) {
   return (
     <div className="finance-create-transaction__step-header">
-      <div className="finance-create-transaction__step-number">
-        {step}
-      </div>
+      <div className="finance-create-transaction__step-number">{step}</div>
 
       <div>
         <h2>{title}</h2>
@@ -1100,9 +1088,7 @@ function InfoBox({
         {label}
       </div>
 
-      <div className="finance-create-transaction__info-value">
-        {value}
-      </div>
+      <div className="finance-create-transaction__info-value">{value}</div>
     </div>
   );
 }

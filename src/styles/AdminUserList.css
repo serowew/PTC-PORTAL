@@ -753,3 +753,783 @@
     transition-duration: 0.01ms !important;
   }
 }
+/* =========================================================
+   ARCHIVE ACTION
+========================================================= */
+
+.admin-user-directory__action--archive {
+  color: #8a2b22;
+  border-color: #edcbc7;
+  background: #fff4f2;
+}
+
+.admin-user-directory__action--archive:hover:not(:disabled) {
+  color: #ffffff;
+  border-color: #a52b20;
+  background: #a52b20;
+}
+
+/* =========================================================
+   USER MANAGEMENT MODAL OVERLAY
+   SAME BOX STYLE AS STUDENT MANAGEMENT
+========================================================= */
+
+.admin-user-directory > .modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+
+  width: 100vw !important;
+  height: 100dvh !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 20px !important;
+
+  overflow-y: auto;
+
+  background: rgba(10, 20, 14, 0.58) !important;
+
+  z-index: 2000 !important;
+}
+
+/* =========================================================
+   ACTUAL WHITE MODAL BOX
+========================================================= */
+
+.admin-user-directory > .modal-overlay > .modal-content {
+  position: relative;
+
+  width: min(420px, 100%) !important;
+  min-width: 0 !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
+  max-height: calc(100dvh - 40px) !important;
+
+  padding: 0 !important;
+
+  overflow: hidden;
+
+  border: 1px solid #dfe8e2;
+
+  border-radius: 14px !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 18px 48px rgba(9, 31, 18, 0.2),
+    0 4px 14px rgba(9, 31, 18, 0.12);
+}
+
+/* =========================================================
+   MODAL CLOSE BUTTON
+========================================================= */
+
+.admin-user-directory > .modal-overlay > .modal-content > .close-btn {
+  position: absolute;
+
+  top: 12px;
+  right: 12px;
+
+  display: inline-flex;
+
+  width: 30px;
+  height: 30px;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #e0e7e2;
+  border-radius: 8px;
+
+  color: #66736b;
+
+  background: #f7f9f8;
+
+  font-size: 13px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  z-index: 10;
+}
+
+.admin-user-directory > .modal-overlay > .modal-content > .close-btn:hover {
+  color: #28352d;
+  background: #eef3ef;
+}
+
+/* =========================================================
+   RESET PASSWORD MODAL
+========================================================= */
+
+.admin-user-directory__reset-modal {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns: 40px minmax(0, 1fr);
+
+  gap: 10px 12px;
+
+  padding: 20px;
+  padding-right: 50px;
+}
+
+/* =========================================================
+   RESET PASSWORD ICON
+========================================================= */
+
+.admin-user-directory__reset-modal-icon {
+  display: flex;
+
+  width: 40px;
+  height: 40px;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #d8eade;
+  border-radius: 10px;
+
+  color: #0d653b;
+
+  background: #f1fbf5;
+}
+
+/* =========================================================
+   RESET PASSWORD CONTENT
+========================================================= */
+
+.admin-user-directory__reset-modal-content {
+  min-width: 0;
+}
+
+.admin-user-directory__reset-modal-content h2 {
+  margin: 1px 0 4px;
+
+  color: #17201b;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  line-height: 1.25;
+}
+
+.admin-user-directory__reset-modal-content p {
+  margin: 3px 0 12px;
+
+  color: #5e6b63;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   RESET PASSWORD FIELDS
+========================================================= */
+
+.admin-user-directory__reset-fields {
+  display: grid;
+
+  gap: 10px;
+}
+
+.admin-user-directory__reset-fields label {
+  display: grid;
+
+  gap: 5px;
+}
+
+.admin-user-directory__reset-fields label > span {
+  color: #425047;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.admin-user-directory__reset-fields input {
+  width: 100%;
+
+  min-height: 36px;
+
+  padding: 8px 10px;
+
+  border: 1px solid #cfdcd3;
+  border-radius: 7px;
+
+  outline: none;
+
+  color: #28352d;
+
+  background: #ffffff;
+
+  font-size: 11px;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-user-directory__reset-fields input::placeholder {
+  color: #9aa49d;
+}
+
+.admin-user-directory__reset-fields input:hover:not(:disabled) {
+  border-color: #b8c9bd;
+}
+
+.admin-user-directory__reset-fields input:focus {
+  border-color: #83bb97;
+
+  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.09);
+}
+
+.admin-user-directory__reset-fields input:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+  background: #f7f9f8;
+}
+
+/* =========================================================
+   RESET PASSWORD ERROR
+========================================================= */
+
+.admin-user-directory__reset-error {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 6px;
+
+  margin-top: 9px;
+
+  padding: 8px 9px;
+
+  border: 1px solid #f0c7c2;
+  border-radius: 7px;
+
+  color: #b42318;
+
+  background: #fff3f1;
+
+  font-size: 10px;
+
+  line-height: 1.4;
+}
+
+.admin-user-directory__reset-error svg {
+  flex: 0 0 auto;
+
+  margin-top: 1px;
+}
+
+/* =========================================================
+   RESET PASSWORD ACTIONS
+========================================================= */
+
+.admin-user-directory__reset-modal-actions {
+  grid-column: 1 / -1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  margin-top: 5px;
+
+  padding-top: 11px;
+
+  border-top: 1px solid #edf2ee;
+}
+
+/* =========================================================
+   RESET PASSWORD BUTTONS
+========================================================= */
+
+.admin-user-directory__reset-cancel,
+.admin-user-directory__reset-confirm {
+  display: inline-flex;
+
+  min-height: 34px;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 7px 12px;
+
+  border-radius: 7px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+/* CANCEL */
+
+.admin-user-directory__reset-cancel {
+  border: 1px solid #cfdcd3;
+
+  color: #425047;
+
+  background: #ffffff;
+}
+
+.admin-user-directory__reset-cancel:hover:not(:disabled) {
+  border-color: #b9c9be;
+
+  background: #f5f8f6;
+}
+
+/* RESET */
+
+.admin-user-directory__reset-confirm {
+  border: 1px solid #0d653b;
+
+  color: #ffffff;
+
+  background: #0d653b;
+}
+
+.admin-user-directory__reset-confirm:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  border-color: #0a4b2d;
+
+  background: #0a4b2d;
+}
+
+/* =========================================================
+   ACTIVATE / DEACTIVATE MODAL
+========================================================= */
+
+.admin-user-directory__student-style-modal {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns: 40px minmax(0, 1fr);
+
+  gap: 10px 12px;
+
+  padding: 20px;
+  padding-right: 50px;
+}
+
+/* =========================================================
+   STATUS MODAL ICON
+========================================================= */
+
+.admin-user-directory__student-style-modal
+  .admin-student-management__delete-icon {
+  display: flex;
+
+  width: 40px;
+  height: 40px;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #ead79e;
+
+  border-radius: 10px;
+
+  color: #9a6700;
+
+  background: #fff8e6;
+}
+
+/* =========================================================
+   STATUS MODAL TEXT
+========================================================= */
+
+.admin-user-directory__student-style-modal h2 {
+  margin: 1px 0 4px;
+
+  color: #17201b;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  line-height: 1.25;
+}
+
+.admin-user-directory__student-style-modal p {
+  margin: 3px 0;
+
+  color: #5e6b63;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   STATUS MODAL ACTIONS
+========================================================= */
+
+.admin-user-directory__small-modal-actions {
+  grid-column: 1 / -1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  margin-top: 5px;
+
+  padding-top: 11px;
+
+  border-top: 1px solid #edf2ee;
+}
+
+/* =========================================================
+   GENERIC STATUS MODAL BUTTON
+========================================================= */
+
+.admin-user-directory__small-modal-actions
+  .admin-student-management__modal-button {
+  display: inline-flex;
+
+  min-height: 34px;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 7px 12px;
+
+  border: 1px solid #cfdcd3;
+
+  border-radius: 7px;
+
+  color: #425047;
+
+  background: #ffffff;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-user-directory__small-modal-actions
+  .admin-student-management__modal-button:hover:not(:disabled) {
+  background: #f5f8f6;
+}
+
+/* =========================================================
+   ACTIVATE CONFIRM
+========================================================= */
+
+.admin-user-directory__status-confirm--activate {
+  border-color: #0d653b !important;
+
+  color: #ffffff !important;
+
+  background: #0d653b !important;
+}
+
+.admin-user-directory__status-confirm--activate:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  border-color: #0a4b2d !important;
+
+  background: #0a4b2d !important;
+}
+
+/* =========================================================
+   DEACTIVATE CONFIRM
+========================================================= */
+
+.admin-user-directory__status-confirm--deactivate {
+  border-color: #b42318 !important;
+
+  color: #ffffff !important;
+
+  background: #b42318 !important;
+}
+
+.admin-user-directory__status-confirm--deactivate:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  border-color: #922018 !important;
+
+  background: #922018 !important;
+}
+
+/* =========================================================
+   ARCHIVE MODAL
+========================================================= */
+
+.admin-user-directory__archive-modal {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns: 40px minmax(0, 1fr);
+
+  gap: 10px 12px;
+
+  padding: 20px;
+  padding-right: 50px;
+}
+
+/* =========================================================
+   ARCHIVE MODAL ICON
+========================================================= */
+
+.admin-user-directory__archive-modal-icon {
+  display: flex;
+
+  width: 40px;
+  height: 40px;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #f0c7c2;
+
+  border-radius: 10px;
+
+  color: #b42318;
+
+  background: #fff3f1;
+}
+
+/* =========================================================
+   ARCHIVE MODAL TITLE
+========================================================= */
+
+.admin-user-directory__archive-modal h2 {
+  margin: 1px 0 4px;
+
+  color: #17201b;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  line-height: 1.25;
+}
+
+/* =========================================================
+   ARCHIVE MODAL TEXT
+========================================================= */
+
+.admin-user-directory__archive-modal p {
+  margin: 3px 0;
+
+  color: #5e6b63;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   ARCHIVE COUNTDOWN
+========================================================= */
+
+.admin-user-directory__archive-countdown {
+  display: flex;
+
+  width: 58px;
+  height: 58px;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 12px;
+
+  border: 2px solid #e4b9b4;
+
+  border-radius: 50%;
+
+  color: #8f2e25;
+
+  background: #fff4f2;
+
+  font-size: 22px;
+  font-weight: 800;
+
+  line-height: 1;
+}
+
+/* =========================================================
+   ARCHIVE MODAL ACTIONS
+========================================================= */
+
+.admin-user-directory__archive-modal-actions {
+  grid-column: 1 / -1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  margin-top: 5px;
+
+  padding-top: 11px;
+
+  border-top: 1px solid #edf2ee;
+}
+
+/* =========================================================
+   UNDO ARCHIVE BUTTON
+========================================================= */
+
+.admin-user-directory__archive-modal-button {
+  display: inline-flex;
+
+  min-height: 34px;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 7px 12px;
+
+  border: 1px solid #bdd7c6;
+
+  border-radius: 7px;
+
+  color: #0d653b;
+
+  background: #ffffff;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-user-directory__archive-modal-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  border-color: #83bb97;
+
+  background: #f1fbf5;
+}
+
+/* =========================================================
+   DISABLED MODAL BUTTONS
+========================================================= */
+
+.admin-user-directory__reset-cancel:disabled,
+.admin-user-directory__reset-confirm:disabled,
+.admin-user-directory__archive-modal-button:disabled,
+.admin-user-directory__small-modal-actions button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+/* =========================================================
+   MODAL BUTTON FOCUS
+========================================================= */
+
+.admin-user-directory__reset-cancel:focus-visible,
+.admin-user-directory__reset-confirm:focus-visible,
+.admin-user-directory__archive-modal-button:focus-visible,
+.admin-user-directory__small-modal-actions button:focus-visible {
+  outline: 3px solid rgba(21, 148, 82, 0.15);
+
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   MOBILE MODALS
+========================================================= */
+
+@media (max-width: 480px) {
+  .admin-user-directory > .modal-overlay {
+    padding: 14px !important;
+  }
+
+  .admin-user-directory > .modal-overlay > .modal-content {
+    width: 100% !important;
+
+    max-height: calc(100dvh - 28px) !important;
+  }
+
+  .admin-user-directory__reset-modal,
+  .admin-user-directory__student-style-modal,
+  .admin-user-directory__archive-modal {
+    grid-template-columns: 36px minmax(0, 1fr);
+
+    gap: 9px;
+
+    padding: 17px;
+    padding-right: 45px;
+  }
+
+  .admin-user-directory__reset-modal-icon,
+  .admin-user-directory__archive-modal-icon,
+  .admin-user-directory__student-style-modal
+    .admin-student-management__delete-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .admin-user-directory__reset-modal-actions,
+  .admin-user-directory__small-modal-actions,
+  .admin-user-directory__archive-modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .admin-user-directory__reset-cancel,
+  .admin-user-directory__reset-confirm,
+  .admin-user-directory__archive-modal-button {
+    min-height: 36px;
+  }
+}
+.admin-user-directory > .modal-overlay > .modal-content {
+  width: min(420px, 100%) !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+}

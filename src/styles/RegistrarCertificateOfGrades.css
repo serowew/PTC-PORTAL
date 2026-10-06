@@ -847,26 +847,33 @@
 
 .registrar-cog-document__header {
   display: flex;
+
   align-items: center;
   justify-content: center;
-  gap: 15px;
+
+  gap: 16px;
+
   padding-bottom: 16px;
+
   border-bottom: 2px solid #145c38;
+
   text-align: center;
 }
 
-.registrar-cog-document__seal {
-  flex: 0 0 52px;
-  width: 52px;
-  height: 52px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid #145c38;
-  border-radius: 50%;
-  color: #145c38;
+.registrar-cog-document__logo {
+  flex: 0 0 auto;
+
+  width: 64px;
+  height: 64px;
+
+  object-fit: contain;
+
+  display: block;
 }
 
+.registrar-cog-document__school-info {
+  text-align: center;
+}
 .registrar-cog-document__header p,
 .registrar-cog-document__header h1,
 .registrar-cog-document__header span {
@@ -1472,84 +1479,819 @@
     transition-duration: 0.001ms !important;
   }
 }
-
 /* =========================================================
-   PRINT — PRINT ONLY THE OFFICIAL COG DOCUMENT
+   PRINT — CERTIFICATE OF GRADES
+   PRINT ONLY THE OFFICIAL DOCUMENT
 ========================================================= */
 
 @media print {
+  /* =======================================================
+     PAPER
+  ======================================================= */
+
   @page {
     size: A4 portrait;
-    margin: 12mm 11mm 14mm;
+    margin: 12mm 12mm 14mm;
   }
 
   html,
-  body {
+  body,
+  #root {
     width: 100% !important;
     min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
     margin: 0 !important;
     padding: 0 !important;
+
     overflow: visible !important;
+
     background: #ffffff !important;
   }
 
-  body * {
-    visibility: hidden !important;
+  body {
+    color: #000000 !important;
+
+    font-family: "Times New Roman", Times, serif !important;
+  }
+
+  /* =======================================================
+     RESET DASHBOARD LAYOUT
+  ======================================================= */
+
+  .dashboard-wrapper,
+  .dashboard-main,
+  .dashboard-content {
+    display: block !important;
+
+    position: static !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
+
+    box-shadow: none !important;
+  }
+
+  /* =======================================================
+     HIDE PORTAL INTERFACE
+  ======================================================= */
+
+  .header-container,
+  .app-header,
+  .dashboard-header,
+  .sidebar,
+  .dashboard-sidebar,
+  aside,
+  nav,
+  footer {
+    display: none !important;
+  }
+
+  /* =======================================================
+     COG PAGE
+  ======================================================= */
+
+  .registrar-cog {
+    display: block !important;
+
+    position: static !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    color: #000000 !important;
+
+    background: #ffffff !important;
+  }
+
+  /*
+    Hide all normal page sections first.
+    We only want the official document preview.
+  */
+
+  .registrar-cog > * {
+    display: none !important;
+  }
+
+  /*
+    Bring the official preview back.
+  */
+
+  .registrar-cog > .registrar-cog__preview-wrap {
+    display: block !important;
+
+    width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+
+    background: #ffffff !important;
+
+    box-shadow: none !important;
+  }
+
+  /* Hide "Official Document Preview" screen label */
+
+  .registrar-cog__preview-label,
+  .registrar-cog__ready-badge,
+  .registrar-cog__screen-only {
+    display: none !important;
+  }
+
+  /* =======================================================
+     OFFICIAL DOCUMENT
+  ======================================================= */
+
+  .registrar-cog-document {
+    display: block !important;
+
+    position: static !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    box-sizing: border-box !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+
+    color: #000000 !important;
+
+    background: #ffffff !important;
+
+    box-shadow: none !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    font-family: "Times New Roman", Times, serif !important;
   }
 
   .registrar-cog-document,
   .registrar-cog-document * {
     visibility: visible !important;
+    opacity: 1 !important;
   }
 
-  .registrar-cog-document {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
+  /* =======================================================
+     OFFICIAL SCHOOL HEADER
+  ======================================================= */
+
+  .registrar-cog-document__header {
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 10px !important;
+
     margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: #ffffff !important;
-    box-shadow: none !important;
+    padding: 0 0 8px !important;
+
+    border: none !important;
+
+    text-align: left !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+
+    break-after: avoid !important;
+    page-break-after: avoid !important;
   }
+
+  /* =======================================================
+     PTC LOGO
+  ======================================================= */
+
+  .registrar-cog-document__logo {
+    display: block !important;
+
+    flex: 0 0 auto !important;
+
+    width: 58px !important;
+    height: 58px !important;
+
+    object-fit: contain !important;
+
+    margin: 0 !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .registrar-cog-document__school-info {
+    text-align: center !important;
+  }
+
+  .registrar-cog-document__header p {
+    margin: 0 0 1px !important;
+
+    color: #000000 !important;
+
+    font-size: 8px !important;
+
+    line-height: 1.2 !important;
+  }
+
+  .registrar-cog-document__header h1 {
+    margin: 0 !important;
+
+    color: #000000 !important;
+
+    font-size: 16px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.15 !important;
+
+    letter-spacing: 0.025em !important;
+  }
+
+  .registrar-cog-document__header span {
+    display: block !important;
+
+    margin-top: 2px !important;
+
+    color: #000000 !important;
+
+    font-size: 8px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.2 !important;
+
+    letter-spacing: 0.1em !important;
+  }
+
+  /* =======================================================
+     DOCUMENT TITLE
+  ======================================================= */
+
+  .registrar-cog-document__title {
+    padding: 10px 0 9px !important;
+
+    text-align: center !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .registrar-cog-document__title > span {
+    color: #333333 !important;
+
+    font-size: 6px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 0.11em !important;
+
+    text-transform: uppercase !important;
+  }
+
+  .registrar-cog-document__title h2 {
+    margin: 3px 0 2px !important;
+
+    color: #000000 !important;
+
+    font-size: 14px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.2 !important;
+
+    letter-spacing: 0.07em !important;
+  }
+
+  .registrar-cog-document__title p {
+    margin: 0 !important;
+
+    color: #333333 !important;
+
+    font-size: 7.5px !important;
+
+    line-height: 1.3 !important;
+  }
+
+  /* =======================================================
+     STUDENT INFORMATION
+  ======================================================= */
+
+  .registrar-cog-document__student-grid {
+    display: grid !important;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+    width: 100% !important;
+
+    margin: 0 0 10px !important;
+
+    border-top: 1px solid #000000 !important;
+    border-left: 1px solid #000000 !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .registrar-cog-document__info {
+    min-width: 0 !important;
+
+    padding: 5px 6px !important;
+
+    border-right: 1px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+
+    background: #ffffff !important;
+  }
+
+  .registrar-cog-document__info--wide {
+    grid-column: span 2 !important;
+  }
+
+  .registrar-cog-document__info span {
+    display: block !important;
+
+    margin: 0 0 1px !important;
+
+    color: #444444 !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5.5px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.25 !important;
+
+    letter-spacing: 0.04em !important;
+
+    text-transform: uppercase !important;
+  }
+
+  .registrar-cog-document__info strong {
+    display: block !important;
+
+    color: #000000 !important;
+
+    font-size: 8px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.25 !important;
+
+    overflow-wrap: anywhere !important;
+  }
+
+  /* =======================================================
+     GRADES TABLE WRAPPER
+  ======================================================= */
 
   .registrar-cog-document__table-wrap {
+    display: block !important;
+
+    width: 100% !important;
+
+    margin: 0 0 8px !important;
+    padding: 0 !important;
+
     overflow: visible !important;
   }
 
-  .registrar-cog-document__table {
-    min-width: 0 !important;
-    page-break-inside: auto;
-  }
+  /* =======================================================
+     GRADES TABLE
+  ======================================================= */
 
-  .registrar-cog-document__table tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
+  .registrar-cog-document__table {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    margin: 0 !important;
+
+    border-collapse: collapse !important;
+
+    table-layout: fixed !important;
+
+    color: #000000 !important;
+
+    background: #ffffff !important;
+
+    font-size: 6.5px !important;
+
+    page-break-inside: auto !important;
   }
 
   .registrar-cog-document__table thead {
-    display: table-header-group;
+    display: table-header-group !important;
+  }
+
+  .registrar-cog-document__table tbody {
+    display: table-row-group !important;
   }
 
   .registrar-cog-document__table tfoot {
-    display: table-row-group;
+    display: table-row-group !important;
   }
 
-  .registrar-cog-document__certification,
-  .registrar-cog-document__footer-info,
-  .registrar-cog-document__signature {
-    page-break-inside: avoid;
+  .registrar-cog-document__table tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+
+    page-break-after: auto !important;
   }
 
-  .registrar-cog-document__header,
+  .registrar-cog-document__table th,
+  .registrar-cog-document__table td {
+    padding: 4px 4px !important;
+
+    border: 1px solid #000000 !important;
+
+    color: #000000 !important;
+
+    vertical-align: middle !important;
+
+    line-height: 1.25 !important;
+  }
+
+  /*
+    Do not rely on green table header for printing.
+    This remains readable even when "Background graphics"
+    is disabled in the browser.
+  */
+
   .registrar-cog-document__table th {
+    background: #eeeeee !important;
+
+    color: #000000 !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5.8px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 0.02em !important;
+
+    text-align: left !important;
+
+    text-transform: uppercase !important;
+  }
+
+  /* =======================================================
+     TABLE COLUMN WIDTHS
+  ======================================================= */
+
+  .registrar-cog-document__table th:nth-child(1),
+  .registrar-cog-document__table td:nth-child(1) {
+    width: 13% !important;
+  }
+
+  .registrar-cog-document__table th:nth-child(2),
+  .registrar-cog-document__table td:nth-child(2) {
+    width: 34% !important;
+  }
+
+  .registrar-cog-document__table th:nth-child(3),
+  .registrar-cog-document__table td:nth-child(3) {
+    width: 8% !important;
+
+    text-align: center !important;
+  }
+
+  .registrar-cog-document__table th:nth-child(4),
+  .registrar-cog-document__table td:nth-child(4) {
+    width: 12% !important;
+
+    text-align: center !important;
+  }
+
+  .registrar-cog-document__table th:nth-child(5),
+  .registrar-cog-document__table td:nth-child(5) {
+    width: 16% !important;
+  }
+
+  .registrar-cog-document__table th:nth-child(6),
+  .registrar-cog-document__table td:nth-child(6) {
+    width: 17% !important;
+  }
+
+  /* =======================================================
+     RATING
+  ======================================================= */
+
+  .registrar-cog-document__rating {
+    color: #000000 !important;
+
+    font-size: 7px !important;
+    font-weight: 700 !important;
+  }
+
+  /* =======================================================
+     RESULT
+  ======================================================= */
+
+  .registrar-cog-document__result-cell {
+    display: block !important;
+  }
+
+  .registrar-cog-document__result {
+    display: inline !important;
+
+    width: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: #000000 !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 6px !important;
+    font-weight: 700 !important;
+  }
+
+  .registrar-cog-document__result-cell small {
+    display: block !important;
+
+    margin-top: 1px !important;
+
+    color: #000000 !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5px !important;
+    font-weight: 600 !important;
+  }
+
+  /* =======================================================
+     SUBJECT STATUS
+  ======================================================= */
+
+  .registrar-cog-document__subject-status {
+    display: inline !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+
+    color: #000000 !important;
+
+    background: transparent !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5.8px !important;
+    font-weight: 700 !important;
+  }
+
+  /* =======================================================
+     TABLE FOOTER
+  ======================================================= */
+
+  .registrar-cog-document__table tfoot td {
+    padding: 4px !important;
+
+    color: #000000 !important;
+
+    background: #eeeeee !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5.8px !important;
+    font-weight: 700 !important;
+  }
+
+  /* =======================================================
+     GRADE GUIDE
+  ======================================================= */
+
+  .registrar-cog-document__guide {
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    gap: 8px !important;
+
+    padding: 5px 6px !important;
+
+    border: 1px solid #000000 !important;
+
+    background: #ffffff !important;
+
+    font-family: Arial, sans-serif !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .registrar-cog-document__guide-title {
+    display: inline-flex !important;
+
+    align-items: center !important;
+
+    gap: 4px !important;
+
+    color: #000000 !important;
+
+    font-size: 5.8px !important;
+
+    white-space: nowrap !important;
+  }
+
+  .registrar-cog-document__guide-items {
+    display: flex !important;
+
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+
+    gap: 3px 8px !important;
+
+    color: #000000 !important;
+
+    font-size: 5.3px !important;
+  }
+
+  .registrar-cog-document__guide-items b {
+    color: #000000 !important;
+  }
+
+  /* =======================================================
+     CERTIFICATION
+  ======================================================= */
+
+  .registrar-cog-document__certification {
+    margin-top: 9px !important;
+    padding-top: 7px !important;
+
+    border-top: 1px solid #000000 !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .registrar-cog-document__certification p {
+    margin: 0 0 4px !important;
+
+    color: #000000 !important;
+
+    font-size: 6.5px !important;
+
+    line-height: 1.4 !important;
+
+    text-align: justify !important;
+  }
+
+  /* =======================================================
+     DOCUMENT INFORMATION
+  ======================================================= */
+
+  .registrar-cog-document__footer-info {
+    display: grid !important;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+
+    gap: 6px !important;
+
+    margin-top: 9px !important;
+    padding-top: 7px !important;
+
+    border-top: 1px solid #999999 !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .registrar-cog-document__footer-info div {
+    display: block !important;
+  }
+
+  .registrar-cog-document__footer-info span {
+    display: block !important;
+
+    margin-bottom: 1px !important;
+
+    color: #444444 !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 0.04em !important;
+
+    text-transform: uppercase !important;
+  }
+
+  .registrar-cog-document__footer-info strong {
+    color: #000000 !important;
+
+    font-size: 6.5px !important;
+    font-weight: 700 !important;
+  }
+
+  /* =======================================================
+     REGISTRAR SIGNATURE
+  ======================================================= */
+
+  .registrar-cog-document__signature {
+    display: flex !important;
+
+    justify-content: flex-end !important;
+
+    margin-top: 23px !important;
+
+    text-align: center !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .registrar-cog-document__signature > div {
+    width: 180px !important;
+
+    display: grid !important;
+
+    justify-items: center !important;
+  }
+
+  .registrar-cog-document__signature-line {
+    width: 100% !important;
+    height: 1px !important;
+
+    margin-bottom: 3px !important;
+
+    background: #000000 !important;
+  }
+
+  .registrar-cog-document__signature strong {
+    color: #000000 !important;
+
+    font-size: 7px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 0.03em !important;
+  }
+
+  .registrar-cog-document__signature small {
+    margin-top: 1px !important;
+
+    color: #333333 !important;
+
+    font-family: Arial, sans-serif !important;
+
+    font-size: 5.5px !important;
+  }
+
+  /* =======================================================
+     REMOVE SCREEN SHADOWS / ANIMATIONS
+  ======================================================= */
+
+  .registrar-cog-document *,
+  .registrar-cog-document *::before,
+  .registrar-cog-document *::after {
+    animation: none !important;
+
+    transition: none !important;
+
+    box-shadow: none !important;
+  }
+
+  /* =======================================================
+     PRINT COLORS
+  ======================================================= */
+
+  .registrar-cog-document,
+  .registrar-cog-document * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }

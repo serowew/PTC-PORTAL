@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Archive,
   CircleAlert,
   KeyRound,
   LoaderCircle,
@@ -8,6 +9,7 @@ import {
   Plus,
   Power,
   PowerOff,
+  RotateCcw,
   Search,
   ShieldCheck,
   UserCheck,
@@ -17,11 +19,16 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
+import Modal from "../../../components/modal";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
 import "../../../styles/AdminUserList.css";
 
 const API_BASE_URL = apiUrl("/api/users");
+
+// =====================================================
+// TYPES
+// =====================================================
 
 type User = {
   user_id: number;
@@ -43,7 +50,16 @@ interface MutationResponse {
   success?: boolean;
   message?: string;
   error?: string;
+
+  user?: {
+    user_id: number;
+    username: string;
+  };
 }
+
+// =====================================================
+// ROLE CLASS HELPER
+// =====================================================
 
 function normalizeRoleClass(role: string) {
   return String(role || "")
@@ -52,35 +68,93 @@ function normalizeRoleClass(role: string) {
     .replace(/\s+/g, "-");
 }
 
+// =====================================================
+// COMPONENT
+// =====================================================
+
 export default function UserList() {
   const navigate = useNavigate();
 
   const session = authService.getSession();
   const token = authService.getToken();
+
   const userRole = session?.role;
   const authenticated = Boolean(session && token);
+
+  // =====================================================
+  // GENERAL STATES
+  // =====================================================
 
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [actionUserId, setActionUserId] = useState<number | null>(null);
+
+  // =====================================================
+  // ARCHIVE STATES
+  // =====================================================
+
+  const [archiveTarget, setArchiveTarget] = useState<User | null>(null);
+
+  const [archivingUserId, setArchivingUserId] = useState<number | null>(null);
+
+  const [archiveCountdown, setArchiveCountdown] = useState(10);
+
+  // =====================================================
+  // ACTIVATE / DEACTIVATE STATES
+  // =====================================================
+
+  const [statusTarget, setStatusTarget] = useState<User | null>(null);
+
+  const [pendingStatus, setPendingStatus] = useState<boolean | null>(null);
+
+  // =====================================================
+  // RESET PASSWORD STATES
+  // =====================================================
+
+  const [resetPasswordTarget, setResetPasswordTarget] = useState<User | null>(
+    null,
+  );
+
+  const [newPassword, setNewPassword] = useState("");
+
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [passwordError, setPasswordError] = useState("");
+
+  // =====================================================
+  // AUTHORIZATION
+  // =====================================================
 
   useEffect(() => {
     if (!authenticated) {
       authService.logout();
-      navigate("/login", { replace: true });
+
+      navigate("/login", {
+        replace: true,
+      });
+
       return;
     }
 
     if (userRole !== "Admin") {
       if (userRole) {
-        navigate(authService.getDashboardRoute(userRole), { replace: true });
+        navigate(authService.getDashboardRoute(userRole), {
+          replace: true,
+        });
       } else {
-        navigate("/login", { replace: true });
+        navigate("/login", {
+          replace: true,
+        });
       }
     }
   }, [authenticated, userRole, navigate]);
+
+  // =====================================================
+  // LOAD USERS
+  // =====================================================
 
   useEffect(() => {
     if (!authenticated || userRole !== "Admin") {
@@ -97,12 +171,14 @@ export default function UserList() {
         const response = await authService.authFetch(API_BASE_URL, {
           method: "GET",
           signal: controller.signal,
+
           headers: {
             Accept: "application/json",
           },
         });
 
         const contentType = response.headers.get("content-type") || "";
+
         let data: User[] | UserListResponse | null = null;
 
         if (contentType.includes("application/json")) {
@@ -120,7 +196,11 @@ export default function UserList() {
 
         if (response.status === 401) {
           authService.logout();
-          navigate("/login", { replace: true });
+
+          navigate("/login", {
+            replace: true,
+          });
+
           return;
         }
 
@@ -161,12 +241,14 @@ export default function UserList() {
         }
 
         console.error("LOAD USERS ERROR:", err);
+
         setUsers([]);
 
         if (err instanceof TypeError) {
           setError(
             "Unable to connect to the user server. Make sure the backend is running on port 3000.",
           );
+
           return;
         }
 
@@ -185,40 +267,132 @@ export default function UserList() {
     };
   }, [authenticated, userRole, navigate]);
 
-  const resetPassword = async (userId: number, username: string) => {
+  // =====================================================
+  // ARCHIVE COUNTDOWN
+  // =====================================================
+
+  useEffect(() => {
+    if (!archiveTarget) {
+      return;
+    }
+
+    if (archivingUserId !== null) {
+      return;
+    }
+
+    if (archiveCountdown <= 0) {
+      void archiveUser();
+
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setArchiveCountdown((current) => current - 1);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [archiveTarget, archiveCountdown, archivingUserId]);
+
+  // =====================================================
+  // OPEN RESET PASSWORD MODAL
+  // =====================================================
+
+  const openResetPasswordModal = (targetUser: User) => {
+    if (actionUserId !== null || archivingUserId !== null) {
+      return;
+    }
+
+    setError("");
+    setPasswordError("");
+
+    setResetPasswordTarget(targetUser);
+
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+
+  // =====================================================
+  // CLOSE RESET PASSWORD MODAL
+  // =====================================================
+
+  const closeResetPasswordModal = () => {
+    if (actionUserId !== null) {
+      return;
+    }
+
+    setResetPasswordTarget(null);
+
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+  };
+
+  // =====================================================
+  // RESET PASSWORD
+  // =====================================================
+
+  const resetPassword = async () => {
+    if (!resetPasswordTarget) {
+      return;
+    }
+
     if (!authenticated || userRole !== "Admin") {
-      setError(
+      setPasswordError(
         "Your session has expired or you are not authorized to reset passwords.",
       );
+
       return;
     }
+
+    const userId = Number(resetPasswordTarget.user_id);
 
     if (!Number.isInteger(userId) || userId <= 0) {
-      setError("Invalid user ID.");
-      return;
-    }
+      setPasswordError("Invalid user ID.");
 
-    const newPassword = window.prompt(`Enter new password for ${username}:`);
-
-    if (!newPassword) {
       return;
     }
 
     const cleanPassword = newPassword.trim();
 
+    const cleanConfirmPassword = confirmPassword.trim();
+
+    if (!cleanPassword) {
+      setPasswordError("Please enter a new password.");
+
+      return;
+    }
+
     if (cleanPassword.length < 8) {
-      window.alert("Password must be at least 8 characters.");
+      setPasswordError("Password must be at least 8 characters.");
+
+      return;
+    }
+
+    if (!cleanConfirmPassword) {
+      setPasswordError("Please confirm the new password.");
+
+      return;
+    }
+
+    if (cleanPassword !== cleanConfirmPassword) {
+      setPasswordError("Passwords do not match.");
+
       return;
     }
 
     try {
       setActionUserId(userId);
+
+      setPasswordError("");
       setError("");
 
       const response = await authService.authFetch(
         `${API_BASE_URL}/${userId}/reset-password`,
         {
           method: "PATCH",
+
           body: JSON.stringify({
             password: cleanPassword,
           }),
@@ -226,6 +400,7 @@ export default function UserList() {
       );
 
       const contentType = response.headers.get("content-type") || "";
+
       let data: MutationResponse | null = null;
 
       if (contentType.includes("application/json")) {
@@ -243,7 +418,11 @@ export default function UserList() {
 
       if (response.status === 401) {
         authService.logout();
-        navigate("/login", { replace: true });
+
+        navigate("/login", {
+          replace: true,
+        });
+
         return;
       }
 
@@ -263,55 +442,95 @@ export default function UserList() {
         );
       }
 
-      window.alert(data?.message || "Password reset successfully.");
+      setResetPasswordTarget(null);
+
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordError("");
     } catch (err) {
       console.error("RESET PASSWORD ERROR:", err);
 
-      const message =
-        err instanceof Error ? err.message : "Password reset failed.";
-
-      setError(message);
-      window.alert(message);
+      setPasswordError(
+        err instanceof Error ? err.message : "Password reset failed.",
+      );
     } finally {
       setActionUserId(null);
     }
   };
 
-  const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
+  // =====================================================
+  // OPEN STATUS MODAL
+  // =====================================================
+
+  const openStatusModal = (targetUser: User) => {
+    if (actionUserId !== null || archivingUserId !== null) {
+      return;
+    }
+
+    setError("");
+
+    setStatusTarget(targetUser);
+
+    setPendingStatus(!targetUser.is_active);
+  };
+
+  // =====================================================
+  // CLOSE STATUS MODAL
+  // =====================================================
+
+  const closeStatusModal = () => {
+    if (actionUserId !== null) {
+      return;
+    }
+
+    setStatusTarget(null);
+
+    setPendingStatus(null);
+  };
+
+  // =====================================================
+  // CONFIRM STATUS CHANGE
+  // =====================================================
+
+  const confirmUserStatusChange = async () => {
+    if (!statusTarget || pendingStatus === null) {
+      return;
+    }
+
     if (!authenticated || userRole !== "Admin") {
       setError(
         "Your session has expired or you are not authorized to update users.",
       );
+
       return;
     }
+
+    const userId = Number(statusTarget.user_id);
 
     if (!Number.isInteger(userId) || userId <= 0) {
       setError("Invalid user ID.");
-      return;
-    }
 
-    const action = currentStatus ? "Deactivate" : "Activate";
-    const confirmAction = window.confirm(`${action} this user account?`);
-
-    if (!confirmAction) {
       return;
     }
 
     try {
       setActionUserId(userId);
+
       setError("");
 
       const response = await authService.authFetch(
         `${API_BASE_URL}/${userId}/status`,
         {
           method: "PATCH",
+
           body: JSON.stringify({
-            is_active: !currentStatus,
+            is_active: pendingStatus,
           }),
         },
       );
 
       const contentType = response.headers.get("content-type") || "";
+
       let data: MutationResponse | null = null;
 
       if (contentType.includes("application/json")) {
@@ -329,7 +548,11 @@ export default function UserList() {
 
       if (response.status === 401) {
         authService.logout();
-        navigate("/login", { replace: true });
+
+        navigate("/login", {
+          replace: true,
+        });
+
         return;
       }
 
@@ -354,29 +577,184 @@ export default function UserList() {
           currentUser.user_id === userId
             ? {
                 ...currentUser,
-                is_active: !currentStatus,
+
+                is_active: pendingStatus,
               }
             : currentUser,
         ),
       );
+
+      setStatusTarget(null);
+
+      setPendingStatus(null);
     } catch (err) {
       console.error("UPDATE USER STATUS ERROR:", err);
 
-      const message =
-        err instanceof Error ? err.message : "Failed to update user status.";
-
-      setError(message);
-      window.alert(message);
+      setError(
+        err instanceof Error ? err.message : "Failed to update user status.",
+      );
     } finally {
       setActionUserId(null);
     }
   };
 
+  // =====================================================
+  // START ARCHIVE
+  // =====================================================
+
+  const startArchiveUser = (targetUser: User) => {
+    if (archivingUserId !== null || actionUserId !== null) {
+      return;
+    }
+
+    setError("");
+
+    setArchiveTarget(targetUser);
+
+    setArchiveCountdown(10);
+  };
+
+  // =====================================================
+  // UNDO ARCHIVE
+  // =====================================================
+
+  const undoArchive = () => {
+    if (archivingUserId !== null) {
+      return;
+    }
+
+    setArchiveTarget(null);
+
+    setArchiveCountdown(10);
+  };
+
+  // =====================================================
+  // ARCHIVE USER
+  // =====================================================
+
+  const archiveUser = async () => {
+    if (!archiveTarget) {
+      return;
+    }
+
+    if (archivingUserId !== null) {
+      return;
+    }
+
+    if (!authenticated || userRole !== "Admin") {
+      setError(
+        "Your session has expired or you are not authorized to archive users.",
+      );
+
+      return;
+    }
+
+    const userId = Number(archiveTarget.user_id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      setError("Invalid user ID.");
+
+      return;
+    }
+
+    try {
+      setArchivingUserId(userId);
+
+      setError("");
+
+      const response = await authService.authFetch(
+        `${API_BASE_URL}/${userId}`,
+        {
+          method: "DELETE",
+
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      const contentType = response.headers.get("content-type") || "";
+
+      let data: MutationResponse | null = null;
+
+      if (contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+
+        throw new Error(
+          `Server returned a non-JSON response (${response.status}): ${text.slice(
+            0,
+            200,
+          )}`,
+        );
+      }
+
+      if (response.status === 401) {
+        authService.logout();
+
+        navigate("/login", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      if (response.status === 403) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "You are not authorized to archive users.",
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            `Failed to archive user (${response.status}).`,
+        );
+      }
+
+      setUsers((previous) =>
+        previous.filter((currentUser) => currentUser.user_id !== userId),
+      );
+
+      setArchiveTarget(null);
+
+      setArchiveCountdown(10);
+    } catch (err) {
+      console.error("ARCHIVE USER ERROR:", err);
+
+      if (err instanceof TypeError) {
+        setError(
+          "Unable to connect to the user server. Make sure the backend is running.",
+        );
+      } else {
+        setError(
+          err instanceof Error ? err.message : "Failed to archive user.",
+        );
+      }
+
+      setArchiveTarget(null);
+
+      setArchiveCountdown(10);
+    } finally {
+      setArchivingUserId(null);
+    }
+  };
+
+  // =====================================================
+  // SUMMARY
+  // =====================================================
+
   const summary = useMemo(() => {
     const active = users.filter((currentUser) =>
       Boolean(currentUser.is_active),
     ).length;
+
     const inactive = users.length - active;
+
     const roles = new Set(
       users
         .map((currentUser) => currentUser.role?.trim())
@@ -389,6 +767,10 @@ export default function UserList() {
       roles,
     };
   }, [users]);
+
+  // =====================================================
+  // SEARCH
+  // =====================================================
 
   const filteredUsers = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -403,6 +785,7 @@ export default function UserList() {
         currentUser.username,
         currentUser.email,
         currentUser.role,
+
         currentUser.is_active ? "active" : "inactive",
       ];
 
@@ -414,6 +797,10 @@ export default function UserList() {
     });
   }, [users, searchTerm]);
 
+  // =====================================================
+  // AUTH GUARD
+  // =====================================================
+
   if (!authenticated || !session || userRole !== "Admin") {
     return null;
   }
@@ -421,6 +808,10 @@ export default function UserList() {
   return (
     <DashboardLayout>
       <main className="admin-user-directory">
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
         <section className="admin-user-directory__hero">
           <div className="admin-user-directory__hero-copy">
             <div className="admin-user-directory__eyebrow">
@@ -434,7 +825,8 @@ export default function UserList() {
 
             <p>
               Review portal accounts, manage access status, edit account
-              information, and reset user passwords.
+              information, reset passwords, and archive accounts that should no
+              longer appear in the active directory.
             </p>
           </div>
 
@@ -448,6 +840,10 @@ export default function UserList() {
           </button>
         </section>
 
+        {/* =================================================
+            SUMMARY
+        ================================================= */}
+
         <section
           className="admin-user-directory__summary"
           aria-label="User account overview"
@@ -456,8 +852,10 @@ export default function UserList() {
             <span className="admin-user-directory__summary-icon">
               <UsersRound size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Total Accounts</small>
+
               <strong>{loading ? "…" : users.length.toLocaleString()}</strong>
             </div>
           </article>
@@ -466,8 +864,10 @@ export default function UserList() {
             <span className="admin-user-directory__summary-icon">
               <UserCheck size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Active Accounts</small>
+
               <strong>{loading ? "…" : summary.active.toLocaleString()}</strong>
             </div>
           </article>
@@ -476,8 +876,10 @@ export default function UserList() {
             <span className="admin-user-directory__summary-icon">
               <UserX size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Inactive Accounts</small>
+
               <strong>
                 {loading ? "…" : summary.inactive.toLocaleString()}
               </strong>
@@ -488,19 +890,30 @@ export default function UserList() {
             <span className="admin-user-directory__summary-icon">
               <ShieldCheck size={19} aria-hidden="true" />
             </span>
+
             <div>
               <small>Roles Represented</small>
+
               <strong>{loading ? "…" : summary.roles}</strong>
             </div>
           </article>
         </section>
 
+        {/* =================================================
+            ERROR
+        ================================================= */}
+
         {error && (
           <div className="admin-user-directory__error" role="status">
             <CircleAlert size={18} aria-hidden="true" />
+
             <span>{error}</span>
           </div>
         )}
+
+        {/* =================================================
+            USER LIST
+        ================================================= */}
 
         <section className="admin-user-directory__workspace">
           <header className="admin-user-directory__workspace-header">
@@ -508,7 +921,9 @@ export default function UserList() {
               <span className="admin-user-directory__section-kicker">
                 Portal Accounts
               </span>
+
               <h2>User List</h2>
+
               <p>
                 {loading
                   ? "Loading user accounts…"
@@ -564,6 +979,7 @@ export default function UserList() {
                           className="admin-user-directory__spinner"
                           aria-hidden="true"
                         />
+
                         <span>Loading users...</span>
                       </div>
                     </td>
@@ -573,6 +989,7 @@ export default function UserList() {
                     <td colSpan={6}>
                       <div className="admin-user-directory__table-state">
                         <UsersRound size={22} aria-hidden="true" />
+
                         <span>No users found.</span>
                       </div>
                     </td>
@@ -580,7 +997,11 @@ export default function UserList() {
                 ) : (
                   filteredUsers.map((currentUser) => {
                     const actionLoading = actionUserId === currentUser.user_id;
+
+                    const archiving = archivingUserId === currentUser.user_id;
+
                     const roleClass = normalizeRoleClass(currentUser.role);
+
                     const initial =
                       currentUser.username?.trim().charAt(0).toUpperCase() ||
                       "U";
@@ -601,6 +1022,7 @@ export default function UserList() {
 
                             <div>
                               <strong>{currentUser.username}</strong>
+
                               <small>Portal account</small>
                             </div>
                           </div>
@@ -630,6 +1052,8 @@ export default function UserList() {
 
                         <td>
                           <div className="admin-user-directory__actions">
+                            {/* EDIT */}
+
                             <button
                               type="button"
                               className="admin-user-directory__action admin-user-directory__action--edit"
@@ -638,36 +1062,27 @@ export default function UserList() {
                                   `/admin/user/edit/${currentUser.user_id}`,
                                 )
                               }
-                              disabled={actionLoading}
+                              disabled={actionLoading || archiving}
                             >
                               <Pencil size={14} aria-hidden="true" />
                               Edit
                             </button>
 
+                            {/* RESET PASSWORD */}
+
                             <button
                               type="button"
                               className="admin-user-directory__action admin-user-directory__action--reset"
                               onClick={() =>
-                                void resetPassword(
-                                  currentUser.user_id,
-                                  currentUser.username,
-                                )
+                                openResetPasswordModal(currentUser)
                               }
-                              disabled={actionLoading}
+                              disabled={actionLoading || archiving}
                             >
-                              {actionLoading ? (
-                                <LoaderCircle
-                                  size={14}
-                                  className="admin-user-directory__spinner"
-                                  aria-hidden="true"
-                                />
-                              ) : (
-                                <KeyRound size={14} aria-hidden="true" />
-                              )}
-                              {actionLoading
-                                ? "Processing..."
-                                : "Reset Password"}
+                              <KeyRound size={14} aria-hidden="true" />
+                              Reset Password
                             </button>
+
+                            {/* ACTIVATE / DEACTIVATE */}
 
                             <button
                               type="button"
@@ -676,13 +1091,8 @@ export default function UserList() {
                                   ? "admin-user-directory__action admin-user-directory__action--deactivate"
                                   : "admin-user-directory__action admin-user-directory__action--activate"
                               }
-                              onClick={() =>
-                                void toggleUserStatus(
-                                  currentUser.user_id,
-                                  currentUser.is_active,
-                                )
-                              }
-                              disabled={actionLoading}
+                              onClick={() => openStatusModal(currentUser)}
+                              disabled={actionLoading || archiving}
                             >
                               {actionLoading ? (
                                 <LoaderCircle
@@ -702,6 +1112,27 @@ export default function UserList() {
                                   ? "Deactivate"
                                   : "Activate"}
                             </button>
+
+                            {/* ARCHIVE */}
+
+                            <button
+                              type="button"
+                              className="admin-user-directory__action admin-user-directory__action--archive"
+                              onClick={() => startArchiveUser(currentUser)}
+                              disabled={actionLoading || archiving}
+                            >
+                              {archiving ? (
+                                <LoaderCircle
+                                  size={14}
+                                  className="admin-user-directory__spinner"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <Archive size={14} aria-hidden="true" />
+                              )}
+
+                              {archiving ? "Archiving..." : "Archive"}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -712,6 +1143,241 @@ export default function UserList() {
             </table>
           </div>
         </section>
+
+        {/* =================================================
+            RESET PASSWORD MODAL
+        ================================================= */}
+
+        {resetPasswordTarget && (
+          <Modal
+            isOpen={Boolean(resetPasswordTarget)}
+            onClose={closeResetPasswordModal}
+          >
+            <div className="admin-user-directory__reset-modal">
+              <span className="admin-user-directory__reset-modal-icon">
+                {actionUserId !== null ? (
+                  <LoaderCircle
+                    size={21}
+                    className="admin-user-directory__spinner"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <KeyRound size={21} aria-hidden="true" />
+                )}
+              </span>
+
+              <div className="admin-user-directory__reset-modal-content">
+                <h2>Reset Password</h2>
+
+                <p>
+                  Set a new password for{" "}
+                  <strong>{resetPasswordTarget.username}</strong>.
+                </p>
+
+                <div className="admin-user-directory__reset-fields">
+                  <label>
+                    <span>New Password</span>
+
+                    <input
+                      type="password"
+                      value={newPassword}
+                      placeholder="Enter new password"
+                      onChange={(event) => {
+                        setNewPassword(event.target.value);
+
+                        setPasswordError("");
+                      }}
+                      disabled={actionUserId !== null}
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Confirm Password</span>
+
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      placeholder="Confirm new password"
+                      onChange={(event) => {
+                        setConfirmPassword(event.target.value);
+
+                        setPasswordError("");
+                      }}
+                      disabled={actionUserId !== null}
+                      autoComplete="new-password"
+                    />
+                  </label>
+                </div>
+
+                {passwordError && (
+                  <div className="admin-user-directory__reset-error">
+                    <CircleAlert size={14} aria-hidden="true" />
+
+                    <span>{passwordError}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-user-directory__reset-modal-actions">
+                <button
+                  type="button"
+                  className="admin-user-directory__reset-cancel"
+                  onClick={closeResetPasswordModal}
+                  disabled={actionUserId !== null}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="admin-user-directory__reset-confirm"
+                  onClick={() => void resetPassword()}
+                  disabled={actionUserId !== null}
+                >
+                  {actionUserId !== null ? (
+                    <LoaderCircle
+                      size={14}
+                      className="admin-user-directory__spinner"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <KeyRound size={14} aria-hidden="true" />
+                  )}
+
+                  {actionUserId !== null ? "Resetting..." : "Reset Password"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* =================================================
+            ACTIVATE / DEACTIVATE MODAL
+        ================================================= */}
+
+        {statusTarget && pendingStatus !== null && (
+          <Modal isOpen={Boolean(statusTarget)} onClose={closeStatusModal}>
+            <div className="admin-user-directory__student-style-modal">
+              <span className="admin-student-management__delete-icon">
+                {actionUserId !== null ? (
+                  <LoaderCircle
+                    size={21}
+                    className="admin-user-directory__spinner"
+                    aria-hidden="true"
+                  />
+                ) : pendingStatus ? (
+                  <Power size={21} aria-hidden="true" />
+                ) : (
+                  <PowerOff size={21} aria-hidden="true" />
+                )}
+              </span>
+
+              <div>
+                <h2>{pendingStatus ? "Activate User?" : "Deactivate User?"}</h2>
+
+                <p>
+                  Are you sure you want to{" "}
+                  <strong>{pendingStatus ? "activate" : "deactivate"}</strong>{" "}
+                  <strong>{statusTarget.username}</strong>?
+                </p>
+              </div>
+
+              <div className="admin-user-directory__small-modal-actions">
+                <button
+                  type="button"
+                  className="admin-student-management__modal-button"
+                  onClick={closeStatusModal}
+                  disabled={actionUserId !== null}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    pendingStatus
+                      ? "admin-student-management__modal-button admin-user-directory__status-confirm--activate"
+                      : "admin-student-management__modal-button admin-user-directory__status-confirm--deactivate"
+                  }
+                  onClick={() => void confirmUserStatusChange()}
+                  disabled={actionUserId !== null}
+                >
+                  {pendingStatus ? "Activate" : "Deactivate"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* =================================================
+            ARCHIVE MODAL
+        ================================================= */}
+
+        {archiveTarget && (
+          <Modal isOpen={Boolean(archiveTarget)} onClose={undoArchive}>
+            <div className="admin-user-directory__archive-modal">
+              <span className="admin-user-directory__archive-modal-icon">
+                {archivingUserId !== null ? (
+                  <LoaderCircle
+                    size={21}
+                    className="admin-user-directory__spinner"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Archive size={21} aria-hidden="true" />
+                )}
+              </span>
+
+              <div>
+                <h2>
+                  {archivingUserId !== null
+                    ? "Archiving User"
+                    : "User Pending Archive"}
+                </h2>
+
+                {archivingUserId !== null ? (
+                  <p>
+                    Archiving <strong>{archiveTarget.username}</strong>. Please
+                    do not close this window.
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      <strong>{archiveTarget.username}</strong> will be archived
+                      in <strong>{archiveCountdown} seconds</strong>.
+                    </p>
+
+                    <p>
+                      Press Undo before the countdown reaches zero to keep this
+                      user active.
+                    </p>
+
+                    <div
+                      className="admin-user-directory__archive-countdown"
+                      aria-label={`${archiveCountdown} seconds remaining`}
+                    >
+                      {archiveCountdown}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {archivingUserId === null && (
+                <div className="admin-user-directory__archive-modal-actions">
+                  <button
+                    type="button"
+                    className="admin-user-directory__archive-modal-button"
+                    onClick={undoArchive}
+                  >
+                    <RotateCcw size={15} aria-hidden="true" />
+                    Undo Archive
+                  </button>
+                </div>
+              )}
+            </div>
+          </Modal>
+        )}
       </main>
     </DashboardLayout>
   );

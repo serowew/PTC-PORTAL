@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
+import ptcLogo from "../../../assets/ptclogo.jpg";
 
 import "../../../styles/RegistrarTranscriptPreview.css";
 
@@ -710,10 +711,22 @@ export default function TranscriptPreviewR() {
         </div>
 
         <div className="transcript-document">
-          <div className="transcript-header">
-            <h1>PATEROS TECHNOLOGICAL COLLEGE</h1>
+          <div className="transcript-school-header">
+            <img
+              src={ptcLogo}
+              alt="Pateros Technological College Logo"
+              className="transcript-school-logo"
+            />
 
-            <p>OFFICE OF THE REGISTRAR</p>
+            <div className="transcript-school-info">
+              <h1>PATEROS TECHNOLOGICAL COLLEGE</h1>
+
+              <p className="transcript-office">OFFICE OF THE REGISTRAR</p>
+            </div>
+          </div>
+
+          <div className="transcript-document-title">
+            <span>Official Academic Document</span>
 
             <h2>TRANSCRIPT OF RECORDS</h2>
           </div>

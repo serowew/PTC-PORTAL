@@ -344,46 +344,116 @@
 /* =========================================================
    SCHOOL HEADER
    ========================================================= */
+/* =========================================================
+   OFFICIAL SCHOOL HEADER
+========================================================= */
 
 .transcript-header {
   position: relative;
 
-  padding-bottom: 18px;
+  padding-bottom: 16px;
 
-  border-bottom: 2px solid #0f172a;
+  border-bottom: 2px solid #145c38;
+}
+
+/* LOGO + SCHOOL INFORMATION */
+
+.transcript-school-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 17px;
 
   text-align: center;
 }
 
-.transcript-header h1 {
+.transcript-school-logo {
+  flex: 0 0 auto;
+
+  width: 64px;
+  height: 64px;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+.transcript-school-info {
+  text-align: center;
+}
+
+.transcript-school-info h1 {
   margin: 0;
 
-  color: #0f172a;
+  color: #124e31;
 
-  font-size: 21px;
-  font-weight: 900;
+  font-family: "Times New Roman", Times, serif;
 
-  letter-spacing: 0.04em;
-}
-
-.transcript-header p {
-  margin: 4px 0 0;
-
-  color: #475569;
-
-  font-size: 10px;
+  font-size: 20px;
   font-weight: 700;
 
-  letter-spacing: 0.08em;
+  letter-spacing: 0.03em;
 }
 
-.transcript-header h2 {
-  margin: 15px 0 0;
+.transcript-republic {
+  margin: 0 0 2px;
 
-  color: #0f172a;
+  color: #474e49;
 
-  font-size: 16px;
-  font-weight: 900;
+  font-family: "Times New Roman", Times, serif;
+
+  font-size: 10px;
+}
+
+.transcript-office {
+  margin: 3px 0 0;
+
+  color: #303a33;
+
+  font-family: "Times New Roman", Times, serif;
+
+  font-size: 10.5px;
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+}
+
+/* =========================================================
+   TRANSCRIPT DOCUMENT TITLE
+========================================================= */
+
+.transcript-document-title {
+  padding-top: 18px;
+
+  text-align: center;
+}
+
+.transcript-document-title > span {
+  display: block;
+
+  color: #667069;
+
+  font-family: "Times New Roman", Times, serif;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+.transcript-document-title h2 {
+  margin: 4px 0 0;
+
+  color: #16251c;
+
+  font-family: "Times New Roman", Times, serif;
+
+  font-size: 19px;
+  font-weight: 700;
 
   letter-spacing: 0.08em;
 }
@@ -1180,27 +1250,25 @@
   .signature-line {
     min-width: 180px;
   }
-}
-/* =========================================================
-   PRINT PREVIEW
+} /* =========================================================
+   PRINT
    PRINT ONLY THE OFFICIAL TRANSCRIPT
-   MULTIPLE PAGES ALLOWED
-   ========================================================= */
+========================================================= */
 
 @media print {
-  /* =======================================================
-     PHYSICAL PAGE
-     ======================================================= */
-
   @page {
     size: A4 portrait;
     margin: 12mm 11mm 14mm;
   }
 
   html,
-  body {
+  body,
+  #root {
     width: 100% !important;
     min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
 
     margin: 0 !important;
     padding: 0 !important;
@@ -1211,43 +1279,102 @@
   }
 
   /* =======================================================
-     MOST IMPORTANT RULE
+     RESET DASHBOARD LAYOUT
+  ======================================================= */
 
-     Hide absolutely everything in the application first.
-     This prevents:
-     - sidebar
-     - dashboard header
-     - navigation
-     - action buttons
-     - notices
-     - layout containers
-     from appearing in print.
-     ======================================================= */
+  .dashboard-wrapper {
+    display: block !important;
 
-  body * {
-    visibility: hidden !important;
+    width: 100% !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
+  }
+
+  .dashboard-main {
+    display: block !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
+  }
+
+  .dashboard-content {
+    display: block !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
   }
 
   /* =======================================================
-     SHOW ONLY OFFICIAL TRANSCRIPT
-     ======================================================= */
+     HIDE PORTAL UI
+  ======================================================= */
 
-  .transcript-document,
-  .transcript-document * {
-    visibility: visible !important;
+  .dashboard-wrapper > :first-child,
+  .header-container,
+  .app-header,
+  footer,
+  .transcript-action-bar,
+  .transcript-official-notice {
+    display: none !important;
   }
 
   /* =======================================================
-     PLACE TRANSCRIPT AT TOP-LEFT OF PRINT PAGE
+     TRANSCRIPT PAGE
+  ======================================================= */
 
-     This removes the DashboardLayout spacing completely.
-     ======================================================= */
+  .transcript-page {
+    display: block !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
+  }
+
+  /* =======================================================
+     TRANSCRIPT DOCUMENT
+  ======================================================= */
 
   .transcript-document {
-    position: absolute !important;
+    display: block !important;
 
-    top: 0 !important;
-    left: 0 !important;
+    position: static !important;
 
     width: 100% !important;
     max-width: none !important;
@@ -1269,11 +1396,20 @@
     background: #ffffff !important;
 
     box-shadow: none !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .transcript-document,
+  .transcript-document * {
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   /* =======================================================
-     REMOVE SCREEN-ONLY ELEMENTS INSIDE TRANSCRIPT
-     ======================================================= */
+     HIDE PREVIEW LABEL
+  ======================================================= */
 
   .transcript-preview-label {
     display: none !important;
@@ -1281,7 +1417,7 @@
 
   /* =======================================================
      SCHOOL HEADER
-     ======================================================= */
+  ======================================================= */
 
   .transcript-header {
     position: relative !important;
@@ -1291,17 +1427,52 @@
 
     border-bottom: 2px solid #000000 !important;
 
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
 
-    break-after: avoid;
-    page-break-after: avoid;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
   }
 
-  .transcript-header h1 {
+  .transcript-school-header {
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 12px !important;
+
+    text-align: center !important;
+  }
+
+  /* =======================================================
+     LOGO
+  ======================================================= */
+
+  .transcript-school-logo {
+    display: block !important;
+
+    flex: 0 0 auto !important;
+
+    width: 58px !important;
+    height: 58px !important;
+
+    object-fit: contain !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .transcript-school-info {
+    text-align: center !important;
+  }
+
+  .transcript-school-info h1 {
     margin: 0 !important;
 
     color: #000000 !important;
+
+    font-family: "Times New Roman", Times, serif !important;
 
     font-size: 17px !important;
     font-weight: 900 !important;
@@ -1309,19 +1480,58 @@
     letter-spacing: 0.03em !important;
   }
 
-  .transcript-header p {
+  .transcript-republic {
+    margin: 0 0 2px !important;
+
+    color: #000000 !important;
+
+    font-family: "Times New Roman", Times, serif !important;
+
+    font-size: 8px !important;
+  }
+
+  .transcript-office {
+    margin: 2px 0 0 !important;
+
+    color: #000000 !important;
+
+    font-family: "Times New Roman", Times, serif !important;
+
+    font-size: 8px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 0.1em !important;
+  }
+
+  /* =======================================================
+     DOCUMENT TITLE
+  ======================================================= */
+
+  .transcript-document-title {
+    padding-top: 9px !important;
+
+    text-align: center !important;
+  }
+
+  .transcript-document-title > span {
+    display: block !important;
+
+    color: #000000 !important;
+
+    font-size: 6px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 0.1em !important;
+
+    text-transform: uppercase !important;
+  }
+
+  .transcript-document-title h2 {
     margin: 3px 0 0 !important;
 
     color: #000000 !important;
 
-    font-size: 8px !important;
-    font-weight: 700 !important;
-  }
-
-  .transcript-header h2 {
-    margin: 9px 0 0 !important;
-
-    color: #000000 !important;
+    font-family: "Times New Roman", Times, serif !important;
 
     font-size: 13px !important;
     font-weight: 900 !important;
@@ -1331,7 +1541,7 @@
 
   /* =======================================================
      STUDENT INFORMATION
-     ======================================================= */
+  ======================================================= */
 
   .transcript-student-info {
     width: 100% !important;
@@ -1340,8 +1550,8 @@
 
     border: 1px solid #000000 !important;
 
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   .student-info-row {
@@ -1390,11 +1600,7 @@
 
   /* =======================================================
      ACADEMIC HISTORY
-
-     IMPORTANT:
-     Allow the complete academic history to span as many
-     pages as necessary.
-     ======================================================= */
+  ======================================================= */
 
   .transcript-academic-history {
     width: 100% !important;
@@ -1407,9 +1613,7 @@
 
   /* =======================================================
      ACADEMIC YEAR
-
-     Academic years are allowed to continue onto another page.
-     ======================================================= */
+  ======================================================= */
 
   .transcript-academic-year {
     width: 100% !important;
@@ -1422,7 +1626,6 @@
 
   .transcript-academic-year > h3 {
     margin: 0 0 6px !important;
-
     padding: 0 0 4px !important;
 
     border-bottom: 1px solid #000000 !important;
@@ -1438,12 +1641,7 @@
 
   /* =======================================================
      SEMESTER
-
-     DO NOT use break-inside: avoid here.
-
-     A semester may contain many subjects and MUST be
-     allowed to continue onto page 2, page 3, etc.
-     ======================================================= */
+  ======================================================= */
 
   .transcript-semester {
     width: 100% !important;
@@ -1456,6 +1654,7 @@
 
   .transcript-semester-heading {
     display: flex !important;
+
     align-items: center !important;
     justify-content: space-between !important;
 
@@ -1484,7 +1683,7 @@
 
   /* =======================================================
      TABLE WRAPPER
-     ======================================================= */
+  ======================================================= */
 
   .transcript-table-wrapper {
     width: 100% !important;
@@ -1496,8 +1695,8 @@
   }
 
   /* =======================================================
-     TRANSCRIPT TABLE
-     ======================================================= */
+     TABLE
+  ======================================================= */
 
   .transcript-table {
     width: 100% !important;
@@ -1512,10 +1711,6 @@
     background: #ffffff !important;
   }
 
-  /* =======================================================
-     REPEAT TABLE HEADER ON NEW PRINT PAGE
-     ======================================================= */
-
   .transcript-table thead {
     display: table-header-group !important;
   }
@@ -1524,22 +1719,19 @@
     display: table-row-group !important;
   }
 
-  /* =======================================================
-     KEEP EACH SUBJECT ROW TOGETHER
-     ======================================================= */
-
   .transcript-table tr {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
   .transcript-table th {
-    padding: 4px 4px !important;
+    padding: 4px !important;
 
     border-right: 1px solid #000000 !important;
     border-bottom: 1px solid #000000 !important;
 
     background: #ffffff !important;
+
     color: #000000 !important;
 
     font-size: 6px !important;
@@ -1561,6 +1753,7 @@
     border-bottom: 1px solid #b8b8b8 !important;
 
     background: #ffffff !important;
+
     color: #000000 !important;
 
     font-size: 6.5px !important;
@@ -1570,7 +1763,6 @@
     vertical-align: middle !important;
 
     overflow-wrap: anywhere !important;
-    word-break: normal !important;
   }
 
   .transcript-table td:last-child {
@@ -1578,8 +1770,8 @@
   }
 
   /* =======================================================
-     TABLE COLUMN WIDTHS
-     ======================================================= */
+     COLUMN WIDTHS
+  ======================================================= */
 
   .transcript-table th:nth-child(1),
   .transcript-table td:nth-child(1) {
@@ -1594,34 +1786,30 @@
   .transcript-table th:nth-child(3),
   .transcript-table td:nth-child(3) {
     width: 8% !important;
-
     text-align: center !important;
   }
 
   .transcript-table th:nth-child(4),
   .transcript-table td:nth-child(4) {
     width: 13% !important;
-
     text-align: center !important;
   }
 
   .transcript-table th:nth-child(5),
   .transcript-table td:nth-child(5) {
     width: 13% !important;
-
     text-align: center !important;
   }
 
   .transcript-table th:nth-child(6),
   .transcript-table td:nth-child(6) {
     width: 17% !important;
-
     text-align: center !important;
   }
 
   /* =======================================================
      SUBJECT CODE
-     ======================================================= */
+  ======================================================= */
 
   .transcript-subject-code {
     color: #000000 !important;
@@ -1631,12 +1819,12 @@
   }
 
   /* =======================================================
-     FINAL RATING
+     REMOVE SCREEN BADGES
+  ======================================================= */
 
-     Remove screen badge styling.
-     ======================================================= */
-
-  .transcript-final-rating {
+  .transcript-final-rating,
+  .transcript-result,
+  .transcript-subject-status {
     display: inline !important;
 
     min-width: 0 !important;
@@ -1648,34 +1836,23 @@
     border-radius: 0 !important;
 
     background: transparent !important;
+
     color: #000000 !important;
 
     font-size: 6.5px !important;
+  }
+
+  .transcript-final-rating {
     font-weight: 900 !important;
   }
 
-  /* =======================================================
-     RESULT
-     ======================================================= */
+  .transcript-result,
+  .transcript-subject-status {
+    font-weight: 700 !important;
+  }
 
   .transcript-result-cell {
     display: block !important;
-  }
-
-  .transcript-result {
-    display: inline !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-
-    border: none !important;
-    border-radius: 0 !important;
-
-    background: transparent !important;
-    color: #000000 !important;
-
-    font-size: 6.5px !important;
-    font-weight: 700 !important;
   }
 
   .transcript-retake {
@@ -1690,31 +1867,12 @@
   }
 
   /* =======================================================
-     SUBJECT STATUS
-     ======================================================= */
-
-  .transcript-subject-status {
-    display: inline !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-
-    border: none !important;
-    border-radius: 0 !important;
-
-    background: transparent !important;
-    color: #000000 !important;
-
-    font-size: 6.5px !important;
-    font-weight: 700 !important;
-  }
-
-  /* =======================================================
      SEMESTER SUMMARY
-     ======================================================= */
+  ======================================================= */
 
   .transcript-semester-summary {
     display: flex !important;
+
     justify-content: flex-end !important;
 
     gap: 4px !important;
@@ -1756,7 +1914,7 @@
 
   /* =======================================================
      OVERALL SUMMARY
-     ======================================================= */
+  ======================================================= */
 
   .transcript-summary {
     display: grid !important;
@@ -1804,10 +1962,11 @@
 
   /* =======================================================
      GRADE GUIDE
-     ======================================================= */
+  ======================================================= */
 
   .transcript-grade-guide {
     display: flex !important;
+
     align-items: center !important;
     justify-content: space-between !important;
 
@@ -1850,9 +2009,7 @@
 
   /* =======================================================
      CERTIFICATION
-
-     Keep this block together if possible.
-     ======================================================= */
+  ======================================================= */
 
   .transcript-certification {
     margin-top: 10px !important;
@@ -1876,7 +2033,7 @@
 
   /* =======================================================
      DOCUMENT INFORMATION
-     ======================================================= */
+  ======================================================= */
 
   .transcript-document-info {
     display: grid !important;
@@ -1917,13 +2074,11 @@
 
   /* =======================================================
      SIGNATURE
-
-     Keep signature together and move to next page
-     automatically if there isn't enough room.
-     ======================================================= */
+  ======================================================= */
 
   .transcript-signature {
     display: flex !important;
+
     justify-content: flex-end !important;
 
     margin-top: 24px !important;
@@ -1956,7 +2111,7 @@
 
   /* =======================================================
      EMPTY STATE
-     ======================================================= */
+  ======================================================= */
 
   .transcript-empty {
     border: 1px solid #000000 !important;
@@ -1973,9 +2128,10 @@
 
   /* =======================================================
      PRINT COLORS
-     ======================================================= */
+  ======================================================= */
 
-  * {
+  .transcript-document,
+  .transcript-document * {
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
   }
