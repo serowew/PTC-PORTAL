@@ -1,397 +1,223 @@
 .registrar-manual-payment {
-  --rmp-green: #15803d;
-  --rmp-green-dark: #166534;
-  --rmp-green-soft: #f0fdf4;
-  --rmp-text: #0f172a;
-  --rmp-muted: #64748b;
-  --rmp-border: #e2e8f0;
-  --rmp-panel: #ffffff;
-  --rmp-soft: #f8fafc;
-
-  display: grid;
-  gap: 22px;
-  padding: 4px;
-  color: var(--rmp-text);
+  width: min(1200px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 48px;
+  color: #202124;
 }
 
-.registrar-manual-payment__hero,
-.registrar-manual-payment__toolbar-panel,
-.registrar-manual-payment__panel,
-.registrar-manual-payment__verify-panel {
-  border: 1px solid var(--rmp-border);
-  border-radius: 18px;
-  background: var(--rmp-panel);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-}
-
-.registrar-manual-payment__hero {
+.registrar-manual-payment__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
-  padding: 26px;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.registrar-manual-payment__eyebrow {
+.registrar-manual-payment__header span {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  color: var(--rmp-green);
-  font-size: 12px;
+  gap: 8px;
+  color: #16834b;
+  font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.registrar-manual-payment__hero h1 {
-  margin: 8px 0 0;
-  font-size: 28px;
+.registrar-manual-payment__header h1 {
+  margin: 8px 0;
+  color: #171717;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
   line-height: 1.15;
 }
 
-.registrar-manual-payment__hero p {
-  max-width: 760px;
-  margin: 8px 0 0;
-  color: var(--rmp-muted);
+.registrar-manual-payment__header p {
+  margin: 0;
+  color: #5b6068;
   line-height: 1.6;
 }
 
-.registrar-manual-payment__hero-icon {
-  flex: 0 0 auto;
-  color: var(--rmp-green);
-}
-
-.registrar-manual-payment__message {
-  display: flex;
+.registrar-manual-payment__header button {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  font-size: 14px;
+  gap: 8px;
+  border: 1px solid #16834b;
+  border-radius: 9px;
+  padding: 10px 15px;
+  background: #16834b;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.registrar-manual-payment__message--error {
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
+.registrar-manual-payment__header button:hover:not(:disabled) {
+  background: #116b3d;
 }
 
-.registrar-manual-payment__message--success {
-  border: 1px solid #bbf7d0;
-  background: var(--rmp-green-soft);
-  color: var(--rmp-green-dark);
+.registrar-manual-payment button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.registrar-manual-payment__summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
-}
-
-.registrar-manual-payment__summary-card {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  min-height: 92px;
-  padding: 18px;
-  border: 1px solid var(--rmp-border);
-  border-radius: 14px;
-  background: var(--rmp-panel);
-}
-
-.registrar-manual-payment__summary-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
-  background: var(--rmp-green-soft);
-  color: var(--rmp-green);
-}
-
-.registrar-manual-payment__summary-card span {
-  display: block;
-  color: var(--rmp-muted);
-  font-size: 12px;
-}
-
-.registrar-manual-payment__summary-card strong {
-  display: block;
-  margin-top: 2px;
-  font-size: 23px;
-}
-
-.registrar-manual-payment__toolbar-panel,
-.registrar-manual-payment__panel,
-.registrar-manual-payment__verify-panel {
-  padding: 20px;
+.registrar-manual-payment__error {
+  margin: 0 0 18px;
+  border: 1px solid #f0b8b8;
+  border-radius: 9px;
+  padding: 12px 14px;
+  background: #fff1f1;
+  color: #a12828;
 }
 
 .registrar-manual-payment__toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 18px;
+  border: 1px solid #d9dedb;
+  border-radius: 10px;
+  padding: 11px 14px;
+  background: #fff;
+  color: #69716c;
+  box-shadow: 0 3px 12px rgba(20, 40, 28, 0.04);
 }
 
-.registrar-manual-payment__search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.registrar-manual-payment__search svg {
-  position: absolute;
-  left: 13px;
-  color: var(--rmp-muted);
-}
-
-.registrar-manual-payment__search input {
+.registrar-manual-payment__toolbar input {
   width: 100%;
-  padding: 12px 14px 12px 40px;
-  border: 1px solid var(--rmp-border);
-  border-radius: 10px;
-  color: var(--rmp-text);
-  outline: none;
-}
-
-.registrar-manual-payment__search input:focus,
-.registrar-manual-payment__remarks-field textarea:focus {
-  border-color: #86efac;
-  box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.25);
-}
-
-.registrar-manual-payment__refresh-button,
-.registrar-manual-payment__secondary-button,
-.registrar-manual-payment__primary-button,
-.registrar-manual-payment__verify-button,
-.registrar-manual-payment__icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
   border: 0;
-  cursor: pointer;
+  outline: 0;
+  background: transparent;
+  color: #202124;
   font: inherit;
+  font-size: 0.95rem;
 }
 
-.registrar-manual-payment__refresh-button,
-.registrar-manual-payment__secondary-button {
-  padding: 11px 15px;
-  border: 1px solid var(--rmp-border);
-  border-radius: 10px;
-  background: var(--rmp-panel);
-  color: var(--rmp-text);
-  font-weight: 700;
+.registrar-manual-payment__toolbar input::placeholder {
+  color: #8a918c;
 }
 
-.registrar-manual-payment__refresh-button:disabled,
-.registrar-manual-payment__secondary-button:disabled,
-.registrar-manual-payment__primary-button:disabled,
-.registrar-manual-payment__verify-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
+.registrar-manual-payment__panel {
+  overflow: hidden;
+  border: 1px solid #e1e5e2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 40, 28, 0.05);
 }
 
-.registrar-manual-payment__panel-heading,
-.registrar-manual-payment__verify-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 15px;
-}
-
-.registrar-manual-payment__panel-heading h2,
-.registrar-manual-payment__verify-heading h2 {
+.registrar-manual-payment__panel h2 {
   margin: 0;
-  font-size: 19px;
+  padding: 20px 22px;
+  color: #202124;
+  font-size: 1.15rem;
 }
 
-.registrar-manual-payment__panel-heading p,
-.registrar-manual-payment__verify-heading p {
-  margin: 5px 0 0;
-  color: var(--rmp-muted);
-  font-size: 13px;
-}
-
-.registrar-manual-payment__table-wrap {
-  overflow-x: auto;
-  margin-top: 18px;
+.registrar-manual-payment__panel > p {
+  margin: 0;
+  padding: 24px 22px;
+  color: #626862;
 }
 
 .registrar-manual-payment__table {
   width: 100%;
-  min-width: 980px;
+  overflow-x: auto;
+}
+
+.registrar-manual-payment table {
+  width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
-.registrar-manual-payment__table th {
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--rmp-border);
-  color: var(--rmp-muted);
-  font-size: 11px;
+.registrar-manual-payment th {
+  padding: 12px 18px;
+  border-top: 1px solid #edf0ee;
+  border-bottom: 1px solid #dfe5e1;
+  background: #f7faf8;
+  color: #4c554f;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-align: left;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
-.registrar-manual-payment__table td {
-  padding: 15px 10px;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-  font-size: 13px;
+.registrar-manual-payment td {
+  padding: 15px 18px;
+  border-bottom: 1px solid #edf0ee;
+  color: #252825;
+  font-size: 0.92rem;
+  vertical-align: top;
 }
 
-.registrar-manual-payment__table td > strong,
-.registrar-manual-payment__table td > span,
-.registrar-manual-payment__student-cell span,
-.registrar-manual-payment__student-cell strong {
+.registrar-manual-payment tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.registrar-manual-payment tbody tr:hover {
+  background: #fbfdfb;
+}
+
+.registrar-manual-payment small {
   display: block;
-}
-
-.registrar-manual-payment__table td > span,
-.registrar-manual-payment__student-cell span {
   margin-top: 4px;
-  color: var(--rmp-muted);
-  font-size: 12px;
+  color: #737b75;
+  font-size: 0.78rem;
 }
 
-.registrar-manual-payment__student-cell {
+.registrar-manual-payment td strong {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #e5f7ec;
+  color: #16733f;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.registrar-manual-payment__pagination {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 16px 18px;
+  border-top: 1px solid #edf0ee;
 }
 
-.registrar-manual-payment__student-cell > svg {
-  margin-top: 2px;
-  color: var(--rmp-green);
-}
-
-.registrar-manual-payment__verify-button,
-.registrar-manual-payment__primary-button {
-  padding: 10px 13px;
-  border-radius: 9px;
-  background: var(--rmp-green);
-  color: #ffffff;
-  font-weight: 750;
-}
-
-.registrar-manual-payment__verify-button:hover,
-.registrar-manual-payment__primary-button:hover {
-  background: var(--rmp-green-dark);
-}
-
-.registrar-manual-payment__verify-panel {
-  border-color: #bbf7d0;
-  background: #fbfffc;
-}
-
-.registrar-manual-payment__icon-button {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: #f1f5f9;
-  color: var(--rmp-muted);
-}
-
-.registrar-manual-payment__verify-details {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 18px;
-  padding: 14px;
-  border-radius: 10px;
-  background: var(--rmp-soft);
-  color: var(--rmp-muted);
-  font-size: 13px;
-}
-
-.registrar-manual-payment__verify-details strong {
-  color: var(--rmp-text);
-}
-
-.registrar-manual-payment__remarks-field {
-  display: grid;
-  gap: 7px;
-  margin-top: 16px;
-  color: var(--rmp-text);
-  font-size: 13px;
+.registrar-manual-payment__pagination button {
+  border: 1px solid #16834b;
+  border-radius: 7px;
+  padding: 8px 12px;
+  background: #16834b;
+  color: #fff;
+  cursor: pointer;
   font-weight: 700;
 }
 
-.registrar-manual-payment__remarks-field textarea {
-  width: 100%;
-  resize: vertical;
-  padding: 11px 12px;
-  border: 1px solid var(--rmp-border);
-  border-radius: 10px;
-  font: inherit;
-  outline: none;
+.registrar-manual-payment__pagination button:disabled {
+  border-color: #cdd5cf;
+  background: #e8ece9;
+  color: #7b837d;
+  cursor: not-allowed;
 }
 
-.registrar-manual-payment__remarks-field small {
-  color: var(--rmp-muted);
-  font-weight: 400;
+.registrar-manual-payment__pagination span {
+  color: #555d57;
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
-.registrar-manual-payment__verify-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 9px;
-  margin-top: 16px;
-}
-
-.registrar-manual-payment__loading,
-.registrar-manual-payment__empty {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 54px 18px;
-  color: var(--rmp-muted);
-  text-align: center;
-}
-
-.registrar-manual-payment__empty svg {
-  color: var(--rmp-green);
-}
-
-.registrar-manual-payment__empty strong {
-  color: var(--rmp-text);
-}
-
-.is-spinning {
-  animation: registrar-manual-payment-spin 0.9s linear infinite;
-}
-
-@keyframes registrar-manual-payment-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 760px) {
-  .registrar-manual-payment__hero {
-    align-items: flex-start;
+@media (max-width: 700px) {
+  .registrar-manual-payment {
+    width: min(100% - 28px, 1200px);
+    padding-top: 22px;
   }
 
-  .registrar-manual-payment__hero h1 {
-    font-size: 23px;
-  }
-
-  .registrar-manual-payment__toolbar,
-  .registrar-manual-payment__verify-actions {
-    align-items: stretch;
+  .registrar-manual-payment__header {
     flex-direction: column;
   }
 
-  .registrar-manual-payment__verify-details {
-    grid-template-columns: 1fr;
-  }
-
-  .registrar-manual-payment__refresh-button,
-  .registrar-manual-payment__secondary-button,
-  .registrar-manual-payment__primary-button {
-    width: 100%;
+  .registrar-manual-payment__header button {
+    align-self: stretch;
+    justify-content: center;
   }
 }

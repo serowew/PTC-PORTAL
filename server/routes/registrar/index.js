@@ -24,6 +24,8 @@ import documentRequestsRoutes from "./documentRequests.js";
 
 import gradeChangeRequestRoutes from "./gradeChangeRequests.js";
 
+import financeHistoryRoutes from "./financehistory.js";
+
 const router = express.Router();
 
 // ============================================================
@@ -98,4 +100,5 @@ router.use("/document-requests", documentRequestsRoutes);
 
 router.use("/grade-change-requests", gradeChangeRequestRoutes);
 
+router.use("/finance-history", financeHistoryRoutes);
 export default router;
