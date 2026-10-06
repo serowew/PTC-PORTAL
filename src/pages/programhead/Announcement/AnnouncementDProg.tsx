@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CircleAlert,
+  Clock3,
+  Download,
+  Megaphone,
+  Paperclip,
+  UserRound,
+} from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
-
 import { authService } from "../../../services/auth.service";
-import { apiUrl } from "../../../services/api";
-import { fileService } from "../../../services/file.service";
+import "../../../styles/announcementDetailsProgramHead.css";
 
-import "../../../styles/announcementStudent.css";
-
-// =====================================================
-// API
-// =====================================================
-
-const ANNOUNCEMENTS_API_URL = apiUrl("/api/announcements");
-
-// =====================================================
-// TYPES
-// =====================================================
+const API_BASE_URL = "http://localhost:3000";
+const FILE_BASE_URL = "http://localhost:3000";
 
 interface Attachment {
   file_id: number;
@@ -27,86 +26,130 @@ interface Attachment {
   mime_type: string;
 }
 
+interface Recipient {
+  role_id: number;
+  role_name: string;
+}
+
 interface Announcement {
   announcement_id: number;
   title: string;
   content: string;
-  created_by: string;
+  created_by: string | null;
   publish_date: string;
   expiry_date: string | null;
-  attachments: Attachment[];
+  is_active: number;
+  created_at: string;
+  recipients?: Recipient[];
+  attachments?: Attachment[];
 }
 
-// =====================================================
-// COMPONENT
-// =====================================================
+interface AnnouncementDetailResponse {
+  success?: boolean;
+  announcement?: Announcement;
+  data?: Announcement;
+  message?: string;
+  error?: string;
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "Not available";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatAuthor(value: string | null | undefined) {
+  return value?.trim() || "PTC Administration";
+}
+
+function includesProgramHeadAudience(
+  recipients: Recipient[] | undefined,
+) {
+  return Array.isArray(recipients) &&
+    recipients.some(
+      (recipient) =>
+        String(recipient.role_name || "")
+          .trim()
+          .toLowerCase() === "program head",
+    );
+}
+
+function formatFileSize(bytes: number) {
+  const size = Number(bytes);
+
+  if (!Number.isFinite(size) || size <= 0) {
+    return "Size unavailable";
+  }
+
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function buildFileUrl(path: string) {
+  const normalized = path.replace(/\\/g, "/").replace(/^\/+/, "");
+
+  return `${FILE_BASE_URL}/${normalized}`;
+}
 
 export default function AnnouncementProgD() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
-  const { id } = useParams<{
-    id: string;
-  }>();
-
-  // =====================================================
-  // AUTH SESSION
-  // =====================================================
-
-  const [user] = useState(() => authService.getSession());
-
-  const [token] = useState(() => authService.getToken());
-
-  // =====================================================
-  // STATE
-  // =====================================================
+  const user = authService.getSession();
+  const token = authService.getToken();
+  const authenticated = Boolean(user && token);
+  const userRole = user?.role;
 
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
-  // =====================================================
-  // LOAD ANNOUNCEMENT
-  // =====================================================
+  useEffect(() => {
+    if (!authenticated) {
+      authService.logout();
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (userRole !== "Program Head") {
+      if (userRole) {
+        navigate(authService.getDashboardRoute(userRole), { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [authenticated, userRole, navigate]);
 
   useEffect(() => {
+    if (!authenticated || userRole !== "Program Head") {
+      return;
+    }
+
     const controller = new AbortController();
 
-    async function loadAnnouncement() {
+    const loadAnnouncement = async () => {
       try {
         setLoading(true);
         setError("");
-
-        // =================================================
-        // AUTHENTICATION CHECK
-        // =================================================
-
-        if (!user || !token) {
-          authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
-          return;
-        }
-
-        // =================================================
-        // ROLE CHECK
-        // =================================================
-
-        if (user.role !== "Program Head") {
-          navigate(authService.getDashboardRoute(user.role), {
-            replace: true,
-          });
-
-          return;
-        }
-
-        // =================================================
-        // ANNOUNCEMENT ID VALIDATION
-        // =================================================
 
         const announcementId = Number(id);
 
@@ -114,40 +157,22 @@ export default function AnnouncementProgD() {
           throw new Error("Invalid announcement ID.");
         }
 
-        // =================================================
-        // LOAD PROTECTED ANNOUNCEMENT
-        // =================================================
-
         const response = await authService.authFetch(
-          `${ANNOUNCEMENTS_API_URL}/${announcementId}`,
+          `${API_BASE_URL}/api/announcements/${announcementId}`,
           {
             method: "GET",
-
+            signal: controller.signal,
             headers: {
               Accept: "application/json",
             },
-
-            signal: controller.signal,
           },
         );
 
-        // =================================================
-        // UNAUTHORIZED
-        // =================================================
-
         if (response.status === 401) {
           authService.logout();
-
-          navigate("/login", {
-            replace: true,
-          });
-
+          navigate("/login", { replace: true });
           return;
         }
-
-        // =================================================
-        // PARSE RESPONSE
-        // =================================================
 
         const contentType = response.headers.get("content-type") || "";
 
@@ -157,218 +182,280 @@ export default function AnnouncementProgD() {
           throw new Error(
             `Server returned a non-JSON response (${response.status}): ${text.slice(
               0,
-              200,
+              180,
             )}`,
           );
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as
+          | Announcement
+          | AnnouncementDetailResponse;
 
-        console.log("PROGRAM HEAD ANNOUNCEMENT DETAIL:", data);
+        if (response.status === 403) {
+          const message =
+            "announcement_id" in data
+              ? undefined
+              : data.message || data.error;
 
-        // =================================================
-        // API ERROR
-        // =================================================
-
-        if (!response.ok) {
-          throw new Error(
-            data.error || data.message || "Announcement not found.",
-          );
+          throw new Error(message || "Program Head access is required.");
         }
 
-        // =================================================
-        // NORMALIZE RESPONSE
-        // =================================================
+        if (!response.ok) {
+          const message =
+            "announcement_id" in data
+              ? undefined
+              : data.message || data.error;
 
-        const loadedAnnouncement: Announcement | undefined =
-          data.announcement || data.data || data;
+          throw new Error(message || "Announcement could not be loaded.");
+        }
 
-        if (!loadedAnnouncement || !loadedAnnouncement.announcement_id) {
+        let loadedAnnouncement: Announcement | null = null;
+
+        if ("announcement_id" in data) {
+          loadedAnnouncement = data;
+        } else if (data.announcement) {
+          loadedAnnouncement = data.announcement;
+        } else if (data.data) {
+          loadedAnnouncement = data.data;
+        }
+
+        if (!loadedAnnouncement) {
           throw new Error("Announcement data was not returned by the server.");
         }
 
-        // =================================================
-        // SAVE ANNOUNCEMENT
-        // =================================================
+        const normalizedRecipients = Array.isArray(
+          loadedAnnouncement.recipients,
+        )
+          ? loadedAnnouncement.recipients
+          : [];
+        if (!includesProgramHeadAudience(normalizedRecipients)) {
+          throw new Error(
+            "This announcement is not available for the Program Head audience.",
+          );
+        }
 
         setAnnouncement({
           ...loadedAnnouncement,
-
+          recipients: normalizedRecipients,
           attachments: Array.isArray(loadedAnnouncement.attachments)
             ? loadedAnnouncement.attachments
             : [],
         });
-      } catch (err) {
-        // =================================================
-        // IGNORE ABORT
-        // =================================================
-
-        if (err instanceof DOMException && err.name === "AbortError") {
+      } catch (requestError) {
+        if (
+          requestError instanceof DOMException &&
+          requestError.name === "AbortError"
+        ) {
           return;
         }
 
-        console.error("PROGRAM HEAD ANNOUNCEMENT ERROR:", err);
-
+        console.error("LOAD PROGRAM HEAD ANNOUNCEMENT DETAIL ERROR:", requestError);
         setAnnouncement(null);
 
-        if (err instanceof TypeError) {
+        if (requestError instanceof TypeError) {
           setError(
-            "Unable to connect to the announcement server. Please make sure the backend server is running.",
+            "Unable to connect to the announcement server. Make sure the backend is running on port 3000.",
           );
-
           return;
         }
 
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Something went wrong while loading the announcement.");
-        }
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load announcement.",
+        );
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
-    }
+    };
 
     void loadAnnouncement();
 
-    // =====================================================
-    // CLEANUP
-    // =====================================================
+    return () => controller.abort();
+  }, [id, authenticated, userRole, navigate]);
 
-    return () => {
-      controller.abort();
-    };
-  }, [id, user, token, navigate]);
-
-  // =====================================================
-  // OPEN PROTECTED ATTACHMENT
-  // =====================================================
-
-  const handleOpenAttachment = async (fileId: number) => {
-    try {
-      await fileService.openFile(fileId);
-    } catch (fileError) {
-      console.error("OPEN PROGRAM HEAD ATTACHMENT ERROR:", fileError);
-
-      window.alert(
-        fileError instanceof Error
-          ? fileError.message
-          : "Unable to open attachment.",
-      );
-    }
-  };
-
-  // =====================================================
-  // UI
-  // =====================================================
+  if (!authenticated || !user || userRole !== "Program Head") {
+    return null;
+  }
 
   return (
     <DashboardLayout>
-      <div className="announcementD-student">
-        {/* ============================================= */}
-        {/* BACK BUTTON */}
-        {/* ============================================= */}
+      <main className="programhead-announcement-detail">
+        <section className="programhead-announcement-detail__hero">
+          <div>
+            <div className="programhead-announcement-detail__eyebrow">
+              <span className="programhead-announcement-detail__eyebrow-icon">
+                <Megaphone size={16} strokeWidth={2.2} />
+              </span>
+              Program Head · Announcements
+            </div>
 
-        <button
-          type="button"
-          className="back-button"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
+            <h1>Announcement Details</h1>
 
-        {/* ============================================= */}
-        {/* LOADING */}
-        {/* ============================================= */}
+            <p>
+              Read the full official announcement and review any available
+              attachments.
+            </p>
+          </div>
 
-        {loading && <p>Loading announcement...</p>}
+          <button
+            type="button"
+            className="programhead-announcement-detail__back"
+            onClick={() => navigate("/programhead/announcementprog")}
+          >
+            <ArrowLeft size={16} />
+            Announcements
+          </button>
+        </section>
 
-        {/* ============================================= */}
-        {/* ERROR */}
-        {/* ============================================= */}
+        {loading && (
+          <section
+            className="programhead-announcement-detail__loading"
+            aria-live="polite"
+          >
+            <div className="programhead-announcement-detail__skeleton programhead-announcement-detail__skeleton--title" />
+            <div className="programhead-announcement-detail__skeleton-grid">
+              <div className="programhead-announcement-detail__skeleton" />
+              <div className="programhead-announcement-detail__skeleton" />
+              <div className="programhead-announcement-detail__skeleton" />
+            </div>
+            <div className="programhead-announcement-detail__skeleton programhead-announcement-detail__skeleton--content" />
+          </section>
+        )}
 
-        {!loading && error && <p className="error">{error}</p>}
+        {!loading && error && (
+          <section
+            className="programhead-announcement-detail__state programhead-announcement-detail__state--error"
+            role="alert"
+          >
+            <span className="programhead-announcement-detail__state-icon">
+              <CircleAlert size={24} />
+            </span>
 
-        {/* ============================================= */}
-        {/* ANNOUNCEMENT */}
-        {/* ============================================= */}
+            <div>
+              <strong>Announcement could not be loaded</strong>
+              <p>{error}</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/programhead/announcementprog")}
+            >
+              Back to Announcements
+            </button>
+          </section>
+        )}
 
         {!loading && !error && announcement && (
-          <div className="announcement-details-card">
-            {/* ======================================= */}
-            {/* TITLE */}
-            {/* ======================================= */}
+          <article className="programhead-announcement-detail__card">
+            <header className="programhead-announcement-detail__card-header">
+              <span className="programhead-announcement-detail__label">
+                Official Program Head Notice
+              </span>
 
-            <h1>{announcement.title}</h1>
+              <h2>{announcement.title}</h2>
 
-            {/* ======================================= */}
-            {/* CREATED BY */}
-            {/* ======================================= */}
+              <div className="programhead-announcement-detail__meta">
+                <div>
+                  <span className="programhead-announcement-detail__meta-icon">
+                    <UserRound size={15} />
+                  </span>
+                  <div>
+                    <span>Posted By</span>
+                    <strong>{formatAuthor(announcement.created_by)}</strong>
+                  </div>
+                </div>
 
-            <p>
-              Posted by: <strong>{announcement.created_by}</strong>
-            </p>
+                <div>
+                  <span className="programhead-announcement-detail__meta-icon">
+                    <CalendarDays size={15} />
+                  </span>
+                  <div>
+                    <span>Published</span>
+                    <strong>{formatDateTime(announcement.publish_date)}</strong>
+                  </div>
+                </div>
 
-            {/* ======================================= */}
-            {/* PUBLISH DATE */}
-            {/* ======================================= */}
-
-            <p>
-              Published:{" "}
-              {new Date(announcement.publish_date).toLocaleString("en-PH")}
-            </p>
-
-            {/* ======================================= */}
-            {/* EXPIRY DATE */}
-            {/* ======================================= */}
-
-            {announcement.expiry_date && (
-              <p>
-                Expires:{" "}
-                {new Date(announcement.expiry_date).toLocaleString("en-PH")}
-              </p>
-            )}
-
-            <hr />
-
-            {/* ======================================= */}
-            {/* CONTENT */}
-            {/* ======================================= */}
-
-            <div className="announcement-content">{announcement.content}</div>
-
-            {/* ======================================= */}
-            {/* ATTACHMENTS */}
-            {/* ======================================= */}
-
-            {announcement.attachments.length > 0 && (
-              <div>
-                <hr />
-
-                <h3>Attachments</h3>
-
-                <div className="attachment-list">
-                  {announcement.attachments.map((file) => (
-                    <div key={file.file_id} className="attachment-item">
-                      📄{" "}
-                      <button
-                        type="button"
-                        className="attachment-link"
-                        onClick={() => void handleOpenAttachment(file.file_id)}
-                      >
-                        {file.original_name}
-                      </button>
-                      <span> ({(file.file_size / 1024).toFixed(1)} KB)</span>
-                    </div>
-                  ))}
+                <div>
+                  <span className="programhead-announcement-detail__meta-icon">
+                    <Clock3 size={15} />
+                  </span>
+                  <div>
+                    <span>Available Until</span>
+                    <strong>
+                      {announcement.expiry_date
+                        ? formatDateTime(announcement.expiry_date)
+                        : "No expiry date"}
+                    </strong>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+            </header>
+
+            <section className="programhead-announcement-detail__content">
+              <span className="programhead-announcement-detail__section-kicker">
+                Announcement
+              </span>
+
+              <div className="programhead-announcement-detail__message">
+                {announcement.content}
+              </div>
+            </section>
+
+            {announcement.attachments &&
+              announcement.attachments.length > 0 && (
+                <section className="programhead-announcement-detail__attachments">
+                  <header>
+                    <div>
+                      <span className="programhead-announcement-detail__attachment-icon">
+                        <Paperclip size={17} />
+                      </span>
+
+                      <div>
+                        <span className="programhead-announcement-detail__section-kicker">
+                          Files
+                        </span>
+                        <h3>Attachments</h3>
+                      </div>
+                    </div>
+
+                    <span className="programhead-announcement-detail__attachment-count">
+                      {announcement.attachments.length}
+                    </span>
+                  </header>
+
+                  <div className="programhead-announcement-detail__attachment-list">
+                    {announcement.attachments.map((file) => (
+                      <a
+                        key={file.file_id}
+                        href={buildFileUrl(file.file_path)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="programhead-announcement-detail__attachment"
+                      >
+                        <span className="programhead-announcement-detail__file-icon">
+                          <Paperclip size={16} />
+                        </span>
+
+                        <div>
+                          <strong>{file.original_name}</strong>
+                          <small>
+                            {formatFileSize(file.file_size)}
+                            {file.mime_type ? ` · ${file.mime_type}` : ""}
+                          </small>
+                        </div>
+
+                        <Download size={16} />
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              )}
+          </article>
         )}
-      </div>
+      </main>
     </DashboardLayout>
   );
 }
