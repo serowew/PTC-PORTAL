@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRight,
+  BellRing,
   CalendarClock,
   CalendarDays,
   CheckCircle2,
@@ -32,6 +33,7 @@ const ENROLLMENTS_API = apiUrl("/api/registrar/enrollments");
 
 const ANNOUNCEMENTS_API = apiUrl("/api/announcement-management");
 const PERIOD_API = `${ENROLLMENTS_API}/period`;
+const OFFERING_BATCHES_API = apiUrl("/api/registrar/offering-batches");
 
 interface StudentResponse {
   success: boolean;
@@ -141,7 +143,19 @@ interface AnnouncementResponse {
   error?: string;
 }
 
-type DashboardSource = "students" | "enrollments" | "period" | "announcements";
+interface OfferingBatch {
+  batch_id: number;
+  batch_status: string;
+}
+
+interface OfferingBatchesResponse {
+  success: boolean;
+  batches?: OfferingBatch[];
+  message?: string;
+  error?: string;
+}
+
+type DashboardSource = "students" | "enrollments" | "period" | "announcements" | "offerings";
 
 const formatDate = (value?: string | null) => {
   if (!value) return "Not recorded";
@@ -217,6 +231,7 @@ export default function RegistrarDashboard() {
   const [pendingTotal, setPendingTotal] = useState<number | null>(null);
   const [periodData, setPeriodData] = useState<PeriodResponse | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [offeringBatches, setOfferingBatches] = useState<OfferingBatch[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -290,6 +305,11 @@ export default function RegistrarDashboard() {
             headers: { Accept: "application/json" },
           }),
           authService.authFetch(ANNOUNCEMENTS_API, {
+            method: "GET",
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          }),
+          authService.authFetch(OFFERING_BATCHES_API, {
             method: "GET",
             signal: controller.signal,
             headers: { Accept: "application/json" },
@@ -401,6 +421,29 @@ export default function RegistrarDashboard() {
           nextWarnings.push("announcements");
         }
 
+        // Pending class-offering batches: awaiting Program Head or Registrar action.
+        if (requests[4].status === "fulfilled") {
+          const response = requests[4].value;
+          if (!handleAuthResponse(response)) {
+            if (response.status !== 401) nextWarnings.push("offerings");
+          } else if (response.ok) {
+            try {
+              const data = await parseJsonResponse<OfferingBatchesResponse>(response);
+              if (data.success && Array.isArray(data.batches)) {
+                setOfferingBatches(data.batches);
+              } else {
+                nextWarnings.push("offerings");
+              }
+            } catch {
+              nextWarnings.push("offerings");
+            }
+          } else {
+            nextWarnings.push("offerings");
+          }
+        } else {
+          nextWarnings.push("offerings");
+        }
+
         setWarnings(Array.from(new Set(nextWarnings)));
         setLastUpdated(new Date());
       } finally {
@@ -430,6 +473,21 @@ export default function RegistrarDashboard() {
   const activeAnnouncements = useMemo(
     () => announcements.filter((item) => Number(item.is_active) === 1).length,
     [announcements],
+  );
+
+  const pendingOfferingTotal = useMemo(
+    () => offeringBatches.filter(
+      (batch) => batch.batch_status === "Pending Program Head" ||
+        batch.batch_status === "Ready for Registrar",
+    ).length,
+    [offeringBatches],
+  );
+
+  const readyOfferingTotal = useMemo(
+    () => offeringBatches.filter(
+      (batch) => batch.batch_status === "Ready for Registrar",
+    ).length,
+    [offeringBatches],
   );
 
   const recentAnnouncements = useMemo(
@@ -491,6 +549,7 @@ export default function RegistrarDashboard() {
     enrollments: "enrollment queue",
     period: "enrollment period",
     announcements: "announcements",
+    offerings: "class offerings",
   };
 
   if (!authenticated || !user || userRole !== "Registrar") return null;
@@ -647,6 +706,31 @@ export default function RegistrarDashboard() {
               size={17}
               className="registrar-dashboard__stat-arrow"
             />
+          </button>
+
+          <button
+            type="button"
+            className="registrar-dashboard__stat-card registrar-dashboard__stat-card--offerings"
+            onClick={() => navigate("/registrar/offering/managementR")}
+            aria-label={`Pending class offerings: ${loading || warnings.includes("offerings") ? "unavailable" : pendingOfferingTotal}. Open class offering management.`}
+          >
+            <span className="registrar-dashboard__stat-icon registrar-dashboard__stat-icon--offerings">
+              <BellRing size={20} />
+            </span>
+            <span className="registrar-dashboard__stat-copy">
+              <span>Pending Class Offerings</span>
+              <strong>
+                {loading || warnings.includes("offerings") ? "—" : pendingOfferingTotal}
+              </strong>
+              <small>
+                {warnings.includes("offerings")
+                  ? "Unable to load offerings"
+                  : readyOfferingTotal > 0
+                    ? `${readyOfferingTotal} ready for Registrar review`
+                    : "Awaiting review or publication"}
+              </small>
+            </span>
+            <ChevronRight size={17} className="registrar-dashboard__stat-arrow" />
           </button>
         </section>
 

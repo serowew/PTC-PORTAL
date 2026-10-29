@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -91,6 +91,22 @@ export default function AnnouncementCreateR() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [recipients, setRecipients] = useState<number[]>([]);
+  const publishDateRef = useRef<HTMLInputElement>(null);
+  const expiryDateRef = useRef<HTMLInputElement>(null);
+
+  // Open the native date picker from its dedicated calendar button.
+  // Older browsers fall back to focusing the editable date input.
+  const openDatePicker = (input: HTMLInputElement | null) => {
+    if (!input || input.disabled) return;
+    input.focus();
+    try {
+      if (typeof input.showPicker === "function") input.showPicker();
+    } catch {
+      // Some browsers restrict programmatic pickers: the focused input
+      // remains usable with keyboard entry and its native calendar icon.
+    }
+  };
+
   const [publishDate, setPublishDate] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [isActive, setIsActive] = useState(true);
@@ -654,43 +670,69 @@ export default function AnnouncementCreateR() {
                     </div>
                   </div>
 
-                  <label className="registrar-announcement-create__field">
-                    <span>
+                  <div className="registrar-announcement-create__field">
+                    <label htmlFor="announcement-publish-date">
                       <CalendarDays size={14} /> Publish Date <em>*</em>
-                    </span>
-                    <input
-                      id="announcement-publish-date"
-                      type="date"
-                      value={publishDate}
-                      onChange={(event) => {
-                        setPublishDate(event.target.value);
-                        setError("");
-                      }}
-                      disabled={loading}
-                      required
-                    />
-                  </label>
+                    </label>
+                    <div className="registrar-announcement-create__date-control">
+                      <input
+                        ref={publishDateRef}
+                        id="announcement-publish-date"
+                        type="date"
+                        value={publishDate}
+                        onChange={(event) => {
+                          setPublishDate(event.target.value);
+                          setError("");
+                        }}
+                        disabled={loading}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="registrar-announcement-create__calendar-button"
+                        aria-label="Open publish date calendar"
+                        aria-controls="announcement-publish-date"
+                        onClick={() => openDatePicker(publishDateRef.current)}
+                        disabled={loading}
+                      >
+                        <CalendarDays size={18} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
 
-                  <label className="registrar-announcement-create__field">
-                    <span>
+                  <div className="registrar-announcement-create__field">
+                    <label htmlFor="announcement-expiry-date">
                       <CalendarDays size={14} /> Expiry Date
-                    </span>
-                    <input
-                      id="announcement-expiry-date"
-                      type="date"
-                      value={expiryDate}
-                      onChange={(event) => {
-                        setExpiryDate(event.target.value);
-                        setError("");
-                      }}
-                      min={publishDate || undefined}
-                      disabled={loading}
-                    />
+                    </label>
+                    <div className="registrar-announcement-create__date-control">
+                      <input
+                        ref={expiryDateRef}
+                        id="announcement-expiry-date"
+                        type="date"
+                        value={expiryDate}
+                        onChange={(event) => {
+                          setExpiryDate(event.target.value);
+                          setError("");
+                        }}
+                        min={publishDate || undefined}
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        className="registrar-announcement-create__calendar-button"
+                        aria-label="Open expiry date calendar"
+                        aria-controls="announcement-expiry-date"
+                        onClick={() => openDatePicker(expiryDateRef.current)}
+                        disabled={loading}
+                      >
+                        <CalendarDays size={18} aria-hidden="true" />
+                      </button>
+                    </div>
                     <small className="registrar-announcement-create__field-note">
                       Optional. Leave blank if the announcement should not have
                       an expiry date.
                     </small>
-                  </label>
+                  </div>
                 </div>
               </section>
 

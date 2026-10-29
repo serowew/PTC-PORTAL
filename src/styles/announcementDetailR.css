@@ -758,215 +758,337 @@
 }
 
 /* =========================================================
-   REGISTRAR ANNOUNCEMENT DETAILS — DASHBOARD DESIGN UPDATE
-
-   Visual reference: updated Registrar Dashboard and the
-   redesigned Registrar Announcement List.
-   Scoped to this page. Sidebar/footer, TSX, routes and API
-   operations stay untouched. No page-entry fade or overlay.
+   REGISTRAR ANNOUNCEMENT DETAILS — DARK MODE
+   Scoped to the existing shared layout attribute.
+   Light Mode rules above remain unchanged.
 ========================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail {
+  background: #111719 !important;
+  background-image: none !important;
+  color: #eaf1ed;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail {
+  --rad-text-950: #f3f7f4;
+  --rad-text-800: #e0e8e3;
+  --rad-text-700: #ced9d1;
+  --rad-text-600: #b4c2b8;
+  --rad-text-500: #a7b8ae;
+  --rad-border: #37454b;
+  --rad-border-strong: #45565b;
+  --rad-surface: #20292e;
+  --rad-bg: #111719;
+  --rad-green-50: #1d332a;
+  --rad-green-100: #234735;
+  --rad-green-700: #6ddb9d;
+  --rad-green-800: #84e4ad;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero {
+  background: linear-gradient(115deg, #073d29, #0a6039 68%, #126b42) !important;
+  border-color: #286d4d;
+  box-shadow: 0 12px 24px rgba(0,0,0,.18);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero :is(h1,p,strong,small),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__eyebrow {color: #f2fff6;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__eyebrow-icon {
+  background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.22); color:#fff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary {
+  background: #203c30; color: #f0fff4; border-color: #5c8a71;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary:hover {background:#2b5340;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__button--primary {
+  background:#15824c; border-color:#2aaa69; color:white;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__summary-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__content-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__side-panel {
+  background: #20292e !important;
+  background-image: none !important;
+  color:#e9f1ec;
+  border-color: #3b4b52;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__content-header {
+  background:#1b2429 !important;
+  border-color:#3b4b52;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__body {
+  background: #20292e; color: #e1e9e4;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail :is(
+  .registrar-announcement-detail__summary-card strong,
+  .registrar-announcement-detail__content-header h2,
+  .registrar-announcement-detail__side-header h3,
+  .registrar-announcement-detail__attachment strong,
+  .registrar-announcement-detail__record-list dd,
+  .registrar-announcement-detail__byline strong
+) {color:#f2f7f3;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail :is(
+  .registrar-announcement-detail__summary-card small,
+  .registrar-announcement-detail__byline,
+  .registrar-announcement-detail__side-header p,
+  .registrar-announcement-detail__record-list dt,
+  .registrar-announcement-detail__attachment small,
+  .registrar-announcement-detail__side-empty
+) {color:#b7c6be;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__side-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__record-list > div {
+  border-color:#3b4b52;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail :is(
+  .registrar-announcement-detail__side-icon,
+  .registrar-announcement-detail__summary-icon,
+  .registrar-announcement-detail__attachment-icon
+) {background:#203c31; color:#8ce7b5; border-color:#426858;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__summary-icon--primary {
+  background:#137c4c; color:#ffffff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__recipient-chip {
+  background:#1e352b; color:#a6efc3; border-color:#426954;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__attachment,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__side-empty {
+  background:#192226; border-color:#3b4b52; color:#d8e5dd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__attachment:hover {
+  background:#263638; border-color:#5c8170;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__status-pill--active {
+  background:#143b2b; color:#a1f2c1; border-color:#327c50;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__status-pill--inactive {
+  background:#283137; color:#cfdbd4; border-color:#4b5c62;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__error {
+  background:#352429; color:#ffd0cb; border-color:#895055;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__error-icon {
+  background:#483037; color:#ffd0cb;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__error h2 {color:#ffe5df;}
+/* Dark skeletons prevent white flashes on route entry and during loading. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail :is(
+  .registrar-announcement-detail__skeleton-card,
+  .registrar-announcement-detail__skeleton-main,
+  .registrar-announcement-detail__skeleton-side
+) {
+  background:linear-gradient(90deg,#1a2327 20%,#28333a 48%,#1a2327 74%) !important;
+  background-size:220% 100% !important;
+  border-color:#36464e !important;
+}
 
-/* The layout's content padding would otherwise leave a pale
-   rectangular gap between this page and the shared shell. */
-.dashboard-main:has(.registrar-announcement-detail) .dashboard-content {
-  padding: 0;
+/* =============================================================
+   DARK MODE — WORKSPACE CANVAS
+   Follows the working Registrar Announcement List strategy.
+   Neutral charcoal all the way around the detail cards.
+   ============================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail) > .dashboard-content > .registrar-announcement-detail {
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail) > .dashboard-content {
+  padding: 0 !important;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 7% 10%, rgba(21, 148, 82, 0.17), transparent 38%),
-    radial-gradient(circle at 92% 8%, rgba(212, 167, 44, 0.14), transparent 34%),
-    linear-gradient(180deg, #eef7f1 0%, #e8f3ec 48%, #e4f0e8 100%);
 }
 
-/* Match the Announcement List's unobtrusive shared top-bar
-   handling without restyling the shared sidebar or footer. */
-.dashboard-main:has(.registrar-announcement-detail)
-  .header-container:has(.app-header.hide) {
-  height: 0;
-  min-height: 0;
-  border: 0;
-}
-
-.dashboard-main:has(.registrar-announcement-detail)
-  .header-container:has(.app-header.show) {
-  height: 58px;
-  min-height: 58px;
-}
-
-.dashboard-main:has(.registrar-announcement-detail) .app-header {
-  background: linear-gradient(90deg, rgba(235, 247, 239, .98), rgba(242, 248, 238, .98));
-  border-bottom-color: rgba(13, 101, 59, .12);
-}
-
-.registrar-announcement-detail {
-  --rad-gold: #d4a72c;
-  --rad-blue: #2563eb;
-  --rad-violet: #7c3aed;
-
-  position: relative;
-  isolation: isolate;
-  width: 100%;
-  min-width: 0;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail {
+  background: #111719 !important;
+  background-image: none !important;
   min-height: 100%;
-  overflow-x: clip;
-  padding: 28px 28px 42px;
-  background-color: #e6f1e9;
-  background-image:
-    linear-gradient(135deg, rgba(15, 122, 69, .08) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15, 122, 69, .055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212, 167, 44, .045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37, 99, 235, .035) 25%, transparent 25%),
-    radial-gradient(circle at 12% 10%, rgba(21, 148, 82, .22), transparent 25%),
-    radial-gradient(circle at 88% 6%, rgba(212, 167, 44, .18), transparent 23%),
-    radial-gradient(circle at 92% 72%, rgba(37, 99, 235, .10), transparent 24%),
-    linear-gradient(180deg, #edf6f0 0%, #e5f0e9 48%, #dce9e0 100%);
-  background-size: 96px 96px, 96px 96px, 128px 128px, 128px 128px,
-    auto, auto, auto, auto;
-  background-position: 0 0, 48px 48px, 0 0, 64px 64px,
-    center, center, center, center;
-  /* Deliberately no page-entry opacity animation or white overlay. */
 }
 
-.registrar-announcement-detail::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 14px;
-  right: 16px;
-  left: 16px;
-  height: 374px;
-  border: 1px solid rgba(15, 122, 69, .14);
-  border-radius: 30px;
-  background:
-    linear-gradient(120deg, rgba(255, 255, 255, .70), rgba(240, 248, 242, .48)),
-    radial-gradient(circle at 86% 12%, rgba(212, 167, 44, .12), transparent 28%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95),
-    0 26px 55px rgba(7, 59, 36, .11);
-  pointer-events: none;
+/* Remove any decoration on the page canvas, not on content cards. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail) > .dashboard-content::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-detail) > .dashboard-content::after,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
 }
 
-.registrar-announcement-detail::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 420px;
-  right: -92px;
-  width: min(470px, 100%);
-  aspect-ratio: 1;
-  border: 2px solid rgba(15, 122, 69, .13);
-  border-radius: 50%;
-  box-shadow: 0 0 0 48px rgba(15, 122, 69, .045),
-    0 0 0 96px rgba(212, 167, 44, .025),
-    0 0 0 144px rgba(15, 122, 69, .018);
-  pointer-events: none;
+/* The header remains green and cards retain the approved charcoal palette. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero {
+  background: linear-gradient(115deg, #073d29, #0a6039 68%, #126b42) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail :is(
+  .registrar-announcement-detail__summary-card,
+  .registrar-announcement-detail__content-panel,
+  .registrar-announcement-detail__side-panel
+) {
+  background: #20292e !important;
 }
 
-/* Deep green, rounded banner consistent with the screenshot. */
-.registrar-announcement-detail__hero {
-  z-index: 1;
-  min-height: 188px;
-  padding: 30px 32px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, .18) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255, 255, 255, .08) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%);
-  box-shadow: 0 18px 42px rgba(6, 78, 47, .24);
+/* === APPEARANCE PREFERENCES: DETAILS FONT SIZE AND COMPACT MODE === */
+
+/* Read the existing layout variable; default scale 1 preserves current sizes. */
+
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__hero h1 {
+  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(34px * var(--ptc-font-scale, 1)));
 }
 
-.registrar-announcement-detail__hero::before {
-  content: "";
-  position: absolute;
-  inset: auto -60px -95px auto;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255, 255, 255, .12);
-  border-radius: 50%;
-  pointer-events: none;
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__hero p,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__body {
+  font-size: calc(14px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border: 44px solid rgba(255, 255, 255, .055);
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__eyebrow,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__summary-card > div > span,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__error p {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__eyebrow {
-  color: #dff8e8;
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__button {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__eyebrow-icon {
-  color: #fff;
-  background: rgba(255, 255, 255, .14);
-  border: 1px solid rgba(255, 255, 255, .18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15);
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__summary-card strong {
+  font-size: calc(15px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__hero h1 {
-  color: #fff;
-  font-size: clamp(30px, 3.4vw, 40px);
-  font-weight: 790;
-  letter-spacing: -.035em;
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__summary-card small,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__recipient-chip,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__side-empty {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__hero p {
-  max-width: 790px;
-  color: rgba(239, 255, 245, .85);
-  font-size: 14.5px;
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__section-kicker,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__status-pill,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__side-header p,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__record-list dt,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__error span {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__hero .registrar-announcement-detail__button {
-  min-height: 44px;
-  border-radius: 11px;
-  box-shadow: 0 9px 20px rgba(0, 0, 0, .12);
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__content-header h2 {
+  font-size: clamp(calc(21px * var(--ptc-font-scale, 1)), calc(2.3vw * var(--ptc-font-scale, 1)), calc(28px * var(--ptc-font-scale, 1)));
 }
 
-.registrar-announcement-detail__hero .registrar-announcement-detail__button--primary,
-.registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary {
-  color: #0b5e37;
-  background: #fff;
-  border-color: rgba(255, 255, 255, .88);
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__byline,
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__attachment strong {
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__hero .registrar-announcement-detail__button--primary {
-  color: #07502f;
-  background: #e8f8ed;
-  border-color: #e8f8ed;
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__side-header h3 {
+  font-size: calc(13.5px * var(--ptc-font-scale, 1));
 }
 
-.registrar-announcement-detail__hero .registrar-announcement-detail__button:hover:not(:disabled) {
-  color: #064e2f;
-  background: #f0fff5;
-  border-color: #fff;
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__attachment small {
+  font-size: calc(10px * var(--ptc-font-scale, 1));
 }
 
-/* Four individual tinted indicators; no changes to their data. */
-.registrar-announcement-detail__summary-grid {
-  position: relative;
-  z-index: 1;
-  gap: 16px;
-  margin: -2px -2px 20px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, .72);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, .42);
-  box-shadow: 0 14px 34px rgba(7, 59, 36, .08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__record-list dd {
+  font-size: calc(10.8px * var(--ptc-font-scale, 1));
 }
 
+.dashboard-wrapper .registrar-announcement-detail .registrar-announcement-detail__error h2 {
+  font-size: calc(16px * var(--ptc-font-scale, 1));
+}
+
+/* Compact mode decreases whitespace, never text size. */
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail {
+  padding: 20px 22px 26px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__hero {
+  padding: 18px 22px;
+  margin-bottom: 14px;
+  min-height: 0;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__summary-grid,
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__skeleton-grid {
+  gap: 9px;
+  margin-bottom: 13px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__summary-card {
+  gap: 9px;
+  padding: 11px 13px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__workspace-grid,
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__skeleton-workspace {
+  gap: 12px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__content-header {
+  padding: 15px 18px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__body {
+  min-height: 200px;
+  padding: 18px 20px 22px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__sidebar {
+  gap: 10px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__side-panel {
+  padding: 12px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__recipient-list,
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__attachment-list {
+  gap: 5px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__recipient-chip {
+  padding: 5px 7px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__attachment {
+  padding: 7px 9px;
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__record-list > div {
+  padding: 6px 0;
+}
+@media (max-width: 760px) {
+  .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail {
+    padding: 16px 12px 24px;
+  }
+  .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__hero {
+    padding: 17px;
+  }
+}
+
+/* ==========================================================
+   APPROVED REGISTRAR HERO — IDENTICAL IN BOTH THEMES
+   Other Light/Dark styles and appearance preferences remain.
+   ========================================================== */
+.dashboard-wrapper .registrar-announcement-detail__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(20, 115, 70, 0.38) !important;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+}
+.dashboard-wrapper .registrar-announcement-detail__hero::after {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+}
+.dashboard-wrapper .registrar-announcement-detail__hero :is(h1, h2, p, small, strong),
+.dashboard-wrapper .registrar-announcement-detail__eyebrow {
+  color: #f6fff9 !important;
+}
+.dashboard-wrapper .registrar-announcement-detail__eyebrow-icon {
+  color: #effff5 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+.dashboard-wrapper .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary {
+  background: rgba(13, 34, 26, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+.dashboard-wrapper .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary:hover:not(:disabled) {
+  background: rgba(21, 67, 46, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
+}
+
+
+/* ==========================================================
+   SUMMARY CARD ACCENTS — LIGHT AND DARK MODE
+   Match Registrar Dashboard: green, gold, blue and violet.
+   Only adds the missing vertical lines; existing surfaces,
+   typography, compact spacing and hero remain unchanged.
+   ========================================================== */
 .registrar-announcement-detail__summary-card {
   position: relative;
   overflow: hidden;
-  min-height: 116px;
-  padding: 19px 17px;
-  border: 1px solid rgba(255, 255, 255, .80);
-  border-radius: 18px;
-  background: #eef9f2;
-  box-shadow: 0 9px 22px rgba(7, 59, 36, .065);
-  transition: box-shadow .18s ease, transform .18s ease;
 }
 
 .registrar-announcement-detail__summary-card::before {
@@ -975,343 +1097,20 @@
   top: 0;
   bottom: 0;
   left: 0;
-  width: 4px;
-  background: #119b55;
-}
-
-.registrar-announcement-detail__summary-card::after {
-  content: "";
-  position: absolute;
-  top: -55px;
-  right: -42px;
-  width: 122px;
-  height: 122px;
-  border-radius: 50%;
-  background: rgba(21, 148, 82, .08);
+  width: 5px;
+  border-radius: 15px 0 0 15px;
+  background-color: #159452;
   pointer-events: none;
 }
 
-.registrar-announcement-detail__summary-card:nth-child(2) {
-  background: #fff8e8;
-}
 .registrar-announcement-detail__summary-card:nth-child(2)::before {
-  background: #d4a72c;
+  background-color: #d4a72c;
 }
-.registrar-announcement-detail__summary-card:nth-child(2)::after {
-  background: rgba(212, 167, 44, .10);
-}
-.registrar-announcement-detail__summary-card:nth-child(3) {
-  background: #f0f6ff;
-}
+
 .registrar-announcement-detail__summary-card:nth-child(3)::before {
-  background: #2563eb;
+  background-color: #2563eb;
 }
-.registrar-announcement-detail__summary-card:nth-child(3)::after {
-  background: rgba(37, 99, 235, .09);
-}
-.registrar-announcement-detail__summary-card:nth-child(4) {
-  background: #f7f2ff;
-}
+
 .registrar-announcement-detail__summary-card:nth-child(4)::before {
-  background: #7c3aed;
-}
-.registrar-announcement-detail__summary-card:nth-child(4)::after {
-  background: rgba(124, 58, 237, .09);
-}
-
-.registrar-announcement-detail__summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 29px rgba(7, 59, 36, .12);
-}
-
-.registrar-announcement-detail__summary-card > div {
-  position: relative;
-  z-index: 1;
-}
-
-.registrar-announcement-detail__summary-icon {
-  position: relative;
-  z-index: 1;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  box-shadow: 0 8px 16px rgba(7, 59, 36, .09);
-}
-
-.registrar-announcement-detail__summary-card:nth-child(2) .registrar-announcement-detail__summary-icon {
-  color: #a97908;
-  background: #fff4d4;
-  border-color: #edd796;
-}
-.registrar-announcement-detail__summary-card:nth-child(3) .registrar-announcement-detail__summary-icon {
-  color: #2563eb;
-  background: #eaf2ff;
-  border-color: #cfe0ff;
-}
-.registrar-announcement-detail__summary-card:nth-child(4) .registrar-announcement-detail__summary-icon {
-  color: #7c3aed;
-  background: #f0eaff;
-  border-color: #dfd1ff;
-}
-
-.registrar-announcement-detail__summary-card > div > span {
-  color: #5e7066;
-  font-size: 10.5px;
-  font-weight: 780;
-  letter-spacing: .025em;
-  text-transform: uppercase;
-}
-
-.registrar-announcement-detail__summary-card strong {
-  font-size: clamp(14px, 1.2vw, 19px);
-  font-weight: 790;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-overflow: clip;
-}
-
-.registrar-announcement-detail__summary-card small {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-overflow: clip;
-}
-
-/* White content panel and coordinated right-hand information cards. */
-.registrar-announcement-detail__workspace-grid {
-  position: relative;
-  z-index: 1;
-  grid-template-columns: minmax(0, 1.65fr) minmax(280px, .72fr);
-  gap: 16px;
-}
-
-.registrar-announcement-detail__content-panel {
-  border-color: #d7e8dc;
-  border-radius: 23px;
-  box-shadow: 0 16px 38px rgba(7, 59, 36, .09);
-}
-
-.registrar-announcement-detail__content-header {
-  padding: 24px 27px 20px;
-  background: linear-gradient(110deg, #fff, #edf8f1);
-  border-bottom-color: #dcebe1;
-}
-
-.registrar-announcement-detail__section-kicker {
-  padding: 6px 11px;
-  margin-bottom: 12px;
-  border-radius: 999px;
-  color: #0d653b;
-  background: #e9f6ee;
-}
-
-.registrar-announcement-detail__content-header h2 {
-  font-size: clamp(22px, 2.35vw, 30px);
-  font-weight: 790;
-}
-
-.registrar-announcement-detail__byline {
-  margin-top: 12px;
-}
-
-.registrar-announcement-detail__status-pill {
-  margin-top: 3px;
-  box-shadow: 0 4px 14px rgba(7, 59, 36, .055);
-}
-
-.registrar-announcement-detail__body {
-  min-height: 330px;
-  padding: 28px 30px 38px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(21, 148, 82, .045), transparent 35%),
-    #fff;
-  color: #34483b;
-  line-height: 1.86;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.registrar-announcement-detail__sidebar {
-  gap: 16px;
-}
-
-.registrar-announcement-detail__side-panel {
-  padding: 20px;
-  border-color: #d7e8dc;
-  border-radius: 19px;
-  box-shadow: 0 12px 30px rgba(7, 59, 36, .08);
-}
-
-.registrar-announcement-detail__side-header {
-  padding-bottom: 15px;
-  margin-bottom: 15px;
-  border-bottom-color: #dcebe1;
-}
-
-.registrar-announcement-detail__side-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #eaf7ef;
-}
-
-.registrar-announcement-detail__side-header h3 {
-  font-size: 15px;
-  font-weight: 780;
-}
-
-.registrar-announcement-detail__recipient-chip {
-  border-color: #c7e5d1;
-  border-radius: 10px;
-  background: #ebf8ef;
-}
-
-.registrar-announcement-detail__attachment {
-  width: 100%;
-  min-width: 0;
-  cursor: pointer;
-  text-align: left;
-  border-color: #dcebe1;
-  border-radius: 12px;
-  background: #f8fcf9;
-}
-
-.registrar-announcement-detail__attachment:hover {
-  background: #ecf8f0;
-  border-color: #a6d3b5;
-}
-
-.registrar-announcement-detail__attachment:focus-visible,
-.registrar-announcement-detail__button:focus-visible {
-  outline: 3px solid rgba(21, 148, 82, .45);
-  outline-offset: 2px;
-}
-
-.registrar-announcement-detail__record-list > div {
-  border-bottom-color: #e5eee7;
-}
-
-/* Detail fetch states remain clearly visible, without a white flash. */
-.registrar-announcement-detail__skeleton-card,
-.registrar-announcement-detail__skeleton-main,
-.registrar-announcement-detail__skeleton-side {
-  border-color: #cee2d4;
-  background: linear-gradient(135deg, #dcece2, #e9f4ed);
-  background-size: auto;
-  animation: none;
-}
-
-.registrar-announcement-detail__skeleton-card {
-  min-height: 112px;
-  border-radius: 18px;
-}
-
-.registrar-announcement-detail__skeleton-main {
-  border-radius: 23px;
-}
-
-.registrar-announcement-detail__skeleton-side {
-  border-radius: 19px;
-}
-
-.registrar-announcement-detail__error {
-  border-radius: 19px;
-  box-shadow: 0 10px 25px rgba(127, 33, 25, .06);
-}
-
-@media (max-width: 1180px) {
-  .registrar-announcement-detail__workspace-grid {
-    grid-template-columns: 1fr;
-  }
-  .registrar-announcement-detail__sidebar {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 860px) {
-  .registrar-announcement-detail__hero {
-    min-height: 0;
-  }
-  .registrar-announcement-detail__sidebar {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 760px) {
-  .registrar-announcement-detail {
-    padding: 18px 14px 32px;
-    background-size: 72px 72px, 72px 72px, 92px 92px, 92px 92px,
-      auto, auto, auto, auto;
-  }
-  .registrar-announcement-detail::before {
-    top: 9px;
-    right: 7px;
-    left: 7px;
-    height: 340px;
-    border-radius: 22px;
-  }
-  .registrar-announcement-detail::after {
-    top: 510px;
-    right: -200px;
-  }
-  .registrar-announcement-detail__hero {
-    padding: 24px 22px;
-    border-radius: 20px;
-  }
-  .registrar-announcement-detail__hero h1 {
-    font-size: clamp(28px, 6vw, 36px);
-  }
-  .registrar-announcement-detail__summary-grid {
-    margin-right: 0;
-    margin-left: 0;
-    padding: 9px;
-    border-radius: 19px;
-  }
-  .registrar-announcement-detail__summary-card {
-    min-height: 105px;
-  }
-  .registrar-announcement-detail__content-panel {
-    border-radius: 20px;
-  }
-  .registrar-announcement-detail__content-header {
-    padding-right: 20px;
-    padding-left: 20px;
-  }
-}
-
-@media (max-width: 520px) {
-  .registrar-announcement-detail {
-    padding: 14px 10px 28px;
-  }
-  .registrar-announcement-detail__hero {
-    padding: 22px 18px;
-  }
-  .registrar-announcement-detail__hero-actions {
-    min-width: 0;
-  }
-  .registrar-announcement-detail__hero-actions .registrar-announcement-detail__button {
-    min-width: 0;
-    white-space: normal;
-    text-align: center;
-  }
-  .registrar-announcement-detail__summary-card {
-    padding: 16px;
-  }
-  .registrar-announcement-detail__content-header {
-    padding-right: 17px;
-    padding-left: 17px;
-  }
-  .registrar-announcement-detail__body {
-    padding: 22px 18px 28px;
-  }
-  .registrar-announcement-detail__side-panel {
-    padding: 16px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .registrar-announcement-detail__summary-card,
-  .registrar-announcement-detail__attachment,
-  .registrar-announcement-detail__button {
-    transition: none;
-  }
+  background-color: #7c3aed;
 }

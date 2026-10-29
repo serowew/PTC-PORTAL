@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import type { UserRole } from "../services/auth.service";
 import { authService } from "../services/auth.service";
+import DashboardLayout from "../components/Layout/DashboardLayout";
+import AppearancePreferences from "../pages/settings/AppearancePreferences";
 
 import Navbar from "../components/Forms/HomeNavbar";
 
@@ -209,6 +211,17 @@ function FinanceRoute({ element }: { element: ReactElement }) {
   return <ProtectedRoute allowedRole="Finance">{element}</ProtectedRoute>;
 }
 
+// Shared authenticated page guard for settings accessible to every existing role.
+function AuthenticatedSettingsRoute({ element }: { element: ReactElement }) {
+  const session = authService.getSession();
+
+  if (!authService.isLoggedIn() || !session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <DashboardLayout>{element}</DashboardLayout>;
+}
+
 // ─── Routes ───────────────────────────────────────────────────
 export default function AppRoutes() {
   return (
@@ -260,6 +273,12 @@ export default function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/forgot-password/verify" element={<VerifyResetOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Shared account settings — available to all six authenticated roles */}
+        <Route
+          path="/settings/appearance"
+          element={<AuthenticatedSettingsRoute element={<AppearancePreferences />} />}
+        />
 
         {/* ── Student: Solo links ── */}
         <Route

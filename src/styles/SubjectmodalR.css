@@ -24,6 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
   padding: 24px;
   background: rgba(7, 25, 15, 0.52);
   backdrop-filter: blur(4px);
@@ -37,8 +38,11 @@
 }
 
 .registrar-subject-modal {
+  display: flex;
+  flex-direction: column;
   width: min(760px, 100%);
-  max-height: min(90vh, 830px);
+  max-height: min(90dvh, 830px);
+  min-height: 0;
   overflow: hidden;
   border: 1px solid rgba(207, 220, 211, 0.92);
   border-radius: 18px;
@@ -50,6 +54,13 @@
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   animation: registrar-subject-modal-in 0.2s ease;
+}
+
+.registrar-subject-modal > form {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .registrar-subject-modal button,
@@ -105,7 +116,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--rsm-modal-green-700);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 800;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -114,7 +125,7 @@
 .registrar-subject-modal__header h2 {
   margin: 0;
   color: var(--rsm-modal-text-950);
-  font-size: 20px;
+  font-size: calc(20px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: -0.015em;
 }
@@ -123,7 +134,7 @@
   max-width: 590px;
   margin: 5px 0 0;
   color: var(--rsm-modal-text-600);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
@@ -155,7 +166,9 @@
 /* BODY */
 
 .registrar-subject-modal__body {
-  max-height: calc(min(90vh, 830px) - 160px);
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
   overflow-y: auto;
   padding: 20px 22px 8px;
   scrollbar-width: thin;
@@ -172,7 +185,7 @@
   border-radius: 10px;
   background: var(--rsm-modal-danger-soft);
   color: var(--rsm-modal-danger);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   line-height: 1.5;
 }
 
@@ -199,14 +212,14 @@
 .registrar-subject-modal__section-heading > span {
   display: block;
   color: var(--rsm-modal-text-950);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 760;
 }
 
 .registrar-subject-modal__section-heading p {
   margin: 3px 0 0;
   color: var(--rsm-modal-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -232,7 +245,7 @@
 
 .registrar-subject-modal__field > span {
   color: var(--rsm-modal-text-800);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
@@ -259,7 +272,7 @@
   height: 40px;
   padding: 0 11px;
   outline: none;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
 }
 
 .registrar-subject-modal__field textarea {
@@ -267,7 +280,7 @@
   padding: 10px 11px;
   outline: none;
   resize: vertical;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
@@ -293,7 +306,7 @@
 .registrar-subject-modal__field small {
   align-self: flex-end;
   color: var(--rsm-modal-text-500);
-  font-size: 9.5px;
+  font-size: calc(9.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-subject-modal__number-input {
@@ -330,18 +343,19 @@
   border-radius: 8px;
   background: #f8fcf9;
   color: var(--rsm-modal-text-600);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-subject-modal__load-preview strong {
   color: var(--rsm-modal-green-800);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
 }
 
 /* FOOTER */
 
 .registrar-subject-modal__footer {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -352,7 +366,7 @@
 
 .registrar-subject-modal__footer-note {
   color: var(--rsm-modal-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-subject-modal__footer-actions {
@@ -369,7 +383,7 @@
   min-height: 39px;
   padding: 0 14px;
   border-radius: 9px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 720;
   cursor: pointer;
   transition:
@@ -442,7 +456,7 @@
   }
 
   .registrar-subject-modal {
-    max-height: 94vh;
+    max-height: 94dvh;
     border-radius: 15px;
   }
 
@@ -451,7 +465,6 @@
   }
 
   .registrar-subject-modal__body {
-    max-height: calc(94vh - 166px);
     padding: 18px 18px 6px;
   }
 
@@ -512,82 +525,128 @@
   }
 }
 
-/* PTC Portal Registrar Subjects — Add/Edit subject visual alignment */
-.registrar-subject-modal__overlay { background: rgba(5,28,16,.64); }
-.registrar-subject-modal {
-  border: 1px solid #d6e8dc;
-  border-radius: 22px;
-  box-shadow: 0 28px 70px rgba(4,37,19,.28);
+/* Appearance preferences */
+.registrar-subject-modal__overlay {
+  padding: calc(24px * var(--ptc-compact-scale, 1));
 }
 .registrar-subject-modal__header {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 93% 25%,rgba(255,255,255,.13) 0 18%,transparent 18.4%),
-    linear-gradient(115deg,#064d2f,#0d7441 74%,#188b4c);
-  border-bottom-color: #0b6d3d;
-  padding: 24px 26px;
+  padding: calc(21px * var(--ptc-compact-scale, 1)) calc(22px * var(--ptc-compact-scale, 1));
 }
-.registrar-subject-modal__identity { position: relative; z-index: 1; }
-.registrar-subject-modal__icon {
-  color: #fff;
-  background: rgba(255,255,255,.15);
-  border: 1px solid rgba(255,255,255,.3);
+.registrar-subject-modal__body {
+  padding: calc(20px * var(--ptc-compact-scale, 1)) calc(22px * var(--ptc-compact-scale, 1)) 8px;
 }
-.registrar-subject-modal__eyebrow { color: #d7f7e3; }
-.registrar-subject-modal__header h2 { color: #fff; font-size: 22px; }
-.registrar-subject-modal__header p { color: rgba(241,255,246,.85); }
-.registrar-subject-modal__close {
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.3);
-  background: rgba(255,255,255,.11);
-  z-index: 1;
-}
-.registrar-subject-modal__close:hover:not(:disabled) { color: #074b2b; background: #eafff1; }
-.registrar-subject-modal__body { background: #fbfdfb; padding: 22px 25px 8px; }
 .registrar-subject-modal__section {
-  padding: 17px;
-  margin-bottom: 14px;
-  border: 1px solid #e3eee6;
-  border-radius: 14px;
-  background: #fff;
+  padding-bottom: calc(19px * var(--ptc-compact-scale, 1));
+  margin-bottom: calc(18px * var(--ptc-compact-scale, 1));
 }
-.registrar-subject-modal__section-heading > span { color: #123b26; font-size: 13px; }
-.registrar-subject-modal__field input,
-.registrar-subject-modal__field textarea { border-color: #cbded1; border-radius: 10px; }
-.registrar-subject-modal__field input:focus,
-.registrar-subject-modal__field textarea:focus { border-color: #14844b; box-shadow: 0 0 0 3px rgba(20,132,75,.12); }
-.registrar-subject-modal__load-preview { background: #eef9f2; border-color: #cde7d5; }
+.registrar-subject-modal__grid {
+  gap: calc(13px * var(--ptc-compact-scale, 1));
+}
 .registrar-subject-modal__footer {
-  padding: 18px 25px;
-  background: #f8fcf9;
-  border-top-color: #dfebe3;
+  padding: calc(14px * var(--ptc-compact-scale, 1)) calc(22px * var(--ptc-compact-scale, 1));
 }
-@media (max-width: 600px) {
-  .registrar-subject-modal__header { padding: 19px; }
-  .registrar-subject-modal__body { padding: 14px 16px 6px; }
-  .registrar-subject-modal__section { padding: 13px; }
-  .registrar-subject-modal__footer { padding: 15px 17px; }
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__overlay {
+  --rsm-modal-text-950: #f0f5f2;
+  --rsm-modal-text-800: #d7e4dd;
+  --rsm-modal-text-600: #b6c6bd;
+  --rsm-modal-text-500: #a3b5aa;
+  --rsm-modal-border: #35434a;
+  --rsm-modal-border-strong: #495b62;
+  color-scheme: dark;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal { color: #eaf5ed; background: #1b2b20; border-color: #42664c; color-scheme: dark; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__body,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__footer { background: #1c2d21; border-color: #3c5944; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__section { background: #22382a; border-color: #3c5944; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__section-heading > span,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__field > span { color: #e9f6ec; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__section-heading p { color: #bdd4c2; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__field input,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__field textarea,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__number-input { background: #14251a; color: #eaf4ec; border-color: #456b50; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-subject-modal__load-preview { background: #203d2b; border-color: #3a6347; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal {
+  background: #171e22;
+  color: #f0f5f2;
+  border-color: #415159;
+  box-shadow: 0 26px 65px rgba(0,0,0,.4);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__header {
+  background: #20292e;
+  border-color: #35434a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__icon {
+  color: #a6e2bc;
+  background: #203c2e;
+  border-color: #3a6049;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__eyebrow {
+  color: #a9dfbd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__close {
+  color: #e5efea;
+  background: #263239;
+  border-color: #4b5c64;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__close:hover:not(:disabled) {
+  color: #ffffff;
+  background: #35444b;
+  border-color: #688078;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__body {
+  background: #171e22;
+  scrollbar-color: #40565a #171e22;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__section {
+  border-color: #35434a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field input,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field textarea,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__number-input {
+  color: #eef5f0;
+  background: #20292e;
+  border-color: #4b5b63;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__number-input input {
+  background: transparent;
+  border: 0;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field input::placeholder,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field textarea::placeholder {
+  color: #a0b2aa;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field input:disabled,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field textarea:disabled {
+  color: #abb9b2;
+  background: #263037;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__number-input > svg {
+  color: #a9dfbd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__load-preview span {
+  color: #c2d1c9;
+  background: #20292e;
+  border-color: #40525a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__load-preview strong {
+  color: #b5edc8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__footer {
+  color: #c6d4cb;
+  background: #20292e;
+  border-color: #35434a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--secondary {
+  color: #f0f5f2;
+  background: #28353b;
+  border-color: #50626a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--secondary:hover:not(:disabled) {
+  color: #ffffff;
+  background: #36444b;
+  border-color: #627981;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--primary {
+  color: #ffffff;
+  background: #087444;
+  border-color: #24875a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--primary:hover:not(:disabled) {
+  background: #0a8550;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__error {
+  color: #ffcbc5;
+  background: #382625;
+  border-color: #75443c;
+}

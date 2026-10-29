@@ -1,8 +1,4 @@
-/* =========================================================
-   REGISTRAR — ACADEMIC RECORDS
-   Scoped to this page to prevent style leakage.
-========================================================= */
-
+/* ACADEMIC RECORDS */
 .registrar-academic-record {
   --rar-green-950: #073b24;
   --rar-green-900: #0a4b2d;
@@ -59,10 +55,7 @@
   font: inherit;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
-
+/* HEADER */
 .registrar-academic-record__hero {
   position: relative;
   overflow: hidden;
@@ -108,7 +101,7 @@
   align-items: center;
   gap: 8px;
   color: var(--rar-green-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -132,7 +125,7 @@
 .registrar-academic-record__hero h1 {
   margin: 0;
   color: var(--rar-text-950);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(34px * var(--ptc-font-scale, 1)));
   font-weight: 770;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -142,7 +135,7 @@
   max-width: 760px;
   margin: 9px 0 0;
   color: var(--rar-text-600);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
 
@@ -163,7 +156,7 @@
   gap: 8px;
   padding: 0 14px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 720;
   cursor: pointer;
   transition:
@@ -217,10 +210,7 @@
   }
 }
 
-/* =========================================================
-   OFFICIAL NOTICE
-========================================================= */
-
+/* OFFICIAL RECORD NOTICE */
 .registrar-academic-record__notice {
   display: flex;
   align-items: flex-start;
@@ -248,21 +238,18 @@
   display: block;
   margin: 1px 0 3px;
   color: var(--rar-green-950);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 760;
 }
 
 .registrar-academic-record__notice p {
   margin: 0;
   color: var(--rar-text-600);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
-/* =========================================================
-   ERROR / LOADING
-========================================================= */
-
+/* ERROR STATES */
 .registrar-academic-record__error {
   display: flex;
   align-items: center;
@@ -295,13 +282,13 @@
   display: block;
   margin-bottom: 3px;
   color: #8f1d14;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__error-copy p {
   margin: 0;
   color: #a8362c;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -315,11 +302,12 @@
   border-radius: 9px;
   color: #8f1d14;
   background: #fff;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 720;
   cursor: pointer;
 }
 
+/* LOADING STATES */
 .registrar-academic-record__loading {
   margin-bottom: 18px;
   padding: 22px;
@@ -395,10 +383,7 @@
   }
 }
 
-/* =========================================================
-   STUDENT CARD
-========================================================= */
-
+/* STUDENT PROFILE */
 .registrar-academic-record__student-card {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
@@ -435,7 +420,7 @@
     var(--rar-green-950)
   );
   box-shadow: 0 8px 18px rgba(10, 75, 45, 0.15);
-  font-size: 21px;
+  font-size: calc(21px * var(--ptc-font-scale, 1));
   font-weight: 780;
   letter-spacing: 0.025em;
 }
@@ -459,7 +444,7 @@
   display: block;
   margin-bottom: 3px;
   color: var(--rar-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 680;
   text-transform: uppercase;
   letter-spacing: 0.055em;
@@ -469,7 +454,7 @@
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--rar-text-950);
-  font-size: clamp(20px, 2vw, 26px);
+  font-size: clamp(calc(20px * var(--ptc-font-scale, 1)), calc(2vw * var(--ptc-font-scale, 1)), calc(26px * var(--ptc-font-scale, 1)));
   font-weight: 770;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -484,7 +469,7 @@
   border-radius: 999px;
   color: var(--rar-text-600);
   background: #f7f9f8;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 750;
   white-space: nowrap;
 }
@@ -519,14 +504,14 @@
   flex-wrap: wrap;
   margin-top: 7px;
   color: var(--rar-text-600);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
 .registrar-academic-record__course-name {
   margin: 5px 0 0;
   color: var(--rar-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -548,7 +533,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--rar-text-500);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.045em;
@@ -559,15 +544,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--rar-text-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 740;
   white-space: nowrap;
 }
 
-/* =========================================================
-   SUMMARY
-========================================================= */
-
+/* RECORD SUMMARY */
 .registrar-academic-record__summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -612,7 +594,7 @@
   span:not(.registrar-academic-record__summary-icon) {
   display: block;
   color: var(--rar-text-600);
-  font-size: 10px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
 }
 
@@ -620,7 +602,7 @@
   display: block;
   margin-top: 1px;
   color: var(--rar-text-950);
-  font-size: 20px;
+  font-size: calc(20px * var(--ptc-font-scale, 1));
   font-weight: 790;
   line-height: 1.15;
 }
@@ -631,7 +613,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--rar-text-500);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   white-space: nowrap;
 }
 
@@ -661,12 +643,12 @@
 
 .registrar-academic-record__attention-heading strong {
   color: #7e4a00;
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__attention-heading span {
   color: #936423;
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__attention-items {
@@ -685,19 +667,16 @@
   border-radius: 999px;
   color: #815615;
   background: #fff;
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
 .registrar-academic-record__attention-items strong {
   color: #69430a;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
-/* =========================================================
-   HISTORY / FILTERS
-========================================================= */
-
+/* ACADEMIC HISTORY */
 .registrar-academic-record__directory {
   overflow: hidden;
   margin-bottom: 16px;
@@ -718,7 +697,7 @@
 .registrar-academic-record__directory-heading h2 {
   margin: 6px 0 0;
   color: var(--rar-text-950);
-  font-size: 19px;
+  font-size: calc(19px * var(--ptc-font-scale, 1));
   font-weight: 770;
   letter-spacing: -0.015em;
 }
@@ -726,7 +705,7 @@
 .registrar-academic-record__directory-heading p {
   margin: 5px 0 0;
   color: var(--rar-text-600);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.5;
 }
 
@@ -743,15 +722,16 @@
 
 .registrar-academic-record__record-count strong {
   color: var(--rar-green-800);
-  font-size: 15px;
+  font-size: calc(15px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__record-count span {
   color: var(--rar-text-500);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
+/* SEARCH AND FILTERS */
 .registrar-academic-record__filters {
   display: grid;
   grid-template-columns: minmax(260px, 1.55fr) repeat(
@@ -776,7 +756,7 @@
   display: block;
   margin-bottom: 5px;
   color: var(--rar-text-600);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
@@ -811,7 +791,7 @@
   outline: 0;
   color: var(--rar-text-800);
   background: transparent;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__input-shell input::placeholder {
@@ -830,7 +810,7 @@
   border-radius: 6px;
   color: var(--rar-text-500);
   background: #f0f3f1;
-  font-size: 15px;
+  font-size: calc(15px * var(--ptc-font-scale, 1));
   cursor: pointer;
 }
 
@@ -843,7 +823,7 @@
   outline: 0;
   color: var(--rar-text-700);
   background: #fff;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 630;
   cursor: pointer;
 }
@@ -864,7 +844,7 @@
   border-radius: 9px;
   color: var(--rar-text-700);
   background: #fff;
-  font-size: 10px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
   cursor: pointer;
 }
@@ -889,7 +869,7 @@
   border-radius: 999px;
   color: #fff;
   background: var(--rar-green-700);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__filter-summary {
@@ -904,7 +884,7 @@
 
 .registrar-academic-record__filter-summary > span {
   color: var(--rar-text-500);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
@@ -914,14 +894,11 @@
   border-radius: 999px;
   color: var(--rar-green-800);
   background: var(--rar-green-50);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
-/* =========================================================
-   EMPTY
-========================================================= */
-
+/* EMPTY STATE */
 .registrar-academic-record__empty {
   min-height: 240px;
   display: flex;
@@ -946,14 +923,14 @@
 
 .registrar-academic-record__empty > strong {
   color: var(--rar-text-800);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__empty > p {
   max-width: 460px;
   margin: 5px 0 0;
   color: var(--rar-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
@@ -968,15 +945,12 @@
   border-radius: 9px;
   color: var(--rar-green-800);
   background: #fff;
-  font-size: 10px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
   cursor: pointer;
 }
 
-/* =========================================================
-   YEAR / SEMESTER
-========================================================= */
-
+/* ACADEMIC YEAR AND SEMESTER */
 .registrar-academic-record__year-list {
   display: grid;
   gap: 14px;
@@ -1005,7 +979,7 @@
   display: block;
   margin-bottom: 2px;
   color: var(--rar-green-700);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.065em;
@@ -1014,7 +988,7 @@
 .registrar-academic-record__year-header h3 {
   margin: 0;
   color: var(--rar-green-950);
-  font-size: 14.5px;
+  font-size: calc(14.5px * var(--ptc-font-scale, 1));
   font-weight: 780;
 }
 
@@ -1024,7 +998,7 @@
   border-radius: 999px;
   color: var(--rar-green-800);
   background: #fff;
-  font-size: 9px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
 }
 
@@ -1062,7 +1036,7 @@
 .registrar-academic-record__semester-header h4 {
   margin: 0;
   color: var(--rar-text-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 760;
 }
 
@@ -1070,7 +1044,7 @@
   display: block;
   margin-top: 2px;
   color: var(--rar-text-500);
-  font-size: 9px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__semester-stats {
@@ -1086,18 +1060,15 @@
   border-radius: 8px;
   color: var(--rar-text-500);
   background: #fff;
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__semester-stats strong {
   color: var(--rar-text-800);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
-/* =========================================================
-   TABLE
-========================================================= */
-
+/* RECORD TABLE */
 .registrar-academic-record__table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -1121,7 +1092,7 @@
 .registrar-academic-record__table th {
   color: #6b766f;
   background: #f7f9f8;
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1.25;
   text-transform: uppercase;
@@ -1179,7 +1150,7 @@
 
 .registrar-academic-record__subject-cell > strong {
   color: var(--rar-green-900);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 780;
 }
 
@@ -1188,7 +1159,7 @@
 .registrar-academic-record__class-cell > strong {
   overflow-wrap: anywhere;
   color: var(--rar-text-800);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 690;
   line-height: 1.35;
 }
@@ -1202,7 +1173,7 @@
   > span:not(.registrar-academic-record__review-status) {
   overflow-wrap: anywhere;
   color: var(--rar-text-500);
-  font-size: 8.3px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
 }
 
@@ -1214,7 +1185,7 @@
   padding: 4px 6px;
   border: 1px solid var(--rar-border);
   border-radius: 999px;
-  font-size: 8px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 750;
   line-height: 1;
 }
@@ -1239,7 +1210,7 @@
   border-radius: 8px;
   color: var(--rar-green-900);
   background: var(--rar-green-50);
-  font-size: 10px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 780;
 }
 
@@ -1262,13 +1233,13 @@
   display: block;
   margin-bottom: 2px;
   color: var(--rar-text-500);
-  font-size: 7px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   text-transform: uppercase;
 }
 
 .registrar-academic-record__term-grades strong {
   color: var(--rar-text-800);
-  font-size: 9px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 750;
 }
 
@@ -1276,13 +1247,13 @@
   display: inline-block;
   padding-top: 5px;
   color: #8b958f;
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-style: italic;
 }
 
 .registrar-academic-record__rating-cell > strong {
   color: var(--rar-text-950);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 800;
 }
 
@@ -1292,7 +1263,7 @@
   padding: 4px 7px;
   border: 1px solid var(--rar-border);
   border-radius: 999px;
-  font-size: 8px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1;
 }
@@ -1330,7 +1301,7 @@
   width: max-content;
   max-width: 100%;
   color: var(--rar-text-600);
-  font-size: 8px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 680;
 }
 
@@ -1345,7 +1316,7 @@
   align-items: center;
   gap: 4px;
   color: var(--rar-danger);
-  font-size: 7.8px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
@@ -1356,7 +1327,7 @@
   align-items: center;
   gap: 4px;
   color: var(--rar-green-800);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
@@ -1368,10 +1339,7 @@
   background: #f7f9f8;
 }
 
-/* =========================================================
-   GUIDE
-========================================================= */
-
+/* RESULT GUIDE */
 .registrar-academic-record__guide {
   margin-bottom: 16px;
   padding: 18px 20px;
@@ -1402,7 +1370,7 @@
 .registrar-academic-record__guide-heading > div > span {
   display: block;
   color: var(--rar-green-700);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 740;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1411,7 +1379,7 @@
 .registrar-academic-record__guide-heading h2 {
   margin: 2px 0 0;
   color: var(--rar-text-950);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   font-weight: 760;
 }
 
@@ -1439,7 +1407,7 @@
   justify-content: center;
   padding: 5px 6px;
   border-radius: 8px;
-  font-size: 8px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 780;
 }
 
@@ -1466,20 +1434,17 @@
 .registrar-academic-record__guide-grid strong {
   display: block;
   color: var(--rar-text-800);
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__guide-grid p {
   margin: 3px 0 0;
   color: var(--rar-text-500);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
-/* =========================================================
-   FOOTER / ACTIONS
-========================================================= */
-
+/* RECORD ACTIONS */
 .registrar-academic-record__footer-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -1513,14 +1478,14 @@
 
 .registrar-academic-record__footer-copy strong {
   color: var(--rar-text-800);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__footer-copy p {
   max-width: 650px;
   margin: 3px 0 0;
   color: var(--rar-text-500);
-  font-size: 9px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -1534,14 +1499,14 @@
 .registrar-academic-record__footer-units > small {
   display: block;
   color: var(--rar-text-500);
-  font-size: 8.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__footer-units > strong {
   display: block;
   margin: 1px 0;
   color: var(--rar-green-900);
-  font-size: 19px;
+  font-size: calc(19px * var(--ptc-font-scale, 1));
 }
 
 .registrar-academic-record__actions {
@@ -1561,7 +1526,7 @@
   border-radius: 9px;
   color: var(--rar-text-700);
   background: #fff;
-  font-size: 9.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 690;
   text-align: left;
   cursor: pointer;
@@ -1581,10 +1546,6 @@
   color: #8fa098;
 }
 
-/* =========================================================
-   FOCUS
-========================================================= */
-
 .registrar-academic-record button:focus-visible,
 .registrar-academic-record input:focus-visible,
 .registrar-academic-record select:focus-visible {
@@ -1592,10 +1553,7 @@
   outline-offset: 2px;
 }
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
+/* RESPONSIVE LAYOUT */
 @media (max-width: 1250px) {
   .registrar-academic-record__student-card {
     grid-template-columns: minmax(0, 1fr);
@@ -1691,7 +1649,7 @@
   }
 
   .registrar-academic-record__hero h1 {
-    font-size: 25px;
+    font-size: calc(25px * var(--ptc-font-scale, 1));
   }
 
   .registrar-academic-record__hero-actions {
@@ -1719,7 +1677,7 @@
     width: 56px;
     height: 56px;
     border-radius: 16px;
-    font-size: 17px;
+    font-size: calc(17px * var(--ptc-font-scale, 1));
   }
 
   .registrar-academic-record__identity-heading {
@@ -1784,10 +1742,6 @@
   }
 }
 
-/* =========================================================
-   TWO-TERM GRADING / SPECIAL OUTCOMES
-========================================================= */
-
 .registrar-academic-record__result--unofficial-drop {
   border-color: #d9c8ef;
   color: #6f42a8;
@@ -1806,7 +1760,7 @@
   padding: 4px 7px;
   border: 1px solid var(--rar-border);
   border-radius: 999px;
-  font-size: 7.7px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1;
 }
@@ -1837,7 +1791,7 @@
   border-radius: 4px;
   color: var(--rar-text-600);
   background: #faf8fd;
-  font-size: 7.8px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -1847,7 +1801,6 @@
   background: #f1e9fb;
 }
 
-/* Give the result/outcome cell enough room for the reason text. */
 .registrar-academic-record__table {
   min-width: 1240px;
 }
@@ -1876,596 +1829,757 @@
   }
 }
 
-
-/* ============================================================================
-   PTC PORTAL | REGISTRAR / ACADEMIC RECORDS — GREEN DESIGN REFRESH
-   CSS-only update. The existing academic records, filters, tables, badges and
-   navigation retain their TSX behavior. Shared sidebar/footer are untouched.
-   ============================================================================ */
-
-/* Remove the 20px generic content gutter for this page, without modifying the
-   dimensions or styles of the shared sidebar and footer. */
-.dashboard-main:has(> .dashboard-content > .registrar-academic-record)
-  > .dashboard-content {
+.dashboard-main:has(.registrar-academic-record) > .dashboard-content {
   padding: 0;
-  min-width: 0;
-  overflow-x: clip;
-  background: #e5f0e9;
+  overflow-x: hidden;
 }
-
-/* Suppress only the empty header-holder above a hidden app header. */
-.dashboard-main:has(.registrar-academic-record)
-  > .header-container:has(.app-header.hide) {
-  height: 0;
-  min-height: 0;
-  border: 0;
-}
-
-.registrar-academic-record {
-  --rar-green-950: #063c26;
-  --rar-green-900: #075333;
-  --rar-green-800: #106c40;
-  --rar-green-700: #15804a;
-  --rar-text-950: #19251d;
-  --rar-text-800: #303d34;
-  --rar-text-700: #47584c;
-  --rar-text-600: #617268;
-  --rar-text-500: #75867b;
-  --rar-border: #d7e8db;
-  --rar-border-strong: #c6ddcc;
-  --rar-surface: #fff;
-  --rar-bg: #e7f1e9;
+/* LIGHT MODE */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record {
   position: relative;
   isolation: isolate;
-  min-width: 0;
-  width: 100%;
-  min-height: 100%;
-  padding: 25px 27px 42px;
-  background-color: #e7f1e9;
+  background-color: #e6f1e9;
   background-image:
-    linear-gradient(135deg, rgba(15, 122, 69, .07) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15, 122, 69, .055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212, 167, 44, .045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37, 99, 235, .035) 25%, transparent 25%),
-    radial-gradient(circle at 10% 8%, rgba(21, 148, 82, .17), transparent 27%),
-    radial-gradient(circle at 90% 6%, rgba(212, 167, 44, .12), transparent 24%),
-    linear-gradient(180deg, #eff7f1 0%, #e5f0e8 54%, #dfebe3 100%);
-  background-size: 96px 96px, 96px 96px, 128px 128px, 128px 128px, auto, auto, auto;
+    linear-gradient(135deg,rgba(15,122,69,.075) 25%,transparent 25%),
+    linear-gradient(225deg,rgba(15,122,69,.052) 25%,transparent 25%),
+    linear-gradient(45deg,rgba(212,167,44,.04) 25%,transparent 25%),
+    linear-gradient(315deg,rgba(37,99,235,.03) 25%,transparent 25%),
+    linear-gradient(180deg,#edf6f0 0%,#e5f0e9 48%,#dce9e0 100%);
+  background-size:96px 96px,96px 96px,128px 128px,128px 128px,auto;
+  background-position:0 0,48px 48px,0 0,64px 64px,center;
 }
-
-.registrar-academic-record::before {
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record::before {
   content: "";
   position: absolute;
   z-index: -1;
-  top: 13px;
-  left: 13px;
-  right: 13px;
-  height: 380px;
-  border: 1px solid rgba(7, 83, 51, .12);
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  height: 370px;
+  border: 1px solid rgba(15,122,69,.13);
   border-radius: 30px;
-  background: linear-gradient(110deg, rgba(255,255,255,.68), rgba(234,247,239,.53));
-  box-shadow: 0 18px 48px rgba(6, 60, 38, .09);
+  background: linear-gradient(120deg,rgba(255,255,255,.69),rgba(240,248,242,.45));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9),0 23px 50px rgba(7,59,36,.1);
   pointer-events: none;
 }
-
-/* Green hero / actions */
-.registrar-academic-record__hero {
-  min-height: 184px;
-  margin-bottom: 17px;
-  padding: 29px 31px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 83% 18%, rgba(255,255,255,.16) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 94% 56%, rgba(255,255,255,.08) 0 14%, transparent 14.5%),
-    linear-gradient(120deg, #064e30 0%, #0b6d3f 46%, #148346 78%, #259152 100%);
-  box-shadow: 0 17px 38px rgba(6, 65, 39, .22);
-}
-.registrar-academic-record__hero::after {
-  top: -125px;
-  right: -50px;
-  width: 310px;
-  height: 310px;
-  border: 2px solid rgba(255,255,255,.15);
-  box-shadow: 0 0 0 44px rgba(255,255,255,.045), 0 0 0 84px rgba(255,255,255,.025);
-}
-.registrar-academic-record__eyebrow { color: #f4fff8; font-weight: 800; }
-.registrar-academic-record__eyebrow-icon {
-  color: #f4fff8;
-  background: rgba(255,255,255,.17);
-  border: 1px solid rgba(255,255,255,.2);
-}
-.registrar-academic-record__hero h1 {
-  color: #fff;
-  font-size: clamp(27px, 3.1vw, 37px);
-  letter-spacing: -.035em;
-}
-.registrar-academic-record__hero p {
-  color: #e3f5e9;
-  font-size: 13.5px;
-}
-.registrar-academic-record__hero-actions { position: relative; z-index: 1; }
-.registrar-academic-record__hero .registrar-academic-record__button {
-  min-height: 43px;
-  padding: 10px 15px;
-  border-radius: 11px;
-  box-shadow: 0 5px 12px rgba(2,42,25,.10);
-}
-.registrar-academic-record__hero .registrar-academic-record__button--secondary {
-  border-color: rgba(255,255,255,.55);
-  color: #075333;
-  background: #fff;
-}
-.registrar-academic-record__hero .registrar-academic-record__button--primary {
-  border-color: #dff6e4;
-  color: #075333;
-  background: #eaffee;
-}
-.registrar-academic-record__hero .registrar-academic-record__button:hover:not(:disabled) {
-  filter: brightness(.97);
-}
-
-/* Page notice / loading / student identity */
-.registrar-academic-record__notice {
-  margin-bottom: 17px;
-  padding: 15px 18px;
-  border-color: #c9e5d3;
-  border-radius: 16px;
-  background: #f1fbf4;
-  box-shadow: 0 5px 16px rgba(8,68,41,.045);
-}
-.registrar-academic-record__notice-icon {
-  color: #0b7044;
-  background: #daf3e2;
-}
-.registrar-academic-record__student-card,
-.registrar-academic-record__directory,
-.registrar-academic-record__guide,
-.registrar-academic-record__footer-card,
-.registrar-academic-record__loading,
-.registrar-academic-record__error {
-  border: 1px solid #dbe9df;
-  border-radius: 21px;
-  background: #fff;
-  box-shadow: 0 11px 28px rgba(8,63,37,.075);
-}
-.registrar-academic-record__student-card {
-  gap: 18px;
-  margin-bottom: 17px;
-  padding: 21px 23px;
-}
-.registrar-academic-record__avatar {
-  border-color: #effff4;
-  background: linear-gradient(145deg,#107d47,#064729);
-  box-shadow: 0 10px 25px rgba(7,78,45,.21);
-}
-.registrar-academic-record__identity-heading h2 { font-size: clamp(21px, 2.2vw, 28px); }
-.registrar-academic-record__current-info > div {
-  border-color: #dcece0;
-  border-radius: 13px;
-  background: #f3faf5;
-  padding: 14px;
-}
-.registrar-academic-record__current-info strong {
-  overflow-wrap: anywhere;
-  white-space: normal;
-  text-overflow: initial;
-}
-
-/* Four data-backed cards: official records, earned units, PTC passed, credits. */
-.registrar-academic-record__summary-grid { gap: 13px; margin-bottom: 17px; }
-.registrar-academic-record__summary-card {
-  position: relative;
-  overflow: hidden;
-  min-height: 111px;
-  padding: 17px 15px;
-  border: 1px solid #d9eee1;
-  border-left: 4px solid #0b9760;
-  border-radius: 17px;
-  background: #effbf4;
-  box-shadow: 0 7px 17px rgba(27,74,42,.06);
-}
-.registrar-academic-record__summary-card::after {
-  content: "";
-  position: absolute;
-  top: -45px;
-  right: -37px;
-  width: 115px;
-  height: 115px;
-  border-radius: 50%;
-  background: rgba(18,135,77,.065);
-  pointer-events: none;
-}
-.registrar-academic-record__summary-card:nth-child(2) {
-  border-color: #f6eac8;
-  border-left-color: #dea40d;
-  background: #fff9e9;
-}
-.registrar-academic-record__summary-card:nth-child(2)::after { background: rgba(212,167,44,.09); }
-.registrar-academic-record__summary-card:nth-child(3) {
-  border-color: #d7e7ff;
-  border-left-color: #2563eb;
-  background: #f1f7ff;
-}
-.registrar-academic-record__summary-card:nth-child(3)::after { background: rgba(37,99,235,.08); }
-.registrar-academic-record__summary-card:nth-child(4) {
-  border-color: #e8dafa;
-  border-left-color: #7c3aed;
-  background: #faf4ff;
-}
-.registrar-academic-record__summary-card:nth-child(4)::after { background: rgba(124,58,237,.07); }
-.registrar-academic-record__summary-icon {
+.dashboard-wrapper .registrar-academic-record__hero {
   position: relative;
   z-index: 1;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  border: 1px solid #0d915d;
-  border-radius: 12px;
-  color: #fff;
-  background: #087347;
-  box-shadow: 0 8px 16px rgba(10,97,55,.15);
+  min-height: 188px;
+  padding: calc(30px * var(--ptc-compact-scale,1)) calc(32px * var(--ptc-compact-scale,1));
+  border: 0;
+  border-radius: 24px;
+  background: linear-gradient(110deg,#073b28 0%,#075234 56%,#0d7d48 100%);
+  box-shadow: 0 14px 32px rgba(5,61,38,.21);
 }
-.registrar-academic-record__summary-card:nth-child(2) .registrar-academic-record__summary-icon {
-  border-color: #f4d783;
-  color: #9f6500;
-  background: #fff4cf;
+.dashboard-wrapper .registrar-academic-record__hero::after {
+  border-color: rgba(255,255,255,.065);
 }
-.registrar-academic-record__summary-card:nth-child(3) .registrar-academic-record__summary-icon {
-  border-color: #c9ddff;
-  color: #2563eb;
-  background: #e7f1ff;
+.dashboard-wrapper .registrar-academic-record__hero :is(h1,p,.registrar-academic-record__eyebrow) { color:#f6fff9; }
+.dashboard-wrapper .registrar-academic-record__hero .registrar-academic-record__eyebrow-icon {
+  color:#f6fff9;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.18);
 }
-.registrar-academic-record__summary-card:nth-child(4) .registrar-academic-record__summary-icon {
-  border-color: #e0d0ff;
-  color: #7431de;
-  background: #f0e9ff;
+.dashboard-wrapper .registrar-academic-record__hero .registrar-academic-record__button--secondary {
+  color:#fff;
+  background:rgba(13,34,26,.7);
+  border-color:rgba(255,255,255,.42);
 }
-.registrar-academic-record__summary-card > div { position: relative; z-index: 1; }
-.registrar-academic-record__summary-card span:not(.registrar-academic-record__summary-icon) {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-}
-.registrar-academic-record__summary-card strong {
-  font-size: clamp(19px, 1.8vw, 26px);
-  font-weight: 800;
-}
-.registrar-academic-record__summary-card small {
-  font-size: 10px;
-  white-space: normal;
-  line-height: 1.35;
-}
-.registrar-academic-record__attention {
-  margin-bottom: 17px;
-  padding: 16px;
-  border-radius: 16px;
-  border-color: #f0dfb5;
-  background: #fff8e8;
+.dashboard-wrapper .registrar-academic-record__hero .registrar-academic-record__button--secondary:hover {
+  color:#fff;
+  background:rgba(21,67,46,.94);
 }
 
-/* Main academic history directory, filters and year/semester tables */
-.registrar-academic-record__directory { margin-bottom: 17px; }
-.registrar-academic-record__directory-heading { padding: 23px 25px 19px; }
-.registrar-academic-record__directory-heading h2 { font-size: 22px; font-weight: 800; }
-.registrar-academic-record__section-kicker { color: #087444; font-size: 10px; }
-.registrar-academic-record__record-count {
-  border-color: #cce8d5;
-  background: #effaf3;
-  padding: 10px 13px;
-}
-.registrar-academic-record__filters {
-  gap: 11px;
-  padding: 17px 24px;
-  background: #f7fbf8;
-  border-block-color: #e0ece3;
-}
-.registrar-academic-record__input-shell,
-.registrar-academic-record__filter-field select {
-  min-height: 43px;
-  border: 1px solid #d4e5d9;
-  border-radius: 11px;
-  background: #fff;
-  color: #253b2d;
-}
-.registrar-academic-record__input-shell:focus-within,
-.registrar-academic-record__filter-field select:focus {
-  outline: 2px solid rgba(21,148,82,.2);
-  outline-offset: 0;
-  border-color: #15804a;
-}
-.registrar-academic-record__clear-button { min-height: 43px; border-radius: 11px; }
-.registrar-academic-record__filter-summary { background: #f5faf6; }
-.registrar-academic-record__year-list { padding: 18px; }
-.registrar-academic-record__year {
+.dashboard-wrapper .registrar-academic-record__summary-card {
+  position: relative;
   overflow: hidden;
-  border: 1px solid #d8e8dd;
   border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 5px 18px rgba(8,63,37,.04);
+  padding-left: calc(17px * var(--ptc-compact-scale,1));
 }
-.registrar-academic-record__year-header {
-  padding: 16px 19px;
-  background: #edf8f0;
-  border-bottom: 1px solid #d9e9dd;
+.dashboard-wrapper .registrar-academic-record__summary-card::before {
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:5px;
+  background:#159452;
 }
-.registrar-academic-record__year-header h3 { color: #103f28; }
-.registrar-academic-record__year-count { background: #fff; border-color: #cee5d4; }
-.registrar-academic-record__semester-header {
-  padding: 15px 18px;
-  background: #fbfdfb;
-}
-.registrar-academic-record__semester-icon {
-  border: 1px solid #cce8d5;
-  color: #0f7544;
-  background: #e6f7ec;
-}
-.registrar-academic-record__semester-stats > span {
-  border-color: #dcebe0;
-  border-radius: 9px;
-  background: #f5faf6;
-}
-.registrar-academic-record__table-wrap {
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-color: #a9cbb4 transparent;
-}
-.registrar-academic-record__table { min-width: 1040px; }
-.registrar-academic-record__table th {
-  color: #4b6955;
-  background: #eff6f1;
-  border-bottom-color: #dbe9df;
-}
-.registrar-academic-record__table td { border-bottom-color: #e8f0eb; }
-.registrar-academic-record__table tbody tr:hover td { background: #f4fbf6; }
-.registrar-academic-record__source-badge,
-.registrar-academic-record__result,
-.registrar-academic-record__subject-status,
-.registrar-academic-record__outcome,
-.registrar-academic-record__review-status { border-radius: 999px; }
-.registrar-academic-record__empty {
-  margin: 16px;
-  border: 1px dashed #c6dece;
-  border-radius: 15px;
-  background: #f7fcf9;
-}
-.registrar-academic-record__empty-icon { color: #106c40; background: #e0f5e8; }
+.dashboard-wrapper .registrar-academic-record__summary-card:nth-child(2)::before { background:#d4a72c; }
+.dashboard-wrapper .registrar-academic-record__summary-card:nth-child(3)::before { background:#2563eb; }
+.dashboard-wrapper .registrar-academic-record__summary-card:nth-child(4)::before { background:#7c3aed; }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(1) { background:linear-gradient(140deg,#fff,#ecfbf2); }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(2) { background:linear-gradient(140deg,#fff,#fff8e4); }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(3) { background:linear-gradient(140deg,#fff,#edf5ff); }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(4) { background:linear-gradient(140deg,#fff,#f6efff); }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(2) .registrar-academic-record__summary-icon { color:#a87900;background:#fff5d8;border-color:#efd08d; }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(3) .registrar-academic-record__summary-icon { color:#2563eb;background:#edf5ff;border-color:#ccddff; }
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-academic-record__summary-card:nth-child(4) .registrar-academic-record__summary-icon { color:#7c3aed;background:#f5eeff;border-color:#dfcaff; }
 
-/* Grading guide and lower record action card */
-.registrar-academic-record__guide { padding: 23px 24px; margin-bottom: 16px; }
-.registrar-academic-record__guide-icon,
-.registrar-academic-record__footer-icon {
-  border: 1px solid #cce7d4;
-  border-radius: 12px;
-  color: #0b7545;
-  background: #e5f6eb;
+.dashboard-wrapper .registrar-academic-record {
+  --rar-density:var(--ptc-compact-scale,1);
 }
-.registrar-academic-record__guide-grid { gap: 11px; }
-.registrar-academic-record__guide-grid article {
-  border-color: #deebe1;
-  border-radius: 13px;
-  background: #f9fcfa;
+.dashboard-wrapper .registrar-academic-record__hero h1 {
+  font-size:clamp(calc(26px * var(--ptc-font-scale,1)),calc(3vw * var(--ptc-font-scale,1)),calc(34px * var(--ptc-font-scale,1)));
 }
-.registrar-academic-record__footer-card {
-  padding: 20px 23px;
-  border-color: #cfe4d6;
-  background: linear-gradient(110deg, #f7fdf9, #eef8f1);
-}
-.registrar-academic-record__actions button {
-  border-radius: 11px;
-  border-color: #bfdec8;
-  background: #fff;
-}
-.registrar-academic-record__actions button:hover { background: #e8f7ed; }
-.registrar-academic-record__loading { padding: 24px; }
-.registrar-academic-record__skeleton { background: #dfece2; }
-.registrar-academic-record__skeleton::after {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-}
+.dashboard-wrapper .registrar-academic-record :is(
+  .registrar-academic-record__student-card,.registrar-academic-record__directory,
+  .registrar-academic-record__guide,.registrar-academic-record__notice
+) { margin-bottom:calc(18px * var(--rar-density)); }
+.dashboard-wrapper .registrar-academic-record__summary-grid { gap:calc(12px * var(--rar-density)); }
+.dashboard-wrapper .registrar-academic-record__filters { gap:calc(12px * var(--rar-density)); }
 
-/* Keep cards and filters responsive and avoid horizontal page overflow. */
-@media (max-width: 1250px) {
-  .registrar-academic-record__summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* DARK MODE */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record {
+  background-color:#111719 !important;
+  background-image:none !important;
 }
-@media (max-width: 900px) {
-  .registrar-academic-record { padding: 18px 17px 32px; }
-  .registrar-academic-record__hero { padding: 25px 24px; }
-  .registrar-academic-record__student-card { grid-template-columns: 1fr; }
-  .registrar-academic-record__filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .registrar-academic-record__search-field { grid-column: 1 / -1; }
-  .registrar-academic-record__clear-button { align-self: end; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record {
+  --rar-text-950:#eff6f1;
+  --rar-text-800:#e5eee8;
+  --rar-text-700:#c8d7ce;
+  --rar-text-600:#b8c8be;
+  --rar-text-500:#a4b6ac;
+  --rar-border:#37464b;
+  --rar-border-strong:#4c5b62;
+  --rar-surface:#1e262a;
+  --rar-bg:#111719;
+  --rar-green-50:#20362b;
+  --rar-green-100:#274433;
+  --rar-green-700:#8ee0af;
+  --rar-green-800:#a3e9bf;
+  --rar-green-900:#bcefd1;
+  --rar-warning:#ffd292;
+  --rar-warning-bg:#3e3225;
+  --rar-blue:#a8c8ff;
+  --rar-blue-bg:#253648;
+  color-scheme:dark;
+  color:#eff6f1;
 }
-@media (max-width: 620px) {
-  .registrar-academic-record { padding: 13px 11px 24px; }
-  .registrar-academic-record__hero { padding: 23px 19px; border-radius: 19px; }
-  .registrar-academic-record__hero h1 { font-size: 27px; }
-  .registrar-academic-record__hero-actions { width: 100%; flex-wrap: wrap; }
-  .registrar-academic-record__summary-grid,
-  .registrar-academic-record__current-info,
-  .registrar-academic-record__filters { grid-template-columns: 1fr; }
-  .registrar-academic-record__search-field { grid-column: auto; }
-  .registrar-academic-record__directory-heading { padding: 20px 16px; }
-  .registrar-academic-record__filters { padding: 16px; }
-  .registrar-academic-record__year-list { padding: 11px; }
-  .registrar-academic-record__guide { padding: 18px 15px; }
-  .registrar-academic-record__footer-card { padding: 18px 15px; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record::before { display:none !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__hero {
+  background:linear-gradient(110deg,#073b28 0%,#075234 56%,#0d7d48 100%) !important;
 }
-
-/* Theme applies only when the actual application is in dark mode. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .dashboard-main:has(.registrar-academic-record) > .dashboard-content { background: #101a14; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record {
-  --rar-text-950: #eef7f0;
-  --rar-text-800: #deeee1;
-  --rar-text-700: #c8dbcD;
-  --rar-text-600: #b9cebe;
-  --rar-text-500: #abc4b0;
-  --rar-border: #335441;
-  --rar-border-strong: #42644e;
-  --rar-surface: #1b2c21;
-  --rar-bg: #101a14;
-  color: #e8f5eb;
-  background-color: #101a14;
-  background-image:
-    linear-gradient(135deg, rgba(46,132,79,.09) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(46,132,79,.065) 25%, transparent 25%),
-    linear-gradient(180deg,#17261c,#0f1b13);
-  background-size: 96px 96px, 96px 96px, auto;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record::before { background: rgba(26,46,32,.55); border-color: #345b41; box-shadow: none; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__hero { background: linear-gradient(120deg,#063a25,#095a36 63%,#0b6f43); }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__student-card,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__directory,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__footer-card,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__loading {
-  background: #1b2b21;
-  border-color: #365441;
-  color: #e5f3e9;
-  box-shadow: 0 8px 22px rgba(0,0,0,.16);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__notice { background: #213e2b; border-color: #355d44; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__notice strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__notice p { color: #def1e2; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__notice,.registrar-academic-record__student-card,
+  .registrar-academic-record__summary-card,.registrar-academic-record__directory,
+  .registrar-academic-record__year,.registrar-academic-record__semester,
+  .registrar-academic-record__guide,.registrar-academic-record__loading
+) { background:#1e262a; border-color:#3a4a50; color:#eaf3ed; box-shadow:0 6px 18px rgba(0,0,0,.15); }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
   .registrar-academic-record__current-info > div,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-grid article,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__year { background: #223529; border-color: #385a44; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card { background: #203b2a; border-color:#376a45; border-left-color:#2dd385; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card:nth-child(2) { background: #3b3220; border-color:#706039; border-left-color:#efba34; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card:nth-child(3) { background: #22344a; border-color:#375c82; border-left-color:#6a9df7; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card:nth-child(4) { background: #352843; border-color:#655077; border-left-color:#b58aff; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card strong { color: #f3fcf4; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card span:not(.registrar-academic-record__summary-icon),
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__summary-card small { color: #c9d9ce; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__attention { background:#453923; border-color:#816a3a; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__attention-heading strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__attention-heading span { color: #f6dfad; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__attention-items > span { background:#322b21; border-color:#86724b; color:#f0d69c; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__attention-items strong { color:#ffe0a0; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+  .registrar-academic-record__attention,.registrar-academic-record__attention-items > span,
+  .registrar-academic-record__year-header,.registrar-academic-record__semester-header,
+  .registrar-academic-record__semester-stats > span,.registrar-academic-record__record-count,
+  .registrar-academic-record__filter-summary,.registrar-academic-record__guide-grid > div
+) { background:#222c31; border-color:#405057; color:#dbe8e0; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__input-shell,.registrar-academic-record__filter-field select,
+  .registrar-academic-record__clear-button,.registrar-academic-record__input-shell input
+) { background:#171f23; border-color:#4b5b61; color:#e9f2ec; color-scheme:dark; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(input::placeholder) { color:#a9b9b0; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__table th { background:#283238; border-color:#435059; color:#d1ddd5; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__table td { background:#1e262a; border-color:#35434a; color:#e4ede7; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__table tbody tr:hover td { background:#29363a; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__subject-cell > strong,
+  .registrar-academic-record__directory-heading h2,
+  .registrar-academic-record__semester-header h4,
+  .registrar-academic-record__year-header h3
+) { color:#eff8f1; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__student-meta,.registrar-academic-record__identity-copy,
+  .registrar-academic-record__record-count,.registrar-academic-record__table-wrap
+) { border-color:#3c4b52; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__skeleton,.registrar-academic-record__empty
+) { background:#2b363b; border-color:#46565b; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__skeleton::after { background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent); }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(1) { background:#1f302a; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(2) { background:#302c25; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(3) { background:#222e3e; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(4) { background:#2b2738; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(2) .registrar-academic-record__summary-icon { color:#f4cf7c;background:#41351e;border-color:#765d2f; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(3) .registrar-academic-record__summary-icon { color:#a9c7ff;background:#203957;border-color:#476eaa; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(4) .registrar-academic-record__summary-icon { color:#d1b1ff;background:#34274c;border-color:#70519c; }
+@media(max-width:760px){
+  .dashboard-wrapper .registrar-academic-record__hero { min-height:auto; padding:calc(22px * var(--ptc-compact-scale,1)); }
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record {
+  color-scheme: dark;
+  --rar-surface: #1e262a;
+  --rar-bg: #111719;
+  --rar-green-950: #eef9f1;
+  --rar-green-900: #9be7b7;
+  --rar-green-800: #81dba6;
+  --rar-green-700: #70d09b;
+  --rar-green-600: #55bd86;
+  --rar-green-100: #1c3a2b;
+  --rar-green-50: #193125;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__directory,
+  .registrar-academic-record__directory-header,
+  .registrar-academic-record__directory-heading,
   .registrar-academic-record__filters,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__filter-summary { background:#1f3226; border-color:#34513f; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__input-shell,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__filter-field select {
-  background:#17271c; border-color:#45634f; color:#f0f7f1;
+  .registrar-academic-record__filter-row,
+  .registrar-academic-record__filter-bar,
+  .registrar-academic-record__year-list,
+  .registrar-academic-record__empty,
+  .registrar-academic-record__guide,
+  .registrar-academic-record__footer-card,
+  .registrar-academic-record__review-note
+) {
+  background: #1e262a !important;
+  background-image: none !important;
+  border-color: #39474e !important;
+  color: #e5eee8;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__input-shell input { color:#f0f7f1; background:transparent; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__input-shell input::placeholder { color:#9ab3a1; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__year-header { background:#254630; border-color:#3d674b; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__year-header h3 { color:#e6f8eb; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__year-count,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__semester-header,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__semester-stats > span { background:#233a2a; border-color:#3e6049; color:#dceee0; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__table th { background:#264231; color:#d5e9da; border-color:#3c6349; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__table td { background:#1b2b21; border-color:#344d3d; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__table tbody tr:hover td { background:#294232; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-rating--passed { background:#244b32; border-color:#406f50; color:#b8f2cc; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-rating--credited { background:#263e58; border-color:#4a6a8d; color:#c6e0ff; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-rating--incomplete { background:#514020; border-color:#826a3b; color:#ffe8b7; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-rating--failed,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-rating--unofficial-drop { background:#512c2c; border-color:#8a5151; color:#ffd6d6; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__record-count { background:#243d2d; border-color:#3c6749; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__record-count strong { color:#99e7b6; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__empty { background:#1e3325; border-color:#42684d; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid article,
+  .registrar-academic-record__actions button,
+  .registrar-academic-record__filter-field,
+  .registrar-academic-record__filter-summary,
+  .registrar-academic-record__filter-summary > strong,
   .registrar-academic-record__footer-units,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__actions button { background:#25402e; border-color:#436b4f; color:#e4f5e8; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__skeleton { background:#324b39; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__skeleton::after { background:linear-gradient(90deg,transparent,rgba(133,179,145,.13),transparent); }
-
-/* Complete the dark surfaces: never leave a white history-list panel. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__year-list { background: #16261c; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__section-kicker,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+  .registrar-academic-record__empty > button,
+  .registrar-academic-record__input-shell button
+) {
+  background: #242e33 !important;
+  border-color: #415159 !important;
+  color: #e7f0ea !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-heading h2,
+  .registrar-academic-record__guide-grid strong,
+  .registrar-academic-record__footer-copy strong,
+  .registrar-academic-record__footer-units > strong,
+  .registrar-academic-record__notice strong,
+  .registrar-academic-record__empty > strong,
+  .registrar-academic-record__directory-heading h2
+) { color: #f2f9f4 !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid p,
+  .registrar-academic-record__footer-copy p,
+  .registrar-academic-record__footer-units > span,
+  .registrar-academic-record__footer-units > small,
+  .registrar-academic-record__notice p,
+  .registrar-academic-record__empty > p,
+  .registrar-academic-record__filter-field > label,
+  .registrar-academic-record__filter-field > span
+) { color: #b8c9c0 !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
   .registrar-academic-record__guide-heading > div > span,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__year-header > div > span { color:#8be8ae; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-icon,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__semester-icon,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__footer-icon { color:#a5eac0; background:#284f35; border-color:#456e4c; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-grid article { background:#22372a; border-color:#3d5b47; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__guide-grid strong { color:#e4f5e8; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__clear-button,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__empty > button { background:#263d2d; border-color:#4b7156; color:#dff4e5; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__source-badge--ptc,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__result--passed { background:#1e5531; border-color:#438455; color:#d1f5da; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__source-badge--transfer,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-academic-record__result--credited { background:#24436c; border-color:#5075a4; color:#d4e6ff; }
-
-/* No page-entry flash; existing refresh icon animation remains only on demand. */
-@media (prefers-reduced-motion: reduce) {
-  .registrar-academic-record__button,
-  .registrar-academic-record__actions button { transition: none; }
+  .registrar-academic-record__footer-icon,
+  .registrar-academic-record__guide-icon
+) { color: #8fe2ad !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__notice {
+  background: #1b2924 !important;
+  border-color: #365545 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__guide-rating--passed {
+  color: #95edb5; background: #1c3b2b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__guide-rating--credited {
+  color: #aacfff; background: #223b52;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__guide-rating--incomplete {
+  color: #ffd184; background: #44361f;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__guide-rating--failed {
+  color: #ffb3b3; background: #46292e;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__guide-rating--unofficial-drop {
+  color: #d7baff; background: #392b4d;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__footer-units {
+  border-left-color: #405159 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__actions button:hover:not(:disabled) {
+  background: #2d4038 !important;
+  border-color: #5c9473 !important;
+  color: #b2f1ca !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__clear-button:disabled {
+  background: #2a353a !important;
+  color: #a5b6ae !important;
+  opacity: .7;
 }
 
-@media print {
-  .registrar-academic-record { padding: 0; background: #fff; color: #111; }
-  .registrar-academic-record::before { display: none; }
-  .registrar-academic-record__hero { box-shadow: none; }
+.dashboard-wrapper .registrar-academic-record__table { min-width: 1180px; }
+
+.dashboard-wrapper .registrar-academic-record__input-shell input,
+.dashboard-wrapper .registrar-academic-record__filter-field select {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
+.dashboard-wrapper .registrar-academic-record__clear-button,
+.dashboard-wrapper .registrar-academic-record__actions button {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record {
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record {
+  --rar-text-950: #eff6f1;
+  --rar-text-800: #e5eee8;
+  --rar-text-700: #ccd9d1;
+  --rar-text-600: #b9c9c0;
+  --rar-text-500: #a6b7ae;
+  --rar-border: #334148;
+  --rar-border-strong: #44535a;
+  --rar-surface: #1b2428;
+  --rar-bg: #111719;
+  color: #eff6f1;
+  color-scheme: dark;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record::before {
+  display: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(143, 226, 173, .18) !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__notice,
+  .registrar-academic-record__student-card,
+  .registrar-academic-record__directory,
+  .registrar-academic-record__guide,
+  .registrar-academic-record__footer-card,
+  .registrar-academic-record__loading,
   .registrar-academic-record__year,
   .registrar-academic-record__semester,
-  .registrar-academic-record__guide { break-inside: avoid; }
+  .registrar-academic-record__empty,
+  .registrar-academic-record__review-note
+) {
+  background: #1b2428 !important;
+  background-image: none !important;
+  border-color: #334148 !important;
+  color: #e8f0eb !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__notice {
+  background: linear-gradient(90deg, #173126, #1a272d) !important;
+  border-color: #305044 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__current-info > div,
+  .registrar-academic-record__record-count,
+  .registrar-academic-record__attention,
+  .registrar-academic-record__attention-items > span,
+  .registrar-academic-record__year-header,
+  .registrar-academic-record__semester-header,
+  .registrar-academic-record__semester-stats > span,
+  .registrar-academic-record__filter-summary,
+  .registrar-academic-record__footer-units
+) {
+  background: #202b30 !important;
+  border-color: #3c4b52 !important;
+  color: #dce8e1 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-grid {
+  gap: 14px !important;
+  margin-bottom: 14px !important;
+  padding: 10px !important;
+  border: 1px solid rgba(110, 140, 150, .28) !important;
+  border-radius: 26px !important;
+  background: linear-gradient(180deg, #121c1f, #141f23) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 10px 26px rgba(0,0,0,.18) !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card {
+  position: relative;
+  min-height: 102px;
+  padding: 18px 18px 18px 22px !important;
+  border: 1px solid rgba(92, 112, 120, .42) !important;
+  border-radius: 20px !important;
+  color: #eff6f1 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
+  overflow: hidden;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card::before {
+  width: 4px !important;
+  border-radius: 999px !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(1) {
+  background: linear-gradient(135deg, #18262a, #1d2b2f) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(2) {
+  background: linear-gradient(135deg, #1f2328, #262117) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(3) {
+  background: linear-gradient(135deg, #1b232e, #1f2d3b) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(4) {
+  background: linear-gradient(135deg, #211f2b, #2a2337) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card :is(strong, span, small) {
+  color: #e8f0eb !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card strong {
+  color: #ffffff !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__directory-heading,
+  .registrar-academic-record__filters,
+  .registrar-academic-record__filter-row,
+  .registrar-academic-record__filter-bar,
+  .registrar-academic-record__year-list
+) {
+  background: #1a2327 !important;
+  border-color: #334148 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__input-shell,
+  .registrar-academic-record__filter-field select,
+  .registrar-academic-record__clear-button
+) {
+  background: #121a1e !important;
+  border-color: #43535b !important;
+  color: #edf5f0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__input-shell input {
+  background: transparent !important;
+  color: #edf5f0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__input-shell input::placeholder {
+  color: #aabbb2 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__empty {
+  background: #263238 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__empty :is(strong, p) {
+  color: #e3eee8 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__table th {
+  background: #253037 !important;
+  border-color: #3c4a52 !important;
+  color: #d6e1da !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__table td {
+  background: #1d262b !important;
+  border-color: #334148 !important;
+  color: #e7efea !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__guide-grid article {
+  background: #202a2f !important;
+  border-color: #3b4a51 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-heading h2,
+  .registrar-academic-record__guide-grid strong,
+  .registrar-academic-record__footer-copy strong,
+  .registrar-academic-record__footer-units > strong,
+  .registrar-academic-record__notice strong
+) {
+  color: #f2f8f4 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid p,
+  .registrar-academic-record__footer-copy p,
+  .registrar-academic-record__footer-units > span,
+  .registrar-academic-record__footer-units > small,
+  .registrar-academic-record__notice p
+) {
+  color: #bccdc4 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__actions button {
+  background: #202b30 !important;
+  border-color: #42535b !important;
+  color: #edf5f0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__actions button:hover:not(:disabled) {
+  background: #284036 !important;
+  border-color: #5d9474 !important;
+  color: #b9f1cd !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-academic-record {
+  background: #111719 !important;
+  background-color: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record) > .dashboard-content::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record) > .dashboard-content::after,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record::after {
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  content: none !important;
+  display: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__student-card,
+  .registrar-academic-record__directory,
+  .registrar-academic-record__guide,
+  .registrar-academic-record__footer-card,
+  .registrar-academic-record__loading,
+  .registrar-academic-record__year,
+  .registrar-academic-record__semester
+) {
+  background: #1e262a !important;
+  background-image: none !important;
+  border-color: #37464d !important;
+  color: #eaf2ed !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__directory-heading,
+  .registrar-academic-record__filters,
+  .registrar-academic-record__filter-row,
+  .registrar-academic-record__filter-bar,
+  .registrar-academic-record__filter-summary,
+  .registrar-academic-record__year-list,
+  .registrar-academic-record__year-header,
+  .registrar-academic-record__semester-header,
+  .registrar-academic-record__table-wrap,
+  .registrar-academic-record__empty,
+  .registrar-academic-record__review-note
+) {
+  background: #20292e !important;
+  background-image: none !important;
+  border-color: #3c4a51 !important;
+  color: #e7f0ea !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid article,
+  .registrar-academic-record__current-info > div,
+  .registrar-academic-record__footer-units,
+  .registrar-academic-record__semester-stats > span,
+  .registrar-academic-record__record-count,
+  .registrar-academic-record__attention-items > span
+) {
+  background: #222d32 !important;
+  background-image: none !important;
+  border-color: #435159 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__input-shell,
+  .registrar-academic-record__input-shell input,
+  .registrar-academic-record__filter-field select,
+  .registrar-academic-record__clear-button,
+  .registrar-academic-record__actions button
+) {
+  background: #172024 !important;
+  border-color: #46555c !important;
+  color: #eaf3ed !important;
+  color-scheme: dark;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__empty-icon {
+  background: #20392b !important;
+  color: #a2ecc0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__input-shell input {
+  border: 0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__input-shell input::placeholder {
+  color: #acbcb3 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__filter-field label,
+  .registrar-academic-record__search-field label,
+  .registrar-academic-record__guide-grid p,
+  .registrar-academic-record__footer-copy p,
+  .registrar-academic-record__empty p
+) { color: #bacbc2 !important; }
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-grid {
+  padding: 9px !important;
+  gap: 12px !important;
+  border: 1px solid #3b4a50 !important;
+  border-radius: 23px !important;
+  background: #192125 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 105px;
+  border: 1px solid #36434a !important;
+  border-radius: 16px !important;
+  padding: 16px 16px 16px 20px !important;
+  background: #20292e !important;
+  box-shadow: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 0;
+  background: #159452;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(2)::before { background: #d4a72c; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(3)::before { background: #2563eb; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card:nth-child(4)::before { background: #7c3aed; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card :is(strong, span:not(.registrar-academic-record__summary-icon), small) {
+  color: #eaf3ed !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-academic-record) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-academic-record {
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-academic-record {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-academic-record::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  border: 0 !important;
+  background: #111719 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-academic-record::after,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content:has(> .registrar-academic-record)::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content:has(> .registrar-academic-record)::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-grid {
+  padding: 10px !important;
+  gap: 12px !important;
+  background: #1a2226 !important;
+  border: 1px solid #35434a !important;
+  border-radius: 24px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card {
+  min-height: 100px;
+  padding: 16px 17px 16px 19px !important;
+  border: 1px solid #36444b !important;
+  border-radius: 16px !important;
+  background: #20292e !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-card::before {
+  width: 4px !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__directory,
+  .registrar-academic-record__directory-heading,
+  .registrar-academic-record__filters,
+  .registrar-academic-record__filter-summary,
+  .registrar-academic-record__empty,
+  .registrar-academic-record__year-list,
+  .registrar-academic-record__table-wrap,
+  .registrar-academic-record__guide,
+  .registrar-academic-record__footer-card,
+  .registrar-academic-record__loading
+) {
+  background: #1e262a !important;
+  background-image: none !important;
+  border-color: #37464d !important;
+  color: #eaf2ed !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid article,
+  .registrar-academic-record__footer-units,
+  .registrar-academic-record__filter-summary > strong,
+  .registrar-academic-record__record-count,
+  .registrar-academic-record__semester-stats > span
+) {
+  background: #222d32 !important;
+  background-image: none !important;
+  border-color: #42515a !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__input-shell,
+  .registrar-academic-record__filter-field select,
+  .registrar-academic-record__clear-button,
+  .registrar-academic-record__actions button
+) {
+  color: #e9f3ed !important;
+  background: #172024 !important;
+  border-color: #46565e !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__input-shell input {
+  background: transparent !important;
+  color: #eaf3ed !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid p,
+  .registrar-academic-record__footer-copy p,
+  .registrar-academic-record__empty > p,
+  .registrar-academic-record__filter-field label,
+  .registrar-academic-record__search-field label
+) {
+  color: #c0d0c7 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record :is(
+  .registrar-academic-record__guide-grid strong,
+  .registrar-academic-record__footer-copy strong,
+  .registrar-academic-record__empty > strong,
+  .registrar-academic-record__guide-heading h2
+) {
+  color: #f2f8f4 !important;
+}
+
+@media (max-width: 760px) {
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__summary-grid {
+    padding: 8px !important;
+    gap: 9px !important;
+  }
+}
+
+
+/* =========================
+   DARK MODE AVATAR
+========================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-academic-record__avatar {
+  border: 4px solid #314d3d;
+  color: #f3fff8;
+  background: linear-gradient(145deg, #168052, #0b4e33);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }

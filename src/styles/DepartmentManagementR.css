@@ -2,7 +2,6 @@
    REGISTRAR — DEPARTMENT MANAGEMENT
    Fully scoped to the Department Management page.
 ========================================================= */
-
 .registrar-department-management {
   --rdm-green-950: #073b24;
   --rdm-green-900: #0a4b2d;
@@ -21,9 +20,8 @@
   --rdm-bg: #f5f8f6;
   --rdm-danger: #b42318;
   --rdm-danger-soft: #fff2f0;
-
   min-height: 100%;
-  padding: 28px 30px 38px;
+  padding: calc(28px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1)) calc(38px * var(--ptc-compact-scale, 1));
   background:
     radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
     var(--rdm-bg);
@@ -46,15 +44,14 @@
 /* =========================================================
    HERO
 ========================================================= */
-
 .registrar-department-management__hero {
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 25px 28px;
+  gap: calc(24px * var(--ptc-compact-scale, 1));
+  padding: calc(25px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1));
   margin-bottom: 20px;
   border: 1px solid rgba(15, 122, 69, 0.18);
   border-radius: 18px;
@@ -92,10 +89,10 @@
 .registrar-department-management__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: calc(8px * var(--ptc-compact-scale, 1));
   margin-bottom: 10px;
   color: var(--rdm-green-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -115,7 +112,7 @@
 .registrar-department-management__hero h1 {
   margin: 0;
   color: var(--rdm-text-950);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: calc(clamp(26px, 3vw, 34px) * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -125,7 +122,7 @@
   max-width: 760px;
   margin: 9px 0 0;
   color: var(--rdm-text-600);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
 
@@ -133,29 +130,28 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 10px;
+  gap: calc(10px * var(--ptc-compact-scale, 1));
 }
 
 /* =========================================================
    BUTTONS
 ========================================================= */
-
 .registrar-department-management__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: calc(8px * var(--ptc-compact-scale, 1));
   min-height: 40px;
-  padding: 9px 14px;
+  padding: calc(9px * var(--ptc-compact-scale, 1)) calc(14px * var(--ptc-compact-scale, 1));
   border: 1px solid transparent;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
   line-height: 1;
   cursor: pointer;
   transition:
     transform 160ms ease,
-    background 160ms ease,
+    background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
 }
@@ -194,20 +190,19 @@
 /* =========================================================
    SUMMARY
 ========================================================= */
-
 .registrar-department-management__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: calc(14px * var(--ptc-compact-scale, 1));
   margin-bottom: 20px;
 }
 
 .registrar-department-management__stat-card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: calc(14px * var(--ptc-compact-scale, 1));
   min-width: 0;
-  padding: 17px 18px;
+  padding: calc(17px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   background: var(--rdm-surface);
   border: 1px solid var(--rdm-border);
   border-radius: 15px;
@@ -246,18 +241,18 @@
 .registrar-department-management__stat-card > div:last-child {
   display: grid;
   min-width: 0;
-  gap: 2px;
+  gap: calc(2px * var(--ptc-compact-scale, 1));
 }
 
 .registrar-department-management__stat-card span:not(.registrar-department-management__stat-icon) {
   color: var(--rdm-text-600);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
 .registrar-department-management__stat-card strong {
   color: var(--rdm-text-950);
-  font-size: 24px;
+  font-size: calc(24px * var(--ptc-font-scale, 1));
   font-weight: 780;
   line-height: 1.05;
   letter-spacing: -0.025em;
@@ -266,7 +261,7 @@
 .registrar-department-management__stat-card strong.registrar-department-management__stat-text {
   overflow: hidden;
   max-width: 100%;
-  font-size: 20px;
+  font-size: calc(20px * var(--ptc-font-scale, 1));
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -274,7 +269,7 @@
 .registrar-department-management__stat-card small {
   overflow: hidden;
   color: var(--rdm-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -282,7 +277,6 @@
 /* =========================================================
    WORKSPACE
 ========================================================= */
-
 .registrar-department-management__workspace {
   overflow: hidden;
   background: var(--rdm-surface);
@@ -295,8 +289,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
-  padding: 22px 24px 18px;
+  gap: calc(20px * var(--ptc-compact-scale, 1));
+  padding: calc(22px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   border-bottom: 1px solid #edf2ee;
 }
 
@@ -308,7 +302,7 @@
   display: block;
   margin-bottom: 5px;
   color: var(--rdm-green-700);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.065em;
   text-transform: uppercase;
@@ -317,7 +311,7 @@
 .registrar-department-management__workspace-header h2 {
   margin: 0;
   color: var(--rdm-text-950);
-  font-size: 19px;
+  font-size: calc(19px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: -0.015em;
 }
@@ -325,18 +319,18 @@
 .registrar-department-management__workspace-header p {
   margin: 6px 0 0;
   color: var(--rdm-text-600);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
 .registrar-department-management__record-count {
   flex: 0 0 auto;
-  padding: 6px 10px;
+  padding: calc(6px * var(--ptc-compact-scale, 1)) calc(10px * var(--ptc-compact-scale, 1));
   color: var(--rdm-green-800);
   background: var(--rdm-green-50);
   border: 1px solid rgba(15, 122, 69, 0.13);
   border-radius: 999px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 720;
   white-space: nowrap;
 }
@@ -344,12 +338,11 @@
 /* =========================================================
    TOOLBAR
 ========================================================= */
-
 .registrar-department-management__toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
+  gap: calc(12px * var(--ptc-compact-scale, 1));
+  padding: calc(16px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1));
   background: #fbfcfb;
   border-bottom: 1px solid #edf2ee;
 }
@@ -372,13 +365,13 @@
 .registrar-department-management__search-wrap input {
   width: 100%;
   min-height: 42px;
-  padding: 9px 42px 9px 39px;
+  padding: calc(9px * var(--ptc-compact-scale, 1)) calc(42px * var(--ptc-compact-scale, 1)) calc(9px * var(--ptc-compact-scale, 1)) calc(39px * var(--ptc-compact-scale, 1));
   color: var(--rdm-text-950);
   background: #ffffff;
   border: 1px solid var(--rdm-border-strong);
   border-radius: 10px;
   outline: none;
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease;
@@ -418,13 +411,13 @@
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 6px;
-  padding: 6px 7px 6px 10px;
+  gap: calc(6px * var(--ptc-compact-scale, 1));
+  padding: calc(6px * var(--ptc-compact-scale, 1)) calc(7px * var(--ptc-compact-scale, 1)) calc(6px * var(--ptc-compact-scale, 1)) calc(10px * var(--ptc-compact-scale, 1));
   color: var(--rdm-green-800);
   background: var(--rdm-green-50);
   border: 1px solid rgba(15, 122, 69, 0.15);
   border-radius: 999px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
 }
 
 .registrar-department-management__active-filter span {
@@ -459,7 +452,6 @@
 /* =========================================================
    TABLE
 ========================================================= */
-
 .registrar-department-management__table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -473,7 +465,7 @@
 
 .registrar-department-management__table th,
 .registrar-department-management__table td {
-  padding: 15px 18px;
+  padding: calc(15px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   text-align: left;
   vertical-align: middle;
 }
@@ -482,7 +474,7 @@
   color: var(--rdm-text-500);
   background: #f8faf8;
   border-bottom: 1px solid var(--rdm-border);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -492,7 +484,7 @@
 .registrar-department-management__table td {
   color: var(--rdm-text-800);
   border-bottom: 1px solid #edf2ee;
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
 }
 
 .registrar-department-management__table tbody tr:last-child td {
@@ -500,7 +492,7 @@
 }
 
 .registrar-department-management__table tbody tr {
-  transition: background 150ms ease;
+  transition: background-color 150ms ease;
 }
 
 .registrar-department-management__table tbody tr:hover {
@@ -515,7 +507,7 @@
 .registrar-department-management__department-cell {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: calc(11px * var(--ptc-compact-scale, 1));
 }
 
 .registrar-department-management__department-mark {
@@ -525,63 +517,63 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  padding: 0 5px;
+  padding: 0 calc(5px * var(--ptc-compact-scale, 1));
   overflow: hidden;
   color: #ffffff;
   background: linear-gradient(145deg, var(--rdm-green-700), var(--rdm-green-900));
   border-radius: 11px;
   box-shadow: 0 5px 12px rgba(10, 75, 45, 0.12);
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
   font-weight: 800;
   letter-spacing: 0.03em;
 }
 
 .registrar-department-management__department-cell > div {
   display: grid;
-  gap: 5px;
+  gap: calc(5px * var(--ptc-compact-scale, 1));
 }
 
 .registrar-department-management__department-cell small {
   color: var(--rdm-text-500);
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
 }
 
 .registrar-department-management__code-badge {
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 4px 8px;
+  padding: calc(4px * var(--ptc-compact-scale, 1)) calc(8px * var(--ptc-compact-scale, 1));
   color: var(--rdm-green-800);
   background: var(--rdm-green-50);
   border: 1px solid rgba(15, 122, 69, 0.14);
   border-radius: 7px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 780;
   letter-spacing: 0.035em;
 }
 
 .registrar-department-management__name-cell {
   display: grid;
-  gap: 3px;
+  gap: calc(3px * var(--ptc-compact-scale, 1));
   min-width: 220px;
 }
 
 .registrar-department-management__name-cell strong {
   color: var(--rdm-text-950);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
   line-height: 1.4;
 }
 
 .registrar-department-management__name-cell span {
   color: var(--rdm-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
 }
 
 .registrar-department-management__date-cell {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: calc(7px * var(--ptc-compact-scale, 1));
   color: var(--rdm-text-600);
   white-space: nowrap;
 }
@@ -599,18 +591,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: calc(6px * var(--ptc-compact-scale, 1));
   min-height: 34px;
-  padding: 7px 11px;
+  padding: calc(7px * var(--ptc-compact-scale, 1)) calc(11px * var(--ptc-compact-scale, 1));
   color: var(--rdm-green-800);
   background: #ffffff;
   border: 1px solid var(--rdm-border-strong);
   border-radius: 9px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 720;
   cursor: pointer;
   transition:
-    background 150ms ease,
+    background-color 150ms ease,
     border-color 150ms ease,
     transform 150ms ease;
 }
@@ -624,13 +616,12 @@
 /* =========================================================
    STATES / SKELETONS
 ========================================================= */
-
 .registrar-department-management__state {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: calc(14px * var(--ptc-compact-scale, 1));
   min-height: 180px;
-  padding: 30px 24px;
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1));
   color: var(--rdm-text-600);
 }
 
@@ -654,14 +645,14 @@
 .registrar-department-management__state h3 {
   margin: 0;
   color: var(--rdm-text-950);
-  font-size: 15px;
+  font-size: calc(15px * var(--ptc-font-scale, 1));
   font-weight: 740;
 }
 
 .registrar-department-management__state p {
   max-width: 620px;
   margin: 5px 0 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
@@ -701,23 +692,22 @@
 /* =========================================================
    FOOTER
 ========================================================= */
-
 .registrar-department-management__workspace-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 13px 18px;
+  gap: calc(18px * var(--ptc-compact-scale, 1));
+  padding: calc(13px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   color: var(--rdm-text-500);
   background: #fbfcfb;
   border-top: 1px solid #edf2ee;
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
 }
 
 .registrar-department-management__workspace-footer span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: calc(6px * var(--ptc-compact-scale, 1));
   color: var(--rdm-green-800);
   font-weight: 650;
 }
@@ -730,7 +720,6 @@
 /* =========================================================
    ACCESSIBILITY / ANIMATION
 ========================================================= */
-
 .registrar-department-management button:focus-visible,
 .registrar-department-management input:focus-visible {
   outline: 3px solid rgba(15, 122, 69, 0.19);
@@ -751,6 +740,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -759,10 +749,9 @@
 /* =========================================================
    RESPONSIVE
 ========================================================= */
-
 @media (max-width: 980px) {
   .registrar-department-management {
-    padding: 22px 20px 32px;
+    padding: calc(22px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
   }
 
   .registrar-department-management__hero {
@@ -785,11 +774,11 @@
 
 @media (max-width: 720px) {
   .registrar-department-management {
-    padding: 16px 14px 26px;
+    padding: calc(16px * var(--ptc-compact-scale, 1)) calc(14px * var(--ptc-compact-scale, 1)) calc(26px * var(--ptc-compact-scale, 1));
   }
 
   .registrar-department-management__hero {
-    padding: 21px 20px;
+    padding: calc(21px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1));
     border-radius: 15px;
   }
 
@@ -811,7 +800,7 @@
 
   .registrar-department-management__workspace-header {
     flex-direction: column;
-    padding: 19px 18px 15px;
+    padding: calc(19px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
   }
 
   .registrar-department-management__record-count {
@@ -821,7 +810,7 @@
   .registrar-department-management__toolbar {
     align-items: stretch;
     flex-direction: column;
-    padding: 14px 18px;
+    padding: calc(14px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   }
 
   .registrar-department-management__search-wrap {
@@ -860,21 +849,19 @@
   }
 }
 
-
 /* ==========================================================
    REGISTRAR ACADEMIC / DEPARTMENTS — 2026 VISUAL ALIGNMENT
    Companion to the Registrar Dashboard / Courses / Curriculum.
    Keeps ALL original TSX class names and business logic.
    No sidebar/footer styling and no page entrance animation.
 ========================================================== */
-
 .registrar-department-management {
   position: relative;
   isolation: isolate;
   width: 100%;
   min-height: 100%;
   overflow: hidden;
-  padding: 27px 28px 38px;
+  padding: calc(27px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1)) calc(38px * var(--ptc-compact-scale, 1));
   background-color: #e6f1e9;
   background-image:
     linear-gradient(135deg, rgba(15, 122, 69, .08) 25%, transparent 25%),
@@ -927,14 +914,11 @@
   position: relative;
   z-index: 1;
   min-height: 188px;
-  padding: 30px 32px;
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
   margin-bottom: 0;
   border: 0;
   border-radius: 24px;
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, .18) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255, 255, 255, .08) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%);
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
   box-shadow: 0 18px 42px rgba(6, 78, 47, .24);
 }
 
@@ -959,41 +943,49 @@
 }
 
 .registrar-department-management__eyebrow { color: #dff8e8; }
+
 .registrar-department-management__eyebrow-icon {
   color: #fff;
   background: rgba(255, 255, 255, .14);
   border: 1px solid rgba(255, 255, 255, .18);
   box-shadow: inset 0 1px rgba(255, 255, 255, .15);
 }
+
 .registrar-department-management__hero h1 {
   color: #fff;
-  font-size: clamp(30px, 3.4vw, 40px);
+  font-size: calc(clamp(30px, 3.4vw, 40px) * var(--ptc-font-scale, 1));
   font-weight: 790;
   letter-spacing: -.035em;
 }
+
 .registrar-department-management__hero p {
   max-width: 790px;
   color: rgba(239, 255, 245, .88);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
 }
-.registrar-department-management__hero-actions { align-self: center; gap: 10px; }
+
+.registrar-department-management__hero-actions { align-self: center; gap: calc(10px * var(--ptc-compact-scale, 1)); }
+
 .registrar-department-management__hero-actions .registrar-department-management__button {
   min-height: 43px;
-  padding: 11px 15px;
+  padding: calc(11px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
   border-radius: 11px;
 }
+
 .registrar-department-management__hero-actions .registrar-department-management__button--secondary {
   color: #0a633a;
   background: #fff;
   border-color: rgba(255, 255, 255, .6);
   box-shadow: 0 6px 17px rgba(4, 44, 22, .12);
 }
+
 .registrar-department-management__hero-actions .registrar-department-management__button--primary {
   color: #074427;
   background: #eaf9ef;
   border-color: #dbf4e4;
   box-shadow: 0 6px 17px rgba(4, 44, 22, .13);
 }
+
 .registrar-department-management__hero-actions .registrar-department-management__button:hover:not(:disabled) {
   background: #e2f5e8;
   color: #074427;
@@ -1005,9 +997,9 @@
   position: relative;
   z-index: 1;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: calc(16px * var(--ptc-compact-scale, 1));
   margin: 16px -2px 20px;
-  padding: 10px;
+  padding: calc(10px * var(--ptc-compact-scale, 1));
   border: 1px solid rgba(255, 255, 255, .72);
   border-radius: 22px;
   background: rgba(255, 255, 255, .42);
@@ -1015,16 +1007,18 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+
 .registrar-department-management__stat-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   min-height: 118px;
-  padding: 20px 18px;
+  padding: calc(20px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   border: 0;
   border-radius: 19px;
   box-shadow: 0 12px 28px rgba(31, 56, 40, .09);
 }
+
 .registrar-department-management__stat-card::before {
   content: "";
   position: absolute;
@@ -1033,6 +1027,7 @@
   width: 5px;
   background: #159452;
 }
+
 .registrar-department-management__stat-card::after {
   content: "";
   position: absolute;
@@ -1045,13 +1040,21 @@
   background: rgba(15, 122, 69, .065);
   pointer-events: none;
 }
+
 .registrar-department-management__stat-card:nth-child(1) { background: #eefaf3; }
+
 .registrar-department-management__stat-card:nth-child(2) { background: #fff9e9; }
+
 .registrar-department-management__stat-card:nth-child(3) { background: #f0f6ff; }
+
 .registrar-department-management__stat-card:nth-child(2)::before { background: #d7a116; }
+
 .registrar-department-management__stat-card:nth-child(3)::before { background: #2563eb; }
+
 .registrar-department-management__stat-card:nth-child(2)::after { background: rgba(215, 161, 22, .075); }
+
 .registrar-department-management__stat-card:nth-child(3)::after { background: rgba(37, 99, 235, .075); }
+
 .registrar-department-management__stat-icon {
   flex-shrink: 0;
   width: 47px;
@@ -1062,37 +1065,44 @@
   border-color: #c6e6d2;
   box-shadow: 0 8px 16px rgba(31, 56, 40, .08);
 }
+
 /* Explicitly preserve dark-green fill behind the first white SVG. */
 .registrar-department-management__stat-card:first-child .registrar-department-management__stat-icon--primary {
   color: #fff;
   background: linear-gradient(145deg, #0f7a45, #07532f);
   border-color: #0b643b;
 }
+
 .registrar-department-management__stat-card:nth-child(2) .registrar-department-management__stat-icon {
   color: #b67c00;
   background: #fff4d7;
   border-color: #f2d894;
 }
+
 .registrar-department-management__stat-card:nth-child(3) .registrar-department-management__stat-icon {
   color: #2563eb;
   background: #e9f1ff;
   border-color: #cbdcff;
 }
+
 .registrar-department-management__stat-card > div:last-child > span {
   color: #5e6b63;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 760;
   text-transform: uppercase;
   letter-spacing: .016em;
 }
-.registrar-department-management__stat-card strong { font-size: 27px; font-weight: 800; }
+
+.registrar-department-management__stat-card strong { font-size: calc(27px * var(--ptc-font-scale, 1)); font-weight: 800; }
+
 .registrar-department-management__stat-card strong.registrar-department-management__stat-text {
-  font-size: 23px;
+  font-size: calc(23px * var(--ptc-font-scale, 1));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.registrar-department-management__stat-card small { font-size: 11px; }
+
+.registrar-department-management__stat-card small { font-size: calc(11px * var(--ptc-font-scale, 1)); }
 
 /* Full-width Academic Departments directory card. */
 .registrar-department-management__workspace {
@@ -1104,43 +1114,51 @@
   background: #fff;
   box-shadow: 0 17px 40px rgba(7, 59, 36, .13);
 }
+
 .registrar-department-management__workspace-header {
-  padding: 23px 26px 20px;
+  padding: calc(23px * var(--ptc-compact-scale, 1)) calc(26px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1));
   background: linear-gradient(106deg, #fff 0%, #f8fdf9 65%, #e9f7ee 100%);
   border-bottom: 1px solid #e5eee7;
 }
+
 .registrar-department-management__section-kicker {
   display: inline-flex;
   align-items: center;
   margin-bottom: 10px;
-  padding: 7px 10px;
+  padding: calc(7px * var(--ptc-compact-scale, 1)) calc(10px * var(--ptc-compact-scale, 1));
   border-radius: 999px;
   background: #e5f6eb;
   color: #0b7444;
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
   font-weight: 790;
   letter-spacing: .03em;
 }
+
 .registrar-department-management__workspace-header h2 {
   color: #17231b;
-  font-size: 23px;
+  font-size: calc(23px * var(--ptc-font-scale, 1));
   font-weight: 790;
 }
+
 .registrar-department-management__workspace-header p { color: #6c7c71; }
+
 .registrar-department-management__record-count {
   margin-top: 5px;
-  padding: 10px 12px;
+  padding: calc(10px * var(--ptc-compact-scale, 1)) calc(12px * var(--ptc-compact-scale, 1));
   color: #0b7643;
   background: #ebf9f0;
   border-color: #c7e7d2;
   border-radius: 12px;
 }
+
 .registrar-department-management__toolbar {
-  padding: 18px 26px;
+  padding: calc(18px * var(--ptc-compact-scale, 1)) calc(26px * var(--ptc-compact-scale, 1));
   background: #f9fbf9;
   border-bottom: 1px solid #e6efe8;
 }
+
 .registrar-department-management__search-wrap { max-width: none; }
+
 .registrar-department-management__search-wrap input {
   min-height: 45px;
   border: 1px solid #ccddd1;
@@ -1148,50 +1166,61 @@
   background: #fff;
   box-shadow: inset 0 1px 1px rgba(18, 61, 35, .025);
 }
+
 .registrar-department-management__active-filter {
   min-height: 36px;
   border-color: #b9e1c7;
   background: #ecf9f0;
 }
+
 .registrar-department-management__table th {
-  padding: 17px 18px;
+  padding: calc(17px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   color: #54705d;
   background: #f5faf6;
   border-bottom: 1px solid #dce9df;
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
   font-weight: 800;
 }
+
 .registrar-department-management__table td {
-  padding: 17px 18px;
+  padding: calc(17px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
   border-bottom-color: #e8efea;
 }
+
 .registrar-department-management__table tbody tr:nth-child(even) { background: #fcfefc; }
+
 .registrar-department-management__table tbody tr:hover { background: #f0faf3; }
+
 .registrar-department-management__department-mark {
   border-radius: 12px;
   background: linear-gradient(135deg, #0e7b45, #07532f);
   box-shadow: 0 6px 15px rgba(6, 78, 47, .17);
 }
+
 .registrar-department-management__code-badge {
   color: #0b6c40;
   background: #eaf8ee;
   border-color: #cde8d5;
 }
+
 .registrar-department-management__edit-button {
   border-color: #c8e5d1;
   color: #087341;
   background: #eaf8ef;
   font-weight: 740;
 }
+
 .registrar-department-management__edit-button:hover:not(:disabled) {
   border-color: #7ab991;
   background: #daf2e3;
 }
+
 .registrar-department-management__workspace-footer {
-  padding: 15px 24px;
+  padding: calc(15px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1));
   background: #f5fbf7;
   border-color: #deede2;
 }
+
 .registrar-department-management__state {
   min-height: 210px;
   margin: 14px;
@@ -1199,10 +1228,12 @@
   border-radius: 16px;
   background: linear-gradient(125deg, #fbfefc, #f0faf4);
 }
+
 .registrar-department-management__state--error {
   border-color: #f1c3bd;
   background: #fff5f2;
 }
+
 .registrar-department-management__skeleton {
   background: linear-gradient(90deg, #e5ede7 25%, #f2f8f3 50%, #e5ede7 75%);
   background-size: 200% 100%;
@@ -1210,140 +1241,256 @@
 
 /* Small screens: retain original breakpoint behavior, avoid horizontal overflow. */
 @media (max-width: 980px) {
-  .registrar-department-management { padding: 23px 20px 30px; }
+  .registrar-department-management { padding: calc(23px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1)); }
+
   .registrar-department-management__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
   .registrar-department-management__stats > :last-child { grid-column: 1 / -1; }
-  .registrar-department-management__hero { padding: 26px 24px; }
+
+  .registrar-department-management__hero { padding: calc(26px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1)); }
 }
+
 @media (max-width: 720px) {
-  .registrar-department-management { padding: 16px 13px 26px; }
+  .registrar-department-management { padding: calc(16px * var(--ptc-compact-scale, 1)) calc(13px * var(--ptc-compact-scale, 1)) calc(26px * var(--ptc-compact-scale, 1)); }
+
   .registrar-department-management::before { left: 7px; right: 7px; border-radius: 22px; }
-  .registrar-department-management__hero { padding: 24px 19px; border-radius: 18px; }
+
+  .registrar-department-management__hero { padding: calc(24px * var(--ptc-compact-scale, 1)) calc(19px * var(--ptc-compact-scale, 1)); border-radius: 18px; }
+
   .registrar-department-management__hero-actions { align-self: stretch; }
+
   .registrar-department-management__stats {
     grid-template-columns: 1fr;
     margin: 14px 0 17px;
-    padding: 8px;
-    gap: 9px;
+    padding: calc(8px * var(--ptc-compact-scale, 1));
+    gap: calc(9px * var(--ptc-compact-scale, 1));
     border-radius: 16px;
   }
+
   .registrar-department-management__stats > :last-child { grid-column: auto; }
+
   .registrar-department-management__stat-card { min-height: 98px; }
+
   .registrar-department-management__workspace { border-radius: 18px; }
-  .registrar-department-management__workspace-header { padding: 19px 18px; }
-  .registrar-department-management__workspace-header h2 { font-size: 20px; }
-  .registrar-department-management__toolbar { padding: 14px 18px; }
+
+  .registrar-department-management__workspace-header { padding: calc(19px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1)); }
+
+  .registrar-department-management__workspace-header h2 { font-size: calc(20px * var(--ptc-font-scale, 1)); }
+
+  .registrar-department-management__toolbar { padding: calc(14px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1)); }
+
   .registrar-department-management__table { min-width: 650px; }
 }
 
-/* Dark palette: never introduce white navigation flash or light skeletons. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management {
-  --rdm-text-950: #edf5ef;
-  --rdm-text-800: #d6e8da;
-  --rdm-text-600: #b6cbbd;
-  --rdm-text-500: #9fb6a6;
-  --rdm-border: #304a39;
-  --rdm-border-strong: #385542;
-  background-color: #101b14;
-  background-image:
-    radial-gradient(circle at 12% 15%, rgba(20, 116, 66, .20), transparent 28%),
-    radial-gradient(circle at 90% 55%, rgba(14, 74, 43, .22), transparent 26%),
-    linear-gradient(150deg, #111e16, #18271c 52%, #101b14);
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management {
+  --rdm-text-950: #f1f5f4;
+  --rdm-text-800: #e2eaeb;
+  --rdm-text-600: #bdcacc;
+  --rdm-text-500: #a3b3b7;
+  --rdm-border: #37464d;
+  --rdm-border-strong: #4a5a61;
+  --rdm-surface: #171e22;
+  --rdm-bg: #111719;
+  color: #f1f5f4;
+  color-scheme: dark;
+  background: #111719;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management::before {
-  background: rgba(32, 51, 38, .48);
-  border-color: #2b4835;
+
+/* The shared canvas targets the page and its workspace with !important. */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-department-management) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .registrar-department-management {
+  background-color: #111719 !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-repeat: no-repeat !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management::after {
+  content: none;
+  display: none;
+}
+
+/* Dark Mode header */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero {
+  background-color: #073b28;
+  background-image: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
+  border: 0;
+  outline: none;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero::before {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: none;
   box-shadow: none;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__stats {
-  background: rgba(27, 44, 32, .65);
-  border-color: #395040;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__stat-card {
-  background: #203228;
-  border: 1px solid #3a5643;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero::after {
+  border-color: rgba(255, 255, 255, 0.075);
+  background: none;
   box-shadow: none;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__stat-card strong { color: #f1f8f2; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__stat-card > div:last-child > span,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__stat-card small { color: #bdd0c2; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__workspace,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__workspace-header,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__toolbar,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__workspace-footer {
-  background: #1b2a20;
-  border-color: #314a39;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--secondary {
+  background: #20292e;
+  border-color: #4a5a61;
+  color: #f1f5f4;
+  box-shadow: none;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__workspace-header h2,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__name-cell strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__state h3 { color: #edf6ef; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__workspace-header p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__name-cell span,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__date-cell,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__department-cell small,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__workspace-footer small { color: #b4c7b9; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__table th {
-  color: #c5decf;
-  background: #263b2e;
-  border-color: #34503d;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--secondary:hover:not(:disabled) {
+  background: #2c383e;
+  border-color: #6c8580;
+  color: #fff;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__table td { color: #e5f0e8; border-color: #304a39; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__table tbody tr:nth-child(even) { background: #202f24; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__table tbody tr:hover { background: #284333; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__search-wrap input {
-  color: #edf6ef;
-  background: #13221a;
-  border-color: #385542;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--primary {
+  background: #dbf8e5;
+  border-color: #c4e9d2;
+  color: #073b24;
+  box-shadow: none;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__search-wrap input::placeholder { color: #a3b9a9; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__record-count,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__code-badge,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__edit-button,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__active-filter {
-  color: #c4efd0;
-  background: #203c2a;
-  border-color: #3a634a;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--primary:hover:not(:disabled) {
+  background: #c5efd5;
+  border-color: #a8dfbd;
+  color: #073b24;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__state {
-  color: #bad1c1;
-  background: #1c2c22;
-  border-color: #3d5e47;
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stats {
+  background: #171e22;
+  border-color: #38464c;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__state--error { background: #34221e; border-color: #71443b; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-department-management__skeleton {
-  background: linear-gradient(90deg, #25362a 25%, #344b39 50%, #25362a 75%);
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card {
+  background: #20292e;
+  border: 1px solid #3a4850;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card:nth-child(1),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card:nth-child(2),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card:nth-child(3) {
+  background: #20292e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card:nth-child(1) .registrar-department-management__stat-icon {
+  color: #a7e8c2;
+  background: #163d2d;
+  border-color: #32694e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card:nth-child(2) .registrar-department-management__stat-icon {
+  color: #f4d57b;
+  background: #3b3320;
+  border-color: #80642e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card:nth-child(3) .registrar-department-management__stat-icon {
+  color: #a6c9ff;
+  background: #20344b;
+  border-color: #42658e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-header h2,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__name-cell strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__state h3 {
+  color: #f1f5f4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card > div:last-child > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-header p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__name-cell span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__date-cell,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__department-cell small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-footer small {
+  color: #b8c8cc;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__toolbar,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-footer {
+  background: #171e22;
+  border-color: #35434a;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__section-kicker,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__record-count,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__code-badge,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__active-filter {
+  color: #a6e6be;
+  background: #1c382b;
+  border-color: #36644b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__table th {
+  color: #d1dce0;
+  background: #273238;
+  border-color: #3e4c53;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__table td {
+  color: #e4ecee;
+  border-color: #344249;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__table tbody tr:nth-child(even) {
+  background: #1b2429;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__table tbody tr:hover {
+  background: #28343a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__search-wrap input {
+  background: #20292e;
+  color: #edf3f4;
+  border-color: #4a5a61;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__search-wrap input::placeholder {
+  color: #a5b7bb;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__search-clear:hover {
+  color: #edf3f4;
+  background: #324048;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__edit-button {
+  color: #b4e8c7;
+  background: #253139;
+  border-color: #49606a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__edit-button:hover {
+  color: #d2f7de;
+  background: #304138;
+  border-color: #608477;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__state {
+  color: #c7d4d7;
+  background: #20292e;
+  border-color: #46565c;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__state--error {
+  background: #332726;
+  border-color: #80514b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__state-icon {
+  color: #a6e6be;
+  background: #1c382b;
+  border-color: #36644b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__skeleton {
+  background: linear-gradient(90deg, #243037 25%, #344249 50%, #243037 75%);
   background-size: 200% 100%;
 }
 
@@ -1353,20 +1500,18 @@
   overflow-x: hidden;
   background-color: #e5f0e9;
 }
+
 .dashboard-main:has(.registrar-department-management)
   > .header-container:has(.app-header.hide) {
   height: 0;
   min-height: 0;
   border: 0;
 }
+
 .dashboard-main:has(.registrar-department-management)
   > .header-container:has(.app-header.show) {
   height: 58px;
   min-height: 58px;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .dashboard-main:has(.registrar-department-management) > .dashboard-content {
-  background-color: #101b14;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -98,7 +98,7 @@
   gap: 8px;
   margin-bottom: 10px;
   color: var(--rae-green-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -118,7 +118,7 @@
 .registrar-announcement-edit__hero h1 {
   margin: 0;
   color: var(--rae-text-950);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(34px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -128,7 +128,7 @@
   max-width: 720px;
   margin: 9px 0 0;
   color: var(--rae-text-600);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
 
@@ -151,7 +151,7 @@
   border: 1px solid transparent;
   border-radius: 10px;
   outline: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
   line-height: 1;
   cursor: pointer;
@@ -229,12 +229,12 @@
 .registrar-announcement-edit__notice strong {
   display: block;
   margin-bottom: 2px;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__notice p {
   margin: 0;
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -308,7 +308,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--rae-green-700);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -317,7 +317,7 @@
 .registrar-announcement-edit__panel-header h2 {
   margin: 0;
   color: var(--rae-text-950);
-  font-size: 17px;
+  font-size: calc(17px * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1.3;
   letter-spacing: -0.012em;
@@ -327,7 +327,7 @@
   max-width: 650px;
   margin: 4px 0 0;
   color: var(--rae-text-500);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -349,7 +349,7 @@
   align-items: center;
   gap: 5px;
   color: var(--rae-text-700);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
@@ -367,7 +367,7 @@
   outline: none;
   color: var(--rae-text-950);
   background: #ffffff;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -410,7 +410,7 @@
 
 .registrar-announcement-edit__field small {
   color: var(--rae-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
   text-align: right;
 }
@@ -488,14 +488,14 @@
 
 .registrar-announcement-edit__recipient-option strong {
   color: var(--rae-text-800);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
 .registrar-announcement-edit__recipient-option small {
   margin-top: 2px;
   color: var(--rae-text-500);
-  font-size: 9.5px;
+  font-size: calc(9.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__selection-meta {
@@ -507,7 +507,7 @@
   border-radius: 8px;
   color: var(--rae-green-800);
   background: var(--rae-green-50);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 680;
 }
 
@@ -553,7 +553,7 @@
 .registrar-announcement-edit__attachment-item strong {
   overflow: hidden;
   color: var(--rae-text-800);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -562,7 +562,7 @@
 .registrar-announcement-edit__attachment-item small {
   margin-top: 2px;
   color: var(--rae-text-500);
-  font-size: 9.8px;
+  font-size: calc(9.8px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__remove-button {
@@ -575,7 +575,7 @@
   border-radius: 8px;
   color: var(--rae-danger);
   background: #fffafa;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
   cursor: pointer;
 }
@@ -594,7 +594,7 @@
   border-radius: 10px;
   color: var(--rae-text-500);
   background: #fbfcfb;
-  font-size: 10.8px;
+  font-size: calc(10.8px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__upload-box {
@@ -628,13 +628,13 @@
 
 .registrar-announcement-edit__upload-heading strong {
   color: var(--rae-text-800);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__upload-heading small {
   margin-top: 2px;
   color: var(--rae-text-500);
-  font-size: 9.8px;
+  font-size: calc(9.8px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__upload-box input[type="file"] {
@@ -644,7 +644,7 @@
   border-radius: 9px;
   color: var(--rae-text-600);
   background: #ffffff;
-  font-size: 10.8px;
+  font-size: calc(10.8px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__upload-box input[type="file"]::file-selector-button {
@@ -669,7 +669,7 @@
   border-radius: 8px;
   color: var(--rae-green-800);
   background: var(--rae-green-50);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 680;
 }
 
@@ -710,12 +710,12 @@
 
 .registrar-announcement-edit__status-preview strong {
   display: block;
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-edit__status-preview p {
   margin: 2px 0 0;
-  font-size: 10.3px;
+  font-size: calc(10.3px * var(--ptc-font-scale, 1));
   line-height: 1.4;
 }
 
@@ -759,14 +759,14 @@
 .registrar-announcement-edit__save-summary strong {
   display: block;
   color: var(--rae-text-950);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   font-weight: 750;
 }
 
 .registrar-announcement-edit__save-summary p {
   margin: 3px 0 0;
   color: var(--rae-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -907,736 +907,404 @@
   }
 }
 
-/* ============================================================================
-   REGISTRAR / EDIT ANNOUNCEMENT — DASHBOARD VISUAL REFRESH
-   Reference: user's updated Registrar Dashboard and approved List/Details/Create.
-   Appearance only: preserves the existing TSX, form state, API, sidebar and footer.
-   Important: no page-entry animation, white overlay, or animated page fade.
-============================================================================ */
-
-/* Keep the decorative workspace connected to the content edge (not the footer). */
-.dashboard-main:has(.registrar-announcement-edit) > .dashboard-content {
-  padding: 0;
-  min-width: 0;
-  overflow-x: clip;
-  background: #e7f2eb;
+/* ============================================================
+   REGISTRAR EDIT ANNOUNCEMENT — DARK MODE
+   Scope limited to the edit page. All Light Mode rules above
+   remain intact. Shared footer/sidebar are deliberately excluded.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-edit),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-edit) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit {
+  background: #111719 !important;
+  background-image: none !important;
+  color: #edf3ef;
+  color-scheme: dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit {
+  --rae-green-950: #0a3826;
+  --rae-green-900: #165b3a;
+  --rae-green-800: #71d8a4;
+  --rae-green-700: #73d5a3;
+  --rae-green-600: #39bd81;
+  --rae-green-100: #213c30;
+  --rae-green-50: #1b3228;
+  --rae-text-950: #f2f6f3;
+  --rae-text-800: #e2eae5;
+  --rae-text-700: #ced8d2;
+  --rae-text-600: #bbc9c1;
+  --rae-text-500: #aebdb4;
+  --rae-border: #38464b;
+  --rae-border-strong: #4a5b62;
+  --rae-surface: #1e262a;
+  --rae-bg: #111719;
+  --rae-danger: #ffaaaa;
+  --rae-danger-soft: #39282d;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__hero {
+  background: linear-gradient(115deg, #073e2b 0%, #0a5937 62%, #11683e 100%);
+  border-color: #2b7051;
+  box-shadow: 0 12px 26px rgba(0,0,0,.26);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__hero :is(h1,p,strong,small),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__eyebrow {
+  color: #f2fff7;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__eyebrow-icon {
+  color: #dcf7e6;
+  background: rgba(255,255,255,.13);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__panel,
+  .registrar-announcement-edit__save-panel,
+  .registrar-announcement-edit__notice
+) {
+  background: #1e262a;
+  border-color: #394a51;
+  color: #eaf2ed;
+  box-shadow: 0 8px 22px rgba(0,0,0,.15);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__panel-header,
+  .registrar-announcement-edit__fields,
+  .registrar-announcement-edit__save-summary,
+  .registrar-announcement-edit__save-actions
+) {
+  background: transparent;
+  border-color: #394a51;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__recipient-option,
+  .registrar-announcement-edit__attachment-item,
+  .registrar-announcement-edit__empty-files,
+  .registrar-announcement-edit__upload-box,
+  .registrar-announcement-edit__selected-file,
+  .registrar-announcement-edit__status-preview
+) {
+  background: #20292e;
+  border-color: #405057;
+  color: #e6eee9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__recipient-option--selected,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__status-preview--active {
+  background: #193629;
+  border-color: #367b54;
+  color: #a0edbe;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__field input,
+  .registrar-announcement-edit__field textarea,
+  .registrar-announcement-edit__field select,
+  .registrar-announcement-edit__upload-box input[type="file"]
+) {
+  color: #eaf2ec;
+  background: #171f23;
+  border-color: #4a5a62;
+  color-scheme: dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(input,textarea)::placeholder {
+  color: #a5b3ac;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(input,select,textarea):focus-visible {
+  outline: 2px solid #65c693;
+  outline-offset: 2px;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__panel-header strong,
+  .registrar-announcement-edit__recipient-option strong,
+  .registrar-announcement-edit__attachment-item strong,
+  .registrar-announcement-edit__upload-heading strong,
+  .registrar-announcement-edit__save-summary strong,
+  .registrar-announcement-edit__field label
+) { color: #eef6f0; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__recipient-option small,
+  .registrar-announcement-edit__attachment-item small,
+  .registrar-announcement-edit__upload-heading small,
+  .registrar-announcement-edit__save-summary p
+) { color: #bac8bf; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__panel-icon,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__attachment-icon,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__upload-heading > span {
+  color: #91e7b5;
+  background: #20382d;
+  border-color: #40614e;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__button--secondary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__remove-button,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__selected-file button {
+  color: #e7f1ea;
+  background: #263239;
+  border-color: #516269;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__button--primary {
+  background: #147345;
+  color: white;
+  border-color: #288c59;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__skeleton {
+  background: linear-gradient(90deg,#1c252a 20%,#303c43 48%,#1c252a 75%);
+  background-size: 220% 100%;
+  border-color: #39494f;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__loading {
+  background: #111719;
 }
 
-.registrar-announcement-edit {
-  --rae-gold: #d4a72c;
-  --rae-blue: #2563eb;
-  --rae-violet: #7c3aed;
+/* ============================================================
+   DARK MODE — EDIT WORKSPACE CANVAS (FINAL TARGETED FIX)
+   Keep the geometric Light Mode canvas out of the Edit screen.
+   Only runs for Dark Mode AND when this exact page is mounted.
+   Does not style the sidebar, footer, hero or form controls.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit) {
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit)
+  > .dashboard-content {
   position: relative;
   isolation: isolate;
-  width: 100%;
-  min-width: 0;
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+/* Some shared decorative canvas styles paint on pseudo-elements,
+   so setting the container's background alone cannot remove them. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit)
+  > .dashboard-content::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit)
+  > .dashboard-content::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit)
+  > .dashboard-content > .registrar-announcement-edit {
+  position: relative;
+  isolation: isolate;
   min-height: 100%;
-  overflow: clip;
-  padding: 28px 28px 44px;
-  background-color: #e6f1e9;
-  background-image:
-    linear-gradient(135deg, rgba(15,122,69,.08) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15,122,69,.055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212,167,44,.045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37,99,235,.035) 25%, transparent 25%),
-    radial-gradient(circle at 12% 10%, rgba(21,148,82,.22), transparent 25%),
-    radial-gradient(circle at 88% 6%, rgba(212,167,44,.18), transparent 23%),
-    radial-gradient(circle at 92% 72%, rgba(37,99,235,.10), transparent 24%),
-    linear-gradient(180deg, #edf6f0 0%, #e5f0e9 48%, #dce9e0 100%);
-  background-size: 96px 96px, 96px 96px, 128px 128px, 128px 128px, auto, auto, auto, auto;
-  background-position: 0 0, 48px 48px, 0 0, 64px 64px, center, center, center, center;
+  background: #111719 !important;
+  background-image: none !important;
+  box-shadow: none;
 }
 
-.registrar-announcement-edit::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 14px 16px auto;
-  height: 385px;
-  border: 1px solid rgba(15,122,69,.14);
-  border-radius: 30px;
-  background:
-    linear-gradient(120deg, rgba(255,255,255,.70), rgba(240,248,242,.48)),
-    radial-gradient(circle at 86% 12%, rgba(212,167,44,.12), transparent 28%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95),
-    0 26px 55px rgba(7,59,36,.11);
-  pointer-events: none;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit)
+  > .dashboard-content > .registrar-announcement-edit::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(.registrar-announcement-edit)
+  > .dashboard-content > .registrar-announcement-edit::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
 }
 
-.registrar-announcement-edit::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 420px;
-  right: -92px;
-  width: min(470px, 100%);
-  aspect-ratio: 1;
-  border: 2px solid rgba(15,122,69,.13);
-  border-radius: 50%;
-  box-shadow: 0 0 0 48px rgba(15,122,69,.045),
-    0 0 0 96px rgba(212,167,44,.025),
-    0 0 0 144px rgba(15,122,69,.018);
-  pointer-events: none;
-}
-
-/* The same rounded PTC-green banner as Registrar Dashboard. */
-.registrar-announcement-edit__hero {
+/* EDIT ANNOUNCEMENT — APPEARANCE PREFERENCES & DATE PICKERS */
+.registrar-announcement-edit__date-control {
   position: relative;
-  z-index: 1;
-  min-height: 188px;
-  padding: 30px 32px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255,255,255,.18) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255,255,255,.08) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%);
-  box-shadow: 0 18px 42px rgba(6,78,47,.24);
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
 }
-.registrar-announcement-edit__hero::before {
-  content: "";
+.registrar-announcement-edit__date-control > input[type="date"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 54px;
+}
+.registrar-announcement-edit__calendar-button {
   position: absolute;
-  inset: auto -60px -95px auto;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.registrar-announcement-edit__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border: 44px solid rgba(255,255,255,.055);
-}
-.registrar-announcement-edit__hero-copy { max-width: 790px; }
-.registrar-announcement-edit__eyebrow {
-  color: #dff8e8;
-  font-weight: 800;
-}
-.registrar-announcement-edit__eyebrow-icon {
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.14);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
-}
-.registrar-announcement-edit__hero h1 {
-  color: #fff;
-  font-size: clamp(30px, 3.4vw, 40px);
-  font-weight: 790;
-  letter-spacing: -.035em;
-}
-.registrar-announcement-edit__hero p {
-  max-width: 790px;
-  color: rgba(239,255,245,.86);
-  font-size: 14.5px;
-}
-.registrar-announcement-edit__hero-actions { align-self: center; }
-.registrar-announcement-edit__hero .registrar-announcement-edit__button {
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: 11px;
-  box-shadow: 0 9px 20px rgba(0,0,0,.12);
-}
-.registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary {
-  color: #0b5e37;
-  border-color: rgba(255,255,255,.88);
-  background: #fff;
-}
-.registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
-  color: #064e2f;
-  border-color: #fff;
-  background: #f0fff5;
-}
-
-/* Outer translucent workspace + white panels with meaningful colored rails. */
-.registrar-announcement-edit__form,
-.registrar-announcement-edit__loading {
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-}
-.registrar-announcement-edit__form-grid {
-  grid-template-columns: minmax(0, 1.55fr) minmax(315px, .74fr);
-  gap: 17px;
-  padding: 13px;
-  border: 1px solid rgba(255,255,255,.75);
-  border-radius: 25px;
-  background: rgba(255,255,255,.43);
-  box-shadow: 0 15px 38px rgba(7,59,36,.085);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-.registrar-announcement-edit__main-column,
-.registrar-announcement-edit__side-column {
-  gap: 17px;
-  min-width: 0;
-}
-.registrar-announcement-edit__panel,
-.registrar-announcement-edit__save-panel {
-  position: relative;
-  min-width: 0;
-  border: 1px solid #d7e8dc;
-  border-radius: 21px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(7,59,36,.085);
-}
-.registrar-announcement-edit__panel {
-  padding: 23px 24px 25px;
-  border-top: 4px solid #119b55;
-}
-.registrar-announcement-edit__main-column > .registrar-announcement-edit__panel:nth-child(2) {
-  border-top-color: #7c3aed;
-}
-.registrar-announcement-edit__main-column > .registrar-announcement-edit__panel:nth-child(3) {
-  border-top-color: #2563eb;
-}
-.registrar-announcement-edit__side-column > .registrar-announcement-edit__panel {
-  border-top-color: #d4a72c;
-}
-.registrar-announcement-edit__panel-header {
-  gap: 12px;
-  padding-bottom: 19px;
-  margin-bottom: 21px;
-  border-bottom-color: #e3ede6;
-}
-.registrar-announcement-edit__panel-icon {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #cbe8d4;
-  border-radius: 13px;
-  color: #0a7342;
-  background: #e9f7ee;
-  box-shadow: 0 7px 15px rgba(7,59,36,.06);
-}
-.registrar-announcement-edit__main-column > .registrar-announcement-edit__panel:nth-child(2)
-  .registrar-announcement-edit__panel-icon {
-  color: #7c3aed;
-  border-color: #e4d8ff;
-  background: #f3edff;
-}
-.registrar-announcement-edit__main-column > .registrar-announcement-edit__panel:nth-child(3)
-  .registrar-announcement-edit__panel-icon {
-  color: #2563eb;
-  border-color: #d3e2ff;
-  background: #edf4ff;
-}
-.registrar-announcement-edit__side-column > .registrar-announcement-edit__panel
-  .registrar-announcement-edit__panel-icon {
-  color: #a97908;
-  border-color: #f1dea8;
-  background: #fff8e4;
-}
-.registrar-announcement-edit__section-kicker {
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 33px;
   display: inline-flex;
+  justify-content: center;
   align-items: center;
-  width: fit-content;
-  min-height: 24px;
-  padding: 5px 10px;
-  margin-bottom: 9px;
-  border-radius: 999px;
+  border: 1px solid #cddfd3;
+  border-radius: 8px;
   color: #0d653b;
-  background: #eaf7ef;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .045em;
+  background: #eef8f1;
+  cursor: pointer;
 }
-.registrar-announcement-edit__panel-header h2 {
-  font-size: clamp(17px, 1.4vw, 20px);
-  font-weight: 790;
+.registrar-announcement-edit__calendar-button:hover:not(:disabled),
+.registrar-announcement-edit__calendar-button:focus-visible {
+  background: #dcf5e6;
+  outline: 2px solid #69d5a0;
+  outline-offset: 1px;
 }
-.registrar-announcement-edit__panel-header p {
-  margin-top: 5px;
-  color: #6c7970;
-  font-size: 12px;
-  line-height: 1.6;
+.registrar-announcement-edit__calendar-button:disabled {opacity:.5;cursor:not-allowed;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__calendar-button {
+  background: #25352e;
+  color: #9ae7b7;
+  border-color: #496252;
 }
-
-/* Form inputs, focus and character counters. */
-.registrar-announcement-edit__fields { gap: 19px; }
-.registrar-announcement-edit__field { gap: 9px; }
-.registrar-announcement-edit__field > span {
-  color: #3f5548;
-  font-size: 12px;
-  font-weight: 760;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__calendar-button:hover:not(:disabled) {
+  background: #304c3c;
 }
-.registrar-announcement-edit__field input,
-.registrar-announcement-edit__field textarea,
-.registrar-announcement-edit__field select {
-  max-width: 100%;
-  border-color: #cfded4;
-  border-radius: 12px;
-  color: #20382a;
-  background: #fbfdfb;
-  font-size: 13px;
+/* Compact mode uses a layout variable; default = 1 (original spacing). */
+.registrar-announcement-edit {
+  padding: calc(28px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1)) calc(38px * var(--ptc-compact-scale, 1));
 }
-.registrar-announcement-edit__field input,
-.registrar-announcement-edit__field select {
-  min-height: 46px;
-  padding: 10px 13px;
+.registrar-announcement-edit__hero {
+  padding: calc(25px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
 }
-.registrar-announcement-edit__field textarea {
-  min-height: 255px;
-  padding: 15px 16px;
-  line-height: 1.78;
-  resize: vertical;
-}
-.registrar-announcement-edit__field input:focus,
-.registrar-announcement-edit__field textarea:focus,
-.registrar-announcement-edit__field select:focus {
-  outline: none;
-  border-color: #159452;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(21,148,82,.14);
-}
-.registrar-announcement-edit__field small {
-  color: #76877b;
-  font-size: 11px;
-}
-
-/* Five selectable roles; selection remains owned by the existing React logic. */
-.registrar-announcement-edit__recipient-grid { gap: 11px; }
-.registrar-announcement-edit__recipient-option {
-  min-height: 61px;
-  padding: 13px;
-  border-color: #dce9df;
-  border-radius: 13px;
-  background: #f9fcfa;
-  box-shadow: 0 4px 12px rgba(7,59,36,.025);
-}
-.registrar-announcement-edit__recipient-option:hover:not(:has(input:disabled)) {
-  border-color: #9bd3b0;
-  background: #f1fbf5;
-  box-shadow: 0 8px 18px rgba(7,59,36,.07);
-}
-.registrar-announcement-edit__recipient-option--selected {
-  border-color: #7cc79d;
-  background: linear-gradient(140deg, #e8f8ee, #f4fbf6);
-  box-shadow: inset 0 0 0 1px rgba(15,122,69,.10),
-    0 7px 18px rgba(7,59,36,.05);
-}
-.registrar-announcement-edit__recipient-option:focus-within {
-  outline: 3px solid rgba(21,148,82,.36);
-  outline-offset: 2px;
-}
-.registrar-announcement-edit__recipient-option:has(input:disabled) {
-  cursor: not-allowed;
-  opacity: .68;
-}
-.registrar-announcement-edit__recipient-check {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-}
-.registrar-announcement-edit__recipient-option strong {
-  font-size: 12px;
-  font-weight: 760;
-}
-.registrar-announcement-edit__recipient-option small { font-size: 10px; }
-.registrar-announcement-edit__selection-meta {
-  flex-wrap: wrap;
-  padding: 12px 14px;
-  margin-top: 16px;
-  border: 1px solid #c6e6d1;
-  border-radius: 12px;
-  background: #ecf8f0;
-  font-size: 12px;
-}
-
-/* Existing files, remove action, upload and selected-file indicators. */
-.registrar-announcement-edit__attachment-list {
-  gap: 10px;
-  margin-bottom: 17px;
-}
-.registrar-announcement-edit__attachment-item {
-  min-width: 0;
-  gap: 12px;
-  padding: 12px 13px;
-  border-color: #dce8df;
-  border-radius: 13px;
-  background: #f9fcfa;
-}
-.registrar-announcement-edit__attachment-icon {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #d3e2ff;
-  border-radius: 12px;
-  color: #2563eb;
-  background: #edf4ff;
-}
-.registrar-announcement-edit__attachment-item strong {
-  font-size: 12px;
-}
-.registrar-announcement-edit__attachment-item small { font-size: 10.5px; }
-.registrar-announcement-edit__remove-button {
-  min-height: 36px;
-  padding: 8px 11px;
-  border-color: #efc8c5;
-  border-radius: 10px;
-  font-size: 11px;
-  transition: background-color .16s ease, border-color .16s ease;
-}
-.registrar-announcement-edit__remove-button:hover:not(:disabled) {
-  border-color: #e7aaa5;
-  background: #fff0ef;
-}
-.registrar-announcement-edit__remove-button:disabled {
-  cursor: not-allowed;
-  opacity: .58;
-}
-.registrar-announcement-edit__empty-files {
-  min-height: 76px;
-  padding: 16px;
-  margin-bottom: 17px;
-  border-color: #cbded3;
-  border-radius: 13px;
-  background: #f8fcf9;
-  font-size: 12px;
-}
-.registrar-announcement-edit__upload-box {
-  padding: 19px;
-  border: 1.5px dashed #accfbb;
-  border-radius: 16px;
-  background: linear-gradient(120deg, #f8fdf9, #f1f8ff);
-}
-.registrar-announcement-edit__upload-heading { gap: 12px; margin-bottom: 14px; }
-.registrar-announcement-edit__upload-heading > span {
-  width: 45px;
-  height: 45px;
-  border: 1px solid #ccddff;
-  border-radius: 13px;
-  color: #2563eb;
-  background: #eaf2ff;
-}
-.registrar-announcement-edit__upload-heading strong { font-size: 13px; }
-.registrar-announcement-edit__upload-heading small { font-size: 11px; }
-.registrar-announcement-edit__upload-box input[type="file"] {
-  max-width: 100%;
-  padding: 10px;
-  border-color: #ceded2;
-  border-radius: 11px;
-  color: #3f584b;
-  background: #fff;
-  font-size: 11px;
-}
-.registrar-announcement-edit__upload-box input[type="file"]::file-selector-button {
-  min-height: 35px;
-  padding: 8px 11px;
-  margin-right: 12px;
-  border: 1px solid #cdddff;
-  border-radius: 9px;
-  color: #1e55c2;
-  background: #edf4ff;
-  font-weight: 760;
-}
-.registrar-announcement-edit__upload-box input[type="file"]::file-selector-button:hover {
-  background: #e2edff;
-}
-.registrar-announcement-edit__selected-file {
-  margin-top: 13px;
-  padding: 12px 13px;
-  border-radius: 12px;
-  background: #edf9f1;
-}
-
-/* Gold publication panel + status indicators. */
-.registrar-announcement-edit__status-preview {
-  gap: 11px;
-  padding: 14px;
-  border-radius: 13px;
-}
-.registrar-announcement-edit__status-preview strong { font-size: 12.5px; }
-.registrar-announcement-edit__status-preview p { font-size: 11px; line-height: 1.55; }
-.registrar-announcement-edit__status-preview--active {
-  border-color: #bfe5cc;
-  background: #effaf3;
-}
-.registrar-announcement-edit__status-preview--inactive {
-  border-color: #dfe5e1;
-  background: #f3f5f4;
-}
-
-/* The Update/Cancel action section remains a real submit form. */
-.registrar-announcement-edit__save-panel {
-  overflow: hidden;
-  border-top: 4px solid #119b55;
-  background:
-    radial-gradient(circle at top right, rgba(21,148,82,.08), transparent 48%),
-    #fff;
-}
-.registrar-announcement-edit__save-summary {
-  gap: 13px;
-  padding: 22px 20px;
-  border-bottom-color: #e2ede5;
-}
-.registrar-announcement-edit__save-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(145deg, #12874c, #074e2e);
-}
-.registrar-announcement-edit__save-summary strong {
-  font-size: 14px;
-  font-weight: 790;
-}
-.registrar-announcement-edit__save-summary p { font-size: 11.5px; line-height: 1.6; }
-.registrar-announcement-edit__save-actions {
-  grid-template-columns: minmax(94px, .75fr) minmax(0, 1.6fr);
-  gap: 10px;
-  padding: 17px 20px 20px;
-}
-.registrar-announcement-edit__button--primary {
-  min-height: 43px;
-  border-color: #0b6b3c;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #107a43, #0a5a34);
-  box-shadow: 0 8px 17px rgba(7,78,47,.18);
-}
-.registrar-announcement-edit__button--primary:hover:not(:disabled) {
-  border-color: #064e2f;
-  background: linear-gradient(135deg, #0d713e, #074b2b);
-}
-.registrar-announcement-edit__button--secondary { border-radius: 10px; }
-.registrar-announcement-edit__button:focus-visible,
-.registrar-announcement-edit__remove-button:focus-visible,
-.registrar-announcement-edit__selected-file button:focus-visible,
-.registrar-announcement-edit__notice button:focus-visible,
-.registrar-announcement-edit__field input:focus-visible,
-.registrar-announcement-edit__field textarea:focus-visible,
-.registrar-announcement-edit__field select:focus-visible,
-.registrar-announcement-edit__upload-box input[type="file"]:focus-visible {
-  outline: 3px solid rgba(21,148,82,.40);
-  outline-offset: 2px;
-}
-.registrar-announcement-edit__notice {
-  position: relative;
-  z-index: 2;
-  padding: 15px;
-  border-radius: 14px;
-  background: #fff2f0;
-  box-shadow: 0 7px 19px rgba(133,33,24,.05);
-}
-
-/* Loading: muted green skeleton, never a white-page overlay. */
-.registrar-announcement-edit__loading {
-  gap: 17px;
-  padding: 13px;
-  border: 1px solid rgba(255,255,255,.75);
-  border-radius: 25px;
-  background: rgba(255,255,255,.38);
-}
-.registrar-announcement-edit__skeleton {
-  border-color: #d2e7d8;
-  background: linear-gradient(90deg, #dfeae2 25%, #eef6f0 45%, #dfeae2 65%);
-  background-size: 220% 100%;
-}
-.registrar-announcement-edit__skeleton--main,
-.registrar-announcement-edit__skeleton--side { border-radius: 20px; }
-
-/* Responsive: existing form order and real controls are preserved. */
-@media (max-width: 1180px) {
-  .registrar-announcement-edit__form-grid,
-  .registrar-announcement-edit__loading {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .registrar-announcement-edit__side-column {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .registrar-announcement-edit__save-panel { align-self: start; }
-}
-@media (max-width: 860px) {
-  .registrar-announcement-edit { padding: 19px 16px 34px; }
-  .registrar-announcement-edit__hero {
-    min-height: 0;
-    padding: 25px 23px;
-    border-radius: 21px;
-  }
-  .registrar-announcement-edit__hero-actions { align-self: stretch; }
-  .registrar-announcement-edit__form-grid { padding: 10px; border-radius: 20px; }
-  .registrar-announcement-edit__side-column { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 640px) {
-  .registrar-announcement-edit { padding: 16px 12px 30px; }
-  .registrar-announcement-edit::before {
-    top: 8px;
-    right: 6px;
-    left: 6px;
-    height: 320px;
-    border-radius: 22px;
-  }
-  .registrar-announcement-edit__hero {
-    padding: 23px 19px;
-    border-radius: 19px;
-  }
-  .registrar-announcement-edit__hero h1 {
-    font-size: clamp(28px, 7.5vw, 36px);
-  }
-  .registrar-announcement-edit__form-grid { padding: 8px; border-radius: 17px; }
-  .registrar-announcement-edit__panel,
-  .registrar-announcement-edit__save-panel { border-radius: 16px; }
-  .registrar-announcement-edit__panel { padding: 18px 16px; }
-  .registrar-announcement-edit__save-actions { grid-template-columns: 1fr; }
-  .registrar-announcement-edit__attachment-item strong {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  .registrar-announcement-edit__upload-box { padding: 15px; }
-  .registrar-announcement-edit__upload-box input[type="file"] { width: 100%; }
-}
-
-/* Dark Mode: charcoal/green page, dark panels, inputs and skeletons.
-   No white flash or entry animation; only interaction/loading states animate. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .dashboard-main:has(.registrar-announcement-edit) > .dashboard-content {
-  background: #111b17;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+.registrar-announcement-edit__fields {gap: calc(16px * var(--ptc-compact-scale, 1));}
+.registrar-announcement-edit__field {gap: calc(6px * var(--ptc-compact-scale, 1));}
+.registrar-announcement-edit__recipient-grid,
+.registrar-announcement-edit__attachment-list {gap: calc(10px * var(--ptc-compact-scale, 1));}
+.registrar-announcement-edit__recipient-option,
+.registrar-announcement-edit__attachment-item {padding: calc(12px * var(--ptc-compact-scale, 1));}
+.registrar-announcement-edit__field textarea {min-height: calc(220px * var(--ptc-compact-scale, 1));}
+@media (max-width: 760px) {
   .registrar-announcement-edit {
-  --rae-text-950: #eaf4ed;
-  --rae-text-800: #d3e7d9;
-  --rae-text-700: #b6cdbd;
-  --rae-text-600: #9db6a5;
-  --rae-text-500: #8da99a;
-  --rae-border: #294a37;
-  --rae-border-strong: #38634a;
-  --rae-surface: #172b20;
-  --rae-bg: #101d16;
-  color: #eaf4ed;
-  background-color: #101d16;
-  background-image:
-    radial-gradient(circle at 15% 0%, rgba(27,118,66,.22), transparent 38%),
-    linear-gradient(135deg, rgba(44,119,73,.10) 25%, transparent 25%),
-    linear-gradient(180deg, #101d16, #13221a);
-  background-size: auto, 96px 96px, auto;
+    padding: calc(20px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1)) calc(34px * var(--ptc-compact-scale, 1));
+  }
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit::before {
-  border-color: rgba(100,176,122,.15);
-  background: linear-gradient(120deg, rgba(30,65,44,.56), rgba(16,31,23,.36));
-  box-shadow: 0 20px 40px rgba(0,0,0,.18);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__form-grid,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__loading {
-  border-color: #294d37;
-  background: rgba(18,37,26,.83);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__panel,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__save-panel {
-  border-color: #2a4d39;
-  background: #182c20;
-  box-shadow: 0 12px 30px rgba(0,0,0,.15);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__panel-header,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__save-summary {
-  border-bottom-color: #30543e;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__panel-header h2,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__save-summary strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__recipient-option strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__attachment-item strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__upload-heading strong {
-  color: #eaf4ed;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__panel-header p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__save-summary p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__field > span,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__attachment-item small,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__upload-heading small,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__field small {
-  color: #b8cfc0;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__field input,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__field textarea,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__field select {
-  color: #eaf4ed;
-  border-color: #365a44;
-  background: #102117;
-  color-scheme: dark;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__recipient-option,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__attachment-item,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__empty-files,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__upload-box,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__selected-file,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__recipient-check {
-  color: #eaf4ed;
-  border-color: #31533f;
-  background: #1d3527;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__recipient-option--selected,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__selection-meta,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__status-preview--active {
-  color: #c8f3d6;
-  border-color: #346c48;
-  background: #173d27;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__status-preview--inactive {
-  color: #b7c5bc;
-  border-color: #355142;
-  background: #23372b;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__upload-box input[type="file"] {
-  color: #eaf4ed;
-  border-color: #31533f;
-  background: #12251a;
-  color-scheme: dark;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__selected-file button {
-  color: #d6f7e0;
-  background: #244a31;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__notice {
-  color: #ffd7d2;
-  border-color: #80403b;
-  background: #3d2120;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-edit__skeleton {
-  border-color: #274833;
-  background: linear-gradient(90deg, #15271c 25%, #244330 45%, #15271c 65%);
-  background-size: 220% 100%;
+@media (max-width: 520px) {
+  .registrar-announcement-edit {
+    padding: calc(16px * var(--ptc-compact-scale, 1)) calc(12px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1));
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .registrar-announcement-edit__panel,
-  .registrar-announcement-edit__button,
-  .registrar-announcement-edit__recipient-option,
-  .registrar-announcement-edit__skeleton {
-    animation: none !important;
-    transition: none !important;
-  }
+.registrar-announcement-edit__panel {padding: calc(21px * var(--ptc-compact-scale, 1)) calc(22px * var(--ptc-compact-scale, 1));}
+.registrar-announcement-edit__panel-header {padding-bottom: calc(16px * var(--ptc-compact-scale, 1)); margin-bottom: calc(17px * var(--ptc-compact-scale, 1));}
+.registrar-announcement-edit__save-panel {padding: calc(20px * var(--ptc-compact-scale, 1));}
+@media (max-width: 640px) {
+ .registrar-announcement-edit__panel {padding: calc(18px * var(--ptc-compact-scale, 1)) calc(16px * var(--ptc-compact-scale, 1));}
+}
+
+/* =========================================================
+   DARK MODE RECIPIENT ICON FIX
+   ========================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__recipient-check {
+  color: #c3d0c8;
+  background: #182024;
+  border-color: #465760;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__recipient-check svg {
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-edit__recipient-option:hover
+  .registrar-announcement-edit__recipient-check {
+  background: #1d262b;
+  border-color: #5b6d75;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-edit__recipient-option--selected
+  .registrar-announcement-edit__recipient-check {
+  color: #ffffff;
+  background: #67d39a;
+  border-color: #67d39a;
+}
+
+/* LIGHT MODE — RESTORE APPROVED PTC GREEN HERO
+   Scoped to this page; Dark Mode, page panels, sidebar, footer and
+   appearance preference rules are unchanged. */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
+  border-color: rgba(20, 115, 70, .38);
+  box-shadow: 0 10px 26px rgba(5, 61, 38, .15);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero::after {
+  border-color: rgba(255, 255, 255, .075);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero h1,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero p,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__eyebrow {
+  color: #f6fff9;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__eyebrow-icon {
+  color: #effff5;
+  background: rgba(255,255,255,.14);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary {
+  background: rgba(13, 34, 26, .72);
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
+  background: rgba(25, 68, 47, .92);
+  border-color: rgba(255,255,255,.65);
+  color: #fff;
+}
+
+/* ==========================================================
+   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
+   Scoped to this page only. Keep existing panels and layout.
+   ========================================================== */
+.dashboard-wrapper .registrar-announcement-edit__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(20, 115, 70, 0.38) !important;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+}
+.dashboard-wrapper .registrar-announcement-edit__hero::after {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero :is(h1, h2, p, small, strong),
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__eyebrow {
+  color: #f6fff9 !important;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__eyebrow-icon {
+  color: #effff5 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary {
+  background: rgba(13, 34, 26, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
+  background: rgba(21, 67, 46, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
+}
+
+
+/* ============================================================
+   EDIT ANNOUNCEMENT — FINAL SURFACE CONSISTENCY
+   Applies ONLY in Dark Mode. Light Mode and hero remain intact.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-edit__recipient-option:not(.registrar-announcement-edit__recipient-option--selected)
+  .registrar-announcement-edit__recipient-check {
+  background: #192329;
+  border-color: #465760;
+  color: #c3d0c8;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-edit__recipient-option--selected
+  .registrar-announcement-edit__recipient-check {
+  background: #17844f;
+  border-color: #44b679;
+  color: #ffffff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-edit__calendar-button {
+  background: #24343a;
+  border-color: #4c5d65;
+  color: #a8e8c6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-edit__calendar-button:hover:not(:disabled) {
+  background: #2c4045;
 }

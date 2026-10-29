@@ -2,7 +2,6 @@
    REGISTRAR — STUDENT LIST
    Scoped styles to avoid affecting other Registrar pages.
 ========================================================= */
-
 .registrar-student-list {
   --rsl-green-950: #073b24;
   --rsl-green-900: #0a4b2d;
@@ -20,7 +19,6 @@
   --rsl-surface: #ffffff;
   --rsl-bg: #f5f8f6;
   --rsl-danger: #b42318;
-
   min-height: 100%;
   padding: 28px 30px 36px;
   background:
@@ -39,7 +37,6 @@
 /* =========================================================
    HERO
 ========================================================= */
-
 .registrar-student-list__hero {
   position: relative;
   overflow: hidden;
@@ -80,7 +77,7 @@
   gap: 8px;
   margin-bottom: 10px;
   color: var(--rsl-green-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -100,7 +97,7 @@
 .registrar-student-list__hero h1 {
   margin: 0;
   color: var(--rsl-text-950);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: clamp(calc(30px * var(--ptc-font-scale, 1)), calc(3.4vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -110,7 +107,7 @@
   max-width: 720px;
   margin: 9px 0 0;
   color: var(--rsl-text-600);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
 
@@ -148,7 +145,7 @@
 
 .registrar-student-list__hero-badge small {
   color: var(--rsl-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -156,14 +153,13 @@
 
 .registrar-student-list__hero-badge strong {
   color: var(--rsl-text-800);
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
 /* =========================================================
    STAT CARDS
 ========================================================= */
-
 .registrar-student-list__stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -217,13 +213,13 @@
 
 .registrar-student-list__stat-card span {
   color: var(--rsl-text-600);
-  font-size: 12px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
 .registrar-student-list__stat-card strong {
   color: var(--rsl-text-950);
-  font-size: 24px;
+  font-size: calc(24px * var(--ptc-font-scale, 1));
   font-weight: 780;
   line-height: 1.05;
   letter-spacing: -0.025em;
@@ -232,7 +228,7 @@
 .registrar-student-list__stat-card small {
   overflow: hidden;
   color: var(--rsl-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -240,7 +236,6 @@
 /* =========================================================
    MAIN PANEL / TOOLBAR
 ========================================================= */
-
 .registrar-student-list__panel {
   overflow: hidden;
   border: 1px solid var(--rsl-border);
@@ -260,7 +255,7 @@
 .registrar-student-list__panel-heading h2 {
   margin: 0;
   color: var(--rsl-text-950);
-  font-size: 18px;
+  font-size: clamp(calc(19px * var(--ptc-font-scale, 1)), calc(2.1vw * var(--ptc-font-scale, 1)), calc(23px * var(--ptc-font-scale, 1)));
   font-weight: 740;
   letter-spacing: -0.012em;
 }
@@ -268,7 +263,7 @@
 .registrar-student-list__panel-heading p {
   margin: 4px 0 0;
   color: var(--rsl-text-500);
-  font-size: 12px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   line-height: 1.5;
 }
 
@@ -279,7 +274,7 @@
   border-radius: 9px;
   color: var(--rsl-text-600);
   background: #f8faf9;
-  font-size: 11px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 680;
 }
 
@@ -318,7 +313,7 @@
   color: var(--rsl-text-800);
   background: #fbfcfb;
   font: inherit;
-  font-size: 12.5px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
@@ -365,7 +360,7 @@
   align-items: center;
   gap: 5px;
   color: var(--rsl-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 700;
 }
 
@@ -379,7 +374,7 @@
   color: var(--rsl-text-800);
   background-color: #ffffff;
   font: inherit;
-  font-size: 11.5px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 600;
   cursor: pointer;
   transition: border-color 160ms ease, box-shadow 160ms ease;
@@ -402,7 +397,7 @@
   color: var(--rsl-text-600);
   background: #f7faf8;
   font: inherit;
-  font-size: 11px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 700;
   cursor: pointer;
 }
@@ -424,7 +419,7 @@
   border-radius: 10px;
   color: var(--rsl-green-900);
   background: #f5fbf7;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
@@ -437,7 +432,6 @@
 /* =========================================================
    TABLE
 ========================================================= */
-
 .registrar-student-list__table-shell {
   border-top: 1px solid var(--rsl-border);
 }
@@ -460,7 +454,7 @@
   border-bottom: 1px solid #dce7df;
   color: #496054;
   background: #f5f9f6;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.035em;
   text-align: left;
@@ -483,7 +477,7 @@
   border-bottom: 1px solid #edf1ee;
   color: var(--rsl-text-600);
   background: #ffffff;
-  font-size: 11.8px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   vertical-align: middle;
 }
 
@@ -513,7 +507,7 @@
   border-radius: 10px;
   color: var(--rsl-green-800);
   background: linear-gradient(145deg, #f2fbf5, #e3f4e9);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 800;
   letter-spacing: 0.035em;
 }
@@ -528,7 +522,7 @@
   overflow: hidden;
   max-width: 230px;
   color: var(--rsl-text-950);
-  font-size: 12.3px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 710;
   line-height: 1.35;
   white-space: nowrap;
@@ -539,7 +533,7 @@
   overflow: hidden;
   max-width: 230px;
   color: var(--rsl-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.35;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -561,7 +555,7 @@
   border-radius: 7px;
   color: var(--rsl-green-800);
   background: #f3faf5;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   white-space: nowrap;
 }
@@ -576,7 +570,7 @@
   border-radius: 999px;
   color: #536058;
   background: #f7f9f8;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 700;
   white-space: nowrap;
 }
@@ -638,7 +632,7 @@
   color: #415248;
   background: #ffffff;
   font: inherit;
-  font-size: 10.5px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
@@ -667,7 +661,6 @@
 /* =========================================================
    STATES / SKELETON
 ========================================================= */
-
 .registrar-student-list__state {
   display: flex;
   flex-direction: column;
@@ -688,14 +681,14 @@
   border-radius: 14px;
   color: var(--rsl-green-700);
   background: var(--rsl-green-50);
-  font-size: 22px;
+  font-size: calc(22px * var(--ptc-font-scale, 1));
   font-weight: 800;
 }
 
 .registrar-student-list__state h3 {
   margin: 0;
   color: var(--rsl-text-800);
-  font-size: 15px;
+  font-size: calc(16px * var(--ptc-font-scale, 1));
   font-weight: 740;
 }
 
@@ -703,7 +696,7 @@
   max-width: 570px;
   margin: 7px 0 0;
   color: var(--rsl-text-500);
-  font-size: 11.5px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
 
@@ -715,7 +708,7 @@
   color: #ffffff;
   background: var(--rsl-green-700);
   font: inherit;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 700;
   cursor: pointer;
 }
@@ -767,7 +760,6 @@
 .registrar-student-list__skeleton--short { width: 56px; }
 .registrar-student-list__skeleton--badge { width: 72px; height: 24px; }
 .registrar-student-list__skeleton--actions { width: 210px; height: 30px; border-radius: 8px; }
-
 @keyframes registrar-student-list-shimmer {
   100% { transform: translateX(100%); }
 }
@@ -775,7 +767,6 @@
 /* =========================================================
    PAGINATION
 ========================================================= */
-
 .registrar-student-list__pagination-bar {
   display: flex;
   align-items: center;
@@ -789,7 +780,7 @@
 .registrar-student-list__pagination-bar p {
   margin: 0;
   color: var(--rsl-text-500);
-  font-size: 10.8px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-student-list__pagination-bar p strong {
@@ -817,7 +808,7 @@
   color: #56655c;
   background: #ffffff;
   font: inherit;
-  font-size: 10.5px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 700;
   cursor: pointer;
 }
@@ -851,7 +842,6 @@
 /* =========================================================
    RESPONSIVE
 ========================================================= */
-
 @media (max-width: 1280px) {
   .registrar-student-list__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -966,165 +956,637 @@
   }
 }
 
+/* =========================================================
+   REGISTRAR STUDENT LIST — CHARCOAL DARK MODE
+   Scoped to saved Dark Mode. Original Light Mode remains intact.
+   No sidebar/footer overrides. No layout or API changes.
+========================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list {
+  --rsl-text-950: #f3f6f5;
+  --rsl-text-800: #e5ece9;
+  --rsl-text-600: #bfcac6;
+  --rsl-text-500: #a8b7b0;
+  --rsl-border: #35444a;
+  --rsl-border-strong: #4a5b61;
+  --rsl-surface: #171e22;
+  --rsl-bg: #111719;
+  --rsl-green-50: #192d25;
+  --rsl-green-100: #203b2e;
+  --rsl-green-700: #59d69a;
+  --rsl-green-800: #86e7b5;
+  --rsl-green-900: #a2eec5;
+  background: #111719;
+  background-image: none;
+  color: #edf3f0;
+  color-scheme: dark;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list) > .dashboard-content {
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero {
+  background: linear-gradient(120deg, #08412c 0%, #0a5636 55%, #116b40 100%);
+  border-color: #216846;
+  box-shadow: 0 14px 30px rgba(0,0,0,.22);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero h1,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__eyebrow,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero-badge strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero-badge small {
+  color: #f4faf6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero-badge {
+  background: rgba(240,255,244,.1);
+  border-color: rgba(227,255,238,.23);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero-badge-icon,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__eyebrow-icon {
+  background: #e9f7ee;
+  color: #126d42;
+  border-color: #c6e8d3;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__panel {
+  background: #1a2226;
+  background-image: none;
+  border-color: #35444a;
+  box-shadow: 0 12px 24px rgba(0,0,0,.12);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-card span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-card small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__panel-heading p {
+  color: #b5c4be;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-card strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__panel-heading h2 {
+  color: #f1f6f3;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-icon {
+  color: #8be4b6;
+  background: #20392e;
+  border-color: #376850;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-icon--primary {
+  color: #fff;
+  background: #087a48;
+  border-color: #168456;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__record-count,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__filter-summary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__filter-summary span {
+  background: #202b30;
+  border-color: #405158;
+  color: #d9e7df;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__search input,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__filters select {
+  background: #20292e;
+  border-color: #46565c;
+  color: #eff6f2;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__search input:focus,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__filters select:focus {
+  background: #263238;
+  border-color: #53c68e;
+  outline-color: #53c68e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__search input::placeholder {
+  color: #b0beb8;
+  opacity: 1;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__search > svg,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__filter-label {
+  color: #bdcec6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__search-clear,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__clear-filters,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__action:not(.registrar-student-list__action--primary),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__page-btn:not(.registrar-student-list__page-btn--active) {
+  background: #253137;
+  border-color: #46575e;
+  color: #e3efe9;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__search-clear:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__clear-filters:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__action:not(.registrar-student-list__action--primary):hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__page-btn:not(.registrar-student-list__page-btn--active):hover {
+  background: #304047;
+  border-color: #5a7970;
+  color: #a8f3cd;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__table thead th {
+  background: #202a2f;
+  color: #cddbd5;
+  border-bottom-color: #435158;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__table tbody td {
+  background: #1b2428;
+  color: #e3ece7;
+  border-bottom-color: #34444a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__table tbody tr:not(.registrar-student-list__skeleton-row):hover td {
+  background: #253137;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__table-shell,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__pagination-bar {
+  background: #1a2226;
+  border-color: #35444a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__avatar {
+  background: #1d4635;
+  border-color: #367454;
+  color: #b2f3ce;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__student-copy strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__student-number {
+  color: #f0f6f3;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__student-copy span {
+  color: #acbcb5;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__course-chip {
+  background: #26352e;
+  border-color: #426454;
+  color: #b0edcb;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status {
+  background: #263138;
+  border-color: #42545a;
+  color: #d2ddd8;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--active,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--enrolled {
+  background: #15392b;
+  border-color: #27744c;
+  color: #88ecc0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--inactive,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--dropped {
+  background: #422629;
+  border-color: #8e4b50;
+  color: #ffb4b4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--graduated {
+  background: #1d3450;
+  border-color: #476f9b;
+  color: #b0d5ff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--leave-of-absence,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__status--loa {
+  background: #443722;
+  border-color: #8b6938;
+  color: #f8d99a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__state,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__state-icon {
+  background: #1b2428;
+  color: #dcebe3;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__state h3 {
+  color: #f2f7f4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__state p {
+  color: #b5c4be;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__state--error .registrar-student-list__state-icon {
+  color: #ffb9b9;
+  background: #462b2e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__state--error h3 {
+  color: #ffcdcd;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__skeleton {
+  background: #2b373c;
+  animation: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(166,188,178,.09), transparent);
+  animation: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__skeleton-row td {
+  background: #1b2428;
+  border-color: #34444a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__page-btn--active,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__action--primary {
+  color: #fff;
+  background: #137d4d;
+  border-color: #2a9b67;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__page-btn--active:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__action--primary:hover {
+  color: #fff;
+  background: #16945a;
+  border-color: #39ba7b;
+}
+
+/* =============================================================
+   DARK MODE — DIRECTORY SURFACES / NO LIGHT ENTRY FLASH
+   Covers the missing heading + toolbar backgrounds and the
+   shared canvas. Light Mode, sidebar and footer are untouched.
+   ============================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .registrar-student-list {
+  background: #111719 !important;
+  background-image: none !important;
+  color: #eaf1ed;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list::after {
+  background: none !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__panel {
+  background: #171e22 !important;
+  background-image: none !important;
+  border-color: #39474d !important;
+  color: #eaf1ed !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__panel-heading {
+  background: #1b2429 !important;
+  background-image: none !important;
+  border-bottom: 1px solid #3b4a50 !important;
+  color: #f0f6f3 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__panel-heading h2 {
+  color: #f5f8f6 !important;
+  opacity: 1 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__panel-heading p {
+  color: #b9c8c2 !important;
+  opacity: 1 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__toolbar {
+  background: #1b2429 !important;
+  background-image: none !important;
+  border-bottom: 1px solid #3b4a50 !important;
+  color: #e3ede8 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__filter-label,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__search label {
+  color: #c2d0c9 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__record-count {
+  background: #253139 !important;
+  color: #e8f0ec !important;
+  border-color: #4a5b62 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__table-shell,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__pagination-bar {
+  background: #171e22 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__skeleton,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__skeleton-row td {
+  background: #273239 !important;
+  background-image: none !important;
+  animation: none !important;
+}
+
+/* =============================================================
+   STUDENT LIST — FINAL DARK CANVAS FIX
+   Covers the visible geometric gap around the student sections.
+   Only applies while the saved Dark Mode is active.
+   ============================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list) > .dashboard-content > main.registrar-student-list {
+  background-color: #111719 !important;
+  background-image: none !important;
+  background: #111719 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] main.registrar-student-list::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] main.registrar-student-list::after,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list) > .dashboard-content::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-list) > .dashboard-content::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+  opacity: 0 !important;
+}
+
+/* Keep section gaps dark, but leave the actual content cards intact. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] main.registrar-student-list {
+  isolation: isolate;
+  min-height: 100%;
+}
 
 /* ============================================================
-   REGISTRAR STUDENT LIST — DASHBOARD-MATCHED VISUAL REFRESH
-   Scoped to StudentlistR.tsx. No shared sidebar/footer changes.
-   Uses static surfaces only: no page entrance fades/white flashes.
-============================================================ */
-.dashboard-main:has(.registrar-student-list) .dashboard-content {
-  padding: 0;
-  overflow-x: hidden;
-  background: linear-gradient(180deg, #eaf4ed, #e2efe7);
+   STUDENT LIST — APPEARANCE PREFERENCES
+   Uses the existing DashboardLayout variables; this file only.
+   No changes to sidebar/footer or light/dark palette.
+   ============================================================ */
+.registrar-student-list {
+  --rsl-density: var(--ptc-compact-scale, 1);
 }
 
-.registrar-student-list {
-  --rsl-gold: #d4a72c;
-  --rsl-blue: #2563eb;
-  --rsl-violet: #7c3aed;
+/* Compact Mode scales spacing only; font sizes are controlled above. */
+.registrar-student-list .registrar-student-list__hero {
+  padding: calc(25px * var(--rsl-density)) calc(28px * var(--rsl-density));
+  gap: calc(24px * var(--rsl-density));
+  margin-bottom: calc(20px * var(--rsl-density));
+}
+
+.registrar-student-list .registrar-student-list__stats {
+  gap: calc(14px * var(--rsl-density));
+  margin-bottom: calc(20px * var(--rsl-density));
+}
+
+.registrar-student-list .registrar-student-list__stat-card {
+  padding: calc(17px * var(--rsl-density)) calc(18px * var(--rsl-density));
+  gap: calc(14px * var(--rsl-density));
+}
+
+.registrar-student-list .registrar-student-list__panel-heading {
+  padding: calc(20px * var(--rsl-density)) calc(22px * var(--rsl-density)) calc(15px * var(--rsl-density));
+}
+
+.registrar-student-list .registrar-student-list__toolbar {
+  padding: 0 calc(22px * var(--rsl-density)) calc(17px * var(--rsl-density));
+  gap: calc(12px * var(--rsl-density));
+}
+
+.registrar-student-list .registrar-student-list__table th,
+.registrar-student-list .registrar-student-list__table td {
+  padding-top: calc(12px * var(--rsl-density));
+  padding-bottom: calc(12px * var(--rsl-density));
+}
+
+.registrar-student-list .registrar-student-list__pagination-bar {
+  gap: calc(8px * var(--rsl-density));
+}
+
+@media (max-width: 760px) {
+  .registrar-student-list .registrar-student-list__hero {
+    padding: calc(22px * var(--rsl-density));
+  }
+
+  .registrar-student-list .registrar-student-list__stats {
+    gap: calc(10px * var(--rsl-density));
+  }
+}
+
+@media (max-width: 520px) {
+  .registrar-student-list .registrar-student-list__hero {
+    padding: calc(20px * var(--rsl-density)) calc(18px * var(--rsl-density));
+  }
+}
+
+/* =========================================================
+   RESTORE COLORED STAT ACCENT LINES
+   ========================================================= */
+.registrar-student-list__stat-card {
+  position: relative;
+  overflow: hidden;
+  padding-left: 20px;
+}
+
+.registrar-student-list__stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  border-radius: 15px 0 0 15px;
+  background: var(--rsl-green-700);
+}
+
+.registrar-student-list__stat-card:nth-child(2)::before {
+  background: #d4a72c;
+}
+
+.registrar-student-list__stat-card:nth-child(3)::before {
+  background: #2563eb;
+}
+
+.registrar-student-list__stat-card:nth-child(4)::before {
+  background: #7c3aed;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__stat-card::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   STUDENT LIST — APPROVED REGISTRAR GREEN HERO (BOTH THEMES)
+   Matched to Announcement Management without changing KPI
+   colors, typography preferences, page layout or footer.
+   ========================================================= */
+.dashboard-wrapper .registrar-student-list__hero {
   position: relative;
   isolation: isolate;
-  width: 100%;
-  min-height: 100%;
-  overflow-x: clip;
-  padding: 28px 28px 42px;
-  background-color: #e6f1e9;
-  background-image:
-    linear-gradient(135deg, rgba(15,122,69,.08) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15,122,69,.055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212,167,44,.045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37,99,235,.035) 25%, transparent 25%),
-    radial-gradient(circle at 12% 10%, rgba(21,148,82,.22), transparent 25%),
-    radial-gradient(circle at 88% 6%, rgba(212,167,44,.18), transparent 23%),
-    radial-gradient(circle at 92% 72%, rgba(37,99,235,.10), transparent 24%),
-    linear-gradient(180deg, #edf6f0 0%, #e5f0e9 48%, #dce9e0 100%);
-  background-size: 96px 96px, 96px 96px, 128px 128px, 128px 128px, auto, auto, auto, auto;
-  background-position: 0 0, 48px 48px, 0 0, 64px 64px, center, center, center, center;
+  min-height: 188px;
+  border: 0 !important;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255,255,255,.18) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 91% 52%, rgba(255,255,255,.08) 0 13%, transparent 13.5%),
+    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%) !important;
+  box-shadow: 0 18px 42px rgba(6,78,47,.24);
 }
-.registrar-student-list::before {
-  content: "";
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list__hero {
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255,255,255,.10) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 91% 52%, rgba(255,255,255,.04) 0 13%, transparent 13.5%),
+    linear-gradient(120deg, #053622 0%, #0a472d 38%, #0f6a3b 70%, #128246 100%) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.30);
+}
+
+.dashboard-wrapper .registrar-student-list__hero::after {
+  top: -115px;
+  right: 105px;
+  width: 250px;
+  height: 250px;
+  border-color: rgba(255,255,255,.055) !important;
+}
+
+.dashboard-wrapper .registrar-student-list__hero h1,
+.dashboard-wrapper .registrar-student-list__hero p,
+.dashboard-wrapper .registrar-student-list__hero .registrar-student-list__eyebrow {
+  color: #f5fff8 !important;
+}
+
+.dashboard-wrapper .registrar-student-list__hero .registrar-student-list__eyebrow-icon {
+  color: #f5fff8 !important;
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+}
+
+.dashboard-wrapper .registrar-student-list__hero .registrar-student-list__hero-badge {
+  border-color: rgba(255,255,255,.22) !important;
+  background: rgba(255,255,255,.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.dashboard-wrapper .registrar-student-list__hero .registrar-student-list__hero-badge :is(small,strong) {
+  color: #f5fff8 !important;
+}
+
+.dashboard-wrapper .registrar-student-list__hero .registrar-student-list__hero-badge-icon {
+  background: rgba(255,255,255,.92) !important;
+  color: #0f6d3f !important;
+  border-color: rgba(255,255,255,.28) !important;
+}
+
+/* FINAL HEADER COLOR CORRECTION — MATCH ANNOUNCEMENT MANAGEMENT
+   Use one identical deep-green surface in BOTH themes.
+   Remove bright radial fills without removing decorative outlines. */
+.dashboard-wrapper .registrar-student-list .registrar-student-list__hero,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-list .registrar-student-list__hero {
+  background-color: #073b28 !important;
+  background-image: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border: 0 !important;
+  color: #ffffff !important;
+}
+
+.dashboard-wrapper .registrar-student-list .registrar-student-list__hero::before {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper .registrar-student-list .registrar-student-list__hero::after {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: rgba(255,255,255,.055) !important;
+}
+
+.dashboard-wrapper .registrar-student-list .registrar-student-list__hero :is(h1,p,.registrar-student-list__eyebrow) {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   STUDENT LIST — RESTORE THE TRANSLUCENT LIGHT-MODE FRAME
+   Matches the frosted background behind Announcement Management's
+   hero and summary cards, without changing card or hero styling.
+   ============================================================ */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-list {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-list::before {
+  content: "" !important;
+  display: block !important;
   position: absolute;
   z-index: -1;
   top: 14px;
   left: 16px;
   right: 16px;
   height: 374px;
-  border: 1px solid rgba(15,122,69,.14);
+  border: 1px solid rgba(15, 122, 69, 0.14);
   border-radius: 30px;
-  background: linear-gradient(120deg, rgba(255,255,255,.70), rgba(240,248,242,.48));
-  box-shadow: inset 0 1px rgba(255,255,255,.95), 0 26px 55px rgba(7,59,36,.11);
-  pointer-events: none;
-}
-.registrar-student-list::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 420px;
-  right: -92px;
-  width: min(470px, 100%);
-  aspect-ratio: 1;
-  border: 2px solid rgba(15,122,69,.13);
-  border-radius: 50%;
-  box-shadow: 0 0 0 48px rgba(15,122,69,.045), 0 0 0 96px rgba(212,167,44,.025), 0 0 0 144px rgba(15,122,69,.018);
-  pointer-events: none;
-}
-.registrar-student-list__hero {
-  position: relative;
-  z-index: 1;
-  min-height: 188px;
-  padding: 30px 32px;
-  border: 0;
-  border-radius: 24px;
   background:
-    radial-gradient(circle at 84% 18%, rgba(255,255,255,.18) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255,255,255,.08) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%);
-  box-shadow: 0 18px 42px rgba(6,78,47,.24);
-}
-.registrar-student-list__hero::before {
-  content: "";
-  position: absolute;
-  right: -60px;
-  bottom: -95px;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 50%;
+    linear-gradient(120deg, rgba(255, 255, 255, 0.70), rgba(240, 248, 242, 0.48)),
+    radial-gradient(circle at 86% 12%, rgba(212, 167, 44, 0.12), transparent 28%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 26px 55px rgba(7, 59, 36, 0.11);
   pointer-events: none;
 }
-.registrar-student-list__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border: 44px solid rgba(255,255,255,.055);
-}
-.registrar-student-list__eyebrow { color: #dff8e8; }
-.registrar-student-list__eyebrow-icon {
-  color: #fff;
-  background: rgba(255,255,255,.14);
-  border: 1px solid rgba(255,255,255,.18);
-  box-shadow: inset 0 1px rgba(255,255,255,.15);
-}
-.registrar-student-list__hero h1 {
-  color: #fff;
-  font-size: clamp(30px, 3.4vw, 40px);
-  font-weight: 790;
-  letter-spacing: -.035em;
-}
-.registrar-student-list__hero p {
-  max-width: 790px;
-  color: rgba(239,255,245,.86);
-  font-size: 14.5px;
-}
-.registrar-student-list__hero-badge {
-  border-color: rgba(255,255,255,.22);
-  background: rgba(255,255,255,.14);
-  box-shadow: 0 12px 25px rgba(0,0,0,.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-.registrar-student-list__hero-badge-icon {
-  color: #0a5a34;
-  background: linear-gradient(145deg, #fff, #dff7e8);
-  box-shadow: 0 6px 16px rgba(0,0,0,.13);
-}
-.registrar-student-list__hero-badge small { color: rgba(255,255,255,.74); }
-.registrar-student-list__hero-badge strong { color: #fff; }
 
-/* Four contrasting dashboard KPI cards. */
-.registrar-student-list__stats {
+/* Compact Mode: keep the frame following the reduced card spacing. */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])[data-ptc-compact="true"] .registrar-student-list::before {
+  height: calc(374px * var(--ptc-compact-scale, 1));
+}
+
+/* ============================================================
+   STUDENT LIST — FINAL ANNOUNCEMENT-MATCHED LIGHT MODE CARDS
+   Restores translucent KPI strip, four tinted stat cards and
+   subtle circular accents. Dark Mode stays charcoal; typography
+   and Compact Mode values continue to come from existing rules.
+   ============================================================ */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list .registrar-student-list__stats {
   position: relative;
   z-index: 1;
-  gap: 16px;
-  padding: 10px;
-  margin: -2px -2px 20px;
-  border: 1px solid rgba(255,255,255,.72);
+  gap: calc(16px * var(--rsl-density, 1));
+  padding: calc(10px * var(--rsl-density, 1));
+  margin: -2px -2px calc(20px * var(--rsl-density, 1));
+  border: 1px solid rgba(255, 255, 255, .72);
   border-radius: 22px;
-  background: rgba(255,255,255,.42);
-  box-shadow: 0 14px 34px rgba(7,59,36,.08);
+  background: rgba(255, 255, 255, .42);
+  box-shadow: 0 14px 34px rgba(7, 59, 36, .08);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-.registrar-student-list__stat-card {
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list .registrar-student-list__stat-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   min-height: 118px;
-  padding: 20px;
+  padding: calc(20px * var(--rsl-density, 1));
+  gap: calc(14px * var(--rsl-density, 1));
   border: 0;
   border-radius: 19px;
-  box-shadow: 0 12px 28px rgba(31,56,40,.09);
+  box-shadow: 0 12px 28px rgba(31, 56, 40, .09);
 }
-.registrar-student-list__stat-card::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0 auto 0 0;
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card::before {
+  z-index: 1;
   width: 5px;
-  background: #159452;
+  border-radius: 19px 0 0 19px;
 }
-.registrar-student-list__stat-card::after {
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card::after {
   content: "";
   position: absolute;
   z-index: -1;
@@ -1133,200 +1595,80 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: rgba(21,148,82,.08);
   pointer-events: none;
 }
-.registrar-student-list__stat-card:nth-child(1) { background: linear-gradient(145deg, #fff, #ecfbf2); }
-.registrar-student-list__stat-card:nth-child(2) { background: linear-gradient(145deg, #fff, #fff8e4); }
-.registrar-student-list__stat-card:nth-child(2)::before { background: var(--rsl-gold); }
-.registrar-student-list__stat-card:nth-child(2)::after { background: rgba(212,167,44,.10); }
-.registrar-student-list__stat-card:nth-child(3) { background: linear-gradient(145deg, #fff, #edf5ff); }
-.registrar-student-list__stat-card:nth-child(3)::before { background: var(--rsl-blue); }
-.registrar-student-list__stat-card:nth-child(3)::after { background: rgba(37,99,235,.08); }
-.registrar-student-list__stat-card:nth-child(4) { background: linear-gradient(145deg, #fff, #f6efff); }
-.registrar-student-list__stat-card:nth-child(4)::before { background: var(--rsl-violet); }
-.registrar-student-list__stat-card:nth-child(4)::after { background: rgba(124,58,237,.08); }
-.registrar-student-list__stat-icon { width: 50px; height: 50px; border-radius: 15px; box-shadow: 0 8px 18px rgba(15,122,69,.10); }
-.registrar-student-list__stat-card:nth-child(2) .registrar-student-list__stat-icon { color: #a97908; background: #fff7dc; border-color: #edd796; }
-.registrar-student-list__stat-card:nth-child(3) .registrar-student-list__stat-icon { color: var(--rsl-blue); background: #eef5ff; border-color: #cfe0ff; }
-.registrar-student-list__stat-card:nth-child(4) .registrar-student-list__stat-icon { color: var(--rsl-violet); background: #f5f0ff; border-color: #dfd1ff; }
-.registrar-student-list__stat-card span { font-size: 11px; font-weight: 760; letter-spacing: .025em; text-transform: uppercase; }
-.registrar-student-list__stat-card strong { font-size: 26px; }
 
-/* Student directory / filters / table. */
-.registrar-student-list__panel {
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(15,122,69,.14);
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(1) {
+  background: linear-gradient(145deg, #fff 0%, #ecfbf2 100%);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(1)::after {
+  background: rgba(21, 148, 82, .08);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(2) {
+  background: linear-gradient(145deg, #fff 0%, #fff8e4 100%);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(2)::after {
+  background: rgba(212, 167, 44, .10);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(3) {
+  background: linear-gradient(145deg, #fff 0%, #edf5ff 100%);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(3)::after {
+  background: rgba(37, 99, 235, .08);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(4) {
+  background: linear-gradient(145deg, #fff 0%, #f6efff 100%);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(4)::after {
+  background: rgba(124, 58, 237, .08);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(2) .registrar-student-list__stat-icon {
+  color: #a97908;
+  background: #fff7dc;
+  border-color: #edd796;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(3) .registrar-student-list__stat-icon {
+  color: #2563eb;
+  background: #eef5ff;
+  border-color: #cfe0ff;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list__stat-card:nth-child(4) .registrar-student-list__stat-icon {
+  color: #7c3aed;
+  background: #f5f0ff;
+  border-color: #dfd1ff;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-student-list .registrar-student-list__panel {
   border-radius: 24px;
-  background: rgba(255,255,255,.97);
-  box-shadow: 0 16px 38px rgba(7,59,36,.09);
+  border-color: rgba(15, 122, 69, .14);
+  box-shadow: 0 16px 38px rgba(7, 59, 36, .09);
 }
-.registrar-student-list__panel-heading {
-  padding: 23px 26px 18px;
-  border-bottom: 1px solid rgba(15,122,69,.08);
-  background: linear-gradient(110deg, rgba(255,255,255,.98), rgba(239,249,242,.8));
-}
-.registrar-student-list__panel-heading h2 { font-size: 20px; font-weight: 780; }
-.registrar-student-list__record-count { border-color: #c7e5d1; color: #0d653b; background: #eaf7ee; }
-.registrar-student-list__toolbar { gap: 14px; padding: 17px 26px 19px; background: rgba(249,253,250,.96); }
-.registrar-student-list__search input, .registrar-student-list__filters select {
-  height: 44px;
-  border-color: #d1e2d6;
-  border-radius: 12px;
-  background-color: #fff;
-}
-.registrar-student-list__clear-filters { height: 44px; }
-.registrar-student-list__search input:focus-visible,
-.registrar-student-list__filters select:focus-visible,
-.registrar-student-list__action:focus-visible,
-.registrar-student-list__page-btn:focus-visible,
-.registrar-student-list__clear-filters:focus-visible,
-.registrar-student-list__search-clear:focus-visible {
-  outline: 3px solid rgba(21,148,82,.28);
-  outline-offset: 2px;
-}
-.registrar-student-list__filter-summary { margin-right: 26px; margin-left: 26px; background: #effaf3; }
-.registrar-student-list__table-shell { border-top-color: #deebe2; }
-.registrar-student-list__table thead th { padding-top: 15px; padding-bottom: 15px; background: #edf7f0; color: #24523a; }
-.registrar-student-list__table tbody td { padding-top: 15px; padding-bottom: 15px; }
-.registrar-student-list__table tbody tr:not(.registrar-student-list__skeleton-row):hover td { background: #f2faf5; }
-.registrar-student-list__avatar { border-radius: 13px; background: linear-gradient(145deg,#e3f7e9,#cfead8); }
-.registrar-student-list__course-chip { border-color: #c9e6d2; border-radius: 9px; background: #eaf7ef; }
-.registrar-student-list__action { min-height: 35px; border-radius: 9px; }
-.registrar-student-list__action--primary { background: #0d653b; border-color: #0d653b; }
-.registrar-student-list__action--primary:hover { background: #084b2c; border-color: #084b2c; }
-.registrar-student-list__pagination-bar { padding: 17px 24px; background: #f4faf6; }
-.registrar-student-list__page-btn--active { background: #0d653b; border-color: #0d653b; }
-.registrar-student-list__state { min-height: 300px; margin: 18px; border: 1px dashed #bfdcc9; border-radius: 18px; background: linear-gradient(135deg, #fbfefc, #f0f8f3); }
-.registrar-student-list__state-icon { border-radius: 50%; background: #e4f7ea; }
-.registrar-student-list__state--error .registrar-student-list__state-icon { background: #fff1ef; }
-/* Dark skeletons are needed only if the application supplies a dark theme class. */
-:is(.dark, .dark-mode, [data-theme="dark"]) .registrar-student-list__skeleton { background: #314239; }
-:is(.dark, .dark-mode, [data-theme="dark"]) .registrar-student-list__skeleton::after { background: linear-gradient(90deg,transparent,rgba(95,126,109,.26),transparent); }
 
 @media (max-width: 760px) {
-  .registrar-student-list { padding: 18px 14px 32px; background-size: 72px 72px, 72px 72px, 92px 92px, 92px 92px, auto, auto, auto, auto; }
-  .registrar-student-list::before { top: 9px; right: 7px; left: 7px; height: 340px; border-radius: 22px; }
-  .registrar-student-list::after { top: 510px; right: -200px; }
-  .registrar-student-list__hero { min-height: 0; padding: 24px 22px; border-radius: 20px; }
-  .registrar-student-list__hero h1 { font-size: clamp(28px, 6vw, 36px); }
-  .registrar-student-list__stats { margin-left: 0; margin-right: 0; padding: 9px; border-radius: 19px; }
-  .registrar-student-list__stat-card { min-height: 105px; }
-  .registrar-student-list__panel { border-radius: 20px; }
-  .registrar-student-list__panel-heading, .registrar-student-list__toolbar { padding-left: 18px; padding-right: 18px; }
-  .registrar-student-list__filter-summary { margin-left: 18px; margin-right: 18px; }
-}
-@media (max-width: 520px) {
-  .registrar-student-list { padding: 14px 10px 28px; }
-  .registrar-student-list__hero { padding: 22px 18px; }
-  .registrar-student-list__hero-badge { min-width: 0; }
-  .registrar-student-list__stat-card { padding: 16px; }
-  .registrar-student-list__panel-heading, .registrar-student-list__toolbar { padding-left: 14px; padding-right: 14px; }
-  .registrar-student-list__filter-summary { margin-left: 14px; margin-right: 14px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .registrar-student-list__stat-card, .registrar-student-list__action { transition: none; }
-}
-/* =========================================================
-   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
-   Page: Registrar Student List
-   Additive color overrides. Existing layout/design untouched.
-========================================================= */
-
-/* 1. SLATE */
-.registrar-student-list__stats > .registrar-student-list__stat-card:nth-child(1) {
-  --reg-sem-accent: #64748b;
-  --reg-sem-surface: #f2f6f9;
-  --reg-sem-watermark: rgba(100,116,139,.10);
-  --reg-sem-icon-bg: #e8eef4;
-  --reg-sem-icon-border: #cfdae5;
-  --reg-sem-icon-fg: #475569;
-  --reg-sem-dark-bg: #26343c;
-  --reg-sem-dark-border: #4b606c;
-  --reg-sem-dark-watermark: rgba(148,163,184,.08);
-  --reg-sem-dark-icon-bg: #354956;
-  --reg-sem-dark-icon-fg: #d3e0e9;
-}
-
-/* 2. BLUE */
-.registrar-student-list__stats > .registrar-student-list__stat-card:nth-child(2) {
-  --reg-sem-accent: #2867e6;
-  --reg-sem-surface: #eef5ff;
-  --reg-sem-watermark: rgba(40,105,237,.09);
-  --reg-sem-icon-bg: #e6f0ff;
-  --reg-sem-icon-border: #c9dcff;
-  --reg-sem-icon-fg: #1d56ce;
-  --reg-sem-dark-bg: #25394f;
-  --reg-sem-dark-border: #456995;
-  --reg-sem-dark-watermark: rgba(96,165,250,.08);
-  --reg-sem-dark-icon-bg: #2d4e70;
-  --reg-sem-dark-icon-fg: #a4ccff;
-}
-
-/* 3. VIOLET */
-.registrar-student-list__stats > .registrar-student-list__stat-card:nth-child(3) {
-  --reg-sem-accent: #8651df;
-  --reg-sem-surface: #f6f0ff;
-  --reg-sem-watermark: rgba(133,81,223,.09);
-  --reg-sem-icon-bg: #f0e7ff;
-  --reg-sem-icon-border: #dfcdfb;
-  --reg-sem-icon-fg: #6c32c6;
-  --reg-sem-dark-bg: #342a49;
-  --reg-sem-dark-border: #695590;
-  --reg-sem-dark-watermark: rgba(167,139,250,.08);
-  --reg-sem-dark-icon-bg: #46365f;
-  --reg-sem-dark-icon-fg: #d5bcff;
-}
-
-/* 4. AMBER */
-.registrar-student-list__stats > .registrar-student-list__stat-card:nth-child(4) {
-  --reg-sem-accent: #d69b22;
-  --reg-sem-surface: #fff8e8;
-  --reg-sem-watermark: rgba(218,164,27,.10);
-  --reg-sem-icon-bg: #fff0cc;
-  --reg-sem-icon-border: #efd399;
-  --reg-sem-icon-fg: #9c6714;
-  --reg-sem-dark-bg: #423520;
-  --reg-sem-dark-border: #826536;
-  --reg-sem-dark-watermark: rgba(251,191,36,.08);
-  --reg-sem-dark-icon-bg: #554426;
-  --reg-sem-dark-icon-fg: #f8d38d;
-}
-
-/* Card background, status stripe and corner accent. */
-.registrar-student-list__stats > .registrar-student-list__stat-card {
-  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
-  border-color: var(--reg-sem-icon-border);
-}
-.registrar-student-list__stats > .registrar-student-list__stat-card::before {
-  background: var(--reg-sem-accent);
-}
-.registrar-student-list__stats > .registrar-student-list__stat-card::after {
-  background: var(--reg-sem-watermark);
-}
-.registrar-student-list__stats > .registrar-student-list__stat-card .registrar-student-list__stat-icon {
-  color: var(--reg-sem-icon-fg);
-  border-color: var(--reg-sem-icon-border);
-  background: var(--reg-sem-icon-bg);
-  box-shadow: none;
-}
-.registrar-student-list__stats > .registrar-student-list__stat-card .registrar-student-list__stat-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
-
-/* Dark Mode: status colors remain legible on charcoal panels. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-student-list__stats > .registrar-student-list__stat-card {
-  background: var(--reg-sem-dark-bg) !important;
-  border-color: var(--reg-sem-dark-border);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-student-list__stats > .registrar-student-list__stat-card::before {
-  background: var(--reg-sem-accent);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-student-list__stats > .registrar-student-list__stat-card::after {
-  background: var(--reg-sem-dark-watermark);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-student-list__stats > .registrar-student-list__stat-card .registrar-student-list__stat-icon {
-  color: var(--reg-sem-dark-icon-fg);
-  background: var(--reg-sem-dark-icon-bg);
-  border-color: var(--reg-sem-dark-border);
-  box-shadow: none;
+  .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+    .registrar-student-list .registrar-student-list__stats {
+    gap: calc(10px * var(--rsl-density, 1));
+  }
 }

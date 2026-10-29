@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -20,6 +20,10 @@ import {
   LayoutDashboard,
   Library,
   Menu,
+  LockKeyhole,
+  LogOut,
+  Palette,
+  UserRound,
   Megaphone,
   ReceiptText,
   School,
@@ -504,6 +508,88 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
   const mobileOpen =
     mobileMenu.open && mobileMenu.pathname === location.pathname;
 
+  // The account menu is shared by all six roles. Route-based state closes it
+  // automatically after navigation without changing the sidebar navigation.
+  const [accountMenu, setAccountMenu] = useState<{
+    open: boolean;
+    pathname: string;
+    top: number;
+    left: number;
+    width: number;
+  }>({ open: false, pathname: location.pathname, top: 0, left: 0, width: 260 });
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const accountOpen = accountMenu.open && accountMenu.pathname === location.pathname;
+
+  useEffect(() => {
+    if (!accountOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (profileButtonRef.current?.contains(target)) return;
+      if (accountMenuRef.current?.contains(target)) return;
+      setAccountMenu((previous) => ({ ...previous, open: false }));
+    }
+
+    function handleAccountEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      setAccountMenu((previous) => ({ ...previous, open: false }));
+      profileButtonRef.current?.focus();
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleAccountEscape, true);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleAccountEscape, true);
+    };
+  }, [accountOpen]);
+
+  function toggleAccountMenu() {
+    if (accountOpen) {
+      setAccountMenu((previous) => ({ ...previous, open: false }));
+      return;
+    }
+    const rect = profileButtonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(rect.width, 280, window.innerWidth - 24);
+    const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12);
+    setAccountMenu({
+      open: true,
+      pathname: location.pathname,
+      top: rect.top,
+      left,
+      width,
+    });
+  }
+
+  function handleAccountLogout() {
+    authService.logout();
+    setAccountMenu((previous) => ({ ...previous, open: false }));
+    closeMobileMenu();
+    navigate("/login", { replace: true });
+  }
+
+  const profileRoute: string | null =
+    user?.role === "Student" ? "/student/profile" :
+    user?.role === "Faculty" ? "/faculty/profile" :
+    user?.role === "Program Head" ? "/programhead/profile" : null;
+
+  function handleProfileClick() {
+    if (!profileRoute) return;
+    setAccountMenu((previous) => ({ ...previous, open: false }));
+    closeMobileMenu();
+    navigate(profileRoute);
+  }
+
+  function handleAppearanceClick() {
+    setAccountMenu((previous) => ({ ...previous, open: false }));
+    closeMobileMenu();
+    navigate("/settings/appearance");
+  }
+
   useEffect(() => {
     if (!mobileOpen) return;
 
@@ -637,7 +723,17 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
         </div>
 
         <div className="sidebar-footer">
-          <div className="sidebar-user">
+          <button
+            ref={profileButtonRef}
+            type="button"
+            className="sidebar-user"
+            onClick={toggleAccountMenu}
+            aria-label={`Account menu for ${user.username || "PTC User"}, ${user.role}`}
+            aria-haspopup="menu"
+            aria-expanded={accountOpen}
+            aria-controls={accountOpen ? "sidebar-account-menu" : undefined}
+            style={{ width: "100%", cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+          >
             <span className="sidebar-user__avatar">
               {getUserInitial(user.username)}
             </span>
@@ -646,9 +742,85 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
               <small>{user.role}</small>
             </span>
             <span className="sidebar-user__status" title="Signed in" />
-          </div>
+          </button>
         </div>
       </nav>
+
+      {accountOpen && (
+        <div
+          ref={accountMenuRef}
+          id="sidebar-account-menu"
+          role="menu"
+          aria-label="Account settings"
+          style={{
+            position: "fixed",
+            bottom: Math.max(12, window.innerHeight - accountMenu.top + 10),
+            left: accountMenu.left,
+            width: accountMenu.width,
+            zIndex: 1500,
+            padding: 10,
+            boxSizing: "border-box",
+            maxWidth: "calc(100vw - 24px)",
+            border: "1px solid rgba(255,255,255,0.17)",
+            borderRadius: 13,
+            background: "#111a15",
+            color: "#f7faf8",
+            boxShadow: "0 18px 45px rgba(0,0,0,0.28)",
+            fontFamily: "inherit",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "4px 2px 10px" }}>
+            <span style={{ display: "grid", placeItems: "center", width: 36, height: 36, flexShrink: 0, borderRadius: 10, background: "#05633b", fontWeight: 800, fontSize: 15 }}>
+              {getUserInitial(user.username)}
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 750, overflowWrap: "anywhere" }}>{user.username || "PTC User"}</div>
+              <div style={{ color: "#c2d0c8", fontSize: 12 }}>{user.role}</div>
+              <div style={{ color: "#9baea2", fontSize: 11 }}>Account settings</div>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid #34423a", paddingTop: 6 }}>
+            <button role="menuitem" type="button" onClick={handleProfileClick}
+              disabled={!profileRoute} title={!profileRoute ? "Profile page is not available for this role yet" : undefined}
+              style={accountItemStyle(!profileRoute)}>
+              <UserRound size={17} /> My Profile
+            </button>
+            <button role="menuitem" type="button" onClick={handleAppearanceClick}
+              style={accountItemStyle(false)}>
+              <Palette size={17} /> Appearance &amp; Preferences <ChevronRight size={15} style={{ marginLeft: "auto" }} />
+            </button>
+            <button role="menuitem" type="button" disabled title="Change Password will be connected in a later step"
+              style={accountItemStyle(true)}>
+              <LockKeyhole size={17} /> Change Password
+            </button>
+          </div>
+          <div style={{ borderTop: "1px solid #34423a", marginTop: 9, paddingTop: 6 }}>
+            <button role="menuitem" type="button" onClick={handleAccountLogout}
+              style={{ ...accountItemStyle(false), color: "#ff7777" }}>
+              <LogOut size={17} /> Log Out
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
+}
+
+function accountItemStyle(disabled: boolean): CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: 9,
+    width: "100%",
+    padding: "8px 7px",
+    border: 0,
+    borderRadius: 9,
+    background: "transparent",
+    color: disabled ? "#9aa7a0" : "#f7faf8",
+    fontFamily: "inherit",
+    fontSize: 12,
+    fontWeight: 650,
+    textAlign: "left",
+    cursor: disabled ? "not-allowed" : "pointer",
+  };
 }
