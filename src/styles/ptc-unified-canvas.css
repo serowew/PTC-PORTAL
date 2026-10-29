@@ -2,7 +2,7 @@
    PTC PORTAL — UNIFIED PAGE CANVAS  |  2026-10-28
 
    One shared page background for the ALREADY-REDESIGNED Admin, Registrar,
-   Program Head, and newly updated Student Profile screens. Reference: Registrar Dashboard V4 geometric canvas.
+   and Program Head screens. Reference: Registrar Dashboard V4 geometric canvas.
 
    Installation: import this file LAST from src/main.tsx, after admin-theme.css.
    Scope: dashboard content and its immediate page root only.
@@ -82,8 +82,7 @@ html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > :is(
     .admin-announcement-directory,
     .admin-announcement-details-view,
     .admin-create-announcement,
-    .admin-announcement-editor,
-    .student-self-profile
+    .admin-announcement-editor
   )) > .dashboard-content,
 html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-schedule-page > .faculty-schedule-page__read-only-note) > .dashboard-content {
   padding: 0 !important;
@@ -151,7 +150,6 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > :is(
     .admin-announcement-details-view,
     .admin-create-announcement,
     .admin-announcement-editor,
-    .student-self-profile,
     .faculty-schedule-page:has(> .faculty-schedule-page__read-only-note)
   ) {
   background-color: var(--ptc-canvas-color) !important;
@@ -227,8 +225,7 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
     .admin-announcement-directory,
     .admin-announcement-details-view,
     .admin-create-announcement,
-    .admin-announcement-editor,
-    .student-self-profile
+    .admin-announcement-editor
   )) > .dashboard-content,
 :is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
     .dark-mode, .theme-dark, [data-theme="dark"])
@@ -287,7 +284,6 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
     .admin-announcement-details-view,
     .admin-create-announcement,
     .admin-announcement-editor,
-    .student-self-profile,
     .faculty-schedule-page:has(> .faculty-schedule-page__read-only-note)
   ) {
   background-color: #111c16 !important;
@@ -302,6 +298,18 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
   background-size: auto, auto, 96px 96px, 96px 96px, 128px 128px, 128px 128px, auto !important;
   background-position: center, center, 0 0, 48px 48px, 0 0, 64px 64px, center !important;
   background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat !important;
+}
+
+/* Registrar page Dark Mode canvas */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > :is(.registrar-course-management, .registrar-curriculum-details, .registrar-department-management, .registrar-subject-management, .registrar-enrollment-period, .offering-batches-page, .registrar-class-offering, .registrar-teaching-schedule)) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main .dashboard-content > :is(.registrar-course-management, .registrar-curriculum-details, .registrar-department-management, .registrar-subject-management, .registrar-enrollment-period, .offering-batches-page, .registrar-class-offering, .registrar-teaching-schedule) {
+  background-color: #111719 !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-position: initial !important;
+  background-repeat: no-repeat !important;
 }
 
 @media (max-width: 720px) {
@@ -356,8 +364,7 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
     .admin-announcement-directory,
     .admin-announcement-details-view,
     .admin-create-announcement,
-    .admin-announcement-editor,
-    .student-self-profile
+    .admin-announcement-editor
   )) > .dashboard-content,
 html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-schedule-page > .faculty-schedule-page__read-only-note) > .dashboard-content {
     padding: 0 !important;

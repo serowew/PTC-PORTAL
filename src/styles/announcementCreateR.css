@@ -100,7 +100,7 @@
   gap: 8px;
   margin-bottom: 10px;
   color: var(--rac-green-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -130,7 +130,7 @@
   max-width: 720px;
   margin: 9px 0 0;
   color: var(--rac-text-600);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
 
@@ -155,7 +155,7 @@
   border: 1px solid transparent;
   border-radius: 10px;
   outline: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
   line-height: 1;
   cursor: pointer;
@@ -235,12 +235,12 @@
 .registrar-announcement-create__notice strong {
   display: block;
   margin-bottom: 2px;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-create__notice p {
   margin: 0;
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -332,7 +332,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--rac-green-700);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.055em;
   text-transform: uppercase;
@@ -342,7 +342,7 @@
 .registrar-announcement-create__save-panel h2 {
   margin: 0;
   color: var(--rac-text-950);
-  font-size: 17px;
+  font-size: calc(17px * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1.3;
   letter-spacing: -0.012em;
@@ -352,7 +352,7 @@
   max-width: 650px;
   margin: 4px 0 0;
   color: var(--rac-text-500);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -366,7 +366,7 @@
   border-radius: 999px;
   color: var(--rac-green-800);
   background: var(--rac-green-50);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
   white-space: nowrap;
 }
@@ -391,7 +391,7 @@
   align-items: center;
   gap: 5px;
   color: var(--rac-text-700);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 720;
 }
 
@@ -409,7 +409,7 @@
   outline: none;
   color: var(--rac-text-950);
   background: #ffffff;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -452,7 +452,7 @@
 
 .registrar-announcement-create__field small {
   color: var(--rac-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
   text-align: right;
 }
@@ -534,7 +534,7 @@
 
 .registrar-announcement-create__recipient-name {
   overflow: hidden;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -550,7 +550,7 @@
   border-radius: 10px;
   color: var(--rac-green-900);
   background: #f5fbf7;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -612,14 +612,14 @@
 .registrar-announcement-create__upload-copy strong {
   display: block;
   color: var(--rac-text-800);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   font-weight: 730;
 }
 
 .registrar-announcement-create__upload-copy p {
   margin: 3px 0 0;
   color: var(--rac-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
 }
 
@@ -627,7 +627,7 @@
   margin-left: auto;
   max-width: 260px;
   color: var(--rac-text-600);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-create__upload-box input[type="file"]::file-selector-button {
@@ -678,13 +678,13 @@
 
 .registrar-announcement-create__selected-file strong {
   color: var(--rac-text-800);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-create__selected-file div > span {
   margin-top: 2px;
   color: var(--rac-text-500);
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
 }
 
 .registrar-announcement-create__selected-file button {
@@ -726,14 +726,14 @@
 
 .registrar-announcement-create__status-preview strong {
   display: block;
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 730;
 }
 
 .registrar-announcement-create__status-preview p {
   margin: 2px 0 0;
   color: var(--rac-text-600);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
 }
 
@@ -781,14 +781,14 @@
 .registrar-announcement-create__checklist-header strong {
   display: block;
   color: var(--rac-text-800);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   font-weight: 740;
 }
 
 .registrar-announcement-create__checklist-header p {
   margin: 3px 0 0;
   color: var(--rac-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.4;
 }
 
@@ -818,13 +818,13 @@
   border-radius: 50%;
   color: var(--rac-text-500);
   background: #ffffff;
-  font-size: 9px;
+  font-size: calc(9px * var(--ptc-font-scale, 1));
   font-weight: 760;
 }
 
 .registrar-announcement-create__checklist > div p {
   margin: 0;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
 
@@ -863,7 +863,7 @@
 .registrar-announcement-create__save-panel > div:nth-child(2) > p {
   margin: 5px 0 0;
   color: var(--rac-text-500);
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.5;
 }
 
@@ -1018,712 +1018,347 @@
   }
 }
 
-/* =========================================================
-   REGISTRAR — CREATE ANNOUNCEMENT | DASHBOARD VISUAL REFRESH
-   Reference: the supplied green Registrar Dashboard screenshot
-   and the redesigned Announcement List / Details pages.
-
-   This section updates appearance ONLY. The original form,
-   validation, upload control, and submit behavior are untouched.
-   No sidebar/footer restyling. No page-entry animation/overlay.
-========================================================= */
-
-/* Carry the patterned page all the way to the shared content edge. */
-.dashboard-main:has(.registrar-announcement-create) .dashboard-content {
+/* ============================================================
+   REGISTRAR CREATE ANNOUNCEMENT — CHARCOAL DARK MODE
+   No changes to original Light Mode styling or shared footer.
+   Covers shared workspace + every form surface, not just cards.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-create),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-create) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-create) > .dashboard-content > .registrar-announcement-create {
+  background: #111719 !important;
+  background-image: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-create) > .dashboard-content {
   padding: 0;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 7% 10%, rgba(21, 148, 82, .17), transparent 38%),
-    radial-gradient(circle at 92% 8%, rgba(212, 167, 44, .14), transparent 34%),
-    linear-gradient(180deg, #eef7f1 0%, #e8f3ec 48%, #e4f0e8 100%);
 }
-
-/* A hidden existing header must never reserve an empty band. */
-.dashboard-main:has(.registrar-announcement-create)
-  .header-container:has(.app-header.hide) {
-  min-height: 0;
-  height: 0;
-  border: 0;
-}
-.dashboard-main:has(.registrar-announcement-create)
-  .header-container:has(.app-header.show) {
-  height: 58px;
-  min-height: 58px;
-}
-.dashboard-main:has(.registrar-announcement-create) .app-header {
-  background: linear-gradient(90deg, rgba(235,247,239,.98), rgba(242,248,238,.98));
-  border-bottom-color: rgba(13,101,59,.12);
-}
-
-.registrar-announcement-create {
-  --rac-gold: #d4a72c;
-  --rac-blue: #2563eb;
-  --rac-violet: #7c3aed;
-  position: relative;
-  isolation: isolate;
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
-  overflow-x: clip;
-  padding: 28px 28px 44px;
-  background-color: #e6f1e9;
-  background-image:
-    linear-gradient(135deg, rgba(15,122,69,.08) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15,122,69,.055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212,167,44,.045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37,99,235,.035) 25%, transparent 25%),
-    radial-gradient(circle at 12% 10%, rgba(21,148,82,.22), transparent 25%),
-    radial-gradient(circle at 88% 6%, rgba(212,167,44,.18), transparent 23%),
-    radial-gradient(circle at 92% 72%, rgba(37,99,235,.10), transparent 24%),
-    linear-gradient(180deg, #edf6f0 0%, #e5f0e9 48%, #dce9e0 100%);
-  background-size:
-    96px 96px, 96px 96px, 128px 128px, 128px 128px,
-    auto, auto, auto, auto;
-  background-position:
-    0 0, 48px 48px, 0 0, 64px 64px,
-    center, center, center, center;
-  /* Important: no opacity/transform animation on page mount. */
-}
-
-.registrar-announcement-create::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 14px;
-  right: 16px;
-  left: 16px;
-  height: 385px;
-  border: 1px solid rgba(15,122,69,.14);
-  border-radius: 30px;
-  background:
-    linear-gradient(120deg, rgba(255,255,255,.70), rgba(240,248,242,.48)),
-    radial-gradient(circle at 86% 12%, rgba(212,167,44,.12), transparent 28%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95),
-    0 26px 55px rgba(7,59,36,.11);
-  pointer-events: none;
-}
-
-.registrar-announcement-create::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 420px;
-  right: -92px;
-  width: min(470px, 100%);
-  aspect-ratio: 1;
-  border: 2px solid rgba(15,122,69,.13);
-  border-radius: 50%;
-  box-shadow: 0 0 0 48px rgba(15,122,69,.045),
-    0 0 0 96px rgba(212,167,44,.025),
-    0 0 0 144px rgba(15,122,69,.018);
-  pointer-events: none;
-}
-
-/* The large green banner follows Dashboard, List and Details. */
-.registrar-announcement-create__hero {
-  position: relative;
-  z-index: 1;
-  min-height: 188px;
-  padding: 30px 32px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255,255,255,.18) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255,255,255,.08) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%);
-  box-shadow: 0 18px 42px rgba(6,78,47,.24);
-}
-
-.registrar-announcement-create__hero::before {
-  content: "";
-  position: absolute;
-  inset: auto -60px -95px auto;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.registrar-announcement-create__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border: 44px solid rgba(255,255,255,.055);
-}
-.registrar-announcement-create__hero-copy { max-width: 790px; }
-.registrar-announcement-create__eyebrow {
-  color: #dff8e8;
-  font-weight: 800;
-}
-.registrar-announcement-create__eyebrow-icon {
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.14);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
-}
-.registrar-announcement-create__hero h1 {
-  color: #fff;
-  font-size: clamp(30px, 3.4vw, 40px);
-  font-weight: 790;
-  letter-spacing: -.035em;
-}
-.registrar-announcement-create__hero p {
-  max-width: 790px;
-  color: rgba(239,255,245,.86);
-  font-size: 14.5px;
-}
-.registrar-announcement-create__hero .registrar-announcement-create__button {
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: 11px;
-  box-shadow: 0 9px 20px rgba(0,0,0,.12);
-}
-.registrar-announcement-create__hero .registrar-announcement-create__button--secondary {
-  color: #0b5e37;
-  border-color: rgba(255,255,255,.88);
-  background: #fff;
-}
-.registrar-announcement-create__hero .registrar-announcement-create__button--secondary:hover:not(:disabled) {
-  color: #064e2f;
-  border-color: #fff;
-  background: #f0fff5;
-}
-
-/* Consistent open, lightweight workspace between the header/cards. */
-.registrar-announcement-create form {
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-}
-.registrar-announcement-create__form-grid {
-  grid-template-columns: minmax(0, 1.55fr) minmax(315px, .74fr);
-  gap: 17px;
-  padding: 13px;
-  border: 1px solid rgba(255,255,255,.75);
-  border-radius: 25px;
-  background: rgba(255,255,255,.43);
-  box-shadow: 0 15px 38px rgba(7,59,36,.085);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.registrar-announcement-create__main-column,
-.registrar-announcement-create__side-column {
-  gap: 17px;
-  min-width: 0;
-}
-
-/* White content cards with colored top rails identify their purpose. */
-.registrar-announcement-create__panel,
-.registrar-announcement-create__checklist-panel,
-.registrar-announcement-create__save-panel {
-  position: relative;
-  min-width: 0;
-  border: 1px solid #d7e8dc;
-  border-radius: 21px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(7,59,36,.085);
-}
-.registrar-announcement-create__panel {
-  padding: 23px 24px 25px;
-  border-top: 4px solid #119b55;
-}
-.registrar-announcement-create__main-column > .registrar-announcement-create__panel:nth-child(2) {
-  border-top-color: #7c3aed;
-}
-.registrar-announcement-create__main-column > .registrar-announcement-create__panel:nth-child(3) {
-  border-top-color: #2563eb;
-}
-.registrar-announcement-create__side-column > .registrar-announcement-create__panel {
-  border-top-color: #d4a72c;
-}
-.registrar-announcement-create__panel-header {
-  padding-bottom: 19px;
-  margin-bottom: 21px;
-  border-bottom-color: #e3ede6;
-}
-.registrar-announcement-create__panel-icon {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #cbe8d4;
-  border-radius: 13px;
-  color: #0a7342;
-  background: #e9f7ee;
-  box-shadow: 0 7px 15px rgba(7,59,36,.06);
-}
-.registrar-announcement-create__main-column > .registrar-announcement-create__panel:nth-child(2)
-  .registrar-announcement-create__panel-icon {
-  color: #7c3aed;
-  background: #f3edff;
-  border-color: #e4d8ff;
-}
-.registrar-announcement-create__main-column > .registrar-announcement-create__panel:nth-child(3)
-  .registrar-announcement-create__panel-icon {
-  color: #2563eb;
-  background: #edf4ff;
-  border-color: #d3e2ff;
-}
-.registrar-announcement-create__side-column > .registrar-announcement-create__panel
-  .registrar-announcement-create__panel-icon {
-  color: #a97908;
-  background: #fff8e4;
-  border-color: #f1dea8;
-}
-.registrar-announcement-create__section-kicker {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  min-height: 24px;
-  padding: 5px 10px;
-  margin-bottom: 9px;
-  border-radius: 999px;
-  color: #0d653b;
-  background: #eaf7ef;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .045em;
-}
-.registrar-announcement-create__panel-header h2,
-.registrar-announcement-create__save-panel h2 {
-  font-size: clamp(17px, 1.4vw, 20px);
-  font-weight: 790;
-}
-.registrar-announcement-create__panel-header p {
-  margin-top: 5px;
-  color: #6c7970;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.registrar-announcement-create__count-badge {
-  min-height: 32px;
-  padding: 7px 12px;
-  color: #5b22ba;
-  background: #f4efff;
-  border-color: #dfd0ff;
-  font-weight: 760;
-}
-
-/* Inputs stay native and keyboard-accessible. */
-.registrar-announcement-create__fields { gap: 19px; }
-.registrar-announcement-create__field { gap: 9px; }
-.registrar-announcement-create__field > span {
-  color: #3f5548;
-  font-size: 12px;
-  font-weight: 760;
-}
-.registrar-announcement-create__field input,
-.registrar-announcement-create__field textarea,
-.registrar-announcement-create__field select {
-  max-width: 100%;
-  border-color: #cfded4;
-  border-radius: 12px;
-  color: #20382a;
-  background: #fbfdfb;
-  font-size: 13px;
-}
-.registrar-announcement-create__field input,
-.registrar-announcement-create__field select {
-  min-height: 46px;
-  padding: 10px 13px;
-}
-.registrar-announcement-create__field textarea {
-  min-height: 255px;
-  padding: 15px 16px;
-  line-height: 1.78;
-  resize: vertical;
-}
-.registrar-announcement-create__field input::placeholder,
-.registrar-announcement-create__field textarea::placeholder {
-  color: #95a39a;
-}
-.registrar-announcement-create__field input:focus,
-.registrar-announcement-create__field textarea:focus,
-.registrar-announcement-create__field select:focus {
-  outline: none;
-  border-color: #159452;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(21,148,82,.14);
-}
-.registrar-announcement-create__field small {
-  color: #76877b;
-  font-size: 11px;
-}
-
-/* Five target roles: checked state remains driven by React. */
-.registrar-announcement-create__recipient-grid { gap: 11px; }
-.registrar-announcement-create__recipient-card {
-  min-height: 58px;
-  padding: 12px 14px;
-  border-color: #dce9df;
-  border-radius: 13px;
-  background: #f9fcfa;
-  box-shadow: 0 4px 12px rgba(7,59,36,.025);
-}
-.registrar-announcement-create__recipient-card:hover:not(:has(input:disabled)) {
-  border-color: #9bd3b0;
-  background: #f1fbf5;
-  box-shadow: 0 8px 18px rgba(7,59,36,.07);
-}
-.registrar-announcement-create__recipient-card--selected {
-  border-color: #7cc79d;
-  background: linear-gradient(140deg, #e8f8ee 0%, #f4fbf6 100%);
-  box-shadow: inset 0 0 0 1px rgba(15,122,69,.10),
-    0 7px 18px rgba(7,59,36,.05);
-}
-.registrar-announcement-create__recipient-check {
-  width: 25px;
-  height: 25px;
-  border-radius: 8px;
-}
-.registrar-announcement-create__recipient-name {
-  font-size: 12.5px;
-  font-weight: 750;
-}
-.registrar-announcement-create__audience-summary {
-  flex-wrap: wrap;
-  padding: 13px 14px;
-  margin-top: 16px;
-  border-color: #c6e6d1;
-  border-radius: 12px;
-  background: #ecf8f0;
-  font-size: 12px;
-}
-
-/* File picker remains a real, visible <input type="file">. */
-.registrar-announcement-create__upload-box {
-  min-height: 102px;
-  padding: 18px;
-  border: 1.5px dashed #accfbb;
-  border-radius: 16px;
-  background: linear-gradient(120deg, #f8fdf9, #f1f8ff);
-}
-.registrar-announcement-create__upload-icon {
-  width: 48px;
-  height: 48px;
-  color: #2563eb;
-  border: 1px solid #ccddff;
-  border-radius: 14px;
-  background: #eaf2ff;
-}
-.registrar-announcement-create__upload-copy strong { font-size: 13px; }
-.registrar-announcement-create__upload-copy p { font-size: 11px; }
-.registrar-announcement-create__upload-box input[type="file"] {
-  max-width: min(100%, 255px);
-  font-size: 11px;
-}
-.registrar-announcement-create__upload-box input[type="file"]::file-selector-button {
-  padding: 9px 11px;
-  border-color: #ccddff;
-  border-radius: 9px;
-  color: #1e55c2;
-  background: #fff;
-}
-.registrar-announcement-create__upload-box input[type="file"]::file-selector-button:hover {
-  background: #edf4ff;
-}
-.registrar-announcement-create__selected-file {
-  margin-top: 13px;
-  padding: 12px 13px;
-  border-radius: 12px;
-  background: #f8fcf9;
-}
-.registrar-announcement-create__selected-file strong,
-.registrar-announcement-create__selected-file span {
-  overflow-wrap: anywhere;
-}
-
-/* Publish settings use the golden accent; status stays meaningfully green/gray. */
-.registrar-announcement-create__status-preview {
-  padding: 13px 14px;
-  border-radius: 12px;
-}
-.registrar-announcement-create__status-preview--active {
-  border-color: #bfe5cc;
-  background: #effaf3;
-}
-.registrar-announcement-create__status-preview--inactive {
-  border-color: #dfe5e1;
-  background: #f3f5f4;
-}
-
-/* Checklist updates automatically from the form state. */
-.registrar-announcement-create__checklist-panel {
-  padding: 21px 20px;
-  border-top: 4px solid #2563eb;
-}
-.registrar-announcement-create__checklist-header > span {
-  width: 41px;
-  height: 41px;
-  color: #2563eb;
-  border: 1px solid #d2e2ff;
-  border-radius: 13px;
-  background: #eef5ff;
-}
-.registrar-announcement-create__checklist-header strong {
-  font-size: 14px;
-  font-weight: 790;
-}
-.registrar-announcement-create__checklist > div {
-  gap: 11px;
-  min-height: 42px;
-  padding: 9px 11px;
-  border: 1px solid #e7eee9;
-  border-radius: 10px;
-  background: #f9fbf9;
-}
-.registrar-announcement-create__checklist > div.is-complete {
-  border-color: #cbe9d4;
-  background: #eff9f2;
-}
-.registrar-announcement-create__checklist > div p {
-  font-size: 11.5px;
-  font-weight: 670;
-}
-
-/* Clear final action hierarchy: light Cancel, emerald Create. */
-.registrar-announcement-create__save-panel {
-  padding: 22px 20px;
-  border-top: 4px solid #119b55;
-  background:
-    radial-gradient(circle at top right, rgba(21,148,82,.08), transparent 48%),
-    #fff;
-}
-.registrar-announcement-create__save-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(145deg, #12874c, #074e2e);
-}
-.registrar-announcement-create__save-panel > div:nth-child(2) > p {
-  color: #65756a;
-  font-size: 12px;
-}
-.registrar-announcement-create__save-actions {
-  display: grid;
-  grid-template-columns: minmax(90px, .65fr) minmax(0, 1.55fr);
-  gap: 10px;
-  border-top-color: #e2ede5;
-}
-.registrar-announcement-create__button--primary {
-  min-height: 43px;
-  border-color: #0b6b3c;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #107a43, #0a5a34);
-  box-shadow: 0 8px 17px rgba(7,78,47,.18);
-}
-.registrar-announcement-create__button--primary:hover:not(:disabled) {
-  border-color: #064e2f;
-  background: linear-gradient(135deg, #0d713e, #074b2b);
-}
-.registrar-announcement-create__button--secondary {
-  border-radius: 10px;
-}
-.registrar-announcement-create__button:focus-visible,
-.registrar-announcement-create__field input:focus-visible,
-.registrar-announcement-create__field textarea:focus-visible,
-.registrar-announcement-create__field select:focus-visible,
-.registrar-announcement-create__recipient-card:focus-within,
-.registrar-announcement-create__upload-box input[type="file"]:focus-visible {
-  outline: 3px solid rgba(21,148,82,.45);
-  outline-offset: 2px;
-}
-.registrar-announcement-create__notice {
-  position: relative;
-  z-index: 1;
-  padding: 15px;
-  border-radius: 14px;
-  background: #fff2f0;
-  box-shadow: 0 7px 19px rgba(133,33,24,.05);
-}
-
-/* Responsive behaviour follows the existing TSX column order. */
-@media (max-width: 1180px) {
-  .registrar-announcement-create__form-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .registrar-announcement-create__side-column {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .registrar-announcement-create__save-panel { grid-column: 1 / -1; }
-}
-@media (max-width: 820px) {
-  .registrar-announcement-create { padding: 19px 16px 34px; }
-  .registrar-announcement-create__hero {
-    min-height: 0;
-    padding: 25px 23px;
-    border-radius: 21px;
-  }
-  .registrar-announcement-create__form-grid {
-    padding: 10px;
-    border-radius: 20px;
-  }
-  .registrar-announcement-create__side-column { grid-template-columns: 1fr; }
-  .registrar-announcement-create__save-panel { grid-column: auto; }
-}
-@media (max-width: 560px) {
-  .registrar-announcement-create { padding: 16px 12px 30px; }
-  .registrar-announcement-create::before {
-    top: 8px;
-    right: 6px;
-    left: 6px;
-    height: 320px;
-    border-radius: 22px;
-  }
-  .registrar-announcement-create__hero {
-    padding: 23px 19px;
-    border-radius: 19px;
-  }
-  .registrar-announcement-create__hero h1 {
-    font-size: clamp(28px, 7.5vw, 36px);
-  }
-  .registrar-announcement-create__form-grid {
-    padding: 8px;
-    border-radius: 17px;
-  }
-  .registrar-announcement-create__panel,
-  .registrar-announcement-create__checklist-panel,
-  .registrar-announcement-create__save-panel {
-    padding: 18px 16px;
-    border-radius: 16px;
-  }
-  .registrar-announcement-create__recipient-grid { grid-template-columns: 1fr; }
-  .registrar-announcement-create__upload-box { gap: 10px; }
-  .registrar-announcement-create__upload-box input[type="file"] {
-    margin-left: 0;
-    width: 100%;
-    max-width: none;
-  }
-  .registrar-announcement-create__save-actions { grid-template-columns: 1fr; }
-}
-
-/* Optional compatibility with the portal's newer Dark Mode variants.
-   These only apply when a surrounding theme selector exists; they never
-   flash an unthemed white page while navigating. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .dashboard-main:has(.registrar-announcement-create) .dashboard-content {
-  background: #111b17;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create {
-  --rac-text-950: #eaf4ed;
-  --rac-text-800: #d3e7d9;
-  --rac-text-700: #b6cdbd;
-  --rac-text-600: #9db6a5;
-  --rac-text-500: #8da99a;
-  --rac-border: #294a37;
-  --rac-border-strong: #38634a;
-  --rac-surface: #172b20;
-  --rac-bg: #101d16;
-  color: #eaf4ed;
-  background-color: #101d16;
-  background-image:
-    radial-gradient(circle at 15% 0%, rgba(27,118,66,.22), transparent 38%),
-    linear-gradient(135deg, rgba(44,119,73,.10) 25%, transparent 25%),
-    linear-gradient(180deg, #101d16, #13221a);
-  background-size: auto, 96px 96px, auto;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create::before {
-  border-color: rgba(100,176,122,.15);
-  background: linear-gradient(120deg, rgba(30,65,44,.56), rgba(16,31,23,.36));
-  box-shadow: 0 20px 40px rgba(0,0,0,.18);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__form-grid {
-  border-color: #294d37;
-  background: rgba(18,37,26,.83);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__panel,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__checklist-panel,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__save-panel {
-  border-color: #2a4d39;
-  background: #182c20;
-  box-shadow: 0 12px 30px rgba(0,0,0,.15);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__panel-header h2,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__save-panel h2,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__recipient-name {
-  color: #eaf4ed;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__panel-header p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__save-panel > div:nth-child(2) > p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__field > span {
-  color: #b8cfc0;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__panel-header,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__checklist-header,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__save-actions {
-  border-bottom-color: #30543e;
-  border-top-color: #30543e;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__field input,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__field textarea,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__field select {
-  color: #eaf4ed;
-  border-color: #365a44;
-  background: #102117;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create {
+  --rac-green-950: #0d3928;
+  --rac-green-900: #145737;
+  --rac-green-800: #83e5b0;
+  --rac-green-700: #71d59f;
+  --rac-green-600: #39bd81;
+  --rac-green-100: #21392e;
+  --rac-green-50: #1c3127;
+  --rac-text-950: #f0f5f2;
+  --rac-text-800: #e2ebe6;
+  --rac-text-700: #c9d5ce;
+  --rac-text-600: #b3c0b8;
+  --rac-text-500: #a5b2aa;
+  --rac-border: #36464d;
+  --rac-border-strong: #50616a;
+  --rac-surface: #20292e;
+  --rac-bg: #111719;
+  --rac-danger: #ffaaaa;
+  --rac-danger-soft: #38242a;
+  color: #edf4ef;
   color-scheme: dark;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__hero {
+  background: linear-gradient(115deg,#073b28,#0b5736 65%,#11693f) !important;
+  color: #fff;
+  border-color: #2e6748;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__hero :is(h1,p,small,strong),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__eyebrow { color:#f0fff5; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__eyebrow-icon { background:#ffffff20;color:#fff; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
+  .registrar-announcement-create__panel,
+  .registrar-announcement-create__checklist-panel,
+  .registrar-announcement-create__save-panel
+) {
+  background: #1c252a !important;
+  color: #e9f0ec;
+  border-color: #35454c;
+  box-shadow: 0 8px 20px #0003;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__panel-header {
+  background: #1c252a !important;
+  border-bottom-color: #3b4b51;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
+  .registrar-announcement-create__panel-header h2,
+  .registrar-announcement-create__save-panel h2,
+  .registrar-announcement-create__upload-copy strong,
+  .registrar-announcement-create__recipient-name,
+  .registrar-announcement-create__field > span
+) {color:#edf4ef;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
+  .registrar-announcement-create__panel-header p,
+  .registrar-announcement-create__upload-copy p,
+  .registrar-announcement-create__field small,
+  .registrar-announcement-create__audience-summary span
+) {color:#b5c3bb;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
+  .registrar-announcement-create__field input,
+  .registrar-announcement-create__field select,
+  .registrar-announcement-create__field textarea
+) {
+  background:#141d21 !important;
+  color:#eef5f0;
+  border-color:#4c5d65;
+  color-scheme: dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(input,textarea)::placeholder {color:#a8b7af;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(input,select,textarea):focus-visible {outline:2px solid #69d29b;outline-offset:2px;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(input,select,textarea):disabled {
+  background:#222b30 !important;color:#a4b2a9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
   .registrar-announcement-create__recipient-card,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
   .registrar-announcement-create__upload-box,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__checklist > div,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__selected-file {
-  color: #eaf4ed;
-  border-color: #31533f;
-  background: #1d3527;
+  .registrar-announcement-create__selected-file,
+  .registrar-announcement-create__audience-summary,
+  .registrar-announcement-create__status-preview,
+  .registrar-announcement-create__notice,
+  .registrar-announcement-create__checklist,
+  .registrar-announcement-create__count-badge
+) {
+  background:#222c31 !important;
+  color:#e0ebe4;
+  border-color:#46565e;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__recipient-card--selected,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__checklist > div.is-complete,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__audience-summary {
-  color: #c8f3d6;
-  border-color: #346c48;
-  background: #173d27;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-card:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__upload-box:hover {background:#29363b !important;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-card--selected {
+  background:#183b2c !important;
+  border-color:#49a971;
+  color:#a5f0c5;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__status-preview--active {
-  color: #aff0c2;
-  border-color: #346c48;
-  background: #173d27;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-check {background:#162228;border-color:#60736b;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-card--selected .registrar-announcement-create__recipient-check {background:#16824d;border-color:#39bd81;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
+  .registrar-announcement-create__panel-icon,
+  .registrar-announcement-create__save-icon,
+  .registrar-announcement-create__selected-file-icon,
+  .registrar-announcement-create__upload-icon
+) {background:#20392e;color:#8bdfad;border-color:#42644f;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__upload-box input[type="file"]::file-selector-button {
+  background:#28383c;color:#e6f3eb;border-color:#597169;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__status-preview--inactive {
-  color: #b7c5bc;
-  border-color: #355142;
-  background: #23372b;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--secondary {
+  color:#eaf3ed;background:#273238;border-color:#53636b;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-announcement-create__notice {
-  color: #ffd7d2;
-  border-color: #80403b;
-  background: #3d2120;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--primary {
+  color:#fff;background:#137347;border-color:#25965d;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--primary:hover:not(:disabled) {background:#178956;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__status-preview--active {background:#173b2b !important;color:#b0f2ca;border-color:#3b845c;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__status-preview--inactive {background:#2b3338 !important;color:#d0d9d4;border-color:#566068;}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create *,
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create *::before,
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create *::after {animation-duration:0.01ms !important;}
 }
 
-@media (prefers-reduced-motion: reduce) {
+/* ============================================================
+   CREATE ANNOUNCEMENT — APPEARANCE PREFERENCES + DATE PICKER
+   Scoped to main page. Never changes sidebar or footer.
+   ============================================================ */
+.registrar-announcement-create__field > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rac-text-800);
+  font-weight: 720;
+}
+.registrar-announcement-create__date-control {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+.registrar-announcement-create__date-control input[type="date"] {
+  width: 100%;
+  min-width: 0;
+  padding-right: 54px;
+  cursor: pointer;
+}
+.registrar-announcement-create__calendar-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rac-border-strong);
+  border-radius: 8px;
+  color: var(--rac-green-800);
+  background: var(--rac-green-50);
+  cursor: pointer;
+  z-index: 1;
+}
+.registrar-announcement-create__calendar-button:hover:not(:disabled) {
+  border-color: var(--rac-green-600);
+  filter: brightness(.97);
+}
+.registrar-announcement-create__calendar-button:focus-visible {
+  outline: 2px solid var(--rac-green-600);
+  outline-offset: 2px;
+}
+.registrar-announcement-create__calendar-button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+.registrar-announcement-create__calendar-button {
+  background: #24343a;
+  border-color: #4c5d65;
+  color: #a8e8c6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+.registrar-announcement-create__calendar-button:hover:not(:disabled) {
+  background: #2c4045;
+}
+/* The same appearance preference tokens used by the Registrar Dashboard. */
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-create {
+  padding: calc(28px * var(--ptc-compact-scale, .8))
+           calc(30px * var(--ptc-compact-scale, .8))
+           calc(38px * var(--ptc-compact-scale, .8));
+}
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-create :is(
+  .registrar-announcement-create__hero,
   .registrar-announcement-create__panel,
-  .registrar-announcement-create__button,
-  .registrar-announcement-create__recipient-card {
-    transition: none !important;
-  }
+  .registrar-announcement-create__checklist-panel,
+  .registrar-announcement-create__save-panel
+) { margin-bottom: calc(20px * var(--ptc-compact-scale, .8)); }
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-create :is(
+  .registrar-announcement-create__panel-header,
+  .registrar-announcement-create__recipient-card,
+  .registrar-announcement-create__upload-box,
+  .registrar-announcement-create__status-preview,
+  .registrar-announcement-create__checklist-panel,
+  .registrar-announcement-create__save-panel
+) { padding: calc(16px * var(--ptc-compact-scale, .8)); }
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-create :is(
+  .registrar-announcement-create__fields,
+  .registrar-announcement-create__form-grid,
+  .registrar-announcement-create__recipient-grid
+) { gap: calc(14px * var(--ptc-compact-scale, .8)); }
+
+/* ============================================================
+   DARK MODE — PUBLICATION CHECKLIST ROWS
+   The checklist wrapper was dark, but its direct child rows and
+   numbered circles retained their Light Mode white backgrounds.
+   Scoped to Create Announcement only; Light Mode remains intact.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div {
+  background: #222c31 !important;
+  border: 1px solid #3b4b52;
+  color: #c9d5ce;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div > span {
+  background: #172126 !important;
+  border-color: #506168;
+  color: #c7d4cc;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div p {
+  color: inherit;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div.is-complete {
+  background: #18382a !important;
+  border-color: #347754;
+  color: #a8ecc4;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div.is-complete > span {
+  background: #167247 !important;
+  border-color: #329764;
+  color: #ffffff;
+}
+
+/* ==========================================================
+   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
+   Scoped to this page only. Keep existing panels and layout.
+   ========================================================== */
+.dashboard-wrapper .registrar-announcement-create__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(20, 115, 70, 0.38) !important;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+}
+.dashboard-wrapper .registrar-announcement-create__hero::after {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+}
+.dashboard-wrapper .registrar-announcement-create__hero :is(h1, h2, p, small, strong),
+.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__eyebrow {
+  color: #f6fff9 !important;
+}
+.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__eyebrow-icon {
+  color: #effff5 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__button--secondary {
+  background: rgba(13, 34, 26, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__button--secondary:hover:not(:disabled) {
+  background: rgba(21, 67, 46, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================
+   CREATE ANNOUNCEMENT — DARK SURFACE CONSISTENCY
+   Keep the approved green hero in both themes and neutral
+   charcoal surfaces in Dark Mode. Scoped to this page only.
+   ========================================================== */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__recipient-check {
+  background: #192329;
+  border-color: #4d6264;
+  color: #c4d7cc;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__recipient-check svg {
+  color: currentColor;
+  stroke: currentColor;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__recipient-card--selected
+  .registrar-announcement-create__recipient-check {
+  background: #17844f;
+  border-color: #44b679;
+  color: #ffffff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div {
+  background: #222c31 !important;
+  border-color: #43535a;
+  color: #d6e1da;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div > span {
+  background: #172126 !important;
+  border-color: #4e6168;
+  color: #cbd9d1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div.is-complete {
+  background: #19392b !important;
+  border-color: #438765;
+  color: #b7ecca;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__checklist > div.is-complete > span {
+  background: #147748 !important;
+  border-color: #46a46d;
+  color: #ffffff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__calendar-button {
+  background: #24343a;
+  border-color: #4c5d65;
+  color: #a8e8c6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-announcement-create__calendar-button:hover:not(:disabled) {
+  background: #2c4045;
 }

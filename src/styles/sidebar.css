@@ -1198,3 +1198,74 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* =========================================================
+   ACCOUNT MENU — SHARED SIDEBAR PROFILE (STEP 2)
+   Complements the existing inline popup position in Sidebar.tsx.
+   Does not change navigation, sidebar geometry, or footer layout.
+========================================================= */
+
+.sidebar-user:is(:hover, [aria-expanded="true"]) {
+  border-color: rgba(8, 99, 56, 0.34);
+  box-shadow: 0 6px 17px rgba(18, 55, 34, 0.10);
+}
+
+.sidebar-user:focus-visible {
+  outline: 3px solid rgba(23, 122, 69, 0.52);
+  outline-offset: 2px;
+}
+
+#sidebar-account-menu {
+  /* Width and position are measured from the actual profile button in TSX. */
+  max-height: min(440px, calc(100dvh - 24px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #506259 transparent;
+  animation: ptc-account-menu-in 140ms ease-out both;
+}
+
+#sidebar-account-menu button {
+  min-width: 0;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+#sidebar-account-menu button:not(:disabled):hover {
+  background-color: #24382d !important;
+}
+
+#sidebar-account-menu button:focus-visible {
+  outline: 2px solid #93dbab;
+  outline-offset: -2px;
+  background-color: #24382d !important;
+}
+
+#sidebar-account-menu button:disabled {
+  opacity: 0.72;
+}
+
+#sidebar-account-menu button:last-child {
+  line-height: 1.35;
+}
+
+@keyframes ptc-account-menu-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  #sidebar-account-menu {
+    max-width: calc(100vw - 24px) !important;
+    max-height: min(390px, calc(100dvh - 24px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sidebar-account-menu {
+    animation: none;
+  }
+  #sidebar-account-menu button {
+    transition: none;
+  }
+}

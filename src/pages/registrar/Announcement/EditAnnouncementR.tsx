@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   AlertCircle,
@@ -121,6 +121,20 @@ const RECIPIENT_ROLES: Role[] = [
 export default function AnnouncementEditR() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const publishDateRef = useRef<HTMLInputElement>(null);
+  const expiryDateRef = useRef<HTMLInputElement>(null);
+
+  // Open native calendar only from a direct user click (browser security requirement).
+  const openDatePicker = (input: HTMLInputElement | null) => {
+    if (!input || input.disabled) return;
+    input.focus();
+    try {
+      if (typeof input.showPicker === "function") input.showPicker();
+    } catch {
+      // Date input stays focused for keyboard entry on restricted browsers.
+    }
+  };
+
 
   // =====================================================
   // AUTHENTICATION
@@ -885,7 +899,9 @@ export default function AnnouncementEditR() {
                         <span>
                           <CalendarDays size={14} /> Publish Date <em>*</em>
                         </span>
+                        <span className="registrar-announcement-edit__date-control">
                         <input
+                          ref={publishDateRef}
                           id="announcement-edit-publish-date"
                           type="date"
                           value={publishDate}
@@ -895,13 +911,29 @@ export default function AnnouncementEditR() {
                           disabled={saving}
                           required
                         />
+                          <button
+                            type="button"
+                            className="registrar-announcement-edit__calendar-button"
+                            aria-label="Open publish date calendar"
+                            title="Open calendar"
+                            disabled={saving}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              openDatePicker(publishDateRef.current);
+                            }}
+                          >
+                            <CalendarDays size={18} aria-hidden="true" />
+                          </button>
+                        </span>
                       </label>
 
                       <label className="registrar-announcement-edit__field">
                         <span>
                           <CalendarClock size={14} /> Expiry Date
                         </span>
+                        <span className="registrar-announcement-edit__date-control">
                         <input
+                          ref={expiryDateRef}
                           id="announcement-edit-expiry-date"
                           type="date"
                           value={expiryDate}
@@ -911,6 +943,20 @@ export default function AnnouncementEditR() {
                           min={publishDate || undefined}
                           disabled={saving}
                         />
+                          <button
+                            type="button"
+                            className="registrar-announcement-edit__calendar-button"
+                            aria-label="Open expiry date calendar"
+                            title="Open calendar"
+                            disabled={saving}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              openDatePicker(expiryDateRef.current);
+                            }}
+                          >
+                            <CalendarClock size={18} aria-hidden="true" />
+                          </button>
+                        </span>
                         <small>
                           Optional. Leave empty for no configured expiry.
                         </small>

@@ -2,7 +2,6 @@
    REGISTRAR — STUDENT DETAILS
    Scoped styles to avoid affecting other Registrar pages.
 ========================================================= */
-
 .registrar-student-details {
   --rsd-green-950: #073b24;
   --rsd-green-900: #0a4b2d;
@@ -22,7 +21,6 @@
   --rsd-bg: #f5f8f6;
   --rsd-danger: #b42318;
   --rsd-warning: #a15c00;
-
   min-height: 100%;
   padding: 28px 30px 38px;
   background:
@@ -37,22 +35,18 @@
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
 }
-
 .registrar-student-details *,
 .registrar-student-details *::before,
 .registrar-student-details *::after {
   box-sizing: border-box;
 }
-
 .registrar-student-details button,
 .registrar-student-details a {
   font: inherit;
 }
-
 /* =========================================================
    HERO
 ========================================================= */
-
 .registrar-student-details__hero {
   position: relative;
   overflow: hidden;
@@ -72,7 +66,6 @@
   );
   box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
 }
-
 .registrar-student-details__hero::after {
   content: "";
   position: absolute;
@@ -84,26 +77,23 @@
   border-radius: 50%;
   pointer-events: none;
 }
-
 .registrar-student-details__hero-copy {
   position: relative;
   z-index: 1;
   min-width: 0;
   max-width: 760px;
 }
-
 .registrar-student-details__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
   color: var(--rsd-green-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
   text-transform: uppercase;
 }
-
 .registrar-student-details__eyebrow-icon {
   display: inline-flex;
   align-items: center;
@@ -114,24 +104,21 @@
   color: var(--rsd-green-700);
   background: var(--rsd-green-100);
 }
-
 .registrar-student-details__hero h1 {
   margin: 0;
   color: var(--rsd-text-950);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(34px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
 }
-
 .registrar-student-details__hero p {
   max-width: 720px;
   margin: 9px 0 0;
   color: var(--rsd-text-600);
-  font-size: 14px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
-
 .registrar-student-details__hero-actions {
   position: relative;
   z-index: 1;
@@ -140,7 +127,6 @@
   align-items: center;
   gap: 9px;
 }
-
 .registrar-student-details__button {
   min-height: 40px;
   display: inline-flex;
@@ -149,60 +135,51 @@
   gap: 8px;
   padding: 0 14px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 720;
   cursor: pointer;
   transition:
     transform 170ms ease,
     box-shadow 170ms ease,
     border-color 170ms ease,
-    background 170ms ease,
+    background-color 170ms ease,
     color 170ms ease;
 }
-
 .registrar-student-details__button--secondary {
   border: 1px solid var(--rsd-border-strong);
   color: var(--rsd-text-700);
   background: rgba(255, 255, 255, 0.88);
 }
-
 .registrar-student-details__button--secondary:hover {
   border-color: rgba(15, 122, 69, 0.35);
   color: var(--rsd-green-800);
   background: #ffffff;
 }
-
 .registrar-student-details__button--primary {
   border: 1px solid var(--rsd-green-700);
   color: #ffffff;
   background: linear-gradient(145deg, var(--rsd-green-700), var(--rsd-green-900));
   box-shadow: 0 5px 14px rgba(10, 75, 45, 0.16);
 }
-
 .registrar-student-details__button--primary:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(10, 75, 45, 0.2);
 }
-
 .registrar-student-details__button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .registrar-student-details__spin {
   animation: registrar-student-details-spin 0.8s linear infinite;
 }
-
 @keyframes registrar-student-details-spin {
   to {
     transform: rotate(360deg);
   }
 }
-
 /* =========================================================
    PROFILE SUMMARY
 ========================================================= */
-
 .registrar-student-details__profile-card {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(500px, 1fr);
@@ -215,14 +192,12 @@
   background: var(--rsd-surface);
   box-shadow: 0 8px 25px rgba(31, 56, 40, 0.055);
 }
-
 .registrar-student-details__identity {
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 18px;
 }
-
 .registrar-student-details__avatar {
   flex: 0 0 72px;
   width: 72px;
@@ -235,33 +210,29 @@
   color: #ffffff;
   background: linear-gradient(145deg, var(--rsd-green-700), var(--rsd-green-950));
   box-shadow: 0 9px 20px rgba(10, 75, 45, 0.16);
-  font-size: 23px;
+  font-size: calc(23px * var(--ptc-font-scale, 1));
   font-weight: 780;
   letter-spacing: 0.02em;
 }
-
 .registrar-student-details__identity-copy {
   min-width: 0;
 }
-
 .registrar-student-details__identity-heading {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
-
 .registrar-student-details__identity-heading h2 {
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--rsd-text-950);
-  font-size: clamp(20px, 2.1vw, 27px);
+  font-size: clamp(calc(20px * var(--ptc-font-scale, 1)), calc(2.1vw * var(--ptc-font-scale, 1)), calc(27px * var(--ptc-font-scale, 1)));
   font-weight: 770;
   line-height: 1.2;
   letter-spacing: -0.022em;
 }
-
 .registrar-student-details__status {
   flex: 0 0 auto;
   display: inline-flex;
@@ -270,59 +241,51 @@
   padding: 5px 9px;
   border: 1px solid var(--rsd-border);
   border-radius: 999px;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
   line-height: 1;
   white-space: nowrap;
 }
-
 .registrar-student-details__status > span {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
-
 .registrar-student-details__status--active {
   border-color: #b8e7c9;
   color: #11733e;
   background: #edf9f1;
 }
-
 .registrar-student-details__status--graduated {
   border-color: #cbd8e8;
   color: #365d81;
   background: #f3f7fb;
 }
-
 .registrar-student-details__status--warning {
   border-color: #f0d3aa;
   color: #9a5a00;
   background: #fff8e9;
 }
-
 .registrar-student-details__status--danger {
   border-color: #f0c0bc;
   color: var(--rsd-danger);
   background: #fff3f2;
 }
-
 .registrar-student-details__status--neutral {
   border-color: var(--rsd-border);
   color: var(--rsd-text-600);
   background: #f7f9f8;
 }
-
 .registrar-student-details__student-number {
   display: flex;
   align-items: center;
   gap: 5px;
   margin: 7px 0 0;
   color: var(--rsd-text-600);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
-
 .registrar-student-details__identity-tags {
   display: flex;
   align-items: center;
@@ -330,7 +293,6 @@
   flex-wrap: wrap;
   margin-top: 10px;
 }
-
 .registrar-student-details__identity-tags > span {
   display: inline-flex;
   align-items: center;
@@ -340,20 +302,17 @@
   border-radius: 8px;
   color: var(--rsd-text-600);
   background: #f8faf9;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 660;
 }
-
 .registrar-student-details__identity-tags svg {
   color: var(--rsd-green-700);
 }
-
 .registrar-student-details__summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
 }
-
 .registrar-student-details__summary-item {
   min-width: 0;
   display: flex;
@@ -364,7 +323,6 @@
   border-radius: 11px;
   background: #fbfcfb;
 }
-
 .registrar-student-details__summary-icon {
   flex: 0 0 33px;
   width: 33px;
@@ -377,32 +335,27 @@
   color: var(--rsd-green-700);
   background: var(--rsd-green-50);
 }
-
 .registrar-student-details__summary-item > div {
   min-width: 0;
   display: grid;
   gap: 2px;
 }
-
 .registrar-student-details__summary-item span:not(.registrar-student-details__summary-icon) {
   color: var(--rsd-text-500);
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
   font-weight: 650;
 }
-
 .registrar-student-details__summary-item strong {
   overflow: hidden;
   color: var(--rsd-text-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 740;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 /* =========================================================
    RECORD ACTIONS
 ========================================================= */
-
 .registrar-student-details__record-actions {
   margin-bottom: 18px;
   padding: 18px 20px 20px;
@@ -411,7 +364,6 @@
   background: var(--rsd-surface);
   box-shadow: 0 6px 20px rgba(31, 56, 40, 0.045);
 }
-
 .registrar-student-details__section-heading--compact {
   display: flex;
   align-items: flex-end;
@@ -419,19 +371,16 @@
   gap: 20px;
   padding-bottom: 12px;
 }
-
 .registrar-student-details__section-heading--compact > p {
   max-width: 420px;
   margin: 0 0 1px;
   text-align: right;
 }
-
 .registrar-student-details__action-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
-
 .registrar-student-details__action-card {
   min-width: 0;
   display: grid;
@@ -449,16 +398,14 @@
     transform 170ms ease,
     border-color 170ms ease,
     box-shadow 170ms ease,
-    background 170ms ease;
+    background-color 170ms ease;
 }
-
 .registrar-student-details__action-card:hover {
   transform: translateY(-2px);
   border-color: rgba(15, 122, 69, 0.28);
   background: #ffffff;
   box-shadow: 0 8px 20px rgba(31, 56, 40, 0.07);
 }
-
 .registrar-student-details__action-icon {
   width: 40px;
   height: 40px;
@@ -470,49 +417,41 @@
   color: var(--rsd-green-700);
   background: var(--rsd-green-50);
 }
-
 .registrar-student-details__action-copy {
   min-width: 0;
   display: grid;
   gap: 3px;
 }
-
 .registrar-student-details__action-copy strong {
   color: var(--rsd-text-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
 }
-
 .registrar-student-details__action-copy small {
   overflow: hidden;
   color: var(--rsd-text-500);
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
   line-height: 1.35;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 .registrar-student-details__action-arrow {
   color: var(--rsd-green-700);
-  font-size: 17px;
+  font-size: calc(17px * var(--ptc-font-scale, 1));
   font-weight: 700;
   transition: transform 170ms ease;
 }
-
 .registrar-student-details__action-card:hover .registrar-student-details__action-arrow {
   transform: translateX(2px);
 }
-
 /* =========================================================
    INFORMATION LAYOUT
 ========================================================= */
-
 .registrar-student-details__content-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
-
 .registrar-student-details__info-card {
   min-width: 0;
   padding: 20px;
@@ -521,22 +460,18 @@
   background: var(--rsd-surface);
   box-shadow: 0 6px 20px rgba(31, 56, 40, 0.045);
 }
-
 .registrar-student-details__info-card--wide {
   grid-column: 1 / -1;
 }
-
 .registrar-student-details__section-heading {
   padding-bottom: 14px;
   border-bottom: 1px solid #e9efeb;
 }
-
 .registrar-student-details__section-title-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .registrar-student-details__section-icon {
   flex: 0 0 38px;
   width: 38px;
@@ -549,39 +484,34 @@
   color: var(--rsd-green-700);
   background: var(--rsd-green-50);
 }
-
 .registrar-student-details__section-kicker {
   display: block;
   margin-bottom: 2px;
   color: var(--rsd-green-700);
-  font-size: 9px;
+  font-size: calc(9px * var(--ptc-font-scale, 1));
   font-weight: 780;
   letter-spacing: 0.075em;
   text-transform: uppercase;
 }
-
 .registrar-student-details__section-heading h2 {
   margin: 0;
   color: var(--rsd-text-950);
-  font-size: 16px;
+  font-size: calc(16px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: -0.012em;
 }
-
 .registrar-student-details__section-heading > p {
   margin: 7px 0 0;
   color: var(--rsd-text-500);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
   line-height: 1.5;
 }
-
 .registrar-student-details__details-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   margin-top: 4px;
 }
-
 .registrar-student-details__field {
   min-width: 0;
   display: grid;
@@ -591,115 +521,95 @@
   padding: 14px 12px 12px 0;
   border-bottom: 1px solid #edf1ee;
 }
-
 .registrar-student-details__field:nth-child(odd) {
   padding-right: 18px;
 }
-
 .registrar-student-details__field:nth-child(even) {
   padding-left: 18px;
   border-left: 1px solid #edf1ee;
 }
-
 .registrar-student-details__field--full {
   grid-column: 1 / -1;
   padding-left: 0 !important;
   border-left: 0 !important;
 }
-
 .registrar-student-details__field > span {
   color: var(--rsd-text-500);
-  font-size: 9.5px;
+  font-size: calc(9.5px * var(--ptc-font-scale, 1));
   font-weight: 680;
   letter-spacing: 0.025em;
   text-transform: uppercase;
 }
-
 .registrar-student-details__field > strong {
   min-width: 0;
   overflow-wrap: anywhere;
   color: var(--rsd-text-800);
-  font-size: 12px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 700;
   line-height: 1.45;
 }
-
 .registrar-student-details__field--with-icon > strong {
   display: flex;
   align-items: center;
   gap: 7px;
 }
-
 .registrar-student-details__field--with-icon > strong > svg {
   flex: 0 0 auto;
   color: var(--rsd-green-700);
 }
-
 .registrar-student-details__field a {
   min-width: 0;
   overflow-wrap: anywhere;
   color: var(--rsd-green-800);
   text-decoration: none;
 }
-
 .registrar-student-details__field a:hover {
   text-decoration: underline;
 }
-
 .registrar-student-details__inline-status {
   display: inline-flex;
   width: fit-content;
   padding: 5px 8px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
   font-weight: 750;
   line-height: 1;
 }
-
 .registrar-student-details__inline-status--active {
   color: #11733e;
   background: #edf9f1;
 }
-
 .registrar-student-details__inline-status--graduated {
   color: #365d81;
   background: #f3f7fb;
 }
-
 .registrar-student-details__inline-status--warning {
   color: #9a5a00;
   background: #fff8e9;
 }
-
 .registrar-student-details__inline-status--danger {
   color: var(--rsd-danger);
   background: #fff3f2;
 }
-
 .registrar-student-details__inline-status--neutral {
   color: var(--rsd-text-600);
   background: #f1f4f2;
 }
-
 /* =========================================================
    ADDRESS
 ========================================================= */
-
 .registrar-student-details__details-grid--address {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
 .registrar-student-details__details-grid--address .registrar-student-details__field {
   padding-left: 14px;
   padding-right: 14px;
   border-left: 1px solid #edf1ee;
 }
-
 .registrar-student-details__details-grid--address .registrar-student-details__field:nth-child(3n + 1) {
   padding-left: 0;
   border-left: 0;
 }
-
 .registrar-student-details__address-summary {
   grid-column: 1 / -1;
   display: flex;
@@ -711,7 +621,6 @@
   border-radius: 11px;
   background: var(--rsd-green-50);
 }
-
 .registrar-student-details__address-icon {
   flex: 0 0 32px;
   width: 32px;
@@ -723,33 +632,28 @@
   color: #ffffff;
   background: linear-gradient(145deg, var(--rsd-green-700), var(--rsd-green-900));
 }
-
 .registrar-student-details__address-summary > div {
   min-width: 0;
   display: grid;
   gap: 3px;
 }
-
 .registrar-student-details__address-summary > div > span {
   color: var(--rsd-green-800);
-  font-size: 9px;
+  font-size: calc(9px * var(--ptc-font-scale, 1));
   font-weight: 760;
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
-
 .registrar-student-details__address-summary strong {
   overflow-wrap: anywhere;
   color: var(--rsd-text-800);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
   font-weight: 680;
   line-height: 1.5;
 }
-
 /* =========================================================
    LOADING
 ========================================================= */
-
 .registrar-student-details__loading {
   overflow: hidden;
   padding: 22px 24px;
@@ -758,7 +662,6 @@
   background: var(--rsd-surface);
   box-shadow: 0 8px 25px rgba(31, 56, 40, 0.055);
 }
-
 .registrar-student-details__profile-skeleton {
   display: flex;
   align-items: center;
@@ -766,14 +669,12 @@
   padding-bottom: 22px;
   border-bottom: 1px solid var(--rsd-border);
 }
-
 .registrar-student-details__skeleton {
   position: relative;
   overflow: hidden;
   border-radius: 7px;
   background: #e9efeb;
 }
-
 .registrar-student-details__skeleton::after {
   content: "";
   position: absolute;
@@ -787,67 +688,55 @@
   );
   animation: registrar-student-details-shimmer 1.25s infinite;
 }
-
 @keyframes registrar-student-details-shimmer {
   100% {
     transform: translateX(100%);
   }
 }
-
 .registrar-student-details__skeleton--avatar {
   width: 72px;
   height: 72px;
   border-radius: 20px;
 }
-
 .registrar-student-details__skeleton-copy {
   width: min(430px, 70%);
   display: grid;
   gap: 9px;
 }
-
 .registrar-student-details__skeleton--title {
   width: 60%;
   height: 20px;
 }
-
 .registrar-student-details__skeleton--text {
   width: 38%;
   height: 11px;
 }
-
 .registrar-student-details__skeleton--badge {
   width: 74px;
   height: 22px;
   border-radius: 999px;
 }
-
 .registrar-student-details__loading-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px 24px;
   padding-top: 23px;
 }
-
 .registrar-student-details__loading-item {
   display: grid;
   gap: 8px;
 }
-
 .registrar-student-details__skeleton--label {
   width: 42%;
   height: 9px;
 }
-
 .registrar-student-details__skeleton--value {
   width: 72%;
   height: 14px;
 }
-
 /* =========================================================
    ERROR
 ========================================================= */
-
 .registrar-student-details__error {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -859,7 +748,6 @@
   background: #fff7f6;
   box-shadow: 0 5px 18px rgba(87, 33, 28, 0.045);
 }
-
 .registrar-student-details__error-icon {
   width: 40px;
   height: 40px;
@@ -870,26 +758,22 @@
   color: var(--rsd-danger);
   background: #fde8e6;
 }
-
 .registrar-student-details__error-copy {
   min-width: 0;
 }
-
 .registrar-student-details__error-copy strong {
   display: block;
   margin-bottom: 3px;
   color: #83271f;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
   font-weight: 760;
 }
-
 .registrar-student-details__error-copy p {
   margin: 0;
   color: #a3443a;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   line-height: 1.5;
 }
-
 .registrar-student-details__error > button {
   min-height: 36px;
   display: inline-flex;
@@ -901,155 +785,124 @@
   border-radius: 9px;
   color: #922f26;
   background: #ffffff;
-  font-size: 11px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
   font-weight: 720;
   cursor: pointer;
 }
-
 .registrar-student-details__error > button:hover {
   background: #fffafa;
 }
-
 /* =========================================================
    ACCESSIBILITY / FOCUS
 ========================================================= */
-
 .registrar-student-details button:focus-visible,
 .registrar-student-details a:focus-visible {
   outline: 3px solid rgba(21, 148, 82, 0.22);
   outline-offset: 2px;
 }
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
-
 @media (max-width: 1180px) {
   .registrar-student-details__profile-card {
     grid-template-columns: 1fr;
   }
-
   .registrar-student-details__action-grid {
     grid-template-columns: 1fr;
   }
-
   .registrar-student-details__action-copy small {
     white-space: normal;
   }
 }
-
 @media (max-width: 900px) {
   .registrar-student-details {
     padding: 22px 20px 32px;
   }
-
   .registrar-student-details__hero {
     align-items: flex-start;
     flex-direction: column;
   }
-
   .registrar-student-details__hero-actions {
     width: 100%;
   }
-
   .registrar-student-details__content-grid {
     grid-template-columns: 1fr;
   }
-
   .registrar-student-details__info-card--wide {
     grid-column: auto;
   }
-
   .registrar-student-details__details-grid--address {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .registrar-student-details__details-grid--address .registrar-student-details__field {
     padding-left: 16px;
     border-left: 1px solid #edf1ee;
   }
-
   .registrar-student-details__details-grid--address .registrar-student-details__field:nth-child(3n + 1) {
     padding-left: 16px;
     border-left: 1px solid #edf1ee;
   }
-
   .registrar-student-details__details-grid--address .registrar-student-details__field:nth-child(odd) {
     padding-left: 0;
     border-left: 0;
   }
-
   .registrar-student-details__loading-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @media (max-width: 640px) {
   .registrar-student-details {
     padding: 16px 13px 26px;
   }
-
   .registrar-student-details__hero {
     padding: 20px 18px;
     border-radius: 15px;
   }
-
   .registrar-student-details__hero-actions {
     flex-direction: column;
   }
-
   .registrar-student-details__button {
     width: 100%;
   }
-
   .registrar-student-details__profile-card {
     padding: 18px;
     border-radius: 15px;
   }
-
   .registrar-student-details__identity {
     align-items: flex-start;
   }
-
   .registrar-student-details__avatar {
     flex-basis: 58px;
     width: 58px;
     height: 58px;
     border-radius: 16px;
-    font-size: 19px;
+    font-size: calc(19px * var(--ptc-font-scale, 1));
   }
-
   .registrar-student-details__identity-heading {
     align-items: flex-start;
     flex-direction: column;
     gap: 7px;
   }
-
   .registrar-student-details__summary-grid {
     grid-template-columns: 1fr;
   }
-
   .registrar-student-details__record-actions,
   .registrar-student-details__info-card {
     padding: 17px 16px;
     border-radius: 14px;
   }
-
   .registrar-student-details__section-heading--compact {
     align-items: flex-start;
     flex-direction: column;
     gap: 6px;
   }
-
   .registrar-student-details__section-heading--compact > p {
     text-align: left;
   }
-
   .registrar-student-details__details-grid,
   .registrar-student-details__details-grid--address {
     grid-template-columns: 1fr;
   }
-
   .registrar-student-details__field,
   .registrar-student-details__field:nth-child(odd),
   .registrar-student-details__field:nth-child(even),
@@ -1060,21 +913,17 @@
     padding: 12px 0;
     border-left: 0;
   }
-
   .registrar-student-details__error {
     grid-template-columns: auto minmax(0, 1fr);
   }
-
   .registrar-student-details__error > button {
     grid-column: 1 / -1;
     width: 100%;
   }
-
   .registrar-student-details__loading-grid {
     grid-template-columns: 1fr;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .registrar-student-details *,
   .registrar-student-details *::before,
@@ -1085,414 +934,411 @@
     transition-duration: 0.01ms !important;
   }
 }
-
-
-/* ===========================================================================
-   PTC PORTAL | REGISTRAR / STUDENT DETAILS — 2026 DESIGN REFRESH
-   Follows the Registrar dashboard visual language. All selectors are scoped to
-   this page. Data fields and actions remain controlled by StudentDetailsR.tsx.
-   The shared navigation/sidebar/footer are intentionally not restyled.
-   =========================================================================== */
-
-/* Remove the dashboard layout's 20px white strip for this page only. */
-.dashboard-main:has(> .dashboard-content > .registrar-student-details)
-  > .dashboard-content {
-  padding: 0;
-  min-width: 0;
-  overflow-x: clip;
-  background: #e5f0e9;
-}
-
-/* Header is hidden on some pages; don't leave its empty bar above the content. */
-.dashboard-main:has(.registrar-student-details)
-  > .header-container:has(.app-header.hide) {
-  height: 0;
-  min-height: 0;
-  border: 0;
-}
-
+/* =========================================================
+   APPEARANCE PREFERENCES — STUDENT DETAILS ONLY
+   Existing default spacing and Light Mode remain unchanged.
+========================================================= */
 .registrar-student-details {
-  --rsd-green-950: #063c26;
-  --rsd-green-900: #075333;
-  --rsd-green-800: #106c40;
-  --rsd-green-700: #15804a;
-  --rsd-text-950: #19251d;
-  --rsd-text-800: #303d34;
-  --rsd-text-700: #47584c;
-  --rsd-text-600: #617268;
-  --rsd-text-500: #75867b;
-  --rsd-border: #d7e8db;
-  --rsd-border-strong: #c6ddcc;
-  --rsd-surface: #fff;
-  --rsd-bg: #e7f1e9;
-
+  --rsd-density: var(--ptc-compact-scale, 1);
+}
+.registrar-student-details__hero {
+  padding: calc(25px * var(--rsd-density)) calc(28px * var(--rsd-density));
+  margin-bottom: calc(18px * var(--rsd-density));
+}
+.registrar-student-details__profile-card {
+  padding: calc(22px * var(--rsd-density)) calc(24px * var(--rsd-density));
+  gap: calc(28px * var(--rsd-density));
+  margin-bottom: calc(18px * var(--rsd-density));
+}
+.registrar-student-details__record-actions {
+  padding: calc(18px * var(--rsd-density)) calc(20px * var(--rsd-density));
+  margin-bottom: calc(18px * var(--rsd-density));
+}
+.registrar-student-details__info-card { padding: calc(20px * var(--rsd-density)); }
+.registrar-student-details__content-grid { gap: calc(14px * var(--rsd-density)); }
+.registrar-student-details__summary-grid,
+.registrar-student-details__action-grid { gap: calc(10px * var(--rsd-density)); }
+.registrar-student-details__summary-item { padding: calc(11px * var(--rsd-density)) calc(12px * var(--rsd-density)); }
+.registrar-student-details__action-card { padding: calc(12px * var(--rsd-density)) calc(13px * var(--rsd-density)); }
+.registrar-student-details__field {
+  min-height: calc(72px * var(--rsd-density));
+  padding-top: calc(14px * var(--rsd-density));
+  padding-bottom: calc(12px * var(--rsd-density));
+}
+.registrar-student-details__address-summary { padding: calc(13px * var(--rsd-density)) calc(14px * var(--rsd-density)); }
+/* =========================================================
+   DARK MODE — STUDENT DETAILS
+   Scoped to the page; sidebar and footer are not restyled.
+========================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-details),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-details) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details {
+  background: #111719 !important;
+  background-image: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details {
+  --rsd-green-950: #103b29;
+  --rsd-green-900: #155e3e;
+  --rsd-green-800: #8be2b1;
+  --rsd-green-700: #72d5a0;
+  --rsd-green-600: #39bd81;
+  --rsd-green-100: #20382d;
+  --rsd-green-50: #1c3026;
+  --rsd-text-950: #f1f5f3;
+  --rsd-text-800: #e5ece8;
+  --rsd-text-700: #cbd6d0;
+  --rsd-text-600: #b7c5bc;
+  --rsd-text-500: #a8b7ae;
+  --rsd-border: #39464d;
+  --rsd-border-strong: #4a5a62;
+  --rsd-surface: #1e262a;
+  --rsd-bg: #111719;
+  --rsd-danger: #ffa5a5;
+  color-scheme: dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__hero {
+  background: linear-gradient(110deg,#073b28 0%,#0b5033 58%,#10683d 100%);
+  border-color: #316849;
+  box-shadow: 0 10px 24px #0005;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__hero::after { border-color: #ffffff0d; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__hero :is(h1,p,.registrar-student-details__eyebrow) { color: #f5fff8; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__eyebrow-icon { color: #eafff2; background: #ffffff19; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details :is(
+ .registrar-student-details__profile-card,
+ .registrar-student-details__record-actions,
+ .registrar-student-details__info-card,
+ .registrar-student-details__loading
+) { background: #1e262a; border-color: #3d4b52; box-shadow: 0 6px 20px #0003; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details :is(
+ .registrar-student-details__summary-item,
+ .registrar-student-details__action-card,
+ .registrar-student-details__identity-tags > span
+) { background: #222c31; border-color: #43535a; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__action-card:hover { background: #29363b; border-color: #538069; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details :is(
+ .registrar-student-details__summary-icon,
+ .registrar-student-details__action-icon,
+ .registrar-student-details__section-icon
+) { color: #9be9bc; background: #203a2d; border-color: #42624e; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__avatar { border-color: #314d3d; background: linear-gradient(145deg,#168052,#0b4e33); }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details :is(.registrar-student-details__section-heading,.registrar-student-details__field) { border-bottom-color: #3b4950; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details .registrar-student-details__field:nth-child(even),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details .registrar-student-details__details-grid--address .registrar-student-details__field { border-left-color: #3b4950; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary { background: #20372b; border-color: #3d6d52; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-icon { background: #196b47; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__button--secondary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__error > button { color: #edf5ef; background: #253139; border-color: #4e626a; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__button--secondary:hover { background: #304047; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__button--primary { background: #176b45; border-color: #319565; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__status--active,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__inline-status--active { background: #19392b; color: #a0eebc; border-color: #427b58; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__status--graduated,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__inline-status--graduated { background: #233747; color: #a5cffa; border-color: #4b6a83; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__status--warning,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__inline-status--warning { background: #3a3022; color: #ffcf83; border-color: #725d3c; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__status--danger,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__inline-status--danger { background: #3a2529; color: #ffb5b5; border-color: #795056; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__status--neutral,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__inline-status--neutral { background: #2b3539; color: #d4dfd9; border-color: #526067; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__skeleton { background: #303c41; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__skeleton::after { background: linear-gradient(90deg,transparent,#ffffff13,transparent); }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__error { color: #ffceca; background: #322428; border-color: #764a4a; box-shadow: none; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__error-icon { background: #4a3034; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__error-copy :is(strong,p) { color: #ffd1cc; }
+/* LIGHT MODE — RESTORE APPROVED PTC GREEN HERO
+   Scoped to this page; Dark Mode, page panels, sidebar, footer and
+   appearance preference rules are unchanged. */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
+  border-color: rgba(20, 115, 70, .38);
+  box-shadow: 0 10px 26px rgba(5, 61, 38, .15);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__hero::after {
+  border-color: rgba(255, 255, 255, .075);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__hero h1,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__hero p,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__eyebrow {
+  color: #f6fff9;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__eyebrow-icon {
+  color: #effff5;
+  background: rgba(255,255,255,.14);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__hero .registrar-student-details__button--secondary {
+  background: rgba(13, 34, 26, .72);
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__hero .registrar-student-details__button--secondary:hover:not(:disabled) {
+  background: rgba(25, 68, 47, .92);
+  border-color: rgba(255,255,255,.65);
+  color: #fff;
+}
+/* ==========================================================
+   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
+   Scoped to this page only. Keep existing panels and layout.
+   ========================================================== */
+.dashboard-wrapper .registrar-student-details__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(20, 115, 70, 0.38) !important;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+}
+.dashboard-wrapper .registrar-student-details__hero::after {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+}
+.dashboard-wrapper .registrar-student-details__hero :is(h1, h2, p, small, strong),
+.dashboard-wrapper .registrar-student-details__hero .registrar-student-details__eyebrow {
+  color: #f6fff9 !important;
+}
+.dashboard-wrapper .registrar-student-details__hero .registrar-student-details__eyebrow-icon {
+  color: #effff5 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+.dashboard-wrapper .registrar-student-details__hero .registrar-student-details__button--secondary {
+  background: rgba(13, 34, 26, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+.dashboard-wrapper .registrar-student-details__hero .registrar-student-details__button--secondary:hover:not(:disabled) {
+  background: rgba(21, 67, 46, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
+}
+/* ===========================================================
+   STUDENT DETAILS — CONSISTENCY WITH REGISTRAR STUDENT LIST
+   The approved green hero is shared by both themes. Light
+   Mode retains the geometric canvas and translucent frame;
+   Dark Mode keeps solid charcoal panels with no mint bleed.
+   =========================================================== */
+.dashboard-wrapper .registrar-student-details {
   position: relative;
   isolation: isolate;
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
-  padding: 25px 27px 42px;
-  background-color: #e7f1e9;
-  background-image:
-    linear-gradient(135deg, rgba(15, 122, 69, .07) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15, 122, 69, .055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212, 167, 44, .045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37, 99, 235, .035) 25%, transparent 25%),
-    radial-gradient(circle at 10% 8%, rgba(21, 148, 82, .17), transparent 27%),
-    radial-gradient(circle at 90% 6%, rgba(212, 167, 44, .12), transparent 24%),
-    linear-gradient(180deg, #eff7f1 0%, #e5f0e8 54%, #dfebe3 100%);
-  background-size: 96px 96px, 96px 96px, 128px 128px, 128px 128px,
-                   auto, auto, auto;
 }
-
-/* Decoration is behind the actual information rather than over it. */
-.registrar-student-details::before {
+.dashboard-wrapper .registrar-student-details__hero {
+  position: relative;
+  z-index: 1;
+  min-height: 188px;
+  padding: 30px 32px;
+  border: 0 !important;
+  border-radius: 24px;
+  background: linear-gradient(110deg,#073b28 0%,#075234 56%,#0d7d48 100%) !important;
+  box-shadow: 0 14px 32px rgba(5,61,38,.21) !important;
+}
+.dashboard-wrapper .registrar-student-details__hero::after {
+  border-color: rgba(255,255,255,.075) !important;
+}
+.dashboard-wrapper .registrar-student-details__hero :is(h1,p,.registrar-student-details__eyebrow) {
+  color: #f6fff9 !important;
+}
+.dashboard-wrapper .registrar-student-details__hero .registrar-student-details__eyebrow-icon {
+  color: #f6fff9 !important;
+  background: rgba(255,255,255,.14) !important;
+}
+/* Transparent framing behind the hero + profile, never above cards. */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details::before {
   content: "";
   position: absolute;
   z-index: -1;
-  top: 14px;
-  right: 14px;
-  left: 14px;
-  height: 376px;
-  border: 1px solid rgba(7, 83, 51, .12);
+  inset: 14px 16px auto;
+  height: 385px;
+  pointer-events: none;
+  border: 1px solid rgba(15,122,69,.14);
   border-radius: 30px;
-  background: linear-gradient(110deg, rgba(255,255,255,.7), rgba(234,247,239,.53));
-  box-shadow: 0 18px 48px rgba(6, 60, 38, .1);
-  pointer-events: none;
+  background: linear-gradient(120deg,rgba(255,255,255,.70),rgba(240,248,242,.48));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.92),0 26px 55px rgba(7,59,36,.10);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details {
+  background-color: #e6f1e9;
+  background-image:
+    linear-gradient(135deg,rgba(15,122,69,.08) 25%,transparent 25%),
+    linear-gradient(225deg,rgba(15,122,69,.055) 25%,transparent 25%),
+    linear-gradient(45deg,rgba(212,167,44,.045) 25%,transparent 25%),
+    linear-gradient(315deg,rgba(37,99,235,.035) 25%,transparent 25%),
+    linear-gradient(180deg,#edf6f0 0%,#e5f0e9 48%,#dce9e0 100%);
+  background-size:96px 96px,96px 96px,128px 128px,128px 128px,auto;
+  background-position:0 0,48px 48px,0 0,64px 64px,center;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-details),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-details) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details {
+  background: #111719 !important;
+  background-image: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details::before {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .dashboard-wrapper .registrar-student-details__hero {
+    min-height: auto;
+    padding: 22px;
+    border-radius: 16px;
+  }
+  .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details::before {
+    left: 8px;
+    right: 8px;
+  }
 }
 
-.registrar-student-details__hero {
-  min-height: 188px;
-  padding: 30px 32px;
-  margin-bottom: 17px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 83% 18%, rgba(255,255,255,.16) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 94% 56%, rgba(255,255,255,.08) 0 14%, transparent 14.5%),
-    linear-gradient(120deg, #064e30 0%, #0b6d3f 46%, #148346 78%, #259152 100%);
-  box-shadow: 0 17px 38px rgba(6, 65, 39, .24);
+/* =========================================================
+   DARK MODE — OPAQUE WORKSPACE BACKDROP
+   Keeps the approved hero, panels, and Light Mode unchanged.
+   The opaque page layer hides any shared decorative canvas.
+========================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-details),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-student-details) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-student-details {
+  background: #111719 !important;
+  background-image: none !important;
 }
-.registrar-student-details__hero::after {
-  right: -48px;
-  top: -130px;
-  width: 320px;
-  height: 320px;
-  border: 2px solid rgba(255,255,255,.15);
-  box-shadow: 0 0 0 45px rgba(255,255,255,.045),
-              0 0 0 85px rgba(255,255,255,.025);
-}
-.registrar-student-details__eyebrow {
-  color: #f3fff8;
-  font-weight: 800;
-  letter-spacing: .04em;
-}
-.registrar-student-details__eyebrow-icon {
-  color: #effff4;
-  background: rgba(255,255,255,.17);
-  border: 1px solid rgba(255,255,255,.21);
-}
-.registrar-student-details__hero h1 {
-  color: #fff;
-  font-size: clamp(27px, 3.1vw, 37px);
-  letter-spacing: -.035em;
-}
-.registrar-student-details__hero p {color: #e3f5e9; font-size: 13.5px;}
-.registrar-student-details__hero-actions {position: relative; z-index: 1;}
-.registrar-student-details__hero .registrar-student-details__button {
-  min-height: 43px;
-  padding: 10px 15px;
-  border-radius: 11px;
-  box-shadow: 0 5px 12px rgba(2, 42, 25, .10);
-}
-.registrar-student-details__hero .registrar-student-details__button--secondary {
-  border-color: rgba(255,255,255,.55);
-  color: #075333;
-  background: #fff;
-}
-.registrar-student-details__hero .registrar-student-details__button--primary {
-  border-color: #e8ffed;
-  color: #075333;
-  background: #eaffee;
-}
-.registrar-student-details__hero .registrar-student-details__button:hover:not(:disabled) {
-  filter: brightness(.97);
-}
-
-/* Identity and 4 academic facts form an ordered dashboard section. */
-.registrar-student-details__profile-card {
-  display: block;
-  padding: 19px 19px 20px;
-  margin-bottom: 17px;
-  border: 1px solid rgba(255,255,255,.7);
-  border-radius: 23px;
-  background: rgba(255,255,255,.88);
-  box-shadow: 0 13px 34px rgba(7, 66, 37, .10);
-}
-.registrar-student-details__identity {
-  padding: 7px 7px 18px;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #deebe1;
-}
-.registrar-student-details__avatar {
-  border-color: #effff4;
-  border-radius: 19px;
-  background: linear-gradient(145deg, #107d47, #064729);
-  box-shadow: 0 10px 25px rgba(7, 78, 45, .21);
-}
-.registrar-student-details__identity-heading h2 {
-  font-size: clamp(21px, 2.2vw, 28px);
-}
-.registrar-student-details__summary-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 13px;
-}
-.registrar-student-details__summary-item {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-student-details {
   position: relative;
-  min-width: 0;
-  min-height: 109px;
-  padding: 16px 15px;
-  border: 1px solid #d9eee1;
-  border-left: 4px solid #0b9760;
-  border-radius: 17px;
-  background: #effbf4;
-  overflow: hidden;
-  box-shadow: 0 7px 17px rgba(27, 74, 42, .055);
+  isolation: isolate;
+  min-height: 100%;
 }
-.registrar-student-details__summary-item::after {
-  content: "";
-  position: absolute;
-  right: -37px;
-  top: -45px;
-  width: 115px;
-  height: 115px;
-  border-radius: 50%;
-  background: rgba(18,135,77,.065);
+/* Restore a full-coverage dark layer; earlier CSS hid this pseudo-element. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-student-details::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #111719 !important;
+  background-image: none !important;
+  box-shadow: none !important;
   pointer-events: none;
+  z-index: 0 !important;
 }
-.registrar-student-details__summary-item:nth-child(2) {
-  border-color: #f6eac8;
-  border-left-color: #dea40d;
-  background: #fff9e9;
-}
-.registrar-student-details__summary-item:nth-child(2)::after {background: rgba(212, 167, 44, .09);}
-.registrar-student-details__summary-item:nth-child(3) {
-  border-color: #d7e7ff;
-  border-left-color: #2563eb;
-  background: #f1f7ff;
-}
-.registrar-student-details__summary-item:nth-child(3)::after {background: rgba(37, 99, 235, .08);}
-.registrar-student-details__summary-item:nth-child(4) {
-  border-color: #e8dafa;
-  border-left-color: #7c3aed;
-  background: #faf4ff;
-}
-.registrar-student-details__summary-item:nth-child(4)::after {background: rgba(124, 58, 237, .07);}
-.registrar-student-details__summary-icon {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-student-details > * {
   position: relative;
   z-index: 1;
-  flex: 0 0 43px;
-  width: 43px;
-  height: 43px;
-  border: 1px solid #0d915d;
-  border-radius: 12px;
-  color: #fff;
-  background: #087347;
-  box-shadow: 0 8px 16px rgba(10, 97, 55, .15);
 }
-.registrar-student-details__summary-item:nth-child(2) .registrar-student-details__summary-icon {
-  border-color: #f4d783;
-  color: #9f6500;
-  background: #fff4cf;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .registrar-student-details::after {
+  content: none !important;
+  display: none !important;
 }
-.registrar-student-details__summary-item:nth-child(3) .registrar-student-details__summary-icon {
-  border-color: #c9ddff;
-  color: #2563eb;
-  background: #e7f1ff;
-}
-.registrar-student-details__summary-item:nth-child(4) .registrar-student-details__summary-icon {
-  border-color: #e0d0ff;
-  color: #7431de;
-  background: #f0e9ff;
-}
-.registrar-student-details__summary-item > div {position:relative;z-index:1;gap:5px;}
-.registrar-student-details__summary-item span:not(.registrar-student-details__summary-icon) {
-  color: #65766c;
-  font-size: 10px;
-  font-weight: 760;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-}
-.registrar-student-details__summary-item strong {
-  color: #1a2a20;
-  font-size: clamp(15px, 1.5vw, 21px);
-  font-weight: 800;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  line-height: 1.22;
-}
-
-/* Quick links and information sections. */
-.registrar-student-details__record-actions,
-.registrar-student-details__info-card {
-  border: 1px solid #dcece0;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 10px 26px rgba(8, 63, 37, .065);
-}
-.registrar-student-details__record-actions {
-  padding: 23px 25px 24px;
-  margin-bottom: 18px;
-}
-.registrar-student-details__action-grid {gap: 13px;}
-.registrar-student-details__action-card {
-  min-height: 84px;
-  border-color: #dbece0;
-  border-radius: 14px;
-  background: linear-gradient(155deg, #f6fbf7, #fff);
-}
-.registrar-student-details__action-card:hover,
-.registrar-student-details__action-card:focus-visible {
-  border-color: #9acdae;
-  background: #f1fcf5;
-  box-shadow: 0 8px 20px rgba(8, 89, 48, .1);
-}
-.registrar-student-details__action-icon,
-.registrar-student-details__section-icon {
-  border-color: #cde9d5;
-  border-radius: 12px;
-  color: #0b6f41;
-  background: #e6f7ec;
-}
-.registrar-student-details__action-card:nth-child(2) .registrar-student-details__action-icon {
-  border-color: #cfe0fa; color: #235ed0; background: #edf4ff;
-}
-.registrar-student-details__action-card:nth-child(3) .registrar-student-details__action-icon {
-  border-color: #e4d7f6; color: #7839cf; background: #f5edff;
-}
-.registrar-student-details__action-copy strong {font-size: 13px;}
-.registrar-student-details__action-copy small {font-size: 11px;}
-.registrar-student-details__content-grid {gap: 17px;}
-.registrar-student-details__info-card {padding: 24px;}
-.registrar-student-details__section-kicker {color:#087444; font-size: 10px;}
-.registrar-student-details__section-heading h2 {font-size: 19px;}
-.registrar-student-details__field {border-color: #e8efea;}
-.registrar-student-details__field:nth-child(even) {border-left-color:#e8efea;}
-.registrar-student-details__field > span {font-size: 10px;}
-.registrar-student-details__field > strong {font-size: 13px;}
-.registrar-student-details__field--with-icon > strong > svg {color: #0e7f49;}
-.registrar-student-details__address-summary {
-  border-color: #dcece0;
-  border-radius: 14px;
-  background: #f2faf4;
-}
-.registrar-student-details__loading,
-.registrar-student-details__error {
-  border-radius: 18px;
-  border: 1px solid #d5e8db;
-  background-color: #fff;
-}
-
-/* Keep the original animation for the Refresh icon only; no page-entry flash. */
-@media (max-width: 1180px) {
-  .registrar-student-details__summary-grid {grid-template-columns: repeat(2, minmax(0, 1fr));}
-}
-@media (max-width: 680px) {
-  .registrar-student-details {padding: 16px 13px 26px;}
-  .registrar-student-details__hero {padding: 22px 18px; border-radius: 18px;}
-  .registrar-student-details__profile-card {padding: 15px;}
-  .registrar-student-details__summary-grid {grid-template-columns: 1fr;}
-  .registrar-student-details__summary-item {min-height: 82px;}
-  .registrar-student-details__record-actions,
-  .registrar-student-details__info-card {padding: 18px 16px;}
-}
-
-/* Page-scoped dark mode, with charcoal foundations instead of white overlays. */
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .dashboard-main:has(.registrar-student-details) > .dashboard-content {background: #101a14;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details {
-  --rsd-text-950: #f0f7f1;
-  --rsd-text-800: #e0eee3;
-  --rsd-text-700: #c6d8ca;
-  --rsd-text-600: #b9d0be;
-  --rsd-text-500: #aac1af;
-  --rsd-border: #315341;
-  --rsd-border-strong: #41624e;
-  --rsd-surface: #1b2a20;
-  --rsd-bg: #101a14;
-  color: #e9f3eb;
-  background-color: #101a14;
-  background-image:
-    linear-gradient(135deg, rgba(46, 132, 79, .09) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(46, 132, 79, .065) 25%, transparent 25%),
-    linear-gradient(180deg, #17261c, #0f1b13);
-  background-size: 96px 96px, 96px 96px, auto;
-}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details::before {background: rgba(27,46,32,.50);border-color:#345b41;box-shadow:none;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__hero {background:linear-gradient(120deg,#063a25,#095a36 63%,#0b6f43);}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details :is(
   .registrar-student-details__profile-card,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
   .registrar-student-details__record-actions,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
   .registrar-student-details__info-card,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__loading,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__error {background:#1a2b20;border-color:#35543e;color:#e5f4e9;box-shadow:0 8px 22px rgba(0,0,0,.15);}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__identity {border-bottom-color:#35543e;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__summary-item {background:#203b2a;border-color:#376a45;border-left-color:#2dd385;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__summary-item:nth-child(2) {background:#3b3220;border-color:#706039;border-left-color:#efba34;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__summary-item:nth-child(3) {background:#22344a;border-color:#375c82;border-left-color:#6a9df7;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__summary-item:nth-child(4) {background:#352843;border-color:#655077;border-left-color:#b58aff;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__summary-item strong {color:#f2fbf3;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__summary-item span:not(.registrar-student-details__summary-icon) {color:#cad9ce;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-card {background:#223429;border-color:#365442;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-card:hover {background:#2b4933;border-color:#57a06c;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-copy strong {color:#e8f4eb;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-copy small {color:#bbd1c1;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__field,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__section-heading {border-color:#35543e;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__field:nth-child(even) {border-left-color:#35543e;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__identity-tags > span {background:#273d2e;border-color:#40644b;color:#d1e6d6;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__address-summary {background:#21382a;border-color:#3a5845;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__skeleton {background:#324c39;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__skeleton::after {background:linear-gradient(90deg,transparent,rgba(133,179,145,.13),transparent);}
-
-@media (prefers-reduced-motion: reduce) {
+  .registrar-student-details__loading
+) {
+  background: #1e262a !important;
+  border-color: #3d4b52 !important;
+  color: #e8f0eb;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details :is(
+  .registrar-student-details__summary-item,
   .registrar-student-details__action-card,
-  .registrar-student-details__button {transition: none;}
+  .registrar-student-details__identity-tags > span
+) {
+  background: #222c31 !important;
+  border-color: #43535a !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__action-card:hover {
+  background: #29363b !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary {
+  background: #20292e !important;
+  border-color: #3c6f56 !important;
+  border-left: 4px solid #41b879 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary > div > span {
+  color: #8fe5b2 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary strong {
+  color: #edf6f0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-icon {
+  background: #15563a !important;
+  color: #eafaf0 !important;
 }
 
-/* Keep small section labels and icons legible on charcoal surfaces. */
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__section-kicker {color:#91e4b0;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__section-icon,
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-icon {background:#244d32;border-color:#416b4c;color:#a3edbf;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-card:nth-child(2) .registrar-student-details__action-icon {background:#263b52;border-color:#426288;color:#a8c8ff;}
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-student-details__action-card:nth-child(3) .registrar-student-details__action-icon {background:#3e3154;border-color:#695384;color:#d4b6ff;}
+
+/* =========================================================
+   STUDENT DETAILS — FINAL ACCENT REFINEMENTS
+   The academic summary retains its four-color identity.
+   All dark surfaces stay neutral charcoal, never white.
+========================================================= */
+.registrar-student-details__summary-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  padding-left: calc(17px * var(--rsd-density, 1));
+}
+.registrar-student-details__summary-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: #159452;
+}
+.registrar-student-details__summary-item:nth-child(2)::before { background: #d4a72c; }
+.registrar-student-details__summary-item:nth-child(3)::before { background: #2563eb; }
+.registrar-student-details__summary-item:nth-child(4)::before { background: #7c3aed; }
+
+/* Light Mode retains the approved dashboard's softly tinted cards. */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(1) {
+  background: linear-gradient(135deg, #ffffff, #edf9f2);
+  border-color: #cfead9;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(2) {
+  background: linear-gradient(135deg, #ffffff, #fff8e7);
+  border-color: #efdfb6;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(3) {
+  background: linear-gradient(135deg, #ffffff, #edf5ff);
+  border-color: #d5e4fb;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(4) {
+  background: linear-gradient(135deg, #ffffff, #f6efff);
+  border-color: #e7d7fc;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(2) .registrar-student-details__summary-icon {
+  color: #ae7800; background: #fff6df; border-color: #f1d58c;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(3) .registrar-student-details__summary-icon {
+  color: #2563eb; background: #eff5ff; border-color: #cadfff;
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-student-details__summary-item:nth-child(4) .registrar-student-details__summary-icon {
+  color: #7c3aed; background: #f5efff; border-color: #e3d3fb;
+}
+
+/* Dark Mode: colored accents, but no bright or pale surfaces. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__summary-item {
+  background: #222c31 !important;
+  border-color: #43535a !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__summary-item:nth-child(2) .registrar-student-details__summary-icon {
+  color: #efc96b; background: #352f22; border-color: #63543b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__summary-item:nth-child(3) .registrar-student-details__summary-icon {
+  color: #9cbdff; background: #233247; border-color: #465d7d;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__summary-item:nth-child(4) .registrar-student-details__summary-icon {
+  color: #c5a8ff; background: #302840; border-color: #615078;
+}
+
+/* Complete Address: a neat, restrained green stripe, not a thick neon edge. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary {
+  background: #20292e !important;
+  border: 1px solid #3e5250 !important;
+  border-left: 3px solid #2e9364 !important;
+  box-shadow: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary > div > span {
+  color: #98d9b6 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-summary strong {
+  color: #eaf3ed !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-student-details__address-icon {
+  background: #1b4935 !important;
+  color: #b6ebca !important;
+}

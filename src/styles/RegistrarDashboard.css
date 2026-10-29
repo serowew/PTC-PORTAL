@@ -2183,114 +2183,1234 @@
   }
 }
 
+
 /* =========================================================
-   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
-   Page: Registrar Dashboard
-   Additive color overrides. Existing layout/design untouched.
+   ROLE-SCOPED APPEARANCE THEMES
+   This dashboard only. Sidebar typography and Footer untouched.
+   Default PTC Green remains exactly as defined above.
 ========================================================= */
 
-/* 1. SLATE */
-.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(1) {
-  --reg-sem-accent: #64748b;
-  --reg-sem-surface: #f2f6f9;
-  --reg-sem-watermark: rgba(100,116,139,.10);
-  --reg-sem-icon-bg: #e8eef4;
-  --reg-sem-icon-border: #cfdae5;
-  --reg-sem-icon-fg: #475569;
-  --reg-sem-dark-bg: #26343c;
-  --reg-sem-dark-border: #4b606c;
-  --reg-sem-dark-watermark: rgba(148,163,184,.08);
-  --reg-sem-dark-icon-bg: #354956;
-  --reg-sem-dark-icon-fg: #d3e0e9;
+
+
+
+
+
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard {
+  --rd-green-950:#c4f4d7; --rd-green-900:#a7ecc4;
+  --rd-green-800:#80dca9; --rd-green-700:#53c88a;
+  --rd-green-600:#39bd81; --rd-green-500:#3bbd82;
+  --rd-green-200:#2d6145; --rd-green-100:#263d30;
+  --rd-green-50:#20362a;
+  --rd-text-950:#eef5ef; --rd-text-800:#dce9df;
+  --rd-text-700:#c5d7c9; --rd-text-600:#b6c8bb;
+  --rd-text-500:#aabbaf;
+  --rd-border:#37483c; --rd-border-strong:#4d6251;
+  --rd-surface:#222c26; --rd-bg:#171c1a;
+  --rd-canvas:#171c1a; --rd-canvas-deep:#1c2520;
+  --rd-v4-mint:#171c1a;
+  color:var(--rd-text-950);
+  color-scheme:dark;
+  background-color:#171c1a !important;
+  background-image:linear-gradient(135deg,#18221c,#171c1a) !important;
+  background-size:auto !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) .dashboard-content {
+  background:#171c1a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard::before {
+  background:linear-gradient(120deg,#222e26,#1b2620) !important;
+  border-color:#344b3a !important;
+  box-shadow:none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard::after {
+  border-color:#304a36 !important;
+  box-shadow:none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__stat-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__quick-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__announcement-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__period-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__quick-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__announcement-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__user-badge,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__period-focus,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__inline-state,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__queue-item {
+  background:#222c26 !important;
+  border-color:#394b3f !important;
+  color:#eef5ef;
+  box-shadow:none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(h1,h2,h3,strong) {
+  color:var(--rd-text-950);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(p,small) {
+  color:var(--rd-text-600);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__button--secondary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__period-button {
+  background:#2c3d32;
+  border-color:#4a6351;
+  color:#daf7e4;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__button--primary {
+  background:#176b45;
+  border-color:#278858;
+  color:#ffffff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(input,select,textarea) {
+  background:#1c2620;
+  border-color:#4a5c4e;
+  color:#eef5ef;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(input,textarea)::placeholder {
+  color:#aabbaf;
 }
 
-/* 2. AMBER */
-.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(2) {
-  --reg-sem-accent: #d69b22;
-  --reg-sem-surface: #fff8e8;
-  --reg-sem-watermark: rgba(218,164,27,.10);
-  --reg-sem-icon-bg: #fff0cc;
-  --reg-sem-icon-border: #efd399;
-  --reg-sem-icon-fg: #9c6714;
-  --reg-sem-dark-bg: #423520;
-  --reg-sem-dark-border: #826536;
-  --reg-sem-dark-watermark: rgba(251,191,36,.08);
-  --reg-sem-dark-icon-bg: #554426;
-  --reg-sem-dark-icon-fg: #f8d38d;
+
+/* =========================================================
+   APPEARANCE FIX: readable hero / panel surfaces and font size
+   The selectors below are scoped to the Registrar dashboard.
+   Sidebar dimensions and typography, and Footer remain untouched.
+========================================================= */
+
+/* Keep a dark branded hero on both light alternative themes. */
+
+
+
+
+
+
+
+
+/* Dark headers and cards must share the same readable text palette. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__hero,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-details {
+  background:#222c26 !important;
+  border-color:#394b3f !important;
+  color:#eef5ef !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel-header :is(h2,h3,p,span,small),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__hero :is(h1,p,span,small,strong),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-details :is(p,span,small,strong) {
+  color:#e4f0e7 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__section-kicker {
+  background:#293e31 !important;
+  color:#a5efc3 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__text-action {
+  color:#91e5b5 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__stats,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__priority-grid {
+  background:#1e2822 !important;
+  border-color:#394b3f !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-focus {
+  background:#273931 !important;
+  color:#ecf6ef !important;
 }
 
-/* 3. SLATE */
-.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(3) {
-  --reg-sem-accent: #64748b;
-  --reg-sem-surface: #f2f6f9;
-  --reg-sem-watermark: rgba(100,116,139,.10);
-  --reg-sem-icon-bg: #e8eef4;
-  --reg-sem-icon-border: #cfdae5;
-  --reg-sem-icon-fg: #475569;
-  --reg-sem-dark-bg: #26343c;
-  --reg-sem-dark-border: #4b606c;
-  --reg-sem-dark-watermark: rgba(148,163,184,.08);
-  --reg-sem-dark-icon-bg: #354956;
-  --reg-sem-dark-icon-fg: #d3e0e9;
+/* Respond to saved font preferences without resizing the sidebar or footer.
+   Fixed pixel font sizes in the page otherwise ignore inherited font-size. */
+.dashboard-wrapper .registrar-dashboard {
+  font-size:calc(14px * var(--ptc-font-scale,1));
+}
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero h1 {
+  font-size:clamp(calc(25px * var(--ptc-font-scale,1)),3vw,calc(34px * var(--ptc-font-scale,1)));
+}
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero p {
+  font-size:calc(14px * var(--ptc-font-scale,1));
+}
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__panel-header h2 {
+  font-size:calc(18px * var(--ptc-font-scale,1));
+}
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__stat-copy strong {
+  font-size:calc(24px * var(--ptc-font-scale,1));
+}
+.dashboard-wrapper .registrar-dashboard :is(
+  .registrar-dashboard__eyebrow,.registrar-dashboard__section-kicker,
+  .registrar-dashboard__stat-copy,.registrar-dashboard__stat-arrow,
+  .registrar-dashboard__panel-header p,.registrar-dashboard__text-action,
+  .registrar-dashboard__button,.registrar-dashboard__queue-item,
+  .registrar-dashboard__period-card,.registrar-dashboard__period-focus,
+  .registrar-dashboard__quick-card,.registrar-dashboard__announcement-card
+) {
+  font-size:calc(12px * var(--ptc-font-scale,1));
 }
 
-/* 4. GREEN */
-.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(4) {
-  --reg-sem-accent: #119457;
-  --reg-sem-surface: #edf9f2;
-  --reg-sem-watermark: rgba(20,159,91,.09);
-  --reg-sem-icon-bg: #dff5e9;
-  --reg-sem-icon-border: #bfdfce;
-  --reg-sem-icon-fg: #097443;
-  --reg-sem-dark-bg: #213d2b;
-  --reg-sem-dark-border: #3c7953;
-  --reg-sem-dark-watermark: rgba(74,222,128,.07);
-  --reg-sem-dark-icon-bg: #2c5941;
-  --reg-sem-dark-icon-fg: #99e7b7;
+
+/* ==========================================================
+   APPROVED THEME REFERENCE — Registrar Dashboard
+   These corrections are intentionally scoped to dashboard
+   content only. Sidebar typography and Footer are untouched.
+   ========================================================== */
+
+/* Keep the colored hero on every light theme, with legible text. */
+.dashboard-wrapper[data-ptc-sidebar-theme="ptc-green"] .registrar-dashboard__hero {
+  background:linear-gradient(112deg,#06452c 0%,#096238 54%,#168b4c 100%) !important;
+  color:#fff !important;
 }
 
-/* Card background, status stripe and corner accent. */
-.registrar-dashboard__stats > .registrar-dashboard__stat-card {
-  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
-  border-color: var(--reg-sem-icon-border);
-}
-.registrar-dashboard__stats > .registrar-dashboard__stat-card::before {
-  background: var(--reg-sem-accent);
-}
-.registrar-dashboard__stats > .registrar-dashboard__stat-card::after {
-  background: var(--reg-sem-watermark);
-}
-.registrar-dashboard__stats > .registrar-dashboard__stat-card .registrar-dashboard__stat-icon {
-  color: var(--reg-sem-icon-fg);
-  border-color: var(--reg-sem-icon-border);
-  background: var(--reg-sem-icon-bg);
-  box-shadow: none;
-}
-.registrar-dashboard__stats > .registrar-dashboard__stat-card .registrar-dashboard__stat-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
 
-/* Enrollment Access is green ONLY when the period is Open; Closed stays slate. */
-.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(3).registrar-dashboard__stat-card--success {
-  --reg-sem-accent: #119457; --reg-sem-surface: #edf9f2; --reg-sem-watermark: rgba(20,159,91,.09);
-  --reg-sem-icon-bg: #dff5e9; --reg-sem-icon-border: #bfdfce; --reg-sem-icon-fg: #097443;
-  --reg-sem-dark-bg: #213d2b; --reg-sem-dark-border: #3c7953;
-  --reg-sem-dark-watermark: rgba(74,222,128,.07); --reg-sem-dark-icon-bg: #2c5941;
-  --reg-sem-dark-icon-fg: #99e7b7;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero {
+  background:linear-gradient(115deg,#083b27 0%,#0c5432 62%,#08703a 100%) !important;
+  color:#fff !important;
+  border-color:#216d47 !important;
+}
+.dashboard-wrapper .registrar-dashboard__hero :is(h1,.registrar-dashboard__eyebrow,.registrar-dashboard__user-badge strong) {
+  color:#fff !important;
+}
+.dashboard-wrapper .registrar-dashboard__hero p {
+  color:#edf7f1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__user-badge {
+  background:rgba(255,255,255,.11) !important;
+  border-color:rgba(255,255,255,.22) !important;
 }
 
-/* Dark Mode: status colors remain legible on charcoal panels. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card {
-  background: var(--reg-sem-dark-bg) !important;
-  border-color: var(--reg-sem-dark-border);
+/* Light themes retain bright readable cards, not washed-out headings. */
+
+
+
+
+/* Dark mode must not leave pale panel headers or white empty-state blocks. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__panel,.registrar-dashboard__panel-header,
+  .registrar-dashboard__stat-card,.registrar-dashboard__period-card,
+  .registrar-dashboard__period-details,.registrar-dashboard__inline-state,
+  .registrar-dashboard__quick-card,.registrar-dashboard__announcement-card,
+  .registrar-dashboard__queue-item,.registrar-dashboard__queue-list
+) {
+  background:#202a24 !important;
+  border-color:#394b40 !important;
+  color:#eaf4ed !important;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card::before {
-  background: var(--reg-sem-accent);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__inline-state {
+  background:radial-gradient(circle at 50% 20%,#263c2e,#202a24 70%) !important;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card::after {
-  background: var(--reg-sem-dark-watermark);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__panel-header h2,.registrar-dashboard__stat-copy strong,
+  .registrar-dashboard__inline-state strong,.registrar-dashboard__period-focus strong,
+  .registrar-dashboard__queue-student,.registrar-dashboard__quick-copy strong
+) {
+  color:#f4faf5 !important;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card .registrar-dashboard__stat-icon {
-  color: var(--reg-sem-dark-icon-fg);
-  background: var(--reg-sem-dark-icon-bg);
-  border-color: var(--reg-sem-dark-border);
-  box-shadow: none;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__panel-header p,.registrar-dashboard__stat-copy span,
+  .registrar-dashboard__inline-state p,.registrar-dashboard__period-details span,
+  .registrar-dashboard__quick-copy p
+) {
+  color:#c8d8cc !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(.registrar-dashboard__stats,.registrar-dashboard__priority-grid) {
+  background:#1b251f !important;
+  border-color:#394b40 !important;
+}
+
+/* User-adjustable text remains scoped to main content. */
+.dashboard-wrapper .registrar-dashboard__stat-copy > span,
+.dashboard-wrapper .registrar-dashboard__inline-state strong,
+.dashboard-wrapper .registrar-dashboard__quick-copy,
+.dashboard-wrapper .registrar-dashboard__period-focus,
+.dashboard-wrapper .registrar-dashboard__review-button {
+  font-size:calc(12px * var(--ptc-font-scale,1));
+}
+
+
+/* ==========================================================
+   LIGHT / DARK ONLY — OCT 2026
+   Retain the existing PTC-green Light Mode unchanged.
+   Scope every dark override to the Registrar Dashboard.
+   Do NOT style .sidebar or Footer here.
+   ========================================================== */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard {
+  --rd-bg:#171c19;
+  --rd-surface:#222b25;
+  --rd-text-950:#f4f7f4;
+  --rd-text-800:#e2ebe4;
+  --rd-text-700:#c7d7ca;
+  --rd-text-600:#b8c9bc;
+  --rd-text-500:#a6b9ab;
+  --rd-border:#384b3f;
+  --rd-border-strong:#516457;
+  --rd-green-50:#1e3528;
+  --rd-green-100:#254c35;
+  --rd-green-200:#356848;
+  background:#171c19 !important;
+  color:#eef5ef;
+  color-scheme:dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__hero {
+  background:linear-gradient(108deg,#073d29 0%,#0b5734 60%,#137342 100%) !important;
+  border-color:#235d40 !important;
+  color:#fff !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__hero :is(h1,p,small,strong,span,.registrar-dashboard__eyebrow) {
+  color:#f2fbf5 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+ .registrar-dashboard__panel,.registrar-dashboard__panel-header,
+ .registrar-dashboard__stat-card,.registrar-dashboard__period-card,
+ .registrar-dashboard__period-details,.registrar-dashboard__period-focus,
+ .registrar-dashboard__quick-card,.registrar-dashboard__announcement-card,
+ .registrar-dashboard__queue-item,.registrar-dashboard__queue-list,
+ .registrar-dashboard__inline-state,.registrar-dashboard__notice,
+ .registrar-dashboard__period-note,.registrar-dashboard__queue-load
+) {
+  background:#222b25 !important;
+  border-color:#384b3f !important;
+  color:#eef5ef !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+ .registrar-dashboard__stats,.registrar-dashboard__priority-grid,
+ .registrar-dashboard__quick-grid,.registrar-dashboard__announcement-grid
+) {
+  background:#1c251f !important;
+  border-color:#384b3f !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+ .registrar-dashboard__panel-header h2,.registrar-dashboard__hero h1,
+ .registrar-dashboard__stat-copy strong,.registrar-dashboard__inline-state strong,
+ .registrar-dashboard__period-focus strong,.registrar-dashboard__quick-copy strong,
+ .registrar-dashboard__queue-student,.registrar-dashboard__announcement-card strong
+) { color:#f4faf5 !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+ .registrar-dashboard__panel-header p,.registrar-dashboard__stat-copy span,
+ .registrar-dashboard__inline-state p,.registrar-dashboard__period-details span,
+ .registrar-dashboard__quick-copy p,.registrar-dashboard__queue-period,
+ .registrar-dashboard__footer-meta
+) { color:#c1d4c6 !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__section-kicker {
+  color:#b9f1d0 !important; background:#254232 !important; border-color:#365b43 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(.registrar-dashboard__text-action,.registrar-dashboard__review-button) {
+  color:#a4edc1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(input,textarea,select) {
+  background:#1b2520 !important; border-color:#506555 !important; color:#f4faf5 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(input,textarea)::placeholder {
+  color:#b2c1b5 !important;
+}
+/* Typography still uses --ptc-font-scale supplied by DashboardLayout.
+   The sidebar and footer stay excluded by the .registrar-dashboard scope. */
+
+
+/* ================================================================
+   REGISTRAR DASHBOARD — FIVE KPI CARDS + DARK MODE LEGIBILITY
+   Narrowly scoped to this dashboard; sidebar and footer untouched.
+   ================================================================ */
+
+/* Keep Active Announcements and Pending Class Offerings adjacent on
+   desktop; adapt to available width instead of overflowing. */
+@media (min-width: 1421px) {
+  .registrar-dashboard .registrar-dashboard__stats {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .registrar-dashboard .registrar-dashboard__stat-card {
+    padding: 16px 13px;
+    gap: 10px;
+    min-height: 110px;
+  }
+  .registrar-dashboard .registrar-dashboard__stat-icon {
+    width: 43px;
+    height: 43px;
+    flex-shrink: 0;
+  }
+  .registrar-dashboard .registrar-dashboard__stat-copy strong {
+    font-size: calc(23px * var(--ptc-font-scale, 1));
+  }
+  .registrar-dashboard .registrar-dashboard__stat-copy > span {
+    font-size: calc(10px * var(--ptc-font-scale, 1));
+    line-height: 1.35;
+  }
+  .registrar-dashboard .registrar-dashboard__stat-copy small {
+    white-space: normal;
+    line-height: 1.35;
+  }
+}
+@media (min-width: 901px) and (max-width: 1420px) {
+  .registrar-dashboard .registrar-dashboard__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .registrar-dashboard .registrar-dashboard__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .registrar-dashboard .registrar-dashboard__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Do not turn Lucide icons white on their own white/light icon tiles. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__user-badge-icon {
+  color: #0b5e36 !important;
+  background: linear-gradient(145deg, #ffffff, #dff6e8) !important;
+  border: 1px solid #b9ddc7 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__user-badge-icon svg {
+  color: #0b5e36 !important;
+  stroke: #0b5e36 !important;
+  opacity: 1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__eyebrow-icon {
+  color: #effff4 !important;
+  background: rgba(255,255,255,.13) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__eyebrow-icon svg {
+  color: #effff4 !important;
+  stroke: currentColor !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-icon {
+  color: #a2eed0 !important;
+  background: #153c2a !important;
+  border-color: #2a6044 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-card:nth-child(1) .registrar-dashboard__stat-icon {
+  color: #f1fff7 !important;
+  background: #178957 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-card:nth-child(2) .registrar-dashboard__stat-icon {
+  color: #a86d06 !important;
+  background: #fff5dc !important;
+  border-color: #e5c978 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-card:nth-child(3) .registrar-dashboard__stat-icon {
+  color: #1c57cf !important;
+  background: #eaf2ff !important;
+  border-color: #bfd6ff !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-card:nth-child(4) .registrar-dashboard__stat-icon {
+  color: #7c3aed !important;
+  background: #f3eaff !important;
+  border-color: #d9c6fd !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-icon svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  opacity: 1;
+}
+/* Bright text on dark card surfaces, but muted labels remain readable. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-card .registrar-dashboard__stat-copy :is(strong,span,small) {
+  color: #f2faf3 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-card .registrar-dashboard__stat-copy small {
+  color: #c2d6c9 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__stat-arrow {
+  color: #b5d6c0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__user-badge small {
+  color: #d3eee0 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-button {
+  color: #96f2bc !important;
+  background: #173c2a !important;
+  border-color: #376b4d !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-button :is(span,svg) {
+  color: inherit !important;
+  stroke: currentColor;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  :is(.registrar-dashboard__panel-header,.registrar-dashboard__period-details,
+      .registrar-dashboard__period-focus,.registrar-dashboard__inline-state) {
+  color: #e9f4ec !important;
+  border-color: #405448 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  :is(.registrar-dashboard__panel-header,.registrar-dashboard__period-details,
+      .registrar-dashboard__period-focus,.registrar-dashboard__inline-state)
+  :is(h2,h3,p,small,span,strong) {
+  color: #e9f4ec !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__panel-header p {
+  color: #bcd2c2 !important;
+}
+/* Status and alert icon foregrounds must not disappear into badges. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__inline-state > svg {
+  color: #f2fff6 !important;
+  stroke: currentColor !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  :is(.registrar-dashboard__section-kicker,.registrar-dashboard__text-action) svg {
+  stroke: currentColor !important;
+}
+
+/* ================================================================
+   DARK MODE CONTRAST REFINEMENTS — Registrar screenshot follow-up
+   Light Mode is intentionally unaffected. Footer component is untouched.
+   ================================================================ */
+
+/* The account area belongs to the sidebar, not the site footer.
+   Keep its background dark to avoid a bright stripe beneath the menu. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .sidebar .sidebar-footer {
+  background: linear-gradient(180deg, #1b2620 0%, #18221d 100%) !important;
+  border-top-color: #35483c !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .sidebar .sidebar-user {
+  background: linear-gradient(115deg, #263a2f, #203126) !important;
+  color: #edf7ee !important;
+  border-color: #44624e !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .sidebar .sidebar-user__copy :is(strong,small) {
+  color: #edf7ee !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .sidebar .sidebar-user__copy small {
+  color: #c2d9ca !important;
+}
+
+/* The OPEN/CLOSED chip sits within a dark header. Use a solid,
+   high-contrast status surface instead of almost-white lettering. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-status--open {
+  color: #b4ffd2 !important;
+  background: #17482f !important;
+  border-color: #398759 !important;
+  box-shadow: 0 0 0 3px rgba(31, 175, 95, .10) !important;
+  opacity: 1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-status--open > span {
+  background: #57e991 !important;
+  box-shadow: 0 0 0 3px rgba(87, 233, 145, .16) !important;
+  opacity: 1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-status--closed {
+  color: #f6d9ae !important;
+  background: #463525 !important;
+  border-color: #80603a !important;
+  opacity: 1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-status--closed > span {
+  background: #f0bb75 !important;
+}
+
+/* CalendarClock is rendered as a Lucide SVG inside a white tile.
+   Explicitly give the SVG a blue stroke so it cannot inherit white. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-focus-icon {
+  color: #1655c5 !important;
+  background: #eef5ff !important;
+  border-color: #b9d2ff !important;
+  opacity: 1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-focus-icon svg {
+  color: #1655c5 !important;
+  stroke: #1655c5 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Maintain readable secondary details without touching the footer. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-details :is(span,strong),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-focus :is(span,strong,small) {
+  color: #e4f2e8 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard
+  .registrar-dashboard__period-details > div {
+  border-bottom-color: #3b5143 !important;
+}
+
+/* ============================================================
+   DARK MODE FINISHING FIX — OCT 29, 2026
+   Scope: Registrar dashboard only. Do not restyle shared footer,
+   sidebar navigation, or the original light-mode appearance.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) {
+  background-color: #171c1a !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content {
+  background: #171c1a !important;
+  color: #e9eee9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .registrar-dashboard {
+  --rd-canvas: #171c1a;
+  --rd-canvas-deep: #171c1a;
+  --rd-canvas-light: #1c2520;
+  --rd-v4-mint: #171c1a;
+  --rd-v4-mint-deep: #171c1a;
+  --rd-v4-cream: #1b241e;
+  --rd-v4-blue: #1b241e;
+  background: #171c1a !important;
+  background-image: none !important;
+  color: #e9eee9;
+}
+/* Suppress decorative mint/cream background ornaments in dark mode. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .registrar-dashboard::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .registrar-dashboard::after {
+  background: none !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+/* Override legacy white hero button, including focus and loading. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:hover:not(:disabled),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:focus-visible,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:disabled {
+  background: #22382e !important;
+  background-image: none !important;
+  color: #effff4 !important;
+  border: 1px solid #547963 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.16) !important;
+  opacity: 1 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:hover:not(:disabled) {
+  background: #2f503d !important;
+  border-color: #79b58c !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:disabled {
+  opacity: .72 !important;
+  cursor: wait;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary svg {
+  color: #effff4 !important;
+  stroke: currentColor !important;
+  opacity: 1 !important;
+}
+
+
+/* ============================================================
+   FINAL DARK CANVAS OVERRIDE — remove remaining light workspace
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content > .registrar-dashboard {
+  background: #171c1a !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content {
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content > .registrar-dashboard::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content > .registrar-dashboard::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+
+/* ============================================================
+   CHARCOAL DARK MODE — SECOND REFERENCE SCREENSHOT
+   Scoped to Registrar only. Light Mode, sidebar, and footer untouched.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-dashboard) > .dashboard-content > .registrar-dashboard {
+  background: #111619 !important;
+  background-image: none !important;
+  color: #eaf0ed;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard {
+  --rd-bg: #111619;
+  --rd-surface: #1d2529;
+  --rd-border: #344046;
+  --rd-border-strong: #46535a;
+  --rd-text-950: #f4f7f6;
+  --rd-text-800: #e6eeea;
+  --rd-text-700: #cad7d1;
+  --rd-text-600: #aabbb5;
+  --rd-text-500: #99ada5;
+  --rd-green-50: #1a2924;
+  --rd-green-100: #223c30;
+  --rd-green-200: #385e4a;
+  color: #eaf0ed;
+}
+
+/* Retain a rich PTC-green hero; charcoal dominates everywhere else. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero {
+  background: radial-gradient(circle at 82% 3%, rgba(66, 145, 102, .15), transparent 30%),
+              linear-gradient(105deg, #093522 0%, #0b5133 58%, #086138 100%) !important;
+  border-color: #20533b !important;
+  box-shadow: 0 12px 26px rgba(0,0,0,.2) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero :is(h1,p,small,strong,span,.registrar-dashboard__eyebrow) {
+  color: #f4faf6 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__user-badge {
+  background: rgba(14, 40, 29, .50) !important;
+  border-color: rgba(155, 211, 176, .30) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__user-badge-icon {
+  background: #effaf2 !important;
+  color: #0b6640 !important;
+}
+
+/* Dark-gray KPI cards and content panels, with restrained green details. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__stat-card,
+  .registrar-dashboard__panel,
+  .registrar-dashboard__quick-panel,
+  .registrar-dashboard__announcement-panel,
+  .registrar-dashboard__period-card,
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card,
+  .registrar-dashboard__period-focus,
+  .registrar-dashboard__queue-item,
+  .registrar-dashboard__inline-state,
+  .registrar-dashboard__empty-state,
+  .registrar-dashboard__empty-body
+) {
+  background: #1e262a !important;
+  border-color: #374247 !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,.14) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__stats,
+  .registrar-dashboard__priority-grid
+) {
+  background: #171e22 !important;
+  border-color: #343f43 !important;
+  box-shadow: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__panel-header,
+  .registrar-dashboard__period-details
+) {
+  background: #1d2529 !important;
+  border-color: #39444a !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__stat-card::after {
+  opacity: .09 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(h2,h3,strong) {
+  color: #f4f7f6 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(p,small) {
+  color: #b9c9c2 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__text-action {
+  color: #b2f2ce !important;
+}
+
+/* Make the Refresh button and its SVG readable on the green hero. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:hover:not(:disabled),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:focus-visible,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:disabled {
+  background: #eef8f1 !important;
+  background-image: none !important;
+  border: 1px solid #d9eee0 !important;
+  color: #0a5d37 !important;
+  box-shadow: 0 5px 12px rgba(0,0,0,.14) !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary :is(svg,span) {
+  color: #0a5d37 !important;
+  stroke: currentColor;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero .registrar-dashboard__button--secondary:disabled {
+  opacity: .75 !important;
+}
+
+/* Subtle controls rather than large green blocks. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(input,select,textarea) {
+  background: #182126 !important;
+  color: #eaf0ed !important;
+  border-color: #445158 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(input,textarea)::placeholder {
+  color: #a3b0ad !important;
+}
+
+/* ============================================================
+   REGISTRAR DARK MODE — LOWER DASHBOARD SURFACES
+   Fix only the surfaces shown in the user's screenshot.
+   Do not affect Light Mode, layout, or the site Footer component.
+   ============================================================ */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-panel {
+  background: #171e22 !important;
+  background-image: none !important;
+  border-color: #303d42 !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .15) !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel > .registrar-dashboard__panel-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-panel > .registrar-dashboard__panel-header {
+  background: #1b2327 !important;
+  background-image: none !important;
+  border-color: #334046 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-card {
+  background: #20292e !important;
+  background-image: none !important;
+  border-color: #3b494f !important;
+  color: #eaf1ef !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-card:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-card:hover {
+  background: #283238 !important;
+  border-color: #4b6359 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__footer-meta {
+  background: #20292e !important;
+  background-image: none !important;
+  border: 1px solid #39464c !important;
+  color: #bac9c4 !important;
+  box-shadow: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__footer-meta :is(span,svg) {
+  color: inherit !important;
+}
+
+/* The sidebar's decorative lower glow must not tint the dark sidebar green.
+   This affects the Registrar dashboard only; its navigation is untouched. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-dashboard) .sidebar,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-dashboard) .sidebar-content {
+  background: #111719 !important;
+  background-image: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-dashboard) .sidebar::after {
+  opacity: .15 !important;
+}
+
+/* ===============================================================
+   DARK MODE — NEUTRAL LOWER PANELS AND ENROLLMENT STATUS
+   Match the approved charcoal reference. Light Mode is untouched.
+   =============================================================== */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-panel {
+  background: #171e22 !important;
+  background-color: #171e22 !important;
+  background-image: none !important;
+  border-color: #303c42 !important;
+}
+
+/* The grids cover most of each panel's interior, so they must also
+   lose their older mint-green fill. Do not alter the grid layout. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel > .registrar-dashboard__quick-grid,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-panel > .registrar-dashboard__announcement-grid {
+  background: #171e22 !important;
+  background-color: #171e22 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel > .registrar-dashboard__panel-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-panel > .registrar-dashboard__panel-header {
+  background: #1b2327 !important;
+  background-image: none !important;
+  border-bottom-color: #344047 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-card {
+  background: #20292e !important;
+  background-image: none !important;
+  border-color: #3b4b52 !important;
+}
+
+/* Academic period note: charcoal instead of an olive/green panel.
+   Keep the green success indicator to communicate its state. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-note,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-note--open {
+  background: #20292d !important;
+  background-image: none !important;
+  border: 1px solid #3d4b50 !important;
+  box-shadow: none !important;
+  color: #d8e5df !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-note > p {
+  color: #d8e5df !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-note--open > svg {
+  color: #67d49e !important;
+  stroke: currentColor !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-note--closed {
+  background: #292621 !important;
+  border-color: #5b4b36 !important;
+  color: #f0d4a8 !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-note--closed > p {
+  color: #f0d4a8 !important;
+}
+
+/* =============================================================
+   REGISTRAR DARK MODE — NO LIGHT LOADING FLASH
+   Fix the initial skeleton paint for Pending Enrollment Reviews,
+   as well as the Quick Actions panel when navigating to this page.
+   Scoped to Dark Mode; original Light Mode and footer unchanged.
+   ============================================================= */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel--queue,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel {
+  background: #171e22 !important;
+  background-image: none !important;
+  background-color: #171e22 !important;
+  border-color: #344147 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel--queue > .registrar-dashboard__panel-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel > .registrar-dashboard__panel-header {
+  background: #1b2327 !important;
+  background-image: none !important;
+  border-color: #344147 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__queue-list,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__queue-skeleton,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-skeleton,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-skeleton,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__inline-state,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-grid {
+  background: #171e22 !important;
+  background-image: none !important;
+}
+
+/* White-gradient shimmer was the visible flash while requests load. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__queue-skeleton > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__queue-skeleton i,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__period-skeleton i,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__announcement-skeleton i {
+  background-color: #293238 !important;
+  background-image: linear-gradient(90deg, #263037 20%, #344047 48%, #263037 76%) !important;
+  background-size: 220% 100% !important;
+}
+
+/* Prevent inherited entry/fade transitions from blending white into
+   the work-queue and quick-action surfaces on page navigation. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel--queue,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-grid,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel--queue > .registrar-dashboard__panel-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__quick-panel > .registrar-dashboard__panel-header {
+  transition-property: none !important;
+  animation: none !important;
+}
+
+/* ============================================================
+   REGISTRAR DASHBOARD — FONT SIZE + COMPACT MODE
+   Scoped to this page. Existing Light/Dark colors are untouched.
+   Values are supplied by DashboardLayout on .dashboard-content.
+   The sidebar and site footer are outside this selector.
+   ============================================================ */
+.dashboard-wrapper .dashboard-content .registrar-dashboard {
+  --rd-font: var(--ptc-font-scale, 1);
+  --rd-space: var(--ptc-compact-scale, 1);
+}
+
+/* Explicit font sizes are required because this page uses px values;
+   changing the parent's font-size alone cannot scale those labels. */
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__eyebrow,
+  .registrar-dashboard__stat-copy > span,
+  .registrar-dashboard__stat-copy small,
+  .registrar-dashboard__section-kicker,
+  .registrar-dashboard__panel-header p,
+  .registrar-dashboard__period-focus > div > span,
+  .registrar-dashboard__period-focus small,
+  .registrar-dashboard__period-details span,
+  .registrar-dashboard__period-details strong,
+  .registrar-dashboard__period-note p,
+  .registrar-dashboard__announcement-topline,
+  .registrar-dashboard__announcement-status,
+  .registrar-dashboard__announcement-footer span,
+  .registrar-dashboard__queue-student > span,
+  .registrar-dashboard__queue-period small,
+  .registrar-dashboard__queue-units small,
+  .registrar-dashboard__quick-copy small,
+  .registrar-dashboard__footer-meta
+) {
+  font-size: calc(11px * var(--rd-font));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__stat-copy strong
+) {
+  font-size: calc(24px * var(--rd-font));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__quick-copy strong,
+  .registrar-dashboard__queue-student strong,
+  .registrar-dashboard__period-focus strong,
+  .registrar-dashboard__announcement-card > strong,
+  .registrar-dashboard__inline-state strong
+) {
+  font-size: calc(13px * var(--rd-font));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__announcement-text,
+  .registrar-dashboard__inline-state p,
+  .registrar-dashboard__user-badge strong,
+  .registrar-dashboard__user-badge small,
+  .registrar-dashboard__button,
+  .registrar-dashboard__text-action,
+  .registrar-dashboard__review-button,
+  .registrar-dashboard__period-status,
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card
+) {
+  font-size: calc(12px * var(--rd-font));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__panel-header h2 {
+  font-size: calc(20px * var(--rd-font));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero h1 {
+  font-size: clamp(calc(27px * var(--rd-font)), calc(3.1vw * var(--rd-font)), calc(40px * var(--rd-font)));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero p {
+  font-size: calc(14px * var(--rd-font));
+}
+
+/* Compact mode: reduce whitespace, not text size. At Default mode the
+   multiplier is 1 so existing spacing and layout are preserved. */
+.dashboard-wrapper .dashboard-content .registrar-dashboard {
+  padding: calc(28px * var(--rd-space)) calc(30px * var(--rd-space)) calc(38px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+  padding: calc(30px * var(--rd-space)) calc(32px * var(--rd-space));
+  margin-bottom: calc(20px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stats {
+  gap: calc(14px * var(--rd-space));
+  margin-bottom: calc(20px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-card {
+  padding: calc(18px * var(--rd-space));
+  gap: calc(14px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__priority-grid {
+  gap: calc(18px * var(--rd-space));
+  margin-bottom: calc(18px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__panel-header {
+  padding: calc(22px * var(--rd-space)) calc(24px * var(--rd-space)) calc(18px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__quick-panel {
+  margin-bottom: calc(18px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__quick-grid,
+  .registrar-dashboard__announcement-grid
+) {
+  gap: calc(12px * var(--rd-space));
+  padding: calc(18px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card
+) {
+  padding: calc(15px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__period-focus {
+  padding: calc(14px * var(--rd-space));
+  margin: calc(16px * var(--rd-space)) calc(18px * var(--rd-space)) calc(12px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__period-details > div {
+  padding: calc(10px * var(--rd-space)) calc(12px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__queue-item {
+  padding: calc(14px * var(--rd-space)) calc(22px * var(--rd-space));
+}
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__inline-state {
+  padding: calc(38px * var(--rd-space)) calc(24px * var(--rd-space));
+}
+/* Preserve the page's original mobile padding sizes when not compact. */
+@media (max-width: 720px) {
+  .dashboard-wrapper .dashboard-content .registrar-dashboard {
+    padding: calc(20px * var(--rd-space)) calc(18px * var(--rd-space)) calc(34px * var(--rd-space));
+  }
+}
+@media (max-width: 500px) {
+  .dashboard-wrapper .dashboard-content .registrar-dashboard {
+    padding: calc(16px * var(--rd-space)) calc(12px * var(--rd-space)) calc(30px * var(--rd-space));
+  }
+}
+
+
+/* ============================================================
+   REGISTRAR DASHBOARD — PROTECTED FIVE-CARD ACCENTS
+   Preserve approved green hero in both appearance themes.
+   Keep original statistic card design in Light Mode.
+   ============================================================ */
+.registrar-dashboard .registrar-dashboard__stat-card:nth-child(1)::before {
+  background: #159452;
+}
+.registrar-dashboard .registrar-dashboard__stat-card:nth-child(2)::before {
+  background: #d4a72c;
+}
+.registrar-dashboard .registrar-dashboard__stat-card:nth-child(3)::before {
+  background: #2563eb;
+}
+.registrar-dashboard .registrar-dashboard__stat-card:nth-child(4)::before {
+  background: #7c3aed;
+}
+.registrar-dashboard .registrar-dashboard__stat-card:nth-child(5)::before {
+  background: #159452;
+}
+.registrar-dashboard .registrar-dashboard__stat-card::before {
+  content: "";
+  display: block;
+  width: 5px;
+  opacity: 1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-dashboard .registrar-dashboard__stat-card::before {
+  opacity: 1 !important;
+}
+
+
+/* =========================================================
+   FINAL HERO MATCH — align Registrar Dashboard header with
+   the richer Announcement header in both Light and Dark Mode.
+   Keeps the existing layout/functionality and only deepens the
+   hero surface so it no longer looks pale beside Announcement.
+========================================================= */
+
+.dashboard-wrapper .registrar-dashboard__hero {
+  min-height: 188px;
+  padding: 30px 32px;
+  border-radius: 24px;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero::before {
+  content: "";
+  position: absolute;
+  inset: auto -60px -95px auto;
+  width: 270px;
+  height: 270px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero::after {
+  top: -115px;
+  right: 105px;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  border: 44px solid rgba(255,255,255,.055);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-dashboard__hero {
+  border: 0 !important;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255,255,255,.18) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 91% 52%, rgba(255,255,255,.08) 0 13%, transparent 13.5%),
+    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%) !important;
+  box-shadow: 0 18px 42px rgba(6,78,47,.24) !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero {
+  border: 0 !important;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255,255,255,.12) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 91% 52%, rgba(255,255,255,.05) 0 13%, transparent 13.5%),
+    linear-gradient(120deg, #053622 0%, #0a472d 38%, #0f6a3b 70%, #128246 100%) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.34) !important;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__eyebrow {
+  color: #dff8e8 !important;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__eyebrow-icon {
+  color: #ffffff !important;
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.15) !important;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero h1 {
+  color: #ffffff !important;
+  font-size: clamp(30px, 3.4vw, 40px);
+  font-weight: 790;
+  letter-spacing: -.035em;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero p {
+  max-width: 790px;
+  color: rgba(239,255,245,.84) !important;
+  font-size: 14.5px;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge {
+  border-color: rgba(255,255,255,.22) !important;
+  background: rgba(255,255,255,.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge-icon {
+  background: rgba(255,255,255,.92) !important;
+  color: #0f6d3f !important;
+  border-color: rgba(255,255,255,.28) !important;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge small {
+  color: rgba(255,255,255,.72) !important;
+}
+
+.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge strong {
+  color: #ffffff !important;
+}
+
+
+/* FINAL: EXACT ANNOUNCEMENT MANAGEMENT HERO COLOR MATCH.
+   The prior dashboard-specific translucent radial backgrounds made
+   the right side appear washed out. Use the SAME opaque linear gradient
+   and pseudo-element ring transparency as Announcement Management. */
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-dashboard .registrar-dashboard__hero,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__hero {
+  background-color: #073b28 !important;
+  background-image: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(20, 115, 70, 0.38) !important;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15) !important;
+}
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero::before {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero::after {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+  background: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
 }

@@ -240,6 +240,7 @@ export default function CertificateOfGradesR() {
   const [student, setStudent] = useState<Student | null>(null);
   const [records, setRecords] = useState<AcademicRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -287,7 +288,6 @@ export default function CertificateOfGradesR() {
 
     const loadCOGData = async () => {
       try {
-        setLoading(true);
         setError("");
 
         const requestUrl = `${API_BASE_URL}/${studentId}/academic-records`;
@@ -361,7 +361,10 @@ export default function CertificateOfGradesR() {
             : "Unable to load Certificate of Grades.",
         );
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     };
 
@@ -488,7 +491,11 @@ export default function CertificateOfGradesR() {
     setSelectedSemesterId(semesterId);
   };
 
-  const refresh = () => setRefreshKey((current) => current + 1);
+  const refresh = () => {
+    if (loading || refreshing) return;
+    setRefreshing(true);
+    setRefreshKey((current) => current + 1);
+  };
   const printCOG = () => window.print();
 
   if (!authenticated || !user || userRole !== "Registrar") return null;
@@ -524,14 +531,10 @@ export default function CertificateOfGradesR() {
               type="button"
               className="registrar-cog__button registrar-cog__button--primary"
               onClick={refresh}
-              disabled={loading}
+              disabled={loading || refreshing}
             >
-              <RefreshCw
-                size={15}
-                className={loading ? "registrar-cog__spin" : ""}
-                aria-hidden="true"
-              />
-              {loading ? "Refreshing" : "Refresh"}
+              <RefreshCw size={15} aria-hidden="true" />
+              Refresh
             </button>
           </div>
         </section>

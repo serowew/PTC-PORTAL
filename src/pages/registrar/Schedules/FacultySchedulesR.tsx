@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   AlertCircle,
   BookOpenCheck,
@@ -282,6 +283,8 @@ export default function FacultySchedulesR() {
   const userRole = session?.role;
   const authenticated = Boolean(session && token);
   const [offerings, setOfferings] = useState<RegistrarOffering[]>([]);
+  const [selectedClass, setSelectedClass] = useState<RegistrarOffering | null>(null);
+  const [selectedClassDay, setSelectedClassDay] = useState<WeekDay | null>(null);
   const [teachingUsers, setTeachingUsers] = useState<TeachingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -382,6 +385,14 @@ export default function FacultySchedulesR() {
     void loadTeachingSchedules();
     return () => controller.abort();
   }, [authenticated, userRole, navigate, refreshKey]);
+  useEffect(() => {
+    if (!selectedClass) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedClass(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedClass]);
   const teachingUserOptions = useMemo<TeachingUserOption[]>(() => {
     return teachingUsers
       .filter(
@@ -864,8 +875,22 @@ export default function FacultySchedulesR() {
                         ) : (
                           dayClasses.map((item) => (
                             <div
-                              className="registrar-teaching-entry"
+                              className="registrar-teaching-entry registrar-teaching-entry--clickable"
                               key={`${day}-${item.offering_id}`}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View schedule details for ${item.subject.subject_code}: ${item.subject.subject_name}`}
+                              onClick={() => {
+                                setSelectedClass(item);
+                                setSelectedClassDay(day);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  setSelectedClass(item);
+                                  setSelectedClassDay(day);
+                                }
+                              }}
                             >
                               <div className="registrar-teaching-entry__time">
                                 <Clock3 size={14} />
@@ -948,6 +973,50 @@ export default function FacultySchedulesR() {
               </section>
             )}
           </>
+        )}
+        {selectedClass && createPortal(
+          <div
+            className="registrar-teaching-detail-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setSelectedClass(null);
+            }}
+          >
+            <section
+              className="registrar-teaching-detail"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="registrar-teaching-detail-title"
+            >
+              <header className="registrar-teaching-detail__header">
+                <div>
+                  <span className="registrar-teaching-detail__eyebrow">Teaching schedule · Read only</span>
+                  <h2 id="registrar-teaching-detail-title">{selectedClass.subject.subject_name}</h2>
+                  <p>{selectedClass.subject.subject_code} · {selectedClass.section.course.course_code} · {selectedClass.section.section_name}</p>
+                </div>
+              </header>
+              <div className="registrar-teaching-detail__body">
+                <div className="registrar-teaching-detail__grid">
+                  <div><span>Teaching user</span><strong>{selectedClass.teaching_user?.name || selectedTeachingUser?.faculty_name || "Not assigned"}</strong></div>
+                  <div><span>Role</span><strong>{selectedClass.teaching_user?.role_name || "Not specified"}</strong></div>
+                  <div><span>Day</span><strong>{selectedClassDay || selectedClass.schedule_days || "Not scheduled"}</strong></div>
+                  <div><span>Time</span><strong>{selectedClass.schedule_time || "Not scheduled"}</strong></div>
+                  <div><span>Room / building</span><strong>{getRoomLabel(selectedClass.room)}</strong></div>
+                  <div><span>Academic period</span><strong>{selectedClass.academic_period.academic_year} · {selectedClass.academic_period.semester_name}</strong></div>
+                  <div><span>Course / section</span><strong>{selectedClass.section.course.course_name} · {selectedClass.section.section_name}</strong></div>
+                  <div><span>Year level</span><strong>Year {selectedClass.section.year_level}</strong></div>
+                  <div><span>Subject units</span><strong>{selectedClass.subject.units}</strong></div>
+                  <div><span>Lecture / laboratory</span><strong>{selectedClass.subject.lecture_hours} lecture · {selectedClass.subject.laboratory_hours} laboratory</strong></div>
+                  <div><span>Enrollment</span><strong>{selectedClass.enrolled_count} enrolled / {selectedClass.max_students} capacity</strong></div>
+                  <div><span>Offering status</span><strong>{selectedClass.status}</strong></div>
+                </div>
+              </div>
+              <footer className="registrar-teaching-detail__footer">
+                <span>Details are view-only.</span>
+                <button type="button" onClick={() => setSelectedClass(null)}>Close</button>
+              </footer>
+            </section>
+          </div>,
+          document.body
         )}
       </main>
     </DashboardLayout>
