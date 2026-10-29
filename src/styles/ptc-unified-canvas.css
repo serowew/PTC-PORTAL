@@ -2,7 +2,7 @@
    PTC PORTAL — UNIFIED PAGE CANVAS  |  2026-10-28
 
    One shared page background for the ALREADY-REDESIGNED Admin, Registrar,
-   and Program Head screens. Reference: Registrar Dashboard V4 geometric canvas.
+   Program Head, and newly updated Student Profile screens. Reference: Registrar Dashboard V4 geometric canvas.
 
    Installation: import this file LAST from src/main.tsx, after admin-theme.css.
    Scope: dashboard content and its immediate page root only.
@@ -82,7 +82,8 @@ html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > :is(
     .admin-announcement-directory,
     .admin-announcement-details-view,
     .admin-create-announcement,
-    .admin-announcement-editor
+    .admin-announcement-editor,
+    .student-self-profile
   )) > .dashboard-content,
 html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-schedule-page > .faculty-schedule-page__read-only-note) > .dashboard-content {
   padding: 0 !important;
@@ -150,6 +151,7 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > :is(
     .admin-announcement-details-view,
     .admin-create-announcement,
     .admin-announcement-editor,
+    .student-self-profile,
     .faculty-schedule-page:has(> .faculty-schedule-page__read-only-note)
   ) {
   background-color: var(--ptc-canvas-color) !important;
@@ -225,7 +227,8 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
     .admin-announcement-directory,
     .admin-announcement-details-view,
     .admin-create-announcement,
-    .admin-announcement-editor
+    .admin-announcement-editor,
+    .student-self-profile
   )) > .dashboard-content,
 :is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
     .dark-mode, .theme-dark, [data-theme="dark"])
@@ -284,6 +287,7 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
     .admin-announcement-details-view,
     .admin-create-announcement,
     .admin-announcement-editor,
+    .student-self-profile,
     .faculty-schedule-page:has(> .faculty-schedule-page__read-only-note)
   ) {
   background-color: #111c16 !important;
@@ -352,7 +356,8 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
     .admin-announcement-directory,
     .admin-announcement-details-view,
     .admin-create-announcement,
-    .admin-announcement-editor
+    .admin-announcement-editor,
+    .student-self-profile
   )) > .dashboard-content,
 html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-schedule-page > .faculty-schedule-page__read-only-note) > .dashboard-content {
     padding: 0 !important;

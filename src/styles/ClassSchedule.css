@@ -2505,3 +2505,114 @@ html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty
     border-radius: 17px;
   }
 }
+/* Faculty Teaching Schedule — STATUS-MEANING COLOR PATCH
+ * Add ONCE to the END of src/styles/ClassSchedule.css.
+ * Do not replace the existing stylesheet.
+ * Card order/labels verified against the actual Faculty TSX.
+ * No layout, shared canvas, sidebar, or component changes.
+ */
+
+/* 1. Scheduled Classes — Green (active / completed) */
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(1) {
+  background: #edf9f2;
+  border-color: #cde9d9;
+  border-left: 4px solid #10a05e;
+}
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(1) .faculty-schedule-page__summary-icon {
+  background: #ddf5e8;
+  color: #087e47;
+  border: 1px solid #b9e4ca;
+  box-shadow: none;
+}
+
+/* 2. Teaching Days — Blue (information / records) */
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(2) {
+  background: #f0f6ff;
+  border-color: #d4e4ff;
+  border-left: 4px solid #2c69e7;
+}
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(2) .faculty-schedule-page__summary-icon {
+  background: #e6f0ff;
+  color: #245ad2;
+  border: 1px solid #c6dbff;
+  box-shadow: none;
+}
+
+/* 3. Official Memberships — Blue (information / records) */
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(3) {
+  background: #f0f6ff;
+  border-color: #d4e4ff;
+  border-left: 4px solid #2c69e7;
+}
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(3) .faculty-schedule-page__summary-icon {
+  background: #e6f0ff;
+  color: #245ad2;
+  border: 1px solid #c6dbff;
+  box-shadow: none;
+}
+
+/* 4. Unscheduled — Warm amber (pending / needs action) */
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(4) {
+  background: #fff8e9;
+  border-color: #f1dcb2;
+  border-left: 4px solid #d79b23;
+}
+.faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(4) .faculty-schedule-page__summary-icon {
+  background: #fff0cf;
+  color: #a56a12;
+  border: 1px solid #edcf93;
+  box-shadow: none;
+}
+
+/* Dark Mode — preserve semantic meaning and readable icon contrast. */
+/* 1. Scheduled Classes */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(1) {
+  background: #1f392b;
+  border-color: #365c46;
+  border-left: 4px solid #41b97e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(1) .faculty-schedule-page__summary-icon {
+  background: #285640;
+  color: #aff2c7;
+  border: 1px solid #467d5a;
+  box-shadow: none;
+}
+
+/* 2. Teaching Days */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(2) {
+  background: #23354a;
+  border-color: #3e5674;
+  border-left: 4px solid #6798e9;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(2) .faculty-schedule-page__summary-icon {
+  background: #304969;
+  color: #c1d9ff;
+  border: 1px solid #526d90;
+  box-shadow: none;
+}
+
+/* 3. Official Memberships */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(3) {
+  background: #23354a;
+  border-color: #3e5674;
+  border-left: 4px solid #6798e9;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(3) .faculty-schedule-page__summary-icon {
+  background: #304969;
+  color: #c1d9ff;
+  border: 1px solid #526d90;
+  box-shadow: none;
+}
+
+/* 4. Unscheduled */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(4) {
+  background: #403322;
+  border-color: #6c5636;
+  border-left: 4px solid #e3ab44;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-schedule-page:not(:has(> .faculty-schedule-page__read-only-note)) .faculty-schedule-page__summary > article:nth-child(4) .faculty-schedule-page__summary-icon {
+  background: #554328;
+  color: #ffe0a3;
+  border: 1px solid #806540;
+  box-shadow: none;
+}

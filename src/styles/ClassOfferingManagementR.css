@@ -2405,3 +2405,105 @@
   color: #c6f4d5;
   background: #224331;
 }
+/* =========================================================
+   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
+   Page: Registrar Special / Retake Offerings (shared stylesheet)
+   Additive color overrides. Existing layout/design untouched.
+========================================================= */
+
+/* 1. BLUE */
+.registrar-class-offering__overview > .registrar-class-offering__overview-card:nth-child(1) {
+  --reg-sem-accent: #2867e6;
+  --reg-sem-surface: #eef5ff;
+  --reg-sem-watermark: rgba(40,105,237,.09);
+  --reg-sem-icon-bg: #e6f0ff;
+  --reg-sem-icon-border: #c9dcff;
+  --reg-sem-icon-fg: #1d56ce;
+  --reg-sem-dark-bg: #25394f;
+  --reg-sem-dark-border: #456995;
+  --reg-sem-dark-watermark: rgba(96,165,250,.08);
+  --reg-sem-dark-icon-bg: #2d4e70;
+  --reg-sem-dark-icon-fg: #a4ccff;
+}
+
+/* 2. VIOLET */
+.registrar-class-offering__overview > .registrar-class-offering__overview-card:nth-child(2) {
+  --reg-sem-accent: #8651df;
+  --reg-sem-surface: #f6f0ff;
+  --reg-sem-watermark: rgba(133,81,223,.09);
+  --reg-sem-icon-bg: #f0e7ff;
+  --reg-sem-icon-border: #dfcdfb;
+  --reg-sem-icon-fg: #6c32c6;
+  --reg-sem-dark-bg: #342a49;
+  --reg-sem-dark-border: #695590;
+  --reg-sem-dark-watermark: rgba(167,139,250,.08);
+  --reg-sem-dark-icon-bg: #46365f;
+  --reg-sem-dark-icon-fg: #d5bcff;
+}
+
+/* 3. TEAL */
+.registrar-class-offering__overview > .registrar-class-offering__overview-card:nth-child(3) {
+  --reg-sem-accent: #159a92;
+  --reg-sem-surface: #edfaf8;
+  --reg-sem-watermark: rgba(21,154,146,.09);
+  --reg-sem-icon-bg: #dff6f2;
+  --reg-sem-icon-border: #b7dfd9;
+  --reg-sem-icon-fg: #0e7772;
+  --reg-sem-dark-bg: #203f3d;
+  --reg-sem-dark-border: #397772;
+  --reg-sem-dark-watermark: rgba(45,212,191,.08);
+  --reg-sem-dark-icon-bg: #2c5551;
+  --reg-sem-dark-icon-fg: #9ee6d7;
+}
+
+/* 4. AMBER */
+.registrar-class-offering__overview > .registrar-class-offering__overview-card:nth-child(4) {
+  --reg-sem-accent: #d69b22;
+  --reg-sem-surface: #fff8e8;
+  --reg-sem-watermark: rgba(218,164,27,.10);
+  --reg-sem-icon-bg: #fff0cc;
+  --reg-sem-icon-border: #efd399;
+  --reg-sem-icon-fg: #9c6714;
+  --reg-sem-dark-bg: #423520;
+  --reg-sem-dark-border: #826536;
+  --reg-sem-dark-watermark: rgba(251,191,36,.08);
+  --reg-sem-dark-icon-bg: #554426;
+  --reg-sem-dark-icon-fg: #f8d38d;
+}
+
+/* Card background, status stripe and corner accent. */
+.registrar-class-offering__overview > .registrar-class-offering__overview-card {
+  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
+  border-left-color: var(--reg-sem-accent);
+}
+.registrar-class-offering__overview > .registrar-class-offering__overview-card::before {
+  background: var(--reg-sem-watermark);
+}
+.registrar-class-offering__overview > .registrar-class-offering__overview-card::before {
+  background: var(--reg-sem-watermark);
+}
+.registrar-class-offering__overview > .registrar-class-offering__overview-card .registrar-class-offering__overview-icon {
+  color: var(--reg-sem-icon-fg);
+  border-color: var(--reg-sem-icon-border);
+  background: var(--reg-sem-icon-bg);
+  box-shadow: none;
+}
+.registrar-class-offering__overview > .registrar-class-offering__overview-card .registrar-class-offering__overview-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
+
+/* Dark Mode: status colors remain legible on charcoal panels. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-class-offering__overview > .registrar-class-offering__overview-card {
+  background: var(--reg-sem-dark-bg) !important;
+  border-left-color: var(--reg-sem-accent);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-class-offering__overview > .registrar-class-offering__overview-card::before {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-class-offering__overview > .registrar-class-offering__overview-card::before {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-class-offering__overview > .registrar-class-offering__overview-card .registrar-class-offering__overview-icon {
+  color: var(--reg-sem-dark-icon-fg);
+  background: var(--reg-sem-dark-icon-bg);
+  border-color: var(--reg-sem-dark-border);
+  box-shadow: none;
+}

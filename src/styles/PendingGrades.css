@@ -2097,3 +2097,55 @@
   z-index: 9999;
   inset: 0;
 }
+/* PTC Portal: Program Head semantic KPI colors. Append to the END of the current CSS. */
+/* Colors convey card meaning, not its position in a decorative palette. */
+/* No layout, hero, canvas, typography or sidebar overrides. */
+
+/* Pending Review — amber */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(1) { border-color: #f0dbaa; background: #fff8e9; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(1) { --card-accent: #d39719; --card-orb: rgba(211,151,25,.095); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(1) .program-head-grade-summary-icon { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(1) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(1) .program-head-grade-summary-icon { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Classes — slate */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(2) { border-color: #d7e0e8; background: #f3f6f9; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(2) { --card-accent: #64748b; --card-orb: rgba(100,116,139,.075); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(2) .program-head-grade-summary-icon { color: #516175; border: 1px solid #d0dce6; background: #edf2f7; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(2) { border-color: #465869; background: #25333d; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(2) .program-head-grade-summary-icon { color: #c8d9e7; border-color: #465869; background: #344857; box-shadow: none; }
+
+/* Faculty — blue */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(3) { border-color: #d1e3fe; background: #f0f6ff; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(3) { --card-accent: #2b69e8; --card-orb: rgba(43,105,232,.09); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(3) .program-head-grade-summary-icon { color: #2460d2; border: 1px solid #c2daff; background: #e6f0ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(3) { border-color: #41648a; background: #20344c; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(3) .program-head-grade-summary-icon { color: #b4d5ff; border-color: #41648a; background: #294965; box-shadow: none; }
+
+/* Passed — green */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(4) { border-color: #c7e9d2; background: #effaf3; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(4) { --card-accent: #0b9857; --card-orb: rgba(11,152,87,.085); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(4) .program-head-grade-summary-icon { color: #087a48; border: 1px solid #bee3ce; background: #e2f6e9; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(4) { border-color: #367451; background: #1d3b2b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(4) .program-head-grade-summary-icon { color: #a9f0c6; border-color: #367451; background: #295840; box-shadow: none; }
+
+/* Incomplete — amber */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(5) { border-color: #f0dbaa; background: #fff8e9; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(5) { --card-accent: #d39719; --card-orb: rgba(211,151,25,.095); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(5) .program-head-grade-summary-icon { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(5) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(5) .program-head-grade-summary-icon { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Failed — red */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(6) { border-color: #f1cfcb; background: #fff2f1; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(6) { --card-accent: #cf5751; --card-orb: rgba(207,87,81,.09); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(6) .program-head-grade-summary-icon { color: #ad3b36; border: 1px solid #eebfbb; background: #ffe8e5; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(6) { border-color: #824c4c; background: #3d282a; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(6) .program-head-grade-summary-icon { color: #ffceca; border-color: #824c4c; background: #593334; box-shadow: none; }
+
+/* Unofficial Drop — red */
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(7) { border-color: #f1cfcb; background: #fff2f1; }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(7) { --card-accent: #cf5751; --card-orb: rgba(207,87,81,.09); }
+.program-head-pending-grades-page .program-head-grade-summary-card:nth-child(7) .program-head-grade-summary-icon { color: #ad3b36; border: 1px solid #eebfbb; background: #ffe8e5; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(7) { border-color: #824c4c; background: #3d282a; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-pending-grades-page .program-head-grade-summary-card:nth-child(7) .program-head-grade-summary-icon { color: #ffceca; border-color: #824c4c; background: #593334; box-shadow: none; }

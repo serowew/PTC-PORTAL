@@ -1750,3 +1750,38 @@
   border-color: #6e5035;
   background: #483328;
 }
+/* PTC Portal: Program Head semantic KPI colors. Append to the END of the current CSS. */
+/* Colors convey card meaning, not its position in a decorative palette. */
+/* No layout, hero, canvas, typography or sidebar overrides. */
+
+/* Available Notices — green */
+.programhead-announcements .programhead-announcements__stat:nth-child(1) { border-color: #c7e9d2; background: #effaf3; }
+.programhead-announcements .programhead-announcements__stat:nth-child(1)::before { background: #0b9857; }
+.programhead-announcements .programhead-announcements__stat:nth-child(1)::after { background: rgba(11,152,87,.085); }
+.programhead-announcements .programhead-announcements__stat:nth-child(1) .programhead-announcements__stat-icon { color: #087a48; border: 1px solid #bee3ce; background: #e2f6e9; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(1) { border-color: #367451; background: #1d3b2b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(1) .programhead-announcements__stat-icon { color: #a9f0c6; border-color: #367451; background: #295840; box-shadow: none; }
+
+/* Needs Attention — amber */
+.programhead-announcements .programhead-announcements__stat:nth-child(2) { border-color: #f0dbaa; background: #fff8e9; }
+.programhead-announcements .programhead-announcements__stat:nth-child(2)::before { background: #d39719; }
+.programhead-announcements .programhead-announcements__stat:nth-child(2)::after { background: rgba(211,151,25,.095); }
+.programhead-announcements .programhead-announcements__stat:nth-child(2) .programhead-announcements__stat-icon { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(2) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(2) .programhead-announcements__stat-icon { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Grade Notices — blue */
+.programhead-announcements .programhead-announcements__stat:nth-child(3) { border-color: #d1e3fe; background: #f0f6ff; }
+.programhead-announcements .programhead-announcements__stat:nth-child(3)::before { background: #2b69e8; }
+.programhead-announcements .programhead-announcements__stat:nth-child(3)::after { background: rgba(43,105,232,.09); }
+.programhead-announcements .programhead-announcements__stat:nth-child(3) .programhead-announcements__stat-icon { color: #2460d2; border: 1px solid #c2daff; background: #e6f0ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(3) { border-color: #41648a; background: #20344c; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(3) .programhead-announcements__stat-icon { color: #b4d5ff; border-color: #41648a; background: #294965; box-shadow: none; }
+
+/* Expiring Soon — amber */
+.programhead-announcements .programhead-announcements__stat:nth-child(4) { border-color: #f0dbaa; background: #fff8e9; }
+.programhead-announcements .programhead-announcements__stat:nth-child(4)::before { background: #d39719; }
+.programhead-announcements .programhead-announcements__stat:nth-child(4)::after { background: rgba(211,151,25,.095); }
+.programhead-announcements .programhead-announcements__stat:nth-child(4) .programhead-announcements__stat-icon { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(4) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-announcements .programhead-announcements__stat:nth-child(4) .programhead-announcements__stat-icon { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }

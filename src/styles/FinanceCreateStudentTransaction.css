@@ -1012,3 +1012,537 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================================
+   PTC PORTAL | FINANCE TRANSACTIONS | APPROVED ONE-FILE UI REFINEMENT
+   Route: /finance/transactions/create
+   Component: src/pages/finance/CreateStudentTransaction.tsx
+
+   Scope: this Finance page and its immediate workspace only. Uses the exact
+   existing --ptc-canvas-* variables; ptc-unified-canvas.css is not edited.
+   Preserve the student-search, configured-type, fixed/override amount,
+   submit, success, payment/Registrar status, and feedback interactions.
+   ============================================================================ */
+
+/* Remove the default workspace gutter only for this particular page. */
+.dashboard-wrapper .dashboard-main:has(> .dashboard-content > .finance-create-transaction) > .dashboard-content {
+  min-width: 0;
+  padding: 0 !important;
+  overflow-x: clip;
+  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
+  background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0,#dce9e0)) !important;
+  background-size: var(--ptc-canvas-tiles, auto) !important;
+  background-position: var(--ptc-canvas-offsets, center) !important;
+  background-repeat: repeat,repeat,repeat,repeat,no-repeat,no-repeat,no-repeat,no-repeat !important;
+}
+
+.dashboard-content > .finance-create-transaction {
+  --finance-green-950: #06452b;
+  --finance-green-900: #075330;
+  --finance-green-800: #0b673d;
+  --finance-green-700: #0f7a45;
+  --finance-green-600: #159452;
+  --finance-green-100: #dff3e7;
+  --finance-green-50: #edf8f1;
+  --finance-text-950: #1b2b20;
+  --finance-text-900: #273a2e;
+  --finance-text-700: #465b4c;
+  --finance-text-600: #657769;
+  --finance-text-500: #738578;
+  --finance-text-400: #768b7b;
+  --finance-border: #dce9df;
+  --finance-border-soft: #e6eee8;
+  --finance-surface: #fff;
+  --finance-surface-soft: #f7fbf8;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  gap: 16px;
+  padding: 27px 27px 40px;
+  overflow-x: clip;
+  color: var(--finance-text-950);
+  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
+  background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0,#dce9e0)) !important;
+  background-size: var(--ptc-canvas-tiles, auto) !important;
+  background-position: var(--ptc-canvas-offsets, center) !important;
+  background-repeat: repeat,repeat,repeat,repeat,no-repeat,no-repeat,no-repeat,no-repeat !important;
+  font-size: 13px;
+}
+
+/* Dark-green Finance hero, same measurements and tones as Finance Dashboard.
+   The old oversized ring must not bleed into the new header. */
+.finance-create-transaction .finance-create-transaction__hero {
+  min-height: 171px;
+  padding: 28px 31px;
+  border: 1px solid rgba(221,255,236,.16);
+  border-radius: 21px;
+  background: linear-gradient(108deg,#06482e 0%,#086b3c 55%,#138848 100%);
+  box-shadow: 0 16px 34px rgba(4,71,36,.14);
+}
+.finance-create-transaction .finance-create-transaction__hero::after {
+  content: none;
+  display: none;
+}
+.finance-create-transaction .finance-create-transaction__hero-copy { max-width: 760px; }
+.finance-create-transaction .finance-create-transaction__eyebrow {
+  margin-bottom: 12px;
+  color: #e9fff2;
+  font-size: 11px;
+  letter-spacing: .065em;
+}
+.finance-create-transaction .finance-create-transaction__eyebrow-icon {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 9px;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+}
+.finance-create-transaction .finance-create-transaction__hero h1 {
+  color: #fff;
+  font-size: clamp(25px,2.4vw,32px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.finance-create-transaction .finance-create-transaction__hero p {
+  max-width: 660px;
+  margin-top: 10px;
+  color: #e3f5e8;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.finance-create-transaction .finance-create-transaction__refresh {
+  min-height: 41px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255,255,255,.26);
+  border-radius: 10px;
+  background: rgba(255,255,255,.14);
+  box-shadow: none;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 750;
+}
+.finance-create-transaction .finance-create-transaction__refresh:hover:not(:disabled) {
+  border-color: rgba(255,255,255,.42);
+  background: rgba(255,255,255,.23);
+  box-shadow: 0 6px 14px rgba(0,0,0,.12);
+}
+
+/* Panels: same light surfaces, 16px corners, and green-tinted borders as
+   the reviewed Finance Dashboard and Requests. */
+.finance-create-transaction .finance-create-transaction__form { gap: 15px; }
+.finance-create-transaction :is(.finance-create-transaction__panel,.finance-create-transaction__submit-panel) {
+  min-width: 0;
+  border: 1px solid #dce9df;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 9px 25px rgba(8,66,36,.065);
+}
+.finance-create-transaction .finance-create-transaction__panel { padding: 21px 22px 22px; }
+.finance-create-transaction .finance-create-transaction__step-header {
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 17px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e6eee8;
+}
+.finance-create-transaction .finance-create-transaction__step-header > div:last-child { min-width: 0; }
+.finance-create-transaction .finance-create-transaction__step-number {
+  width: 41px;
+  height: 41px;
+  flex: 0 0 41px;
+  border: 1px solid #d1e9db;
+  border-radius: 11px;
+  background: #e8f7ec;
+  color: #0e8048;
+  font-size: 13px;
+  font-weight: 800;
+}
+/* Section-coded accent palette: PTC green, gold, blue. */
+.finance-create-transaction .finance-create-transaction__panel:nth-child(2) .finance-create-transaction__step-number {
+  border-color: #f3e4b5;
+  background: #fff4d8;
+  color: #9d7018;
+}
+.finance-create-transaction .finance-create-transaction__panel:nth-child(3) .finance-create-transaction__step-number {
+  border-color: #d7e6fb;
+  background: #eaf3ff;
+  color: #225fc0;
+}
+.finance-create-transaction .finance-create-transaction__step-header h2 {
+  color: #1b2c20;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.finance-create-transaction .finance-create-transaction__step-header p {
+  margin-top: 4px;
+  color: #65796b;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* Search and student selection: controlled input and result buttons retain
+   their existing click/debounce behavior, only visuals change. */
+.finance-create-transaction .finance-create-transaction__search-field input,
+.finance-create-transaction .finance-create-transaction__field :is(input,select,textarea) {
+  min-width: 0;
+  min-height: 43px;
+  border: 1px solid #cbded1;
+  border-radius: 10px;
+  background: #fff;
+  color: #273a2e;
+  font-size: 12px;
+  box-shadow: none;
+}
+.finance-create-transaction .finance-create-transaction__search-field input { padding-left: 40px; padding-right: 42px; }
+.finance-create-transaction .finance-create-transaction__field textarea { min-height: 90px; }
+.finance-create-transaction .finance-create-transaction__field { gap: 7px; color: #465b4c; font-size: 11.5px; }
+.finance-create-transaction .finance-create-transaction__field small { color: #738578; font-size: 10.5px; line-height: 1.55; }
+.finance-create-transaction :is(.finance-create-transaction__search-field input,.finance-create-transaction__field input,.finance-create-transaction__field select,.finance-create-transaction__field textarea):focus {
+  border-color: #159452;
+  box-shadow: 0 0 0 3px rgba(21,148,82,.11);
+  outline: none;
+}
+.finance-create-transaction :is(button,input,select,textarea):focus-visible {
+  outline: 3px solid rgba(21,148,82,.28);
+  outline-offset: 2px;
+}
+.finance-create-transaction .finance-create-transaction__search-field input::placeholder,
+.finance-create-transaction .finance-create-transaction__field :is(input,textarea)::placeholder { color: #83968a; }
+.finance-create-transaction .finance-create-transaction__field :is(input,select,textarea):disabled,
+.finance-create-transaction .finance-create-transaction__field input.is-fixed {
+  border-color: #dbe5de;
+  background: #f1f6f2;
+  color: #647c6a;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.finance-create-transaction .finance-create-transaction__student-results {
+  border-color: #dce9df;
+  border-radius: 12px;
+  box-shadow: 0 12px 26px rgba(8,66,36,.10);
+}
+.finance-create-transaction .finance-create-transaction__student-result { min-height: 55px; background: #fff; }
+.finance-create-transaction .finance-create-transaction__student-result:hover { background: #f0faf3; }
+.finance-create-transaction .finance-create-transaction__student-result-icon {
+  border-radius: 10px;
+  background: #e8f7ec;
+  color: #0e8048;
+}
+.finance-create-transaction .finance-create-transaction__selected-student {
+  border: 1px solid #b9ddc6;
+  border-radius: 12px;
+  background: linear-gradient(112deg,#f2fbf5,#fff);
+}
+.finance-create-transaction .finance-create-transaction__student-icon {
+  border: 1px solid #d0ebd9;
+  border-radius: 11px;
+  background: #e8f7ec;
+  color: #0e8048;
+}
+.finance-create-transaction .finance-create-transaction__search-message {
+  margin-top: 8px;
+  color: #637b69;
+  font-size: 11.5px;
+}
+
+/* Transaction type preview: subdued blue accent without altering its tags. */
+.finance-create-transaction .finance-create-transaction__type-preview {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #d7e6fb;
+  border-left: 4px solid #2563eb;
+  border-radius: 12px;
+  background: linear-gradient(115deg,#f4f9ff,#fff);
+}
+.finance-create-transaction .finance-create-transaction__type-preview-header > svg { color: #225fc0; }
+.finance-create-transaction .finance-create-transaction__type-preview strong { color: #273a2e; font-size: 12.5px; }
+.finance-create-transaction .finance-create-transaction__type-preview p { color: #657769; }
+.finance-create-transaction .finance-create-transaction__tag { font-size: 10px; line-height: 1.4; }
+.finance-create-transaction .finance-create-transaction__tag--blue { border-color: #bfdbfe; color: #1d4ed8; background: #eff6ff; }
+.finance-create-transaction .finance-create-transaction__tag--green { border-color: #bbf7d0; color: #166534; background: #f0fdf4; }
+.finance-create-transaction .finance-create-transaction__tag--neutral { border-color: #e2e8f0; color: #475569; background: #f8fafc; }
+
+/* Submit actions: violet is reserved for a subtle final-step accent; keep
+   primary action clearly green and focus-visible. */
+.finance-create-transaction .finance-create-transaction__submit-panel {
+  padding: 19px 21px;
+  border-top: 3px solid #9560c8;
+}
+.finance-create-transaction .finance-create-transaction__submit-note { color: #657769; font-size: 11.5px; }
+.finance-create-transaction .finance-create-transaction__submit-note-icon {
+  width: 35px;
+  height: 35px;
+  flex: 0 0 35px;
+  border: 1px solid #e8daf7;
+  border-radius: 10px;
+  background: #f3eafd;
+  color: #8042b5;
+}
+.finance-create-transaction .finance-create-transaction__submit-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #0c6c40;
+  border-radius: 10px;
+  background: linear-gradient(120deg,#0e7845,#086038);
+  color: #fff;
+  font-size: 11.5px;
+  box-shadow: 0 7px 17px rgba(8,75,40,.14);
+}
+.finance-create-transaction .finance-create-transaction__submit-button:hover:not(:disabled) {
+  border-color: #075532;
+  background: #075532;
+}
+.finance-create-transaction .finance-create-transaction__submit-button:disabled {
+  border-color: #9ab7a4;
+  background: #9ab7a4;
+  box-shadow: none;
+}
+
+/* Error/success ticket details. Six success info boxes are grouped with
+   consistent accents without altering Payment Pending and Registrar labels. */
+.finance-create-transaction .finance-create-transaction__message {
+  border-radius: 12px;
+  padding: 13px 15px;
+  font-size: 12px;
+}
+.finance-create-transaction .finance-create-transaction__message--error {
+  border: 1px solid #f1c6c0;
+  background: #fff0ed;
+  color: #a12e24;
+}
+.finance-create-transaction .finance-create-transaction__success-card {
+  border: 1px solid #c8e8d1;
+  border-radius: 17px;
+  padding: 22px;
+  background: linear-gradient(132deg,#edfbf1 0%,#fff 62%);
+  box-shadow: 0 9px 25px rgba(8,66,36,.065);
+}
+.finance-create-transaction .finance-create-transaction__section-kicker {
+  display: block;
+  color: #087846;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.finance-create-transaction .finance-create-transaction__success-icon {
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+  border: 1px solid #cce9d7;
+  border-radius: 12px;
+  background: #dcf5e6;
+  color: #0f7a45;
+}
+.finance-create-transaction .finance-create-transaction__success-header h2 { margin-top: 4px; font-size: 18px; color: #1b2c20; }
+.finance-create-transaction .finance-create-transaction__success-header p { color: #465b4c; }
+.finance-create-transaction .finance-create-transaction__info-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 10px;
+}
+.finance-create-transaction .finance-create-transaction__info-box {
+  min-width: 0;
+  border: 1px solid #dce9df;
+  border-top: 3px solid #159452;
+  border-radius: 11px;
+  padding: 12px;
+  background: #fff;
+}
+.finance-create-transaction .finance-create-transaction__info-box:nth-child(4n + 2) { border-top-color: #d5a32e; }
+.finance-create-transaction .finance-create-transaction__info-box:nth-child(4n + 3) { border-top-color: #2563eb; }
+.finance-create-transaction .finance-create-transaction__info-box:nth-child(4n + 4) { border-top-color: #9560c8; }
+.finance-create-transaction .finance-create-transaction__info-label { color: #657769; font-size: 10px; }
+.finance-create-transaction .finance-create-transaction__info-value { color: #273a2e; font-size: 12px; overflow-wrap: anywhere; }
+.finance-create-transaction .finance-create-transaction__success-note {
+  border: 1px solid #c8e8d1;
+  border-radius: 10px;
+  background: #eaf8ef;
+  color: #166534;
+}
+.finance-create-transaction .finance-create-transaction__status--pending {
+  border-color: #ecd9a8;
+  background: #fff7df;
+  color: #8a6414;
+}
+.finance-create-transaction .finance-create-transaction__status--neutral {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Keep viewport-size changes from affecting fixed sidebar/footer layout. */
+@media (max-width: 900px) {
+  .dashboard-content > .finance-create-transaction { padding: 23px 19px 34px; }
+  .finance-create-transaction .finance-create-transaction__hero { padding: 25px; }
+  .finance-create-transaction .finance-create-transaction__info-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 760px) {
+  .dashboard-content > .finance-create-transaction { padding: 20px 16px 31px; }
+  .finance-create-transaction .finance-create-transaction__hero { min-height: 0; padding: 23px; }
+  .finance-create-transaction .finance-create-transaction__refresh { width: 100%; }
+  .finance-create-transaction .finance-create-transaction__panel { padding: 18px; }
+  .finance-create-transaction .finance-create-transaction__submit-panel { padding: 18px; }
+  .finance-create-transaction .finance-create-transaction__details-form { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 540px) {
+  .dashboard-content > .finance-create-transaction { padding: 17px 13px 28px; }
+  .finance-create-transaction .finance-create-transaction__hero { padding: 23px 20px; border-radius: 18px; }
+  .finance-create-transaction .finance-create-transaction__hero h1 { font-size: 27px; }
+  .finance-create-transaction .finance-create-transaction__info-grid { grid-template-columns: minmax(0,1fr); }
+  .finance-create-transaction .finance-create-transaction__step-header { gap: 10px; }
+  .finance-create-transaction .finance-create-transaction__step-number { width: 38px; height: 38px; flex-basis: 38px; }
+  .finance-create-transaction .finance-create-transaction__submit-button { width: 100%; }
+}
+
+/* Same charcoal geometric canvas as the approved unified dark theme. This
+   is page-scoped and does not force any sidebar/footer background changes. */
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .finance-create-transaction) > .dashboard-content,
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .dashboard-content > .finance-create-transaction {
+  background-color: #111c16 !important;
+  background-image:
+    radial-gradient(circle at 12% 9%, rgba(20,108,61,.17), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(42,100,65,.09), transparent 28%),
+    linear-gradient(135deg,rgba(117,163,126,.025) 25%,transparent 25%),
+    linear-gradient(225deg,rgba(117,163,126,.025) 25%,transparent 25%),
+    linear-gradient(45deg,rgba(117,163,126,.02) 25%,transparent 25%),
+    linear-gradient(315deg,rgba(117,163,126,.02) 25%,transparent 25%),
+    linear-gradient(180deg,#101a15,#17231b) !important;
+  background-size: auto,auto,96px 96px,96px 96px,128px 128px,128px 128px,auto !important;
+  background-position: center,center,0 0,48px 48px,0 0,64px 64px,center !important;
+  background-repeat: no-repeat,no-repeat,repeat,repeat,repeat,repeat,no-repeat !important;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction {
+  --finance-green-950: #a8f0bf;
+  --finance-green-900: #91e4aa;
+  --finance-green-800: #86dfa5;
+  --finance-green-700: #80d89d;
+  --finance-green-600: #6fcf96;
+  --finance-green-100: #2c4b39;
+  --finance-green-50: #284434;
+  --finance-text-950: #e6f2e9;
+  --finance-text-900: #dbece0;
+  --finance-text-700: #c0d5c5;
+  --finance-text-600: #afc5b5;
+  --finance-text-500: #a1bbaa;
+  --finance-text-400: #a1bbaa;
+  --finance-border: #385444;
+  --finance-border-soft: #354c3c;
+  --finance-surface: #1d2b22;
+  --finance-surface-soft: #25372b;
+  color: #e6f2e9;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__hero {
+  border-color: #34744f;
+  background: linear-gradient(108deg,#053823,#075534 55%,#086a3a);
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction :is(.finance-create-transaction__panel,.finance-create-transaction__submit-panel,.finance-create-transaction__student-results,.finance-create-transaction__student-result) {
+  border-color: #385444;
+  background: #1d2b22;
+  box-shadow: 0 9px 25px rgba(0,0,0,.14);
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__submit-panel { border-top-color: #d8b3ff; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__step-header { border-bottom-color: #385444; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__step-header h2,
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction :is(.finance-create-transaction__selected-student strong,.finance-create-transaction__student-result strong,.finance-create-transaction__type-preview strong,.finance-create-transaction__info-value,.finance-create-transaction__success-header h2) { color: #e6f2e9; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction :is(.finance-create-transaction__step-header p,.finance-create-transaction__selected-student span,.finance-create-transaction__student-result span,.finance-create-transaction__field,.finance-create-transaction__field small,.finance-create-transaction__type-preview p,.finance-create-transaction__info-label,.finance-create-transaction__search-message,.finance-create-transaction__submit-note,.finance-create-transaction__success-header p) { color: #b4c9ba; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction :is(.finance-create-transaction__success-card,.finance-create-transaction__selected-student,.finance-create-transaction__type-preview,.finance-create-transaction__info-box,.finance-create-transaction__success-note) {
+  border-color: #385444;
+  background: #25372b;
+  box-shadow: none;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__info-box { border-top-color: #6fcf96; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__info-box:nth-child(4n + 2) { border-top-color: #f3c66b; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__info-box:nth-child(4n + 3) { border-top-color: #9bc4ff; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__info-box:nth-child(4n + 4) { border-top-color: #d8b3ff; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__step-number {
+  border-color: #40624b; background: #294734; color: #91e4ad;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__panel:nth-child(2) .finance-create-transaction__step-number {
+  border-color: #705c37; background: #443921; color: #f5ce83;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__panel:nth-child(3) .finance-create-transaction__step-number {
+  border-color: #48668a; background: #283e56; color: #acccff;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__student-icon,
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__student-result-icon,
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__success-icon {
+  border-color: #40624b; background: #294734; color: #91e4ad;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__submit-note-icon {
+  border-color: #68527c; background: #3b2c4a; color: #d9b9ff;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction :is(.finance-create-transaction__search-field input,.finance-create-transaction__field input,.finance-create-transaction__field select,.finance-create-transaction__field textarea) {
+  border-color: #46654f;
+  background: #243a2b;
+  color: #e7f3e9;
+  color-scheme: dark;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction :is(.finance-create-transaction__search-field input,.finance-create-transaction__field input,.finance-create-transaction__field textarea)::placeholder { color: #acbfb0; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__field :is(input,select,textarea):disabled,
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__field input.is-fixed {
+  border-color: #385444; background: #1b2e22; color: #adc5b3;
+}
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__student-result:hover { background: #2d4634; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__clear-student { border-color: #51685a; background: #273e2e; color: #deede1; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__clear-student:hover { border-color: #9e5c58; background: #402c2a; color: #ffd3cc; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__tag--blue { border-color: #486685; background: #293e54; color: #b3d1ff; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__tag--green { border-color: #417a55; background: #20432e; color: #a4ebbd; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__tag--neutral { border-color: #51685a; background: #2d3e32; color: #d2e3d6; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__status--pending { border-color: #705c37; background: #453821; color: #f3d18f; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__status--neutral { border-color: #51685a; background: #2d3e32; color: #d2e3d6; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__message--error { border-color: #88504b; background: #422725; color: #ffcbc4; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__success-note { color: #a4ebbd; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__section-kicker { color: #91e4ad; }
+:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,.dark)
+  .finance-create-transaction .finance-create-transaction__submit-button:not(:disabled) {
+  border-color: #0c6c40; background: linear-gradient(120deg,#0e7845,#086038); color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finance-create-transaction .finance-create-transaction__refresh,
+  .finance-create-transaction .finance-create-transaction__submit-button,
+  .finance-create-transaction .finance-create-transaction__student-result { transition: none; }
+  .finance-create-transaction .finance-create-transaction__spinner,
+  .finance-create-transaction .finance-create-transaction__search-spinner,
+  .finance-create-transaction .finance-create-transaction__refresh .is-spinning { animation: none; }
+}

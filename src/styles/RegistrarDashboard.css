@@ -2182,3 +2182,115 @@
     padding: 0;
   }
 }
+
+/* =========================================================
+   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
+   Page: Registrar Dashboard
+   Additive color overrides. Existing layout/design untouched.
+========================================================= */
+
+/* 1. SLATE */
+.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(1) {
+  --reg-sem-accent: #64748b;
+  --reg-sem-surface: #f2f6f9;
+  --reg-sem-watermark: rgba(100,116,139,.10);
+  --reg-sem-icon-bg: #e8eef4;
+  --reg-sem-icon-border: #cfdae5;
+  --reg-sem-icon-fg: #475569;
+  --reg-sem-dark-bg: #26343c;
+  --reg-sem-dark-border: #4b606c;
+  --reg-sem-dark-watermark: rgba(148,163,184,.08);
+  --reg-sem-dark-icon-bg: #354956;
+  --reg-sem-dark-icon-fg: #d3e0e9;
+}
+
+/* 2. AMBER */
+.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(2) {
+  --reg-sem-accent: #d69b22;
+  --reg-sem-surface: #fff8e8;
+  --reg-sem-watermark: rgba(218,164,27,.10);
+  --reg-sem-icon-bg: #fff0cc;
+  --reg-sem-icon-border: #efd399;
+  --reg-sem-icon-fg: #9c6714;
+  --reg-sem-dark-bg: #423520;
+  --reg-sem-dark-border: #826536;
+  --reg-sem-dark-watermark: rgba(251,191,36,.08);
+  --reg-sem-dark-icon-bg: #554426;
+  --reg-sem-dark-icon-fg: #f8d38d;
+}
+
+/* 3. SLATE */
+.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(3) {
+  --reg-sem-accent: #64748b;
+  --reg-sem-surface: #f2f6f9;
+  --reg-sem-watermark: rgba(100,116,139,.10);
+  --reg-sem-icon-bg: #e8eef4;
+  --reg-sem-icon-border: #cfdae5;
+  --reg-sem-icon-fg: #475569;
+  --reg-sem-dark-bg: #26343c;
+  --reg-sem-dark-border: #4b606c;
+  --reg-sem-dark-watermark: rgba(148,163,184,.08);
+  --reg-sem-dark-icon-bg: #354956;
+  --reg-sem-dark-icon-fg: #d3e0e9;
+}
+
+/* 4. GREEN */
+.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(4) {
+  --reg-sem-accent: #119457;
+  --reg-sem-surface: #edf9f2;
+  --reg-sem-watermark: rgba(20,159,91,.09);
+  --reg-sem-icon-bg: #dff5e9;
+  --reg-sem-icon-border: #bfdfce;
+  --reg-sem-icon-fg: #097443;
+  --reg-sem-dark-bg: #213d2b;
+  --reg-sem-dark-border: #3c7953;
+  --reg-sem-dark-watermark: rgba(74,222,128,.07);
+  --reg-sem-dark-icon-bg: #2c5941;
+  --reg-sem-dark-icon-fg: #99e7b7;
+}
+
+/* Card background, status stripe and corner accent. */
+.registrar-dashboard__stats > .registrar-dashboard__stat-card {
+  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
+  border-color: var(--reg-sem-icon-border);
+}
+.registrar-dashboard__stats > .registrar-dashboard__stat-card::before {
+  background: var(--reg-sem-accent);
+}
+.registrar-dashboard__stats > .registrar-dashboard__stat-card::after {
+  background: var(--reg-sem-watermark);
+}
+.registrar-dashboard__stats > .registrar-dashboard__stat-card .registrar-dashboard__stat-icon {
+  color: var(--reg-sem-icon-fg);
+  border-color: var(--reg-sem-icon-border);
+  background: var(--reg-sem-icon-bg);
+  box-shadow: none;
+}
+.registrar-dashboard__stats > .registrar-dashboard__stat-card .registrar-dashboard__stat-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
+
+/* Enrollment Access is green ONLY when the period is Open; Closed stays slate. */
+.registrar-dashboard__stats > .registrar-dashboard__stat-card:nth-child(3).registrar-dashboard__stat-card--success {
+  --reg-sem-accent: #119457; --reg-sem-surface: #edf9f2; --reg-sem-watermark: rgba(20,159,91,.09);
+  --reg-sem-icon-bg: #dff5e9; --reg-sem-icon-border: #bfdfce; --reg-sem-icon-fg: #097443;
+  --reg-sem-dark-bg: #213d2b; --reg-sem-dark-border: #3c7953;
+  --reg-sem-dark-watermark: rgba(74,222,128,.07); --reg-sem-dark-icon-bg: #2c5941;
+  --reg-sem-dark-icon-fg: #99e7b7;
+}
+
+/* Dark Mode: status colors remain legible on charcoal panels. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card {
+  background: var(--reg-sem-dark-bg) !important;
+  border-color: var(--reg-sem-dark-border);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card::before {
+  background: var(--reg-sem-accent);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card::after {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-dashboard__stats > .registrar-dashboard__stat-card .registrar-dashboard__stat-icon {
+  color: var(--reg-sem-dark-icon-fg);
+  background: var(--reg-sem-dark-icon-bg);
+  border-color: var(--reg-sem-dark-border);
+  box-shadow: none;
+}

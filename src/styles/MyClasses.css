@@ -715,6 +715,7 @@
   line-height: 1.3;
 }
 
+
 .faculty-class-subject span {
   display: -webkit-box;
   max-width: 100%;
@@ -725,7 +726,9 @@
   line-height: 1.35;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
+
 
 .faculty-class-subject small,
 .faculty-class-cell-stack small {
@@ -1427,4 +1430,115 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-class
   color: #fff;
   background: #137d4b;
   border-color: #54a877;
+}
+/* Faculty My Classes — STATUS-MEANING COLOR PATCH
+ * Add ONCE to the END of src/styles/MyClasses.css.
+ * Do not replace the existing stylesheet.
+ * Card order/labels verified against the actual Faculty TSX.
+ * No layout, shared canvas, sidebar, or component changes.
+ */
+
+/* 1. Assigned Classes — Muted slate (neutral) */
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(1) {
+  background: #f5f8fa;
+  border-color: #d7e0e7;
+  border-left: 4px solid #788b9a;
+}
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(1) .faculty-class-stat__icon {
+  background: #eaf0f4;
+  color: #4d6477;
+  border: 1px solid #cedae3;
+  box-shadow: none;
+}
+
+/* 2. Open Classes — Green (active / completed) */
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(2) {
+  background: #edf9f2;
+  border-color: #cde9d9;
+  border-left: 4px solid #10a05e;
+}
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(2) .faculty-class-stat__icon {
+  background: #ddf5e8;
+  color: #087e47;
+  border: 1px solid #b9e4ca;
+  box-shadow: none;
+}
+
+/* 3. Closed Classes — Muted slate (neutral) */
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(3) {
+  background: #f5f8fa;
+  border-color: #d7e0e7;
+  border-left: 4px solid #788b9a;
+}
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(3) .faculty-class-stat__icon {
+  background: #eaf0f4;
+  color: #4d6477;
+  border: 1px solid #cedae3;
+  box-shadow: none;
+}
+
+/* 4. Official Memberships — Blue (information / records) */
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(4) {
+  background: #f0f6ff;
+  border-color: #d4e4ff;
+  border-left: 4px solid #2c69e7;
+}
+.faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(4) .faculty-class-stat__icon {
+  background: #e6f0ff;
+  color: #245ad2;
+  border: 1px solid #c6dbff;
+  box-shadow: none;
+}
+
+/* Dark Mode — preserve semantic meaning and readable icon contrast. */
+/* 1. Assigned Classes */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(1) {
+  background: #28343e;
+  border-color: #445765;
+  border-left: 4px solid #8ea5b5;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(1) .faculty-class-stat__icon {
+  background: #354754;
+  color: #d4e3ec;
+  border: 1px solid #526c7d;
+  box-shadow: none;
+}
+
+/* 2. Open Classes */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(2) {
+  background: #1f392b;
+  border-color: #365c46;
+  border-left: 4px solid #41b97e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(2) .faculty-class-stat__icon {
+  background: #285640;
+  color: #aff2c7;
+  border: 1px solid #467d5a;
+  box-shadow: none;
+}
+
+/* 3. Closed Classes */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(3) {
+  background: #28343e;
+  border-color: #445765;
+  border-left: 4px solid #8ea5b5;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(3) .faculty-class-stat__icon {
+  background: #354754;
+  color: #d4e3ec;
+  border: 1px solid #526c7d;
+  box-shadow: none;
+}
+
+/* 4. Official Memberships */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(4) {
+  background: #23354a;
+  border-color: #3e5674;
+  border-left: 4px solid #6798e9;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-classes-page .faculty-classes-summary > .faculty-class-stat:nth-child(4) .faculty-class-stat__icon {
+  background: #304969;
+  color: #c1d9ff;
+  border: 1px solid #526d90;
+  box-shadow: none;
 }

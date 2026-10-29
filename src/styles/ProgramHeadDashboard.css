@@ -1735,3 +1735,38 @@
   .programhead-dashboard__action-card,
   .programhead-dashboard__refresh { transition: none; }
 }
+/* PTC Portal: Program Head semantic KPI colors. Append to the END of the current CSS. */
+/* Colors convey card meaning, not its position in a decorative palette. */
+/* No layout, hero, canvas, typography or sidebar overrides. */
+
+/* Pending Grade Reviews — amber */
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(1) { border-color: #f0dbaa; background: #fff8e9; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(1)::before { background: #d39719; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(1)::after { border-color: rgba(211,151,25,.095); }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(1) .programhead-dashboard__stat-icon { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(1) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(1) .programhead-dashboard__stat-icon { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Department Classes — slate */
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(2) { border-color: #d7e0e8; background: #f3f6f9; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(2)::before { background: #64748b; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(2)::after { border-color: rgba(100,116,139,.075); }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(2) .programhead-dashboard__stat-icon { color: #516175; border: 1px solid #d0dce6; background: #edf2f7; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(2) { border-color: #465869; background: #25333d; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(2) .programhead-dashboard__stat-icon { color: #c8d9e7; border-color: #465869; background: #344857; box-shadow: none; }
+
+/* Official Memberships — blue */
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(3) { border-color: #d1e3fe; background: #f0f6ff; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(3)::before { background: #2b69e8; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(3)::after { border-color: rgba(43,105,232,.09); }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(3) .programhead-dashboard__stat-icon { color: #2460d2; border: 1px solid #c2daff; background: #e6f0ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(3) { border-color: #41648a; background: #20344c; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(3) .programhead-dashboard__stat-icon { color: #b4d5ff; border-color: #41648a; background: #294965; box-shadow: none; }
+
+/* Approved Grades — green */
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(4) { border-color: #c7e9d2; background: #effaf3; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(4)::before { background: #0b9857; }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(4)::after { border-color: rgba(11,152,87,.085); }
+.programhead-dashboard .programhead-dashboard__stat-card:nth-child(4) .programhead-dashboard__stat-icon { color: #087a48; border: 1px solid #bee3ce; background: #e2f6e9; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(4) { border-color: #367451; background: #1d3b2b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .programhead-dashboard .programhead-dashboard__stat-card:nth-child(4) .programhead-dashboard__stat-icon { color: #a9f0c6; border-color: #367451; background: #295840; box-shadow: none; }

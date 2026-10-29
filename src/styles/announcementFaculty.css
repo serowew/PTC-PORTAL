@@ -1133,3 +1133,88 @@
   .faculty-announcements__card {
   transition: none;
 }
+/* Faculty Announcements — STATUS-MEANING COLOR PATCH
+ * Add ONCE to the END of src/styles/announcementFaculty.css.
+ * Do not replace the existing stylesheet.
+ * Card order/labels verified against the actual Faculty TSX.
+ * No layout, shared canvas, sidebar, or component changes.
+ */
+
+/* 1. Available — Green (active / completed) */
+.faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(1) {
+  background: #edf9f2;
+  border-color: #cde9d9;
+  border-left: 4px solid #10a05e;
+}
+.faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(1) .faculty-announcements__summary-icon {
+  background: #ddf5e8;
+  color: #087e47;
+  border: 1px solid #b9e4ca;
+  box-shadow: none;
+}
+
+/* 2. Recent — Blue (information / records) */
+.faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(2) {
+  background: #f0f6ff;
+  border-color: #d4e4ff;
+  border-left: 4px solid #2c69e7;
+}
+.faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(2) .faculty-announcements__summary-icon {
+  background: #e6f0ff;
+  color: #245ad2;
+  border: 1px solid #c6dbff;
+  box-shadow: none;
+}
+
+/* 3. Latest From — Muted slate (neutral) */
+.faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(3) {
+  background: #f5f8fa;
+  border-color: #d7e0e7;
+  border-left: 4px solid #788b9a;
+}
+.faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(3) .faculty-announcements__summary-icon {
+  background: #eaf0f4;
+  color: #4d6477;
+  border: 1px solid #cedae3;
+  box-shadow: none;
+}
+
+/* Dark Mode — preserve semantic meaning and readable icon contrast. */
+/* 1. Available */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(1) {
+  background: #1f392b;
+  border-color: #365c46;
+  border-left: 4px solid #41b97e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(1) .faculty-announcements__summary-icon {
+  background: #285640;
+  color: #aff2c7;
+  border: 1px solid #467d5a;
+  box-shadow: none;
+}
+
+/* 2. Recent */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(2) {
+  background: #23354a;
+  border-color: #3e5674;
+  border-left: 4px solid #6798e9;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(2) .faculty-announcements__summary-icon {
+  background: #304969;
+  color: #c1d9ff;
+  border: 1px solid #526d90;
+  box-shadow: none;
+}
+
+/* 3. Latest From */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(3) {
+  background: #28343e;
+  border-color: #445765;
+  border-left: 4px solid #8ea5b5;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-announcements .faculty-announcements__summary > .faculty-announcements__summary-card:nth-child(3) .faculty-announcements__summary-icon {
+  background: #354754;
+  color: #d4e3ec;
+  border: 1px solid #526c7d;
+  box-shadow: none;
+}

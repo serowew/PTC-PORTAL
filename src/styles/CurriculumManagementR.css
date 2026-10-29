@@ -2189,3 +2189,141 @@
   .dashboard-main:has(.registrar-curriculum-management) > .dashboard-content {
   background-color: #101b14;
 }
+/* =============================================================
+   PTC PORTAL — REGISTRAR SEMANTIC CARD COLORS
+   Page: Curriculum Management
+   PATCH ONLY — paste at the END of the existing CSS file.
+   Does not change the hero, background pattern, sidebar or layout.
+   ============================================================= */
+
+/* 1. Total Results: neutral count — slate */
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1) {
+  background: #f3f6f8;
+  border-left-color: #8292a3;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1)::before { background: #8292a3; }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1)::after { background-color: rgba(100,116,139,.09); }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1) .registrar-curriculum-management__stat-icon {
+  color: #475569;
+  background: #e8eef3;
+  border: 1px solid #cfd8e1;
+  box-shadow: none;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1) .registrar-curriculum-management__stat-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1) {
+  background: #28343e;
+  border-left-color: #4b5e6b;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1)::before { background: #8292a3; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1)::after { background-color: rgba(143,164,181,.08); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(1) .registrar-curriculum-management__stat-icon {
+  color: #d3e2ec;
+  background: #374a58;
+  border-color: #4b5e6b;
+  box-shadow: none;
+}
+
+/* 2. Active Curricula: active status — green */
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2) {
+  background: #edf9f2;
+  border-left-color: #119457;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2)::before { background: #119457; }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2)::after { background-color: rgba(24,156,85,.09); }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2) .registrar-curriculum-management__stat-icon {
+  color: #097443;
+  background: #ddf5e6;
+  border: 1px solid #bfe3ce;
+  box-shadow: none;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2) .registrar-curriculum-management__stat-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2) {
+  background: #203d2c;
+  border-left-color: #3d7955;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2)::before { background: #119457; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2)::after { background-color: rgba(64,220,136,.075); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(2) .registrar-curriculum-management__stat-icon {
+  color: #a4edbe;
+  background: #2b5d43;
+  border-color: #3d7955;
+  box-shadow: none;
+}
+
+/* 3. Courses Represented: academic category — blue */
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3) {
+  background: #eef5ff;
+  border-left-color: #2867e6;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3)::before { background: #2867e6; }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3)::after { background-color: rgba(40,105,237,.09); }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3) .registrar-curriculum-management__stat-icon {
+  color: #1d56ce;
+  background: #e5f0ff;
+  border: 1px solid #c9dcff;
+  box-shadow: none;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3) .registrar-curriculum-management__stat-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3) {
+  background: #253950;
+  border-left-color: #456b99;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3)::before { background: #2867e6; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3)::after { background-color: rgba(96,165,250,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(3) .registrar-curriculum-management__stat-icon {
+  color: #a4ccff;
+  background: #2d4e70;
+  border-color: #456b99;
+  box-shadow: none;
+}
+
+/* 4. Mapped Subjects: curriculum mapping category — violet */
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4) {
+  background: #f8f3ff;
+  border-left-color: #8b5cf6;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4)::before { background: #8b5cf6; }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4)::after { background-color: rgba(139,92,246,.085); }
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4) .registrar-curriculum-management__stat-icon {
+  color: #7141d4;
+  background: #f1e9ff;
+  border: 1px solid #ddccff;
+  box-shadow: none;
+}
+.registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4) .registrar-curriculum-management__stat-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4) {
+  background: #33293f;
+  border-left-color: #71518c;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4)::before { background: #8b5cf6; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4)::after { background-color: rgba(192,132,252,.08); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-curriculum-management__stats > .registrar-curriculum-management__stat-card:nth-child(4) .registrar-curriculum-management__stat-icon {
+  color: #dbc1ff;
+  background: #49365c;
+  border-color: #71518c;
+  box-shadow: none;
+}

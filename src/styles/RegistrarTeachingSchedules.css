@@ -1602,3 +1602,243 @@
   .registrar-teaching-schedule__refresh .is-spinning,
   .registrar-teaching-schedule__spinner { animation: none; }
 }
+/* =========================================================
+   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
+   Page: Registrar Teaching Schedules
+   Additive color overrides. Existing layout/design untouched.
+========================================================= */
+
+/* 1. GREEN */
+.registrar-teaching-schedule__summary > article:nth-child(1) {
+  --reg-sem-accent: #119457;
+  --reg-sem-surface: #edf9f2;
+  --reg-sem-watermark: rgba(20,159,91,.09);
+  --reg-sem-icon-bg: #dff5e9;
+  --reg-sem-icon-border: #bfdfce;
+  --reg-sem-icon-fg: #097443;
+  --reg-sem-dark-bg: #213d2b;
+  --reg-sem-dark-border: #3c7953;
+  --reg-sem-dark-watermark: rgba(74,222,128,.07);
+  --reg-sem-dark-icon-bg: #2c5941;
+  --reg-sem-dark-icon-fg: #99e7b7;
+}
+
+/* 2. BLUE */
+.registrar-teaching-schedule__summary > article:nth-child(2) {
+  --reg-sem-accent: #2867e6;
+  --reg-sem-surface: #eef5ff;
+  --reg-sem-watermark: rgba(40,105,237,.09);
+  --reg-sem-icon-bg: #e6f0ff;
+  --reg-sem-icon-border: #c9dcff;
+  --reg-sem-icon-fg: #1d56ce;
+  --reg-sem-dark-bg: #25394f;
+  --reg-sem-dark-border: #456995;
+  --reg-sem-dark-watermark: rgba(96,165,250,.08);
+  --reg-sem-dark-icon-bg: #2d4e70;
+  --reg-sem-dark-icon-fg: #a4ccff;
+}
+
+/* 3. BLUE */
+.registrar-teaching-schedule__summary > article:nth-child(3) {
+  --reg-sem-accent: #2867e6;
+  --reg-sem-surface: #eef5ff;
+  --reg-sem-watermark: rgba(40,105,237,.09);
+  --reg-sem-icon-bg: #e6f0ff;
+  --reg-sem-icon-border: #c9dcff;
+  --reg-sem-icon-fg: #1d56ce;
+  --reg-sem-dark-bg: #25394f;
+  --reg-sem-dark-border: #456995;
+  --reg-sem-dark-watermark: rgba(96,165,250,.08);
+  --reg-sem-dark-icon-bg: #2d4e70;
+  --reg-sem-dark-icon-fg: #a4ccff;
+}
+
+/* 4. AMBER */
+.registrar-teaching-schedule__summary > article:nth-child(4) {
+  --reg-sem-accent: #d69b22;
+  --reg-sem-surface: #fff8e8;
+  --reg-sem-watermark: rgba(218,164,27,.10);
+  --reg-sem-icon-bg: #fff0cc;
+  --reg-sem-icon-border: #efd399;
+  --reg-sem-icon-fg: #9c6714;
+  --reg-sem-dark-bg: #423520;
+  --reg-sem-dark-border: #826536;
+  --reg-sem-dark-watermark: rgba(251,191,36,.08);
+  --reg-sem-dark-icon-bg: #554426;
+  --reg-sem-dark-icon-fg: #f8d38d;
+}
+
+/* Card background, status stripe and corner accent. */
+.registrar-teaching-schedule__summary > article {
+  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
+  border-left-color: var(--reg-sem-accent);
+}
+.registrar-teaching-schedule__summary > article::before {
+  background: var(--reg-sem-watermark);
+}
+.registrar-teaching-schedule__summary > article::before {
+  background: var(--reg-sem-watermark);
+}
+.registrar-teaching-schedule__summary > article .registrar-teaching-schedule__summary-icon {
+  color: var(--reg-sem-icon-fg);
+  border-color: var(--reg-sem-icon-border);
+  background: var(--reg-sem-icon-bg);
+  box-shadow: none;
+}
+.registrar-teaching-schedule__summary > article .registrar-teaching-schedule__summary-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
+
+/* Dark Mode: status colors remain legible on charcoal panels. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-teaching-schedule__summary > article {
+  background: var(--reg-sem-dark-bg) !important;
+  border-left-color: var(--reg-sem-accent);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-teaching-schedule__summary > article::before {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-teaching-schedule__summary > article::before {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-teaching-schedule__summary > article .registrar-teaching-schedule__summary-icon {
+  color: var(--reg-sem-dark-icon-fg);
+  background: var(--reg-sem-dark-icon-bg);
+  border-color: var(--reg-sem-dark-border);
+  box-shadow: none;
+}
+/* =============================================================
+   PTC PORTAL — REGISTRAR SEMANTIC CARD COLORS
+   Page: Teaching Schedules
+   PATCH ONLY — paste at the END of the existing CSS file.
+   Does not change the hero, background pattern, sidebar or layout.
+   ============================================================= */
+
+/* 1. Scheduled Classes: successfully scheduled — green */
+.registrar-teaching-schedule__summary > article:nth-child(1) {
+  background: #edf9f2;
+  border-left-color: #119457;
+}
+.registrar-teaching-schedule__summary > article:nth-child(1)::before { background: rgba(24,156,85,.09); }
+.registrar-teaching-schedule__summary > article:nth-child(1)::after { background-color: rgba(24,156,85,.09); }
+.registrar-teaching-schedule__summary > article:nth-child(1) .registrar-teaching-schedule__summary-icon {
+  color: #097443;
+  background: #ddf5e6;
+  border: 1px solid #bfe3ce;
+  box-shadow: none;
+}
+.registrar-teaching-schedule__summary > article:nth-child(1) .registrar-teaching-schedule__summary-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(1) {
+  background: #203d2c;
+  border-left-color: #3d7955;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(1)::before { background: rgba(64,220,136,.075); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(1)::after { background-color: rgba(64,220,136,.075); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(1) .registrar-teaching-schedule__summary-icon {
+  color: #a4edbe;
+  background: #2b5d43;
+  border-color: #3d7955;
+  box-shadow: none;
+}
+
+/* 2. Teaching Days: calendar information — blue */
+.registrar-teaching-schedule__summary > article:nth-child(2) {
+  background: #eef5ff;
+  border-left-color: #2867e6;
+}
+.registrar-teaching-schedule__summary > article:nth-child(2)::before { background: rgba(40,105,237,.09); }
+.registrar-teaching-schedule__summary > article:nth-child(2)::after { background-color: rgba(40,105,237,.09); }
+.registrar-teaching-schedule__summary > article:nth-child(2) .registrar-teaching-schedule__summary-icon {
+  color: #1d56ce;
+  background: #e5f0ff;
+  border: 1px solid #c9dcff;
+  box-shadow: none;
+}
+.registrar-teaching-schedule__summary > article:nth-child(2) .registrar-teaching-schedule__summary-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(2) {
+  background: #253950;
+  border-left-color: #456b99;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(2)::before { background: rgba(96,165,250,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(2)::after { background-color: rgba(96,165,250,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(2) .registrar-teaching-schedule__summary-icon {
+  color: #a4ccff;
+  background: #2d4e70;
+  border-color: #456b99;
+  box-shadow: none;
+}
+
+/* 3. Enrolled Students: enrollment information — blue */
+.registrar-teaching-schedule__summary > article:nth-child(3) {
+  background: #eef5ff;
+  border-left-color: #2867e6;
+}
+.registrar-teaching-schedule__summary > article:nth-child(3)::before { background: rgba(40,105,237,.09); }
+.registrar-teaching-schedule__summary > article:nth-child(3)::after { background-color: rgba(40,105,237,.09); }
+.registrar-teaching-schedule__summary > article:nth-child(3) .registrar-teaching-schedule__summary-icon {
+  color: #1d56ce;
+  background: #e5f0ff;
+  border: 1px solid #c9dcff;
+  box-shadow: none;
+}
+.registrar-teaching-schedule__summary > article:nth-child(3) .registrar-teaching-schedule__summary-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(3) {
+  background: #253950;
+  border-left-color: #456b99;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(3)::before { background: rgba(96,165,250,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(3)::after { background-color: rgba(96,165,250,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(3) .registrar-teaching-schedule__summary-icon {
+  color: #a4ccff;
+  background: #2d4e70;
+  border-color: #456b99;
+  box-shadow: none;
+}
+
+/* 4. Unscheduled: still needs a schedule — amber */
+.registrar-teaching-schedule__summary > article:nth-child(4) {
+  background: #fff8e8;
+  border-left-color: #d69b22;
+}
+.registrar-teaching-schedule__summary > article:nth-child(4)::before { background: rgba(218,164,27,.10); }
+.registrar-teaching-schedule__summary > article:nth-child(4)::after { background-color: rgba(218,164,27,.10); }
+.registrar-teaching-schedule__summary > article:nth-child(4) .registrar-teaching-schedule__summary-icon {
+  color: #9c6714;
+  background: #fff0cc;
+  border: 1px solid #efd399;
+  box-shadow: none;
+}
+.registrar-teaching-schedule__summary > article:nth-child(4) .registrar-teaching-schedule__summary-icon svg {
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(4) {
+  background: #423520;
+  border-left-color: #806336;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(4)::before { background: rgba(251,191,36,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(4)::after { background-color: rgba(251,191,36,.085); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .registrar-teaching-schedule__summary > article:nth-child(4) .registrar-teaching-schedule__summary-icon {
+  color: #f8d38d;
+  background: #554426;
+  border-color: #806336;
+  box-shadow: none;
+}

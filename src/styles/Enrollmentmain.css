@@ -623,14 +623,14 @@
   background: var(--warning-soft);
 }
 .enrollment-main .subjects-heading-icon.retake {
-  color: var(--danger);
-  border-color: var(--danger-border);
-  background: var(--danger-soft);
+  color: #b86a16;
+  border-color: #efcf98;
+  background: #fff0d6;
 }
 .enrollment-main .subjects-heading-icon.blocked {
-  color: #9a670f;
-  border-color: var(--warning-border);
-  background: var(--warning-soft);
+  color: #64748b;
+  border-color: #d5dce4;
+  background: #eef2f6;
 }
 .enrollment-main .subjects-eyebrow {
   margin-bottom: 2px;
@@ -687,14 +687,14 @@
   background: var(--warning-soft);
 }
 .enrollment-main .retake-section .selection-counter {
-  color: var(--danger);
-  border-color: var(--danger-border);
-  background: var(--danger-soft);
+  color: #a85f12;
+  border-color: #efcf98;
+  background: #fff4e1;
 }
 .enrollment-main .blocked-section .selection-counter {
-  color: #8a6414;
-  border-color: var(--warning-border);
-  background: var(--warning-soft);
+  color: #475569;
+  border-color: #d5dce4;
+  background: #eef2f6;
 }
 .enrollment-main .subject-list {
   display: flex;
@@ -745,10 +745,10 @@
   background: #c28a1a;
 }
 .enrollment-main .subject-card.retake-subject::before {
-  background: #d5564b;
+  background: #d48a2a;
 }
 .enrollment-main .subject-card.blocked-subject::before {
-  background: #d39a25;
+  background: #7b8794;
 }
 .enrollment-main .subject-card.completed-subject {
   border-color: #dce9e0;
@@ -759,12 +759,12 @@
   background: #fffefa;
 }
 .enrollment-main .subject-card.retake-subject {
-  border-color: #efd1cd;
-  background: #fffdfd;
+  border-color: #efd9b2;
+  background: #fffdf8;
 }
 .enrollment-main .subject-card.blocked-subject {
-  border-color: #eadbb5;
-  background: #fffefb;
+  border-color: #d8dee6;
+  background: #f8fafc;
 }
 .enrollment-main .subject-card.official-subject.is-expanded {
   border-color: #a9d1b7;
@@ -820,14 +820,14 @@
   background: var(--warning-soft);
 }
 .enrollment-main .retake-subject .subject-number {
-  color: var(--danger);
-  border-color: var(--danger-border);
-  background: var(--danger-soft);
+  color: #a85f12;
+  border-color: #efcf98;
+  background: #fff0d6;
 }
 .enrollment-main .blocked-subject .subject-number {
-  color: #9a670f;
-  border-color: var(--warning-border);
-  background: var(--warning-soft);
+  color: #475569;
+  border-color: #d5dce4;
+  background: #eef2f6;
 }
 .enrollment-main .completed-subject .subject-number {
   color: var(--ptc-green-800);
@@ -855,10 +855,10 @@
   color: #7d5a11;
 }
 .enrollment-main .retake-subject .subject-code {
-  color: #9f2f27;
+  color: #a85f12;
 }
 .enrollment-main .blocked-subject .subject-code {
-  color: #8a6414;
+  color: #475569;
 }
 .enrollment-main .subject-badge {
   display: inline-flex;
@@ -880,9 +880,9 @@
   background: var(--ptc-green-50);
 }
 .enrollment-main .subject-badge.retake {
-  color: var(--danger);
-  border-color: #f1d0cc;
-  background: var(--danger-soft);
+  color: #a85f12;
+  border-color: #efcf98;
+  background: #fff3df;
 }
 .enrollment-main .carryover-subject .subject-badge.retake {
   color: var(--warning-dark);
@@ -890,9 +890,9 @@
   background: var(--warning-soft);
 }
 .enrollment-main .blocked-subject .subject-badge.retake {
-  color: #8a6414;
-  border-color: var(--warning-border);
-  background: var(--warning-soft);
+  color: #475569;
+  border-color: #d5dce4;
+  background: #eef2f6;
 }
 .enrollment-main .subject-main h3 {
   margin: 0;
@@ -969,7 +969,7 @@
     transform 0.18s ease,
     background 0.18s ease;
 }
-.enrollment-main .subject-detail-arrow\.expanded {
+.enrollment-main .subject-detail-arrow.expanded {
   transform: rotate(180deg);
   background: var(--ptc-green-100);
 }
@@ -983,12 +983,12 @@
   background: #fffdf8;
 }
 .enrollment-main .retake-subject .section-area {
-  border-top-color: #f1d8d5;
-  background: #fffafa;
+  border-top-color: #efd9b2;
+  background: #fffaf2;
 }
 .enrollment-main .blocked-subject .section-area {
-  border-top-color: #eee0c0;
-  background: #fffcf5;
+  border-top-color: #d8dee6;
+  background: #f6f8fa;
 }
 .enrollment-main .official-placement-area {
   padding-top: 10px;
@@ -1716,5 +1716,699 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   PTC PORTAL | STUDENT ENROLLMENT — CONSISTENT SINGLE-FILE VISUAL DESIGN
+   Route: /student/enrollment/main
+   This block intentionally lives inside Enrollmentmain.css.
+   The source of truth for the canvas variables is the existing
+   ptc-unified-canvas.css; do not duplicate or modify that shared file.
+   All rules are scoped to the Student Enrollment route so the completed
+   Student pages, other roles, sidebar, footer and application logic stay intact.
+   ============================================================================ */
+
+/* The same geometric canvas from approved Registrar/Program Head pages,
+   including the parent workspace (avoids disconnected background strips). */
+.dashboard-main:has(> .dashboard-content > .enrollment-main) > .dashboard-content {
+  padding: 0 !important;
+  min-width: 0;
+  overflow-x: clip;
+  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
+  background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0, #dce9e0)) !important;
+  background-size: var(--ptc-canvas-tiles, auto) !important;
+  background-position: var(--ptc-canvas-offsets, center) !important;
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
+}
+
+.dashboard-content > .enrollment-main {
+  --text-primary: #17251e;
+  --text-secondary: #607469;
+  --text-muted: #718278;
+  --surface: #ffffff;
+  --surface-soft: #f7fbf8;
+  --border: #dce9e0;
+  --border-strong: #c6ddce;
+  --border-soft: #e8f0e9;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 100%;
+  padding: 27px 27px 42px;
+  overflow-x: clip;
+  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
+  background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0, #dce9e0)) !important;
+  background-size: var(--ptc-canvas-tiles, auto) !important;
+  background-position: var(--ptc-canvas-offsets, center) !important;
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
+}
+.enrollment-main .enrollment-shell { min-width: 0; max-width: 100%; }
+
+/* No large round decorations: same clean, dark-green gradient hero. */
+.enrollment-main::before,
+.enrollment-main::after,
+.enrollment-main .enrollment-header::before,
+.enrollment-main .enrollment-header::after {
+  content: none !important;
+  display: none !important;
+}
+.enrollment-main .enrollment-header {
+  min-height: 180px;
+  margin-bottom: 17px;
+  padding: 29px 31px;
+  border: 1px solid rgba(221, 255, 236, .16);
+  border-radius: 23px;
+  background: linear-gradient(108deg, #06482e 0%, #086b3c 55%, #138848 100%);
+  box-shadow: 0 16px 34px rgba(4, 71, 36, .14);
+}
+.enrollment-main .enrollment-eyebrow:not(.subjects-eyebrow) {
+  gap: 9px;
+  margin-bottom: 12px;
+  color: #e9fff2;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .065em;
+}
+.enrollment-main .enrollment-header .enrollment-eyebrow-icon {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  border: 1px solid rgba(255, 255, 255, .24);
+  color: #ffffff;
+  background: rgba(255, 255, 255, .15);
+}
+.enrollment-main .enrollment-header h1 {
+  color: #ffffff;
+  font-size: clamp(29px, 2.6vw, 38px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+.enrollment-main .enrollment-header p {
+  max-width: 730px;
+  color: #e1f7e9;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.enrollment-main .enrollment-header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.enrollment-main .enrollment-period-badge {
+  min-height: 35px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, .45);
+  color: #edf9f2;
+  background: rgba(255, 255, 255, .12);
+  font-size: 11px;
+  backdrop-filter: blur(3px);
+}
+.enrollment-main .enrollment-period-badge.open {
+  border-color: rgba(255, 255, 255, .67);
+  color: #06472d;
+  background: #e2f7ea;
+}
+.enrollment-main .enrollment-period-badge.closed {
+  border-color: rgba(255,255,255,.35);
+  color: #f2f7f4;
+  background: rgba(255,255,255,.12);
+}
+.enrollment-main .enrollment-period-badge.closed .enrollment-period-dot {
+  background: #f2dcc0;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.12);
+}
+
+/* Identity information and quick overview: matched compact rounded cards. */
+.enrollment-main .enrollment-info-grid {
+  gap: 12px;
+  margin-bottom: 17px;
+}
+.enrollment-main .enrollment-info-card {
+  min-height: 100px;
+  padding: 16px 17px;
+  border-color: #dbe9df;
+  border-left: 4px solid #159452;
+  border-radius: 17px;
+  background: linear-gradient(115deg, #ffffff, #f7fcf9);
+  box-shadow: 0 8px 22px rgba(8, 66, 36, .065);
+}
+.enrollment-main .enrollment-info-card:nth-child(2) {
+  border-left-color: #2563eb;
+  background: linear-gradient(115deg, #ffffff, #f5f9ff);
+}
+.enrollment-main .enrollment-info-card:nth-child(3) {
+  border-left-color: #b67ad4;
+  background: linear-gradient(115deg, #ffffff, #fbf8ff);
+}
+.enrollment-main .enrollment-info-card:nth-child(4) {
+  border-left-color: #d7a329;
+  background: linear-gradient(115deg, #ffffff, #fffaf1);
+}
+.enrollment-main .info-label,
+.enrollment-main .enrollment-info-card .info-label {
+  color: #627567;
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: .035em;
+}
+.enrollment-main .enrollment-info-card strong {
+  color: #17251e;
+  font-size: 14px;
+  font-weight: 790;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.enrollment-main .enrollment-info-card small { color: #687d70; font-size: 11px; white-space: normal; }
+.enrollment-main .enrollment-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 19px;
+  padding: 11px;
+  border: 1px solid rgba(255,255,255,.77);
+  border-radius: 23px;
+  background: rgba(255,255,255,.58);
+  box-shadow: 0 10px 25px rgba(10,66,36,.08);
+}
+.enrollment-main .summary-item {
+  min-height: 106px;
+  gap: 13px;
+  padding: 17px 16px;
+  border: 1px solid #deebdf;
+  border-left: 4px solid #0b9953;
+  border-radius: 17px;
+  background: linear-gradient(110deg, #f4fcf7, #eaf8ef);
+  box-shadow: 0 6px 16px rgba(13,69,37,.055);
+}
+.enrollment-main .summary-item:hover { background: #f1fcf6; }
+.enrollment-main .summary-item.retake {
+  border-color: #efd4aa;
+  border-left-color: #d48a2a;
+  background: linear-gradient(110deg, #fffaf1, #fff0d9);
+}
+.enrollment-main .summary-item.retake:hover { background: #fff5e6; }
+/* Carry Over stays gold and independent of the Retake color. */
+.enrollment-main .summary-item.carryover {
+  border-color: #f1e4c4;
+  border-left-color: #d69b1c;
+  background: linear-gradient(110deg, #fffdf5, #fff5dd);
+}
+.enrollment-main .summary-item.carryover:hover { background: #fff8e9; }
+.enrollment-main .summary-item.carryover .summary-icon {
+  color: #926400;
+  border: 1px solid #e9d39b;
+  background: #fff2d1;
+}
+.enrollment-main .summary-item.carryover .summary-number { color: #8b630d; }
+
+.enrollment-main .summary-item.blocked {
+  border-color: #d8e0e8;
+  border-left-color: #7b8794;
+  background: linear-gradient(110deg, #f8fafc, #eef2f6);
+}
+.enrollment-main .summary-item.blocked:hover { background: #f2f5f9; }
+.enrollment-main .summary-item.completed {
+  border-color: #cfece0;
+  border-left-color: #0a9a71;
+  background: linear-gradient(110deg, #f4fcf9, #e4f8f0);
+}
+.enrollment-main .summary-item.type {
+  border-color: #d7e5fa;
+  border-left-color: #2563eb;
+  background: linear-gradient(110deg, #f7faff, #eaf2ff);
+}
+.enrollment-main .summary-icon {
+  flex-basis: 44px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 13px;
+  color: #ffffff;
+  background: linear-gradient(145deg, #0b9955, #065c34);
+}
+.enrollment-main .summary-item.retake .summary-icon {
+  color: #b86a16;
+  border: 1px solid #efcf98;
+  background: #fff0d6;
+}
+.enrollment-main .summary-item.blocked .summary-icon {
+  color: #64748b;
+  border: 1px solid #d5dce4;
+  background: #eef2f6;
+}
+/* The Completed TSX already renders CheckCircle2; give it a visible white stroke. */
+.enrollment-main .summary-item.completed .summary-icon {
+  color: #ffffff;
+  border: 1px solid #0e8250;
+  background: linear-gradient(145deg, #119d5d, #087046);
+}
+.enrollment-main .summary-item.completed .summary-icon svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  stroke-width: 2.35;
+  opacity: 1;
+  visibility: visible;
+}
+.enrollment-main .summary-item.type .summary-icon {
+  color: #2563eb;
+  border: 1px solid #cfe0ff;
+  background: #e8f1ff;
+}
+.enrollment-main .summary-number { color: #17251e; font-size: 27px; font-weight: 820; }
+.enrollment-main .summary-item.retake .summary-number { color: #a85f12; }
+.enrollment-main .summary-item.blocked .summary-number { color: #475569; }
+.enrollment-main .summary-item.type .summary-number { color: #1e51ba; }
+.enrollment-main .summary-label {
+  color: #607469;
+  font-size: 10px;
+  font-weight: 790;
+  letter-spacing: .025em;
+}
+
+/* Enrollment status, instructions and alerts retain their original semantics. */
+.enrollment-main .enrollment-status-card,
+.enrollment-main .enrollment-instruction,
+.enrollment-main .enrollment-alert,
+.enrollment-main .curriculum-card,
+.enrollment-main .enrollment-submit-card {
+  border-color: #d9e9df;
+  border-radius: 19px;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(8,66,36,.07);
+}
+.enrollment-main .enrollment-status-card { border-left: 4px solid #0e9154; padding: 19px 21px; }
+.enrollment-main .status-label { color: #536f5d; font-size: 10px; }
+.enrollment-main .status-left p { color: #607469; font-size: 11.5px; }
+.enrollment-main .status-right span { color: #637868; }
+.enrollment-main .status-right strong { color: #203329; font-size: 11px; }
+.enrollment-main .enrollment-instruction { padding: 15px 17px; }
+.enrollment-main .enrollment-instruction strong { font-size: 12.5px; }
+.enrollment-main .enrollment-instruction p { font-size: 11px; line-height: 1.65; }
+.enrollment-main .enrollment-instruction small { font-size: 10px; }
+.enrollment-main .enrollment-alert.error { border-color: #efd1c9; background: #fff8f6; }
+.enrollment-main .enrollment-alert.success { border-color: #cce6d5; background: #f4fcf7; }
+
+/* Collapsible sections: original keyboard interaction and all state classes remain. */
+.enrollment-main .subjects-container {
+  border-color: #d9e9df;
+  border-radius: 19px;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(8,66,36,.07);
+}
+.enrollment-main .enrollment-subject-section:hover { border-color: #b7d9c4; }
+.enrollment-main .enrollment-subject-section.is-open { border-color: #a9d6bb; }
+.enrollment-main .subjects-header {
+  min-height: 88px;
+  padding: 18px 20px;
+  background: linear-gradient(110deg, #ffffff 50%, #f3fbf6);
+}
+.enrollment-main .enrollment-subject-section .subjects-header[role="button"]:hover {
+  background: linear-gradient(110deg, #ffffff, #ebf9ef);
+}
+.enrollment-main .enrollment-subject-section.is-open > .subjects-header {
+  border-bottom-color: #e0eee4;
+  background: linear-gradient(110deg, #ffffff, #eefaf1);
+}
+.enrollment-main .subjects-header h2 { color: #17251e; font-size: 16px; font-weight: 790; }
+.enrollment-main .subjects-header p { color: #607469; font-size: 11px; line-height: 1.6; }
+.enrollment-main .subjects-eyebrow { color: #0d7a45; font-size: 10px; font-weight: 790; }
+.enrollment-main .subjects-heading-icon { width: 42px; height: 42px; border-radius: 12px; }
+.enrollment-main .subjects-heading { grid-template-columns: 42px minmax(0, 1fr); }
+.enrollment-main .subjects-heading-icon.official,
+.enrollment-main .subjects-heading-icon.regular,
+.enrollment-main .subjects-heading-icon.completed,
+.enrollment-main .subjects-heading-icon.draft { color: #ffffff; border: none; background: linear-gradient(145deg, #0b9955, #065c34); }
+.enrollment-main .subjects-heading-icon.carryover { color: #966000; border-color: #efdaa5; background: #fff0ce; }
+.enrollment-main .subjects-heading-icon.retake { color: #b86a16; border-color: #efcf98; background: #fff0d6; }
+.enrollment-main .subjects-heading-icon.blocked { color: #64748b; border-color: #d5dce4; background: #eef2f6; }
+.enrollment-main .selection-counter { min-height: 31px; padding: 6px 11px; font-size: 10px; }
+.enrollment-main .subject-list { gap: 10px; padding: 14px; background: #f7fbf8; }
+.enrollment-main .subject-card { border-color: #dfeae2; border-radius: 13px; background: #ffffff; }
+.enrollment-main .subject-main h3 { color: #182a1e; }
+.enrollment-main .subject-header { min-height: 76px; padding: 13px 16px; }
+.enrollment-main .subject-header-toggle:hover,
+.enrollment-main .subject-header-toggle:focus-visible { background: #f7fcf8; }
+.enrollment-main .assigned-section-card { border-color: #d3e7d9; background: #ffffff; }
+.enrollment-main .section-area { background: #f7fbf8; }
+.enrollment-main .section-area-header strong,
+.enrollment-main .section-information strong { color: #183326; }
+.enrollment-main .selected-section-message { border-color: #d3e6d9; background: #f5fbf7; }
+.enrollment-main .no-sections { border-color: #c7dbce; background: #ffffff; }
+.enrollment-main .placement-empty { background: #f6fcf8; }
+.enrollment-main .retake-selection-message,
+.enrollment-main .retake-selection-message:hover { border-color: #efd9b2; background: #fffaf2; }
+.enrollment-main .retake-selection-message.selected { border-color: #a7d3b8; background: #effaf3; }
+.enrollment-main .carryover-message { border-color: #e9d7a9; background: #fffbf1; }
+.enrollment-main .curriculum-card { padding: 18px 20px; }
+.enrollment-main .curriculum-card strong { color: #203329; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
+.enrollment-main .enrollment-submit-card::before { width: 4px; }
+.enrollment-main .enrollment-submit-content { padding: 19px 20px 19px 24px; }
+.enrollment-main .enrollment-submit-content h2 { color: #17251e; font-size: 17px; font-weight: 790; }
+.enrollment-main .enrollment-submit-content p { color: #607469; font-size: 11px; line-height: 1.65; }
+.enrollment-main .enrollment-submit-content small { font-size: 10px; }
+.enrollment-main .enrollment-btn.primary {
+  min-height: 43px;
+  border-color: #0b7644;
+  background: linear-gradient(120deg, #087d46, #075532);
+  box-shadow: 0 6px 14px rgba(5,96,51,.13);
+}
+.enrollment-main .enrollment-btn.primary:hover:not(:disabled) {
+  border-color: #06472b;
+  background: linear-gradient(120deg, #0a6f40, #06472b);
+}
+.enrollment-main .enrollment-error-page { border-color: #efd1c9; background: #fffaf9; }
+.enrollment-main .enrollment-initial-placeholder { background: transparent; }
+
+/* Responsive layout: do not override the existing layout's collapse behavior. */
+@media (max-width: 1100px) {
+  .enrollment-main .enrollment-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+  .enrollment-main .enrollment-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .dashboard-content > .enrollment-main { padding: 18px 16px 32px; }
+  .enrollment-main .enrollment-header { min-height: 0; padding: 24px 20px; border-radius: 19px; }
+  .enrollment-main .enrollment-header-actions { justify-content: flex-start; }
+  .enrollment-main .subjects-header { padding: 15px 16px; }
+  .enrollment-main .enrollment-info-card { min-height: 90px; }
+}
+@media (max-width: 640px) {
+  .enrollment-main .enrollment-summary { grid-template-columns: 1fr; }
+  .enrollment-main .summary-item { min-height: 86px; }
+}
+@media (max-width: 520px) {
+  .dashboard-content > .enrollment-main { padding: 15px 12px 27px; }
+  .enrollment-main .enrollment-header { padding: 22px 18px; border-radius: 17px; }
+  .enrollment-main .enrollment-header h1 { font-size: 27px; }
+  .enrollment-main .enrollment-info-card { border-radius: 15px; }
+  .enrollment-main .summary-item { border-radius: 15px; }
+  .enrollment-main .enrollment-summary { padding: 8px; border-radius: 18px; }
+  .enrollment-main .subjects-header h2 { font-size: 15px; }
+  .enrollment-main .subject-header { padding: 11px 13px; }
+}
+
+/* Dark Mode: paint both workspace and page dark, including loading states.
+   No white page-entry animation or overlay is added. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .dashboard-main:has(> .dashboard-content > .enrollment-main) > .dashboard-content,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .dashboard-content > .enrollment-main {
+  background-color: #111c16 !important;
+  background-image:
+    linear-gradient(135deg, rgba(117,163,126,.035) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(117,163,126,.025) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(117,163,126,.02) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(117,163,126,.02) 25%, transparent 25%),
+    linear-gradient(180deg, #101a15, #17231b) !important;
+  background-size: 96px 96px, 96px 96px, 128px 128px, 128px 128px, auto !important;
+  background-position: 0 0, 48px 48px, 0 0, 64px 64px, center !important;
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat !important;
+}
+/* The per-page dark variables are scoped, never set on sidebar or footer. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main {
+  --text-primary: #edf6ef;
+  --text-secondary: #b9cbbc;
+  --text-muted: #9eb5a7;
+  --surface: #1d2922;
+  --surface-soft: #223329;
+  --border: #344b3c;
+  --border-strong: #4d6754;
+  --border-soft: #344a3b;
+  --gray-soft: #2c3c33;
+  --gray: #b2c4b5;
+  --danger-soft: #402720;
+  --danger-border: #715044;
+  --warning-soft: #3d3420;
+  --warning-border: #6a5732;
+  --warning-dark: #ffd07c;
+  --ptc-green-50: #253d2d;
+  --ptc-green-100: #2b5138;
+  --ptc-green-800: #ade9bb;
+  color: #edf6ef;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-header {
+  border-color: rgba(255,255,255,.18);
+  background: linear-gradient(108deg, #063c29, #075b37 55%, #0a7141);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.enrollment-summary) {
+  border-color: #34513f;
+  background: rgba(18,29,23,.74);
+  box-shadow: none;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.enrollment-info-card, .summary-item, .enrollment-status-card,
+    .enrollment-instruction, .enrollment-alert, .subjects-container,
+    .curriculum-card, .enrollment-submit-card, .assigned-section-card,
+    .subject-card, .no-sections, .enrollment-error-page) {
+  border-color: #36513e;
+  color: #eaf4ec;
+  background: #1e2b23;
+  box-shadow: none;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-info-card { border-left-color: #27bc75; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-info-card:nth-child(2) { border-left-color: #759df1; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-info-card:nth-child(3) { border-left-color: #b99adb; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-info-card:nth-child(4) { border-left-color: #dfb15b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.summary-item,.summary-item:hover) { border-left-color: #2cbd70; background: #1f3528; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.summary-item.retake,.summary-item.retake:hover) { border-color: #735532; border-left-color: #e4a24e; background: #382c20; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.summary-item.blocked,.summary-item.blocked:hover) { border-color: #526071; border-left-color: #9aa9bc; background: #29313d; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.summary-item.type,.summary-item.type:hover) { border-color: #395375; border-left-color: #78a3f2; background: #1e2e43; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.summary-item.completed,.summary-item.completed:hover) { border-left-color: #39c69e; background: #20392f; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.summary-number, .summary-item.retake .summary-number,
+    .summary-item.type .summary-number, .subject-main h3, .subjects-header h2,
+    .curriculum-card strong, .enrollment-submit-content h2, .enrollment-info-card strong,
+    .enrollment-instruction strong, .status-right strong, .section-information strong,
+    .section-area-header strong, .no-sections strong, .selected-section-message strong,
+    .subject-code, .section-capacity strong, .enrollment-error-page h2,
+    .status-left strong) {
+  color: #edf6ef;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.info-label, .summary-label, .status-label, .status-left p,
+    .status-right span, .enrollment-info-card small, .enrollment-instruction p,
+    .enrollment-instruction small, .subjects-header p, .subject-details,
+    .section-information small, .section-capacity small, .no-sections p,
+    .no-sections small, .selected-section-message p, .selected-section-message small,
+    .enrollment-submit-content p, .enrollment-submit-content small) {
+  color: #bacdbd;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.subjects-header, .enrollment-subject-section.is-open > .subjects-header,
+    .enrollment-subject-section .subjects-header[role="button"]:hover,
+    .subject-header-toggle:hover, .subject-header-toggle:focus-visible) {
+  border-color: #36513e;
+  background: #23382a;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.subject-list, .section-area) { border-color: #354b3c; background: #192820; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.selected-section-message, .placement-empty,
+    .retake-selection-message, .retake-selection-message:hover, .retake-selection-message.selected) {
+  color: #d4e4d5;
+  border-color: #3d604a;
+  background: #253a2d;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.carryover-message) { border-color: #675731; background: #352d21; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .subject-card.carryover-subject { border-color: #594d32; background: #2e2a20; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .subject-card.blocked-subject { border-color: #4d596b; background: #252e38; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.subject-card.retake-subject, .enrollment-alert.error) { border-color: #654638; background: #342521; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.enrollment-alert.success, .subject-card.completed-subject) { border-color: #326b46; background: #1e3627; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.enrollment-subject-section .selection-counter, .subject-badge,
+    .status-badge, .section-status, .section-count) { border-color: #4a6652; color: #dceee0; background: #2b4132; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.status-badge.pending, .section-status.full, .carryover-section .selection-counter) {
+  color: #ffdf9d; border-color: #726035; background: #40351f;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.status-badge.approved, .status-badge.ready, .section-status.open,
+    .regular-section .selection-counter, .completed-section .selection-counter,
+    .official-section .selection-counter, .draft-review-section .selection-counter) {
+  color: #aaf2bd; border-color: #326e4b; background: #213b2b;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.status-badge.rejected, .status-badge.failed) {
+  color: #ffb4a7; border-color: #704b46; background: #3a2725;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.status-badge.dropped, .status-badge.draft, .section-status.closed) {
+  color: #c5d3c9; border-color: #4a5f51; background: #2a3930;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.enrollment-btn:not(.primary), .alert-icon, .alert-close,
+    .no-section-icon, .section-radio, .subject-number, .instruction-icon) {
+  border-color: #486451; color: #a5e9bc; background: #27412f;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-btn.primary { color: #ffffff; background: linear-gradient(120deg, #0a8850, #075c39); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-error-page { background: #302423; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .enrollment-initial-placeholder { background: transparent; }
+
+/* Preserve accessible contrast in small nested chips and status indicators. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .subject-details span {
+  color: #c3d6c7;
+  border-color: #3b5142;
+  background: #27362c;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .section-count {
+  color: #dceee0 !important;
+  border-color: #4a6652;
+  background: #2b4132;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.carryover {
+  border-color: #675832;
+  border-left-color: #e0b351;
+  background: #342e21;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.carryover:hover { background: #3d3527; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.carryover .summary-number { color: #ffe19b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.retake-subject .subject-number, .retake-subject .subject-code) { color: #ffc781; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.carryover-subject .subject-number, .carryover-subject .subject-code) { color: #ffdc91; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main :is(.blocked-subject .subject-number, .blocked-subject .subject-code) { color: #c4d0de; }
+
+
+/* Student Enrollment semantic palette in Dark Mode: Retake / Blocked / Completed. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.carryover .summary-icon {
+  color: #ffdf9d; border-color: #705933; background: #42331e;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.retake .summary-icon,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .subjects-heading-icon.retake {
+  color: #ffc781; border-color: #805b32; background: #45311f;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.blocked .summary-icon,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .subjects-heading-icon.blocked {
+  color: #d1d9e4; border-color: #536174; background: #344052;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .summary-item.completed .summary-icon {
+  color: #ffffff; border-color: #159d65; background: linear-gradient(145deg,#11a76b,#08724c);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .retake-section .selection-counter,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .retake-candidate-subject .subject-badge.retake {
+  color: #ffd08c; border-color: #805b32; background: #40301e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .blocked-section .selection-counter,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .blocked-subject .subject-badge.retake {
+  color: #cbd5e1; border-color: #536174; background: #303b49;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .blocked-subject .subject-number {
+  color: #cbd5e1; border-color: #536174; background: #303b49;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .retake-subject .subject-number {
+  color: #ffd08c; border-color: #805b32; background: #40301e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .retake-subject .section-area { border-color: #56452f; background: #29251e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .blocked-subject .section-area { border-color: #4d596b; background: #232c36; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark, [data-theme="dark"])
+  .enrollment-main .retake-selection-message:not(.selected) {
+  border-color: #654c2f; background: #32291f;
+}
+
+/* The loading placeholder is deliberately transparent in either theme; it
+   cannot expose a white overlay when navigating during a fetch. */
+@media (prefers-reduced-motion: reduce) {
+  .enrollment-main *, .enrollment-main *::before, .enrollment-main *::after {
+    transition-duration: .01ms !important;
   }
 }

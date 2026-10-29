@@ -1170,3 +1170,38 @@
   .program-head-profile-page__refresh,
   .program-head-profile-page__back { transition: none; }
 }
+/* PTC Portal: Program Head semantic KPI colors. Append to the END of the current CSS. */
+/* Colors convey card meaning, not its position in a decorative palette. */
+/* No layout, hero, canvas, typography or sidebar overrides. */
+
+/* Employee Number — slate */
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(1) { border-color: #d7e0e8; background: #f3f6f9; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(1)::before { background: #64748b; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(1)::after { border-color: rgba(100,116,139,.075); }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(1) .program-head-profile-page__summary-icon { color: #516175; border: 1px solid #d0dce6; background: #edf2f7; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(1) { border-color: #465869; background: #25333d; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(1) .program-head-profile-page__summary-icon { color: #c8d9e7; border-color: #465869; background: #344857; box-shadow: none; }
+
+/* Department — violet */
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(2) { border-color: #e3d4fa; background: #f7f2ff; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(2)::before { background: #8a4ae0; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(2)::after { border-color: rgba(138,74,224,.08); }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(2) .program-head-profile-page__summary-icon { color: #7640c4; border: 1px solid #d9c6fc; background: #f0e8ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(2) { border-color: #604a78; background: #332840; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(2) .program-head-profile-page__summary-icon { color: #e3d0ff; border-color: #604a78; background: #49345f; box-shadow: none; }
+
+/* Assignment (Active) — green */
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(3) { border-color: #c7e9d2; background: #effaf3; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(3)::before { background: #0b9857; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(3)::after { border-color: rgba(11,152,87,.085); }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(3) .program-head-profile-page__summary-icon { color: #087a48; border: 1px solid #bee3ce; background: #e2f6e9; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(3) { border-color: #367451; background: #1d3b2b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(3) .program-head-profile-page__summary-icon { color: #a9f0c6; border-color: #367451; background: #295840; box-shadow: none; }
+
+/* Program Head Since — blue */
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(4) { border-color: #d1e3fe; background: #f0f6ff; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(4)::before { background: #2b69e8; }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(4)::after { border-color: rgba(43,105,232,.09); }
+.program-head-profile-page .program-head-profile-page__summary article:nth-child(4) .program-head-profile-page__summary-icon { color: #2460d2; border: 1px solid #c2daff; background: #e6f0ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(4) { border-color: #41648a; background: #20344c; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-profile-page .program-head-profile-page__summary article:nth-child(4) .program-head-profile-page__summary-icon { color: #b4d5ff; border-color: #41648a; background: #294965; box-shadow: none; }

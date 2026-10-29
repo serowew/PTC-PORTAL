@@ -1364,3 +1364,105 @@
   .registrar-doc-request .is-spinning,
   .registrar-doc-request__spinner { animation: none; }
 }
+/* =========================================================
+   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
+   Page: Registrar Document Requests
+   Additive color overrides. Existing layout/design untouched.
+========================================================= */
+
+/* 1. SLATE */
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card:nth-child(1) {
+  --reg-sem-accent: #64748b;
+  --reg-sem-surface: #f2f6f9;
+  --reg-sem-watermark: rgba(100,116,139,.10);
+  --reg-sem-icon-bg: #e8eef4;
+  --reg-sem-icon-border: #cfdae5;
+  --reg-sem-icon-fg: #475569;
+  --reg-sem-dark-bg: #26343c;
+  --reg-sem-dark-border: #4b606c;
+  --reg-sem-dark-watermark: rgba(148,163,184,.08);
+  --reg-sem-dark-icon-bg: #354956;
+  --reg-sem-dark-icon-fg: #d3e0e9;
+}
+
+/* 2. AMBER */
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card:nth-child(2) {
+  --reg-sem-accent: #d69b22;
+  --reg-sem-surface: #fff8e8;
+  --reg-sem-watermark: rgba(218,164,27,.10);
+  --reg-sem-icon-bg: #fff0cc;
+  --reg-sem-icon-border: #efd399;
+  --reg-sem-icon-fg: #9c6714;
+  --reg-sem-dark-bg: #423520;
+  --reg-sem-dark-border: #826536;
+  --reg-sem-dark-watermark: rgba(251,191,36,.08);
+  --reg-sem-dark-icon-bg: #554426;
+  --reg-sem-dark-icon-fg: #f8d38d;
+}
+
+/* 3. BLUE */
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card:nth-child(3) {
+  --reg-sem-accent: #2867e6;
+  --reg-sem-surface: #eef5ff;
+  --reg-sem-watermark: rgba(40,105,237,.09);
+  --reg-sem-icon-bg: #e6f0ff;
+  --reg-sem-icon-border: #c9dcff;
+  --reg-sem-icon-fg: #1d56ce;
+  --reg-sem-dark-bg: #25394f;
+  --reg-sem-dark-border: #456995;
+  --reg-sem-dark-watermark: rgba(96,165,250,.08);
+  --reg-sem-dark-icon-bg: #2d4e70;
+  --reg-sem-dark-icon-fg: #a4ccff;
+}
+
+/* 4. GREEN */
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card:nth-child(4) {
+  --reg-sem-accent: #119457;
+  --reg-sem-surface: #edf9f2;
+  --reg-sem-watermark: rgba(20,159,91,.09);
+  --reg-sem-icon-bg: #dff5e9;
+  --reg-sem-icon-border: #bfdfce;
+  --reg-sem-icon-fg: #097443;
+  --reg-sem-dark-bg: #213d2b;
+  --reg-sem-dark-border: #3c7953;
+  --reg-sem-dark-watermark: rgba(74,222,128,.07);
+  --reg-sem-dark-icon-bg: #2c5941;
+  --reg-sem-dark-icon-fg: #99e7b7;
+}
+
+/* Card background, status stripe and corner accent. */
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card {
+  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
+  border-left-color: var(--reg-sem-accent);
+}
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card::after {
+  background: var(--reg-sem-watermark);
+}
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card::before {
+  background: var(--reg-sem-watermark);
+}
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card .registrar-doc-request__summary-icon {
+  color: var(--reg-sem-icon-fg);
+  border-color: var(--reg-sem-icon-border);
+  background: var(--reg-sem-icon-bg);
+  box-shadow: none;
+}
+.registrar-doc-request__summary-grid > .registrar-doc-request__summary-card .registrar-doc-request__summary-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
+
+/* Dark Mode: status colors remain legible on charcoal panels. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-doc-request__summary-grid > .registrar-doc-request__summary-card {
+  background: var(--reg-sem-dark-bg) !important;
+  border-left-color: var(--reg-sem-accent);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-doc-request__summary-grid > .registrar-doc-request__summary-card::after {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-doc-request__summary-grid > .registrar-doc-request__summary-card::before {
+  background: var(--reg-sem-dark-watermark);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-doc-request__summary-grid > .registrar-doc-request__summary-card .registrar-doc-request__summary-icon {
+  color: var(--reg-sem-dark-icon-fg);
+  background: var(--reg-sem-dark-icon-bg);
+  border-color: var(--reg-sem-dark-border);
+  box-shadow: none;
+}

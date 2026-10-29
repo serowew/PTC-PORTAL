@@ -1829,7 +1829,7 @@ export default function Enrollmentmain() {
                 <span className="summary-label">Retake Candidates</span>
               </div>
             </div>
-            <div className="summary-item retake">
+            <div className="summary-item carryover">
               <span className="summary-icon">
                 <Layers3 size={18} aria-hidden="true" />
               </span>

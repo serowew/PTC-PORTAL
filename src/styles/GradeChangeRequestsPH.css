@@ -1905,3 +1905,41 @@
   .ph-grade-change-page :is(input,select,textarea,button,.ph-grade-change-modal) {
   transition: none;
 }
+/* PTC Portal: Program Head semantic KPI colors. Append to the END of the current CSS. */
+/* Colors convey card meaning, not its position in a decorative palette. */
+/* No layout, hero, canvas, typography or sidebar overrides. */
+
+/* Pending Review — amber */
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(1) { border-color: #f0dbaa; background: #fff8e9; }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(1) { --metric-accent: #d39719; --metric-orb: rgba(211,151,25,.095); }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(1) > span { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(1) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(1) > span { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* For Registrar — blue */
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(2) { border-color: #d1e3fe; background: #f0f6ff; }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(2) { --metric-accent: #2b69e8; --metric-orb: rgba(43,105,232,.09); }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(2) > span { color: #2460d2; border: 1px solid #c2daff; background: #e6f0ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(2) { border-color: #41648a; background: #20344c; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(2) > span { color: #b4d5ff; border-color: #41648a; background: #294965; box-shadow: none; }
+
+/* Returned — amber */
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(3) { border-color: #f0dbaa; background: #fff8e9; }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(3) { --metric-accent: #d39719; --metric-orb: rgba(211,151,25,.095); }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(3) > span { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(3) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(3) > span { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Rejected — red */
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(4) { border-color: #f1cfcb; background: #fff2f1; }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(4) { --metric-accent: #cf5751; --metric-orb: rgba(207,87,81,.09); }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(4) > span { color: #ad3b36; border: 1px solid #eebfbb; background: #ffe8e5; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(4) { border-color: #824c4c; background: #3d282a; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(4) > span { color: #ffceca; border-color: #824c4c; background: #593334; box-shadow: none; }
+
+/* Completed — green */
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(5) { border-color: #c7e9d2; background: #effaf3; }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(5) { --metric-accent: #0b9857; --metric-orb: rgba(11,152,87,.085); }
+.ph-grade-change-page .ph-grade-change-summary article:nth-child(5) > span { color: #087a48; border: 1px solid #bee3ce; background: #e2f6e9; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(5) { border-color: #367451; background: #1d3b2b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .ph-grade-change-page .ph-grade-change-summary article:nth-child(5) > span { color: #a9f0c6; border-color: #367451; background: #295840; box-shadow: none; }

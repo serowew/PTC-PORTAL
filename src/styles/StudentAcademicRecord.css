@@ -1633,3 +1633,590 @@
     gap: 4px;
   }
 }
+
+/* ============================================================================
+   PTC PORTAL | STUDENT GRADES — APPROVED STUDENT VISUAL STANDARD
+   Route /student/records | Component AcademicRecord/StudentRecord.tsx
+   Single-file page redesign. Uses the EXACT existing shared canvas variables;
+   does NOT change ptc-unified-canvas.css, sidebar, footer or React logic.
+   Keep status meanings: transfer=blue, incomplete=gold, failed/retake=red.
+   ============================================================================ */
+
+/* Match the approved canvas on both the content parent and page; no white rim. */
+.dashboard-main:has(> .dashboard-content > .student-academic-record-page) > .dashboard-content {
+  padding: 0 !important;
+  min-width: 0;
+  overflow-x: clip;
+  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
+  background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0, #dce9e0)) !important;
+  background-size: var(--ptc-canvas-tiles, auto) !important;
+  background-position: var(--ptc-canvas-offsets, center) !important;
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
+}
+.dashboard-content > .student-academic-record-page {
+  --sar-text-950: #17201b;
+  --sar-text-900: #1f2d23; /* Previously referenced but undefined in grade cell. */
+  --sar-text-800: #28352d;
+  --sar-text-700: #425047;
+  --sar-text-600: #5e6b63;
+  --sar-text-500: #6a796f;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  padding: 27px 27px 42px;
+  overflow-x: clip;
+  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
+  background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0, #dce9e0)) !important;
+  background-size: var(--ptc-canvas-tiles, auto) !important;
+  background-position: var(--ptc-canvas-offsets, center) !important;
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
+}
+
+/* Dark-green hero with no oversized rings or intrusive decorations. */
+.student-academic-record-page .student-record-header {
+  min-height: 178px;
+  gap: 22px;
+  margin-bottom: 17px;
+  padding: 29px 31px;
+  border: 1px solid rgba(221, 255, 236, .16);
+  border-radius: 23px;
+  background: linear-gradient(108deg, #06482e 0%, #086b3c 55%, #138848 100%);
+  box-shadow: 0 16px 34px rgba(4, 71, 36, .14);
+}
+.student-academic-record-page .student-record-header::after {
+  content: none;
+  display: none;
+}
+.student-academic-record-page .student-record-eyebrow {
+  gap: 9px;
+  margin-bottom: 12px;
+  color: #e9fff2;
+  font-size: 11px;
+  font-weight: 800;
+}
+.student-academic-record-page .student-record-eyebrow-icon {
+  flex-basis: 30px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255,255,255,.24);
+  color: #fff;
+  background: rgba(255,255,255,.15);
+}
+.student-academic-record-page .student-record-header h1 {
+  color: #fff;
+  font-size: clamp(29px, 2.6vw, 38px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+.student-academic-record-page .student-record-header p {
+  max-width: 730px;
+  color: #e1f7e9;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.student-academic-record-page .student-record-header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.student-academic-record-page .student-record-refresh {
+  min-height: 41px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255,255,255,.62);
+  border-radius: 10px;
+  color: #075331;
+  background: #f2fff6;
+  box-shadow: 0 5px 12px rgba(0,0,0,.07);
+  font-size: 11px;
+}
+.student-academic-record-page .student-record-refresh:hover:not(:disabled) {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255,255,255,.19);
+}
+.student-academic-record-page .student-record-header-icon {
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  background: rgba(255,255,255,.13);
+  box-shadow: none;
+}
+
+/* Official notice, student information, and semantic KPI palette. */
+.student-academic-record-page .student-record-official-notice {
+  margin-bottom: 16px;
+  padding: 14px 17px;
+  border-color: #cde5d4;
+  border-left: 4px solid #159452;
+  border-radius: 15px;
+  background: linear-gradient(115deg, #fff, #f3faf5);
+  box-shadow: 0 8px 22px rgba(8,66,36,.045);
+}
+.student-academic-record-page .student-record-official-notice strong { font-size: 12px; }
+.student-academic-record-page .student-record-official-notice p { font-size: 11px; }
+.student-academic-record-page .student-record-profile { gap: 12px; margin-bottom: 16px; }
+.student-academic-record-page .student-record-profile > div {
+  min-height: 96px;
+  padding: 16px;
+  border: 1px solid #dce9df;
+  border-left: 4px solid #159452;
+  border-radius: 16px;
+  background: linear-gradient(115deg, #fff, #f4fbf6);
+  box-shadow: 0 8px 22px rgba(8,66,36,.06);
+}
+.student-academic-record-page .student-record-profile > div:nth-child(2) {
+  border-left-color: #2563eb;
+  background: linear-gradient(115deg, #fff, #f5f9ff);
+}
+.student-academic-record-page .student-record-profile > div:nth-child(3) {
+  border-left-color: #d5a32e;
+  background: linear-gradient(115deg, #fff, #fffaf0);
+}
+.student-academic-record-page .student-record-profile > div:nth-child(4) {
+  border-left-color: #9560c8;
+  background: linear-gradient(115deg, #fff, #faf6ff);
+}
+.student-academic-record-page .student-record-profile-primary {
+  border-color: #dce9df !important;
+  border-left-color: #159452 !important;
+  background: linear-gradient(115deg, #fff, #f4fbf6) !important;
+}
+.student-academic-record-page .student-record-profile span { font-size: 10px; }
+.student-academic-record-page .student-record-profile strong {
+  font-size: 13px;
+  text-overflow: ellipsis;
+}
+.student-academic-record-page .student-record-profile small { font-size: 10.5px; }
+.student-academic-record-page .student-record-summary { gap: 12px; margin-bottom: 18px; }
+.student-academic-record-page .student-record-summary-card {
+  min-height: 103px;
+  padding: 16px;
+  border-color: #dce9df;
+  border-left: 4px solid #159452;
+  border-radius: 17px;
+  background: linear-gradient(115deg, #fff, #f4fbf6);
+  box-shadow: 0 8px 22px rgba(8,66,36,.065);
+}
+.student-academic-record-page .student-record-summary-card::before { content: none; }
+.student-academic-record-page .student-record-summary-card:nth-child(2),
+.student-academic-record-page .student-record-summary-card:nth-child(4) {
+  border-left-color: #2563eb;
+  background: linear-gradient(115deg, #fff, #f5f9ff);
+}
+.student-academic-record-page .student-record-summary-card:nth-child(3) {
+  border-left-color: #159452;
+}
+.student-academic-record-page .student-record-summary-card:nth-child(5) {
+  border-left-color: #d5a32e;
+  background: linear-gradient(115deg, #fff, #fffaf0);
+}
+.student-academic-record-page .student-record-summary-card:nth-child(6),
+.student-academic-record-page .student-record-summary-card:nth-child(7) {
+  border-left-color: #d06458;
+  background: linear-gradient(115deg, #fff, #fff7f5);
+}
+.student-academic-record-page .student-record-summary-icon {
+  width: 43px;
+  height: 43px;
+  border-radius: 12px;
+}
+.student-academic-record-page .student-record-summary-card:nth-child(2) .student-record-summary-icon,
+.student-academic-record-page .student-record-summary-card:nth-child(4) .student-record-summary-icon {
+  color: #2563eb; border-color: #d7e5ff; background: #eef5ff;
+}
+.student-academic-record-page .student-record-summary-card:nth-child(5) .student-record-summary-icon {
+  color: #946200; border-color: #f2e6c2; background: #fff5d9;
+}
+.student-academic-record-page .student-record-summary-card:nth-child(6) .student-record-summary-icon,
+.student-academic-record-page .student-record-summary-card:nth-child(7) .student-record-summary-icon {
+  color: #bc3d37; border-color: #f0d4cf; background: #fff2f0;
+}
+.student-academic-record-page .student-record-summary-card > div > span { font-size: 10.5px; }
+.student-academic-record-page .student-record-summary-card strong { font-size: 23px; }
+
+/* The curriculum progress and academic-history panels share the same surface. */
+.student-academic-record-page :is(.student-curriculum-progress, .student-record-history, .student-record-legend) {
+  min-width: 0;
+  margin-bottom: 17px;
+  border: 1px solid #dce9df;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 9px 24px rgba(8,66,36,.07);
+}
+.student-academic-record-page :is(.student-progress-header, .student-record-history-header) {
+  padding: 19px 21px;
+  border-color: #dce9df;
+  background: linear-gradient(125deg, #fff, #f5faf7);
+}
+.student-academic-record-page .student-progress-eyebrow,
+.student-academic-record-page .student-record-legend-header span { font-size: 10px; }
+.student-academic-record-page .student-progress-header h2,
+.student-academic-record-page .student-record-history-header h2 { font-size: 19px; }
+.student-academic-record-page .student-progress-header p,
+.student-academic-record-page .student-record-history-header p { font-size: 11.5px; line-height: 1.6; }
+.student-academic-record-page .student-progress-percentage {
+  min-width: 126px;
+  padding: 12px 14px;
+  border-radius: 13px;
+}
+.student-academic-record-page .student-progress-percentage strong { font-size: 24px; }
+.student-academic-record-page .student-progress-percentage span { font-size: 10px; }
+.student-academic-record-page .student-progress-overview {
+  gap: 13px;
+  padding: 17px 19px;
+  border-color: #e2eae4;
+  background: #fafdfb;
+}
+.student-academic-record-page .student-progress-primary-card {
+  padding: 17px;
+  border-radius: 14px;
+  border-color: #dce9df;
+}
+.student-academic-record-page .student-progress-primary-topline > div > span { font-size: 10px; }
+.student-academic-record-page .student-progress-primary-topline > div > strong { font-size: 16px; }
+.student-academic-record-page .student-progress-context-badge { font-size: 10px; }
+.student-academic-record-page .student-progress-unit-row span { font-size: 10px; }
+.student-academic-record-page .student-progress-unit-row strong { font-size: 14px; }
+.student-academic-record-page .student-progress-status-grid { gap: 9px; }
+.student-academic-record-page .student-progress-status-grid > div {
+  border-radius: 12px;
+  border-color: #e1eae3;
+  background: #fff;
+}
+.student-academic-record-page .student-progress-status-grid > div.transfer { border-color: #d9e6f7; background: #f6f9ff; }
+.student-academic-record-page .student-progress-status-grid > div.blocked,
+.student-academic-record-page .student-progress-status-grid > div.retake { border-color: #f0d5d0; background: #fff7f5; }
+.student-academic-record-page .student-progress-status-grid span,
+.student-academic-record-page .student-progress-status-grid small { font-size: 9px; }
+.student-academic-record-page .student-progress-status-grid strong { font-size: 19px; }
+.student-academic-record-page .student-progress-unit-warning { border-radius: 12px; }
+.student-academic-record-page .student-progress-unit-warning strong { font-size: 11.5px; }
+.student-academic-record-page .student-progress-unit-warning p { font-size: 11px; }
+.student-academic-record-page .student-progress-subjects { padding: 0 18px 19px; }
+.student-academic-record-page .student-progress-subjects-header h3 { font-size: 17px; }
+.student-academic-record-page .student-progress-subjects-header p { font-size: 11px; }
+.student-academic-record-page .student-progress-subjects-header > span { font-size: 10px; }
+
+/* Filters, expandable school years, readable scrollable grade tables. */
+.student-academic-record-page :is(.student-progress-filters, .student-record-filters) {
+  gap: 11px;
+  padding: 13px 14px;
+  border-color: #dfeae2;
+  border-radius: 13px;
+  background: #f7fbf8;
+}
+.student-academic-record-page .student-record-filters label { font-size: 10.5px; }
+.student-academic-record-page .student-record-filters :is(input, select) { min-height: 37px; font-size: 11px; }
+.student-academic-record-page :is(.student-record-clear-filter, .student-progress-filters button, .student-record-empty button, .student-progress-error button, .student-record-error button) { font-size: 11px; }
+.student-academic-record-page .student-progress-years { gap: 12px; }
+.student-academic-record-page .student-progress-year {
+  border-color: #dfeae2;
+  border-radius: 13px;
+}
+.student-academic-record-page .student-progress-year.is-expanded {
+  border-color: #bcd7c5;
+  box-shadow: 0 6px 18px rgba(10,70,40,.065);
+}
+.student-academic-record-page .student-progress-year-header { padding: 13px 15px; }
+.student-academic-record-page .student-progress-year-header > div:first-child > span { font-size: 10px; }
+.student-academic-record-page .student-progress-year-header > div:first-child > h4 { font-size: 14px; }
+.student-academic-record-page .student-progress-year-header-actions > strong { font-size: 10px; }
+.student-academic-record-page :is(.student-progress-semester-header, .student-record-semester-header) {
+  padding: 12px 14px;
+  border-color: #e0ebe3;
+}
+.student-academic-record-page :is(.student-progress-semester-header h5, .student-record-semester-header h4) { font-size: 12.5px; }
+.student-academic-record-page :is(.student-progress-semester-header > div:first-child > span, .student-record-semester-header > div:first-child > span) { font-size: 10px; }
+.student-academic-record-page :is(.student-progress-semester-header > div:last-child, .student-record-semester-stats) { font-size: 10px; }
+.student-academic-record-page :is(.student-progress-table, .student-record-table) { background: #fff; }
+.student-academic-record-page :is(.student-progress-table th, .student-record-table th) {
+  padding: 12px 11px;
+  border-color: #e0eae2;
+  background: #f4faf6;
+  color: #466350;
+  font-size: 10px;
+}
+.student-academic-record-page .student-record-table-groups th { background: #eaf5ed; color: #0e683d; }
+.student-academic-record-page :is(.student-progress-table td, .student-record-table td) {
+  padding: 11px;
+  border-color: #e6eee8;
+  font-size: 11px;
+}
+.student-academic-record-page :is(.student-progress-table tbody tr:hover, .student-record-table tbody tr:hover) { background: #f5faf7; }
+.student-academic-record-page :is(.student-progress-subject-name strong, .student-record-subject strong, .student-record-outcome strong, .student-progress-detail strong) { font-size: 11px; }
+.student-academic-record-page :is(.student-progress-subject-name span, .student-record-subject span) { font-size: 10.5px; }
+.student-academic-record-page :is(.student-progress-subject-name small, .student-record-subject small, .student-record-outcome small, .student-record-approval small, .student-progress-detail small) { font-size: 9.5px; }
+.student-academic-record-page :is(.student-progress-units, .student-record-units) { font-size: 11.5px; }
+.student-academic-record-page :is(.student-progress-status, .student-record-result, .student-record-subject-status, .student-record-approved-badge) { min-height: 25px; padding: 5px 8px; font-size: 10px; }
+.student-academic-record-page .student-record-grade-value { font-size: 11px; }
+.student-academic-record-page .student-record-official-grade small { font-size: 9.5px; }
+.student-academic-record-page .student-record-retake { font-size: 10px; }
+.student-academic-record-page :is(.student-progress-prerequisites > span, .student-progress-no-prereq) { font-size: 9.5px; }
+.student-academic-record-page .student-record-history-header > span { font-size: 10px; }
+.student-academic-record-page .student-record-year-header { padding: 13px 16px; background: #f3f9f5; }
+.student-academic-record-page .student-record-year-header span { font-size: 10px; }
+.student-academic-record-page .student-record-year-header h3 { font-size: 14px; }
+.student-academic-record-page .student-record-year-header > strong { font-size: 10px; }
+
+/* Legend and official footer stay in the page; global footer is untouched. */
+.student-academic-record-page .student-record-legend { padding: 18px 19px; }
+.student-academic-record-page .student-record-legend-header span,
+.student-academic-record-page .student-record-legend-header strong { font-size: 10px; }
+.student-academic-record-page .student-record-legend-items { gap: 11px; }
+.student-academic-record-page .student-record-legend-items > div {
+  padding: 12px;
+  border-color: #e1eae3;
+  border-radius: 11px;
+  background: #f9fcfa;
+}
+.student-academic-record-page .student-record-legend-rating { font-size: 10px; min-height: 25px; }
+.student-academic-record-page .student-record-legend-items strong { font-size: 11px; }
+.student-academic-record-page .student-record-legend-items p { font-size: 10px; line-height: 1.5; }
+.student-academic-record-page .student-record-footer {
+  padding: 18px 20px;
+  border: 1px solid #cfe5d5;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #fff, #f1faf4);
+  box-shadow: 0 8px 24px rgba(8,66,36,.06);
+}
+.student-academic-record-page .student-record-footer strong { font-size: 12px; }
+.student-academic-record-page .student-record-footer p { font-size: 11px; line-height: 1.6; }
+.student-academic-record-page .student-record-footer-stat span { font-size: 10px; }
+.student-academic-record-page .student-record-footer-stat strong { font-size: 23px; }
+.student-academic-record-page .student-record-footer-stat small { font-size: 10px; }
+
+/* Loading, empty, blocked, validation and error responses. */
+.student-academic-record-page :is(.student-record-loading, .student-record-empty, .student-progress-empty) {
+  border-color: #dce9df;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(8,66,36,.055);
+}
+.student-academic-record-page :is(.student-record-loading strong, .student-record-empty strong, .student-progress-empty strong) { font-size: 12px; }
+.student-academic-record-page :is(.student-record-loading span, .student-record-empty p, .student-progress-empty p) { font-size: 11px; }
+.student-academic-record-page :is(.student-record-error, .student-progress-error) { border-radius: 13px; }
+.student-academic-record-page :is(.student-record-error strong, .student-progress-error strong) { font-size: 12px; }
+.student-academic-record-page :is(.student-record-error p, .student-progress-error p) { font-size: 11px; }
+.student-academic-record-page :is(button, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(21,148,82,.38);
+  outline-offset: 2px;
+}
+
+/* Dark Mode: do not display a light parent canvas or white table/loading surface. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark)
+  .dashboard-main:has(> .dashboard-content > .student-academic-record-page) > .dashboard-content,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark)
+  .dashboard-content > .student-academic-record-page {
+  background-color: #111c16 !important;
+  background-image:
+    radial-gradient(circle at 12% 9%, rgba(20,108,61,.17), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(42,100,65,.09), transparent 28%),
+    linear-gradient(135deg, rgba(117,163,126,.025) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(117,163,126,.025) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(117,163,126,.02) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(117,163,126,.02) 25%, transparent 25%),
+    linear-gradient(180deg, #101a15, #17231b) !important;
+  background-size: auto, auto, 96px 96px, 96px 96px, 128px 128px, 128px 128px, auto !important;
+  background-position: center, center, 0 0, 48px 48px, 0 0, 64px 64px, center !important;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat !important;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page {
+  --sar-text-950: #e7f2e9;
+  --sar-text-900: #e5f0e6;
+  --sar-text-800: #d6e8da;
+  --sar-text-700: #c1d3c7;
+  --sar-text-600: #b2c8b9;
+  --sar-text-500: #a8bdae;
+  --sar-border: #375344;
+  --sar-border-strong: #526c59;
+  --sar-surface: #1d2b22;
+  --sar-bg: #111c16;
+  --sar-green-50: #213b2b;
+  --sar-green-100: #294c36;
+  --sar-green-700: #8ee2aa;
+  --sar-green-800: #b2eac3;
+  --sar-green-900: #d7f4de;
+  --sar-blue: #a9c9ff;
+  --sar-blue-soft: #293e55;
+  --sar-warning-soft: #3b3323;
+  --sar-warning: #f1cc87;
+  --sar-warning-border: #675635;
+  --sar-danger-soft: #392725;
+  --sar-danger: #ffb7af;
+  --sar-danger-border: #784640;
+  color: #e5f1e8;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page .student-record-header {
+  border-color: #377351;
+  background: linear-gradient(108deg, #053823, #075534 55%, #086a3a);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-official-notice, .student-record-profile > div,
+  .student-record-profile-primary, .student-record-summary-card,
+  .student-curriculum-progress, .student-record-history, .student-record-legend,
+  .student-progress-primary-card, .student-progress-status-grid > div,
+  .student-progress-year, .student-progress-semester,
+  .student-record-footer, .student-record-loading, .student-record-empty,
+  .student-progress-empty) {
+  border-color: #385444;
+  background: #1d2b22 !important;
+  box-shadow: 0 9px 25px rgba(0,0,0,.14);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-header, .student-record-history-header,
+  .student-progress-overview, .student-progress-year-content,
+  .student-progress-semester-header, .student-record-semester-header,
+  .student-record-year-header) {
+  border-color: #375344;
+  background: #24352a;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-filters, .student-record-filters,
+  .student-progress-year-header, .student-record-legend-items > div) {
+  border-color: #3c5847;
+  color: #dcece0;
+  background: #263b2e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-year-header:hover, .student-progress-year-header.is-expanded) {
+  background: #30503b;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-table, .student-record-table,
+  .student-record-grade-value) {
+  border-color: #3b5546;
+  color: #e1f1e5;
+  background: #1d2b22;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-table th, .student-record-table th,
+  .student-record-table-groups th) {
+  border-color: #3b5546;
+  color: #b8dec6;
+  background: #2a4433;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-table td, .student-record-table td) { border-color: #334b3b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-table tbody tr:hover, .student-record-table tbody tr:hover) {
+  background: #2c4535;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-profile span, .student-record-profile strong, .student-record-profile small,
+  .student-record-summary-card > div > span, .student-record-summary-card strong,
+  .student-progress-status-grid span, .student-progress-status-grid strong,
+  .student-progress-status-grid small, .student-progress-unit-row strong,
+  .student-progress-header h2, .student-progress-subjects-header h3,
+  .student-record-history-header h2, .student-record-year-header h3,
+  .student-progress-year-header > div:first-child > h4,
+  .student-progress-semester-header h5, .student-record-semester-header h4,
+  .student-record-footer strong, .student-record-footer p,
+  .student-record-official-notice strong, .student-record-official-notice p,
+  .student-progress-unit-warning strong, .student-progress-unit-warning p,
+  .student-record-legend-items strong, .student-record-legend-items p,
+  .student-record-loading strong, .student-record-loading span,
+  .student-record-empty strong, .student-record-empty p,
+  .student-progress-empty strong, .student-progress-empty p) { color: #d9eadc; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-filters input, .student-record-filters select,
+  .student-progress-filters input, .student-progress-filters select) {
+  border-color: #46654f;
+  color: #e7f2e9;
+  background: #1c3024;
+  color-scheme: dark;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-filters input::placeholder, .student-progress-filters input::placeholder) { color: #a8bdae; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-approved-badge, .student-record-result.passed,
+  .student-record-subject-status.completed, .student-progress-status.completed-ptc,
+  .student-progress-status.eligible, .student-progress-prerequisites > span.satisfied,
+  .student-record-legend-rating.passed) {
+  border-color: #3b654a;
+  color: #9cedb5;
+  background: #22442e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-progress-status.completed-transfer) {
+  border-color: #405c79;
+  color: #b5d2ff;
+  background: #293e55;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-result.incomplete, .student-record-subject-status.incomplete,
+  .student-record-legend-rating.incomplete) {
+  border-color: #685b38;
+  color: #f4d388;
+  background: #403721;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-result.failed, .student-progress-status.retake-required,
+  .student-progress-status.blocked-prerequisite, .student-record-subject-status.failed,
+  .student-record-subject-status.dropped, .student-record-legend-rating.failed,
+  .student-record-retake, .student-progress-prerequisites > span.missing) {
+  border-color: #6e4441;
+  color: #ffb3ab;
+  background: #3a2725;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-error, .student-progress-error, .student-progress-unit-warning) {
+  border-color: #6e5339;
+  color: #f0cf97;
+  background: #3a3023;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-error p, .student-progress-error p) { color: #f0c5bd; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-academic-record-page :is(
+  .student-record-spinner) { border-color: #365d43; border-top-color: #9ee4b4; }
+
+/* Preserve the original responsive table overflow instead of shrinking grades. */
+@media (max-width: 960px) {
+  .dashboard-content > .student-academic-record-page { padding: 22px 18px 32px; }
+  .student-academic-record-page .student-record-header { padding: 25px 23px; }
+}
+@media (max-width: 720px) {
+  .dashboard-content > .student-academic-record-page { padding: 18px 13px 28px; }
+  .student-academic-record-page .student-record-header { min-height: 0; padding: 22px 19px; border-radius: 17px; }
+  .student-academic-record-page .student-record-header h1 { font-size: 28px; }
+  .student-academic-record-page :is(.student-progress-header, .student-record-history-header) { padding: 16px; }
+  .student-academic-record-page .student-progress-overview { padding: 12px; }
+  .student-academic-record-page .student-progress-subjects { padding: 0 12px 14px; }
+  .student-academic-record-page .student-record-legend { padding: 14px; }
+  .student-academic-record-page .student-record-legend-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .student-academic-record-page .student-record-profile > div,
+  .student-academic-record-page .student-record-summary-card { min-height: 78px; }
+  .student-academic-record-page .student-record-legend-items { grid-template-columns: 1fr; }
+  .student-academic-record-page .student-progress-year-header-actions { align-items: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-academic-record-page *,
+  .student-academic-record-page *::before,
+  .student-academic-record-page *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

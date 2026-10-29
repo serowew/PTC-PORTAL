@@ -1215,3 +1215,114 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-pendi
     animation-iteration-count: 1 !important;
   }
 }
+/* Faculty Pending Grades — STATUS-MEANING COLOR PATCH
+ * Add ONCE to the END of src/styles/FacultyPendingGrades.css.
+ * Do not replace the existing stylesheet.
+ * Card order/labels verified against the actual Faculty TSX.
+ * No layout, shared canvas, sidebar, or component changes.
+ */
+
+/* 1. Not Encoded — Warm amber (pending / needs action) */
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) {
+  background: #fff8e9;
+  border-color: #f1dcb2;
+  border-left: 4px solid #d79b23;
+}
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) .faculty-pending-grades-summary__icon {
+  background: #fff0cf;
+  color: #a56a12;
+  border: 1px solid #edcf93;
+  box-shadow: none;
+}
+
+/* 2. Classes with Pending — Warm amber (pending / needs action) */
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) {
+  background: #fff8e9;
+  border-color: #f1dcb2;
+  border-left: 4px solid #d79b23;
+}
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) .faculty-pending-grades-summary__icon {
+  background: #fff0cf;
+  color: #a56a12;
+  border: 1px solid #edcf93;
+  box-shadow: none;
+}
+
+/* 3. Assigned Classes — Muted slate (neutral) */
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) {
+  background: #f5f8fa;
+  border-color: #d7e0e7;
+  border-left: 4px solid #788b9a;
+}
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) .faculty-pending-grades-summary__icon {
+  background: #eaf0f4;
+  color: #4d6477;
+  border: 1px solid #cedae3;
+  box-shadow: none;
+}
+
+/* 4. No Pending — Green (active / completed) */
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) {
+  background: #edf9f2;
+  border-color: #cde9d9;
+  border-left: 4px solid #10a05e;
+}
+.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) .faculty-pending-grades-summary__icon {
+  background: #ddf5e8;
+  color: #087e47;
+  border: 1px solid #b9e4ca;
+  box-shadow: none;
+}
+
+/* Dark Mode — preserve semantic meaning and readable icon contrast. */
+/* 1. Not Encoded */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) {
+  background: #403322;
+  border-color: #6c5636;
+  border-left: 4px solid #e3ab44;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) .faculty-pending-grades-summary__icon {
+  background: #554328;
+  color: #ffe0a3;
+  border: 1px solid #806540;
+  box-shadow: none;
+}
+
+/* 2. Classes with Pending */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) {
+  background: #403322;
+  border-color: #6c5636;
+  border-left: 4px solid #e3ab44;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) .faculty-pending-grades-summary__icon {
+  background: #554328;
+  color: #ffe0a3;
+  border: 1px solid #806540;
+  box-shadow: none;
+}
+
+/* 3. Assigned Classes */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) {
+  background: #28343e;
+  border-color: #445765;
+  border-left: 4px solid #8ea5b5;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) .faculty-pending-grades-summary__icon {
+  background: #354754;
+  color: #d4e3ec;
+  border: 1px solid #526c7d;
+  box-shadow: none;
+}
+
+/* 4. No Pending */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) {
+  background: #1f392b;
+  border-color: #365c46;
+  border-left: 4px solid #41b97e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) .faculty-pending-grades-summary__icon {
+  background: #285640;
+  color: #aff2c7;
+  border: 1px solid #467d5a;
+  box-shadow: none;
+}

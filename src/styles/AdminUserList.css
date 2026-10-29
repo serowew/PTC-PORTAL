@@ -2063,3 +2063,91 @@ body[data-theme="dark"] .admin-user-directory .admin-user-directory__action--act
  .admin-user-directory .admin-user-directory__action,
 :is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark,[data-theme="dark"])
  .admin-user-directory .admin-user-directory__table tbody tr {transition:none !important;}
+
+/* ======================================================================
+   PTC PORTAL — ADMIN SEMANTIC CARD COLORS
+   Adjusts only selected status/summary cards; preserves all layouts.
+   ====================================================================== */
+
+/* Total Accounts: slate */
+.admin-user-directory .admin-user-directory__summary article:nth-child(1) {
+  background: linear-gradient(110deg, #f9fbfc 0%, #ecf1f5 100%);
+  border-color: #dbe3e9;
+}
+.admin-user-directory .admin-user-directory__summary article:nth-child(1)::after { background: rgba(100, 116, 139, .065); }
+.admin-user-directory .admin-user-directory__summary article:nth-child(1)::before { background: #718096; }
+.admin-user-directory .admin-user-directory__summary article:nth-child(1) .admin-user-directory__summary-icon {
+  color: #536477;
+  background: #e9eff4;
+  border: 1px solid #d0dae3;
+  box-shadow: none;
+}
+
+/* Active Accounts: green */
+.admin-user-directory .admin-user-directory__summary article:nth-child(2) {
+  background: linear-gradient(110deg, #f4fcf7 0%, #e5f7ec 100%);
+  border-color: #ccebd7;
+}
+.admin-user-directory .admin-user-directory__summary article:nth-child(2)::after { background: rgba(16, 156, 85, .07); }
+.admin-user-directory .admin-user-directory__summary article:nth-child(2)::before { background: #0e9f58; }
+.admin-user-directory .admin-user-directory__summary article:nth-child(2) .admin-user-directory__summary-icon {
+  color: #097a45;
+  background: #e0f5e8;
+  border: 1px solid #b9e4ca;
+  box-shadow: none;
+}
+
+/* Inactive Accounts: slate */
+.admin-user-directory .admin-user-directory__summary article:nth-child(3) {
+  background: linear-gradient(110deg, #f9fbfc 0%, #ecf1f5 100%);
+  border-color: #dbe3e9;
+}
+.admin-user-directory .admin-user-directory__summary article:nth-child(3)::after { background: rgba(100, 116, 139, .065); }
+.admin-user-directory .admin-user-directory__summary article:nth-child(3)::before { background: #718096; }
+.admin-user-directory .admin-user-directory__summary article:nth-child(3) .admin-user-directory__summary-icon {
+  color: #536477;
+  background: #e9eff4;
+  border: 1px solid #d0dae3;
+  box-shadow: none;
+}
+
+/* Dark mode: matching semantic colors with readable icon contrast. */
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(1) {
+  background: #24303a;
+  border-color: #455463;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(1)::after { background: rgba(148, 163, 184, .10); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(1)::before { background: #8da0b4; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(1) .admin-user-directory__summary-icon {
+  color: #d4e2ef;
+  background: #344250;
+  border: 1px solid #526579;
+  box-shadow: none;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(2) {
+  background: #1c3a2b;
+  border-color: #37684c;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(2)::after { background: rgba(52, 211, 153, .10); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(2)::before { background: #36c67b; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(2) .admin-user-directory__summary-icon {
+  color: #b8f3d0;
+  background: #28563c;
+  border: 1px solid #407f59;
+  box-shadow: none;
+}
+
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(3) {
+  background: #24303a;
+  border-color: #455463;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(3)::after { background: rgba(148, 163, 184, .10); }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(3)::before { background: #8da0b4; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"]) .admin-user-directory .admin-user-directory__summary article:nth-child(3) .admin-user-directory__summary-icon {
+  color: #d4e2ef;
+  background: #344250;
+  border: 1px solid #526579;
+  box-shadow: none;
+}

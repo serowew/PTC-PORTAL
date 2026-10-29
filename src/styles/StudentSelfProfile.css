@@ -799,3 +799,411 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ============================================================================
+   PTC PORTAL | STUDENT PROFILE — APPROVED UNIFIED VISUAL DESIGN
+   Page: src/pages/student/Profile.tsx
+   Retains all profile data fetching, loading, error states and actions.
+   Pattern is NOT recreated here: ptc-unified-canvas.css owns both layers.
+   The selectors below never target Admin Student Profile, sidebar or footer.
+   ============================================================================ */
+
+/* Zero out only this page's shared workspace gutter. The precise geometric
+   pattern and its dark variant come from ptc-unified-canvas.css. */
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-self-profile)
+  > .dashboard-content {
+  padding: 0 !important;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+/* The application's sliding header may be hidden; avoid an empty white bar. */
+.dashboard-main:has(> .dashboard-content > .student-self-profile)
+  > .header-container:has(.app-header.hide) {
+  height: 0;
+  min-height: 0;
+  border: 0;
+}
+
+html body .dashboard-wrapper .dashboard-main .dashboard-content > .student-self-profile {
+  min-width: 0;
+  max-width: 100%;
+  padding: 28px 30px 42px;
+  --sp-text-950: #1b3024;
+  --sp-text-800: #2b4132;
+  --sp-text-700: #405849;
+  --sp-text-600: #62796a;
+  --sp-text-500: #72867a;
+  --sp-border: #d7e7db;
+  --sp-border-strong: #c6decf;
+}
+
+/* Unified deep-green hero, clean typography, and NO oversized decorations. */
+.student-self-profile .student-self-profile__page-hero {
+  isolation: isolate;
+  min-height: 178px;
+  padding: 28px 31px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(223, 255, 237, 0.19);
+  border-radius: 23px;
+  background: linear-gradient(108deg, #06482e 0%, #086b3c 55%, #138848 100%);
+  box-shadow: 0 15px 34px rgba(4, 71, 36, 0.15);
+}
+.student-self-profile .student-self-profile__page-hero::before,
+.student-self-profile .student-self-profile__page-hero::after {
+  content: none !important;
+  display: none !important;
+}
+.student-self-profile .student-self-profile__eyebrow {
+  margin-bottom: 13px;
+  color: #e9fff1;
+  font-size: 11px;
+  font-weight: 800;
+}
+.student-self-profile .student-self-profile__eyebrow-icon {
+  width: 30px;
+  height: 30px;
+  color: #f6fff9;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.15);
+}
+.student-self-profile .student-self-profile__page-hero h1 {
+  color: #ffffff;
+  font-size: clamp(29px, 2.5vw, 38px);
+  font-weight: 820;
+  letter-spacing: -0.04em;
+}
+.student-self-profile .student-self-profile__page-hero p {
+  max-width: 720px;
+  color: #e2f7e9;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.student-self-profile .student-self-profile__refresh {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #ffffff;
+  border-radius: 11px;
+  color: #08653c;
+  background: #ffffff;
+  box-shadow: 0 6px 14px rgba(1, 47, 24, 0.12);
+  font-size: 12px;
+  font-weight: 760;
+}
+.student-self-profile .student-self-profile__refresh:hover:not(:disabled) {
+  color: #064f2d;
+  border-color: #e8f8ed;
+  background: #e8f8ed;
+  box-shadow: 0 8px 18px rgba(1, 47, 24, 0.16);
+}
+
+/* Identity card and enrollment labels. */
+.student-self-profile .student-self-profile__identity {
+  gap: 24px;
+  padding: 22px 24px;
+  margin-bottom: 19px;
+  border-color: #d9e8dd;
+  border-left: 4px solid #d5a42d;
+  border-radius: 19px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(8, 66, 36, 0.07);
+}
+.student-self-profile .student-self-profile__photo {
+  width: 82px;
+  height: 82px;
+  flex-basis: 82px;
+  border-radius: 19px;
+}
+.student-self-profile .student-self-profile__identity-label {
+  color: #0a7744;
+  font-size: 10.5px;
+}
+.student-self-profile .student-self-profile__identity-copy h2 {
+  font-size: clamp(21px, 2.25vw, 28px);
+}
+.student-self-profile .student-self-profile__identity-meta,
+.student-self-profile .student-self-profile__identity-copy p {
+  font-size: 12px;
+  line-height: 1.55;
+}
+.student-self-profile .student-self-profile__identity-details { gap: 11px; }
+.student-self-profile .student-self-profile__identity-details > div {
+  padding: 13px 14px;
+  border-color: #e1ece4;
+  border-radius: 12px;
+  background: #f7fbf8;
+}
+.student-self-profile .student-self-profile__identity-details > div > span {
+  font-size: 10px;
+}
+.student-self-profile .student-self-profile__identity-details > div > strong:not(.student-self-profile__status),
+.student-self-profile .student-self-profile__status {
+  font-size: 12px;
+}
+.student-self-profile .student-self-profile__identity-details > div > strong:not(.student-self-profile__status) {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+/* Color-coded cards match the green / blue / violet / gold design language. */
+.student-self-profile .student-self-profile__content-grid { gap: 18px; }
+.student-self-profile .student-self-profile__card {
+  border: 1px solid #d8e8dd;
+  border-radius: 19px;
+  background: #ffffff;
+  box-shadow: 0 10px 27px rgba(8, 66, 36, 0.07);
+}
+.student-self-profile .student-self-profile__card:nth-child(1) { border-top: 4px solid #129052; }
+.student-self-profile .student-self-profile__card:nth-child(2) { border-top: 4px solid #4086e5; }
+.student-self-profile .student-self-profile__card:nth-child(3) { border-top: 4px solid #926de0; }
+.student-self-profile .student-self-profile__card-header {
+  gap: 12px;
+  padding: 20px 20px 16px;
+  border-color: #e4eee7;
+  background: #fcfefc;
+}
+.student-self-profile .student-self-profile__card-icon {
+  flex-basis: 41px;
+  width: 41px;
+  height: 41px;
+  border-radius: 12px;
+}
+.student-self-profile .student-self-profile__card:nth-child(2) .student-self-profile__card-icon {
+  color: #2869bc;
+  border-color: #d9e8fa;
+  background: #eef5ff;
+}
+.student-self-profile .student-self-profile__card:nth-child(3) .student-self-profile__card-icon {
+  color: #7954c3;
+  border-color: #e7ddf8;
+  background: #f7f2ff;
+}
+.student-self-profile .student-self-profile__card-header > div > span {
+  font-size: 10px;
+}
+.student-self-profile .student-self-profile__card:nth-child(2) .student-self-profile__card-header > div > span { color: #2869bc; }
+.student-self-profile .student-self-profile__card:nth-child(3) .student-self-profile__card-header > div > span { color: #7954c3; }
+.student-self-profile .student-self-profile__card-header h2 {
+  font-size: 17px;
+  font-weight: 780;
+}
+.student-self-profile .student-self-profile__card-header p {
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+.student-self-profile .student-self-profile__fields { padding: 9px 19px 17px; }
+.student-self-profile .student-self-profile__field {
+  gap: 11px;
+  padding: 14px 7px;
+  border-color: #e8efe9;
+}
+.student-self-profile .student-self-profile__field-icon {
+  flex-basis: 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+.student-self-profile .student-self-profile__card:nth-child(2) .student-self-profile__field-icon {
+  color: #2869bc;
+  background: #eef5ff;
+}
+.student-self-profile .student-self-profile__field > div > span,
+.student-self-profile .student-self-profile__guardian-grid span {
+  font-size: 10px;
+  line-height: 1.4;
+}
+.student-self-profile .student-self-profile__field strong,
+.student-self-profile .student-self-profile__inline-status,
+.student-self-profile .student-self-profile__guardian-grid strong {
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.student-self-profile .student-self-profile__guardian-grid {
+  gap: 12px;
+  padding: 18px 20px 21px;
+}
+.student-self-profile .student-self-profile__guardian-grid > div {
+  padding: 15px;
+  border-color: #e7e0f3;
+  border-left: 3px solid #926de0;
+  border-radius: 12px;
+  background: #fcfaff;
+}
+
+/* Accessible, non-flashing loading and error surfaces. */
+.student-self-profile .student-self-profile__loading { gap: 18px; }
+.student-self-profile .student-self-profile__skeleton,
+.student-self-profile .student-self-profile__state {
+  border-radius: 17px;
+}
+.student-self-profile .student-self-profile__state { padding: 20px; }
+.student-self-profile .student-self-profile__state strong { font-size: 13px; }
+.student-self-profile .student-self-profile__state p { font-size: 12px; }
+.student-self-profile .student-self-profile__state button { font-size: 12px; }
+.student-self-profile :is(button):focus-visible {
+  outline: 3px solid rgba(15, 148, 82, 0.32);
+  outline-offset: 3px;
+}
+
+/* Dark Mode keeps panels charcoal and the background supplied by the shared
+   canvas. These rules never touch sidebar or footer. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile {
+  --sp-text-950: #e7f2e9;
+  --sp-text-800: #d5e8d9;
+  --sp-text-700: #bed1c3;
+  --sp-text-600: #abbfb0;
+  --sp-text-500: #9eb5a4;
+  --sp-border: #385244;
+  --sp-border-strong: #4b6654;
+  color: #e7f2e9;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__identity, .student-self-profile__card, .student-self-profile__state) {
+  color: #e7f2e9;
+  background: #1e2d23;
+  border-color: #395143;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__identity {
+  border-left-color: #d5a42d;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(1) { border-top-color: #29ac70; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(2) { border-top-color: #579af1; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(3) { border-top-color: #aa84f5; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__identity-details > div, .student-self-profile__guardian-grid > div) {
+  background: #26382b;
+  border-color: #415b47;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card-header {
+  background: #24362a;
+  border-bottom-color: #3a5241;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__field, .student-self-profile__card-header) {
+  border-color: #3a5241;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__field-icon,
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card-icon {
+  color: #9fe4ba;
+  background: #2a4634;
+  border-color: #3c6149;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(2) :is(
+    .student-self-profile__field-icon, .student-self-profile__card-icon) {
+  color: #9ec7ff;
+  background: #263c56;
+  border-color: #365677;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(3) .student-self-profile__card-icon {
+  color: #d0b6ff;
+  background: #372d4a;
+  border-color: #544169;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__card-header h2, .student-self-profile__identity-copy h2,
+    .student-self-profile__field strong, .student-self-profile__guardian-grid strong,
+    .student-self-profile__identity-details > div > strong:not(.student-self-profile__status)) {
+  color: #e7f2e9;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__field > div > span, .student-self-profile__guardian-grid span,
+    .student-self-profile__identity-details > div > span, .student-self-profile__card-header p,
+    .student-self-profile__identity-meta, .student-self-profile__identity-copy p) {
+  color: #adc6b3;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__identity-label, .student-self-profile__card-header > div > span) { color: #8ce0ab; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(2) .student-self-profile__card-header > div > span { color: #9ec7ff; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__card:nth-child(3) .student-self-profile__card-header > div > span { color: #d0b6ff; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__state--error {
+  background: #3a2828;
+  border-color: #84514e;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__state--error > span {
+  background: #522e2b;
+  color: #ffc4be;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__state--error :is(strong, p) { color: #ffdad4; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__state button {
+  color: #e7f2e9;
+  background: #314635;
+  border-color: #58735c;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile .student-self-profile__skeleton {
+  border-color: #354a3b;
+  background: linear-gradient(90deg, #26362b 25%, #34463a 45%, #26362b 65%);
+  background-size: 220% 100%;
+}
+
+/* Status badges retain their meaning and contrast on charcoal panels. */
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__status--positive, .student-self-profile__inline-status--positive) {
+  color: #93e4b0 !important;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__status--pending, .student-self-profile__inline-status--pending) {
+  color: #f4ce71 !important;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__status--negative, .student-self-profile__inline-status--negative) {
+  color: #ffaca7 !important;
+}
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
+    .dark-mode, .theme-dark, .dark) .student-self-profile :is(
+    .student-self-profile__status--neutral, .student-self-profile__inline-status--neutral) {
+  color: #c2d0c5 !important;
+}
+
+/* Match common workspace breakpoints while preserving the original layout
+   stack behavior for tablets and phones. */
+@media (max-width: 860px) {
+  html body .dashboard-wrapper .dashboard-main .dashboard-content > .student-self-profile { padding: 22px 19px 34px; }
+  .student-self-profile .student-self-profile__page-hero { padding: 25px 22px; border-radius: 19px; }
+}
+@media (max-width: 720px) {
+  html body .dashboard-wrapper .dashboard-main .dashboard-content > .student-self-profile { padding: 18px 16px 30px; }
+  .student-self-profile .student-self-profile__page-hero { min-height: 0; }
+  .student-self-profile .student-self-profile__identity { padding: 19px; }
+  .student-self-profile .student-self-profile__identity-details { width: 100%; }
+  .student-self-profile .student-self-profile__fields { padding: 9px 17px 15px; }
+  .student-self-profile .student-self-profile__guardian-grid { padding: 16px; }
+}
+@media (max-width: 520px) {
+  html body .dashboard-wrapper .dashboard-main .dashboard-content > .student-self-profile { padding: 14px 12px 26px; }
+  .student-self-profile .student-self-profile__page-hero { padding: 23px 19px; border-radius: 17px; }
+  .student-self-profile .student-self-profile__page-hero h1 { font-size: 27px; }
+  .student-self-profile .student-self-profile__identity { padding: 18px; }
+  .student-self-profile .student-self-profile__photo { width: 72px; height: 72px; flex-basis: 72px; }
+  .student-self-profile .student-self-profile__card { border-radius: 16px; }
+  .student-self-profile .student-self-profile__card-header { padding: 17px; }
+}

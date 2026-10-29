@@ -3982,3 +3982,38 @@
   .program-head-transfer-action-modal__success p {color:inherit;}
 :is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
   .program-head-transfer-action-modal textarea::placeholder {color:#a9c3af;opacity:.85;}
+  /* PTC Portal: Program Head semantic KPI colors. Append to the END of the current CSS. */
+/* Colors convey card meaning, not its position in a decorative palette. */
+/* No layout, hero, canvas, typography or sidebar overrides. */
+
+/* Submitted Evaluations — amber */
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(1) { border-color: #f0dbaa; background: #fff8e9; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(1)::before { background: #d39719; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(1)::after { background: rgba(211,151,25,.095); }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(1) > span { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(1) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(1) > span { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Transfer Subjects — blue */
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(2) { border-color: #d1e3fe; background: #f0f6ff; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(2)::before { background: #2b69e8; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(2)::after { background: rgba(43,105,232,.09); }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(2) > span { color: #2460d2; border: 1px solid #c2daff; background: #e6f0ff; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(2) { border-color: #41648a; background: #20344c; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(2) > span { color: #b4d5ff; border-color: #41648a; background: #294965; box-shadow: none; }
+
+/* Pending Decisions — amber */
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(3) { border-color: #f0dbaa; background: #fff8e9; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(3)::before { background: #d39719; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(3)::after { background: rgba(211,151,25,.095); }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(3) > span { color: #a36a0b; border: 1px solid #ebcd82; background: #fff0ce; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(3) { border-color: #796034; background: #3c321e; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(3) > span { color: #f9d98e; border-color: #796034; background: #524020; box-shadow: none; }
+
+/* Unmapped Subjects — slate */
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(4) { border-color: #d7e0e8; background: #f3f6f9; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(4)::before { background: #64748b; }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(4)::after { background: rgba(100,116,139,.075); }
+.program-head-transfer-review .program-head-transfer-review__stat:nth-child(4) > span { color: #516175; border: 1px solid #d0dce6; background: #edf2f7; box-shadow: none; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(4) { border-color: #465869; background: #25333d; }
+:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark) .program-head-transfer-review .program-head-transfer-review__stat:nth-child(4) > span { color: #c8d9e7; border-color: #465869; background: #344857; box-shadow: none; }
