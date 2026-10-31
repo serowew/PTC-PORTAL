@@ -44,6 +44,12 @@ export const registrarNavGroups = [
         path: "/registrar/subjects/management",
         icon: "",
       },
+      {
+  label: "Academic Years",
+  path: "/registrar/academic-years",
+  icon: "",
+}
+
     ],
   },
   {

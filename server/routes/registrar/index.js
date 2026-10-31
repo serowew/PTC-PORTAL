@@ -13,6 +13,7 @@ import transferevaluationRoutes from "./transferEvaluations.js";
 import documentRequestsRoutes from "./documentRequests.js";
 import gradeChangeRequestRoutes from "./gradeChangeRequests.js";
 import financeHistoryRoutes from "./financehistory.js";
+import academicYearsRoutes from "./academicYears.js";
 
 const router = express.Router();
 
@@ -29,5 +30,6 @@ router.use("/transfer-evaluations", transferevaluationRoutes);
 router.use("/document-requests", documentRequestsRoutes);
 router.use("/grade-change-requests", gradeChangeRequestRoutes);
 router.use("/finance-history", financeHistoryRoutes);
+router.use("/academic-years",academicYearsRoutes);
 
 export default router;
