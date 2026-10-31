@@ -121,6 +121,7 @@ import RStudentlist from "../pages/registrar/StudentRecord/StudentlistR";
 import AcademicRecordsR from "../pages/registrar/StudentRecord/AcademicRecordsR";
 import StudentDocumentsR from "../pages/registrar/StudentRecord/StudentCOGR";
 import TranscriptPreviewR from "../pages/registrar/StudentRecord/TranscriptPreviewR";
+import AcademicYearsR from "../pages/registrar/AcademicYears/AcademicYearsR";
 
 //Finance
 import FinanceDashboard from "../pages/finance/Dashboard";
@@ -674,6 +675,10 @@ export default function AppRoutes() {
           path="/registrar/offering/special"
           element={<RegistrarRoute element={<ClassOfferingSpecialR />} />}
         />
+<Route
+  path="/registrar/academic-years"
+  element={<RegistrarRoute element={<AcademicYearsR />} />}
+/>
 
         <Route
           path="/registrar/schedules/faculty"
