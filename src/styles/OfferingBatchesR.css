@@ -468,23 +468,60 @@
   }
 }
 
+/* Batch detail lives above the scrollable dashboard canvas. */
 .offering-batches-modal-backdrop {
+  --ob-green: #0c7b47;
+  --ob-green-dark: #075b36;
+  --ob-green-soft: #e9f7ee;
+  --ob-ink: #1b281f;
+  --ob-muted: #65766b;
+  --ob-border: #dbeae0;
+  --ob-surface: #fff;
+  --ptc-font-scale: 1;
+  --ptc-compact-scale: 1;
   position: fixed;
-  z-index: 1200;
+  z-index: 2000;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ob-ink);
   background: rgba(13, 33, 23, 0.52);
 }
 
+.offering-batches-modal-backdrop *,
+.offering-batches-modal-backdrop *::before,
+.offering-batches-modal-backdrop *::after { box-sizing: border-box; }
+
 .offering-batches-modal {
-  width: min(1100px, 100%);
-  max-height: min(88vh, 900px);
+  display: flex;
+  flex-direction: column;
+  width: min(820px, 100%);
+  min-width: 0;
+  max-height: min(78dvh, 760px);
+  margin: auto;
   overflow: hidden;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+.dashboard-wrapper[data-ptc-font-size="small"] > .offering-batches-modal-backdrop { --ptc-font-scale: .9; }
+.dashboard-wrapper[data-ptc-font-size="large"] > .offering-batches-modal-backdrop { --ptc-font-scale: 1.14; }
+.dashboard-wrapper[data-ptc-font-size="extra-large"] > .offering-batches-modal-backdrop { --ptc-font-scale: 1.28; }
+.dashboard-wrapper[data-ptc-compact="true"] > .offering-batches-modal-backdrop { --ptc-compact-scale: .8; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] > .offering-batches-modal-backdrop {
+  --ob-green: #0c7b47;
+  --ob-green-dark: #075b36;
+  --ob-green-soft: #23392e;
+  --ob-ink: #edf3f1;
+  --ob-muted: #b9c7c5;
+  --ob-border: #39494c;
+  --ob-surface: #171E22;
+  color-scheme: dark;
 }
 
 .offering-batches-modal-header {
@@ -532,8 +569,10 @@
 }
 
 .offering-batches-table-wrap {
-  max-height: 52vh;
+  min-height: 0;
+  max-height: min(43dvh, 430px);
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .offering-batches-table {
@@ -1163,12 +1202,10 @@
 }
 
 .offering-batches-modal {
-  display: flex;
-  flex-direction: column;
-  width: min(1100px, 100%);
-  max-height: min(88dvh, 900px);
+  width: min(820px, 100%);
+  max-height: min(78dvh, 760px);
   border: 1px solid #deece2;
-  border-radius: 23px;
+  border-radius: 18px;
   background: #fff;
   box-shadow: 0 32px 85px rgba(4, 32, 18, .35);
 }
@@ -1199,8 +1236,8 @@
   line-height: 1.6;
 }
 
-.offering-batches-table-wrap { min-height: 0; max-height: none; flex: 1 1 auto; overflow: auto; }
-.offering-batches-table { min-width: 650px; }
+.offering-batches-table-wrap { min-height: 0; max-height: min(43dvh, 430px); flex: 1 1 auto; overflow: auto; }
+.offering-batches-table { min-width: 650px; width: 100%; }
 .offering-batches-table th,
 .offering-batches-table td { padding: 13px 14px; border-bottom-color: #e5eee8; }
 .offering-batches-table th { z-index: 1; color: #4e6757; background: #eff8f2; }
@@ -1245,7 +1282,8 @@
   .offering-batches-card { align-items: stretch; flex-direction: column; }
   .offering-batches-selection-summary { align-items: flex-start; flex-direction: column; }
   .offering-batches-selection-summary strong { margin-left: 0; }
-  .offering-batches-modal { max-height: 94dvh; border-radius: 17px; }
+  .offering-batches-modal { width: 100%; max-height: 90dvh; border-radius: 14px; }
+  .offering-batches-table-wrap { max-height: 48dvh; }
   .offering-batches-modal-header,
   .offering-batches-modal-footer { padding: 15px; }
   .offering-batches-detail-meta { padding: 12px 15px; }
@@ -1371,10 +1409,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .offering-batches-page .offering-batches-button,
+  .offering-batches-modal .offering-batches-button,
   .offering-batches-page .offering-batches-section-option {
     transition: none;
   }
-  .offering-batches-page .offering-batches-spin { animation: none; }
+  .offering-batches-page .offering-batches-spin,
+  .offering-batches-modal .offering-batches-spin { animation: none; }
 }
 
 /* Appearance preferences */

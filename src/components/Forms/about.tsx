@@ -10,7 +10,7 @@ import {
 
 import campusImage from "../../assets/campus.webp";
 import classroomImage from "../../assets/ptc home.png";
-import studentCommunityImage from "../../assets/gei.png";
+import studentCommunityImage from "../../assets/paths.png";
 
 import "../../styles/AboutPage.css";
 
