@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   AlertCircle,
   BookOpenCheck,
@@ -640,6 +641,17 @@ export default function ClassOfferingManagementR() {
     }
   };
 
+  useEffect(() => {
+    if (!detailLoading && !selectedBatch) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !detailLoading && publishingBatchId === null) {
+        setSelectedBatch(null);
+      }
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [detailLoading, selectedBatch, publishingBatchId]);
+
   const publishBatch = async (batch: BatchDetail) => {
     if (batch.batch_status !== "Ready for Registrar") return;
     const confirmed = window.confirm(
@@ -680,6 +692,10 @@ export default function ClassOfferingManagementR() {
       setPublishingBatchId(null);
     }
   };
+
+  const modalHost = typeof document !== "undefined"
+    ? document.querySelector(".dashboard-wrapper")
+    : null;
 
   if (userRole !== "Registrar") return null;
 
@@ -1066,12 +1082,12 @@ export default function ClassOfferingManagementR() {
           )}
         </section>
 
-        {(detailLoading || selectedBatch) && (
+        {(detailLoading || selectedBatch) && modalHost && createPortal(
           <div
             className="offering-batches-modal-backdrop"
             role="presentation"
             onMouseDown={(event) => {
-              if (event.target === event.currentTarget && !detailLoading)
+              if (event.target === event.currentTarget && !detailLoading && publishingBatchId === null)
                 setSelectedBatch(null);
             }}
           >
@@ -1097,7 +1113,7 @@ export default function ClassOfferingManagementR() {
                   className="offering-batches-icon-button"
                   aria-label="Close"
                   onClick={() => setSelectedBatch(null)}
-                  disabled={detailLoading}
+                  disabled={detailLoading || publishingBatchId !== null}
                 >
                   <X size={20} />
                 </button>
@@ -1187,7 +1203,8 @@ export default function ClassOfferingManagementR() {
                 </>
               ) : null}
             </section>
-          </div>
+          </div>,
+          modalHost,
         )}
       </main>
     </DashboardLayout>
