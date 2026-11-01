@@ -52,6 +52,12 @@ export const registrarNavGroups = [
     icon: "",
     children: [
       {
+        label: "Admission Management",
+        path: "/registrar/admissions",
+        icon: "",
+      },
+
+      {
         label: "Student Enrollment",
         path: "/registrar/enrollment/management",
         icon: "",

@@ -1,0 +1,592 @@
+/* Public Admission */
+.ptc-admission-public {
+  --adm-green: #175838;
+  --adm-green-deep: #10442c;
+  --adm-green-soft: #e8f3eb;
+  --adm-ink: #17352a;
+  --adm-muted: #607367;
+  --adm-border: #d8e5dc;
+  --adm-focus: #34835b;
+  --adm-panel: #ffffff;
+  --adm-canvas: #f1f8f2;
+  width: 100%;
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 34px 20px 70px;
+  color: var(--adm-ink);
+  background-color: var(--adm-canvas);
+  background-image:
+    linear-gradient(
+      30deg,
+      rgba(31, 115, 62, 0.04) 12%,
+      transparent 12.5%,
+      transparent 87%,
+      rgba(31, 115, 62, 0.04) 87.5%,
+      rgba(31, 115, 62, 0.04)
+    ),
+    linear-gradient(
+      150deg,
+      rgba(31, 115, 62, 0.04) 12%,
+      transparent 12.5%,
+      transparent 87%,
+      rgba(31, 115, 62, 0.04) 87.5%,
+      rgba(31, 115, 62, 0.04)
+    );
+  background-size: 28px 48px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.ptc-admission-public *,
+.ptc-admission-public *::before,
+.ptc-admission-public *::after {
+  box-sizing: border-box;
+}
+
+.ptc-admission-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* Hero */
+.ptc-admission-hero {
+  border-radius: 17px;
+  padding: 36px 40px 32px;
+  background: linear-gradient(115deg, #0e3f2a, #176340 63%, #22764d);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(14, 63, 42, 0.12);
+  margin-bottom: 22px;
+}
+.ptc-admission-hero-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.81rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.ptc-admission-hero h1 {
+  color: #fff;
+  font-size: clamp(1.7rem, 3.8vw, 2.35rem);
+  line-height: 1.22;
+  margin: 15px 0 10px;
+  font-weight: 750;
+}
+.ptc-admission-hero p {
+  margin: 0;
+  color: #e0f1e6;
+  line-height: 1.65;
+  max-width: 740px;
+}
+.ptc-admission-policy {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  padding-top: 17px;
+  color: #e5f1e8;
+  font-size: 0.89rem;
+}
+
+/* Panels */
+.ptc-admission-panel {
+  background: var(--adm-panel);
+  border: 1px solid var(--adm-border);
+  border-radius: 15px;
+  padding: 24px;
+  margin-bottom: 18px;
+  box-shadow: 0 3px 12px rgba(27, 76, 44, 0.035);
+}
+.ptc-admission-panel h2 {
+  color: var(--adm-ink);
+  font-weight: 740;
+  font-size: 1.27rem;
+  margin: 0 0 8px;
+}
+.ptc-admission-panel h3 {
+  margin: 25px 0 13px;
+  font-weight: 700;
+  color: var(--adm-green);
+  font-size: 1.02rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--adm-border);
+}
+.ptc-admission-panel p {
+  color: var(--adm-muted);
+  font-size: 0.93rem;
+  line-height: 1.65;
+  margin: 0 0 15px;
+}
+.ptc-admission-period {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.ptc-admission-period strong {
+  color: var(--adm-green);
+  font-size: 1.04rem;
+}
+.ptc-admission-period p {
+  margin: 4px 0 0;
+}
+.ptc-admission-period > svg {
+  flex-shrink: 0;
+  color: var(--adm-green);
+}
+.ptc-admission-content {
+  padding: 8px 0 0;
+}
+.ptc-admission-heading {
+  margin-bottom: 20px;
+}
+.ptc-admission-heading h2 {
+  margin-bottom: 5px;
+}
+.ptc-admission-heading p {
+  margin: 0;
+}
+
+/* Tabs */
+.ptc-admission-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--adm-border);
+  margin-bottom: 22px;
+}
+.ptc-admission-tabs button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  padding: 12px 15px;
+  color: var(--adm-muted);
+  font: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ptc-admission-tabs button.is-active {
+  border-bottom-color: var(--adm-green);
+  color: var(--adm-green);
+}
+.ptc-admission-tabs button:focus-visible,
+.ptc-admission-public button:focus-visible,
+.ptc-admission-public input:focus-visible,
+.ptc-admission-public select:focus-visible {
+  outline: 3px solid rgba(31, 111, 72, 0.27);
+  outline-offset: 2px;
+}
+
+/* Forms */
+.ptc-admission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px 20px;
+  margin: 15px 0 22px;
+}
+.ptc-admission-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ptc-admission-field span {
+  font-size: 0.89rem;
+  font-weight: 650;
+  color: #344e3f;
+}
+.ptc-admission-field em {
+  color: #b64e37;
+  font-style: normal;
+}
+.ptc-admission-field input,
+.ptc-admission-field select {
+  display: block;
+  width: 100%;
+  height: 43px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid #cedfd2;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a3527;
+  font: inherit;
+  font-size: 0.93rem;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.ptc-admission-field input:focus,
+.ptc-admission-field select:focus {
+  border-color: var(--adm-focus);
+  box-shadow: 0 0 0 3px rgba(29, 106, 66, 0.1);
+  outline: none;
+}
+.ptc-admission-field input:disabled,
+.ptc-admission-field select:disabled {
+  cursor: not-allowed;
+  background: #f0f3f1;
+  opacity: 0.72;
+}
+.ptc-admission-field--wide {
+  grid-column: 1 / -1;
+}
+.ptc-admission-help {
+  font-size: 0.84rem !important;
+  color: var(--adm-muted);
+}
+.ptc-admission-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 14px;
+  background: #f4f9f5;
+  border: 1px solid var(--adm-border);
+  border-radius: 9px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 12px 0 20px;
+}
+.ptc-admission-checkbox input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--adm-green);
+  width: 16px;
+  height: 16px;
+}
+.ptc-admission-checkbox strong {
+  color: #ae4737;
+}
+
+/* Compact Applicant Details */
+.ptc-admission-panel.ptc-admission-content {
+  padding: 20px 22px 18px;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-heading {
+  margin-bottom: 12px;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-heading h2 {
+  font-size: 1.16rem;
+  margin-bottom: 3px;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-heading p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.ptc-admission-panel.ptc-admission-content h3 {
+  margin: 17px 0 10px;
+  padding-bottom: 7px;
+  font-size: 0.96rem;
+}
+.ptc-admission-panel.ptc-admission-content > .ptc-admission-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px 14px;
+  margin: 10px 0 14px;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-field {
+  gap: 5px;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-field span {
+  font-size: 0.81rem;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-field input,
+.ptc-admission-panel.ptc-admission-content .ptc-admission-field select {
+  height: 38px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 0.88rem;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-checkbox {
+  padding: 11px 12px;
+  margin: 10px 0 14px;
+  gap: 9px;
+  font-size: 0.83rem;
+  line-height: 1.45;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-actions {
+  gap: 8px;
+  padding-top: 13px;
+}
+.ptc-admission-panel.ptc-admission-content .ptc-admission-btn {
+  min-height: 38px;
+  padding: 8px 13px;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 920px) {
+  .ptc-admission-panel.ptc-admission-content > .ptc-admission-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ptc-admission-panel.ptc-admission-content {
+    padding: 17px 15px;
+  }
+  .ptc-admission-panel.ptc-admission-content > .ptc-admission-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Buttons */
+.ptc-admission-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: inherit;
+  padding: 11px 16px;
+  min-height: 42px;
+  cursor: pointer;
+  transition:
+    filter 0.15s,
+    background 0.15s;
+}
+.ptc-admission-btn:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+.ptc-admission-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ptc-admission-btn--primary {
+  background: var(--adm-green);
+  color: #fff;
+}
+.ptc-admission-btn--outline {
+  background: #fff;
+  color: var(--adm-green);
+  border-color: #b7d4bf;
+}
+.ptc-admission-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-top: 1px solid var(--adm-border);
+  padding-top: 20px;
+}
+.ptc-admission-save-state {
+  color: var(--adm-muted);
+  font-size: 0.84rem;
+  margin-right: auto;
+}
+
+/* Application status */
+.ptc-admission-application-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.ptc-admission-application-head h2 {
+  overflow-wrap: anywhere;
+}
+.ptc-admission-overline {
+  text-transform: uppercase;
+  font-size: 0.72rem !important;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  margin-bottom: 5px !important;
+}
+.ptc-admission-version {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ptc-admission-version span {
+  font-size: 0.81rem;
+  color: var(--adm-muted);
+}
+.ptc-admission-status {
+  display: inline-block;
+  border-radius: 99px;
+  padding: 5px 11px;
+  background: #e9f1ed;
+  color: #1f6843;
+  font-size: 0.79rem;
+  font-weight: 750;
+}
+.ptc-admission-status--needs-correction {
+  background: #fff1dc;
+  color: #97631b;
+}
+.ptc-admission-status--submitted {
+  background: #e5eefd;
+  color: #315b9a;
+}
+.ptc-admission-status--rejected {
+  background: #fce7e5;
+  color: #9b3b30;
+}
+.ptc-admission-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  line-height: 1.5;
+  font-size: 0.91rem;
+}
+.ptc-admission-message span {
+  flex: 1;
+}
+.ptc-admission-message button {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.ptc-admission-message--success {
+  background: #e7f5eb;
+  color: #1d633e;
+  border: 1px solid #bbdec4;
+}
+.ptc-admission-message--error {
+  background: #fdefec;
+  color: #a13e30;
+  border: 1px solid #efcec6;
+}
+.ptc-admission-correction {
+  border-left: 4px solid #b78025;
+  background: #fffbf2;
+}
+.ptc-admission-correction h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #8d611e;
+  border-bottom: 0;
+  padding: 0;
+  margin-top: 0;
+}
+.ptc-admission-key {
+  border-color: #b4d6be;
+  background: #f7fcf8;
+}
+.ptc-admission-key-header {
+  color: var(--adm-green);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ptc-admission-secret {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 15px 0;
+}
+.ptc-admission-secret code {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+  background: #e6f1e8;
+  border: 1px solid #c7dfcf;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  color: #225236;
+}
+.ptc-admission-secret button {
+  align-self: center;
+  background: #fff;
+  border: 1px solid #b7d2bf;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--adm-green);
+}
+.ptc-admission-complete {
+  text-align: center;
+  padding: 42px 24px;
+}
+.ptc-admission-complete > svg {
+  color: #2d8a55;
+  margin-bottom: 8px;
+}
+.ptc-admission-complete p {
+  max-width: 580px;
+  margin: 0 auto;
+}
+.ptc-admission-conflict {
+  display: flex;
+  gap: 8px;
+  color: #a13e30 !important;
+  padding: 10px 0 0;
+}
+.ptc-admission-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #61786a;
+  font-size: 0.83rem;
+  padding: 12px 3px;
+}
+
+@media (max-width: 720px) {
+  .ptc-admission-public {
+    padding: 17px 12px 40px;
+  }
+  .ptc-admission-hero {
+    padding: 25px 22px;
+    border-radius: 12px;
+  }
+  .ptc-admission-panel {
+    padding: 18px;
+    border-radius: 12px;
+  }
+  .ptc-admission-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .ptc-admission-field--wide {
+    grid-column: auto;
+  }
+  .ptc-admission-application-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ptc-admission-actions {
+    justify-content: stretch;
+  }
+  .ptc-admission-actions .ptc-admission-btn {
+    width: 100%;
+  }
+  .ptc-admission-save-state {
+    flex-basis: 100%;
+    margin-bottom: 4px;
+  }
+  .ptc-admission-secret {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptc-admission-btn,
+  .ptc-admission-field input,
+  .ptc-admission-field select {
+    transition: none;
+  }
+}

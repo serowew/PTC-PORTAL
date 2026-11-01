@@ -1,8 +1,10 @@
-// routes/students.routes.js
-
 import express from "express";
 import bcrypt from "bcrypt";
 import db from "../../db.js";
+import {
+  selectAvailableSection,
+  SectionAssignmentError,
+} from "../../services/sectionAllocator.js";
 
 const router = express.Router();
 // =====================================================
@@ -501,6 +503,7 @@ router.post("/", async (req, res) => {
 
     yearLevel,
     section,
+    autoAssignSection = false,
     semesterId,
   } = req.body;
 
@@ -515,14 +518,14 @@ router.post("/", async (req, res) => {
     !course ||
     !curriculumId ||
     !yearLevel ||
-    !section ||
+    (!section && autoAssignSection !== true) ||
     !semesterId
   ) {
     return res.status(400).json({
       success: false,
       error: "Missing required fields",
       message:
-        "First name, last name, email, course, curriculum, year level, section, and semester are required.",
+        "First name, last name, email, course, curriculum, year level, and semester are required. Select a section or enable automatic assignment.",
     });
   }
 
@@ -773,98 +776,163 @@ router.post("/", async (req, res) => {
     const academicYear = ayRows[0].academic_year;
 
     // =====================================================
-    // FIND OR CREATE SECTION
+    // ASSIGN SECTION WITH CAPACITY CONTROL
     //
-    // Section must belong to:
-    // - selected course
-    // - current academic year
-    // - selected year level
+    // - Select only existing course/year-level sections.
+    // - Respect a valid staff choice when it has space.
+    // - Automatically use the next available existing section
+    //   when the chosen section has reached capacity.
+    // - Keep all section locks until the student is inserted
+    //   and this transaction commits.
     // =====================================================
 
-    let sectionId;
+    const availableSection = await selectAvailableSection(conn, {
+      courseId,
+      academicYearId,
+      yearLevel: yearLevelNum,
+    });
 
-    const [sectionRows] = await conn.execute(
-      `
-      SELECT
-          section_id,
-          course_id,
-          academic_year_id,
-          year_level,
-          section_name,
-          max_students
+    let sectionId = availableSection.sectionId;
+    let assignedSectionName = availableSection.sectionName;
+    let sectionAutoAssigned = true;
+    const requestedSectionName =
+      typeof section === "string" ? section.trim() : "";
+    const useAutomaticAssignment = autoAssignSection === true;
 
-      FROM sections
+    if (!useAutomaticAssignment) {
+      const [requestedSections] = await conn.execute(
+        `
+        SELECT section_id, section_name, year_level, max_students
+        FROM sections
+        WHERE section_name = ?
+          AND course_id = ?
+          AND academic_year_id = ?
+        LIMIT 1
+        `,
+        [requestedSectionName, courseId, academicYearId],
+      );
 
-      WHERE section_name = ?
-        AND course_id = ?
-        AND academic_year_id = ?
+      if (requestedSections.length === 0) {
+        throw new SectionAssignmentError(
+          "SECTION_NOT_PREPARED",
+          `Section '${requestedSectionName}' is not prepared for this course and academic year. Choose an existing section or enable automatic assignment.`,
+        );
+      }
 
-      LIMIT 1
-      `,
-      [section, courseId, academicYearId],
-    );
+      const requestedSection = requestedSections[0];
 
-    if (sectionRows.length > 0) {
-      const existingSection = sectionRows[0];
-
-      // ===================================================
-      // CHECK YEAR LEVEL MATCH
-      // ===================================================
-
-      if (Number(existingSection.year_level) !== yearLevelNum) {
+      if (Number(requestedSection.year_level) !== yearLevelNum) {
         await conn.rollback();
-
         return res.status(409).json({
           success: false,
           error: "Section year level mismatch",
-
-          message: `Section '${section}' belongs to year level ${existingSection.year_level}, not year level ${yearLevelNum}.`,
+          message: `Section '${requestedSectionName}' belongs to year level ${requestedSection.year_level}, not year level ${yearLevelNum}.`,
         });
       }
 
-      sectionId = Number(existingSection.section_id);
-    } else {
-      // ===================================================
-      // CREATE SECTION
-      // ===================================================
+      const requestedCapacity = Number(requestedSection.max_students);
+      if (
+        !Number.isInteger(requestedCapacity) ||
+        requestedCapacity < 40 ||
+        requestedCapacity > 50
+      ) {
+        throw new SectionAssignmentError(
+          "INVALID_SECTION_CAPACITY",
+          `Section ${requestedSectionName} must have a capacity between 40 and 50.`,
+        );
+      }
 
-      const [newSection] = await conn.execute(
+      // Locking read: avoid admitting a student based on a stale count.
+      // The shared allocator has already locked all candidate sections.
+      const [requestedMembers] = await conn.execute(
         `
-        INSERT INTO sections (
-            course_id,
-            academic_year_id,
-            year_level,
-            section_name
-        )
-
-        VALUES (?, ?, ?, ?)
+        SELECT student_id
+        FROM students
+        WHERE section_id = ?
+          AND is_archived = 0
+        ORDER BY student_id ASC
+        FOR UPDATE
         `,
-        [courseId, academicYearId, yearLevelNum, section],
+        [Number(requestedSection.section_id)],
       );
 
-      sectionId = Number(newSection.insertId);
+      if (requestedMembers.length < requestedCapacity) {
+        sectionId = Number(requestedSection.section_id);
+        assignedSectionName = requestedSection.section_name;
+        sectionAutoAssigned = false;
+      }
     }
 
     // =====================================================
-    // STUDENT NUMBER
-    //
-    // Current numbering behavior preserved.
+    // STUDENT NUMBER - ATOMIC SEQUENCE
     // =====================================================
 
     const year = String(new Date().getFullYear()).slice(-2);
+    const numberPrefix = `${year}${selectedCourse.course_code}-`;
 
-    const [numberRows] = await conn.execute(
+    // Bootstrap from existing student numbers, including usernames.
+    // This also protects installations that already have older records.
+    const [existingNumbers] = await conn.execute(
       `
-      SELECT
-          COUNT(*) AS total
+      SELECT COALESCE(MAX(sequence_number), 0) AS last_sequence
+      FROM (
+        SELECT CAST(
+          SUBSTRING(username, CHAR_LENGTH(?) + 1) AS UNSIGNED
+        ) AS sequence_number
+        FROM users
+        WHERE LEFT(username, CHAR_LENGTH(?)) = ?
+          AND SUBSTRING(username, CHAR_LENGTH(?) + 1)
+              REGEXP '^[0-9]+$'
 
-      FROM students
+        UNION ALL
+
+        SELECT CAST(
+          SUBSTRING(student_number, CHAR_LENGTH(?) + 1) AS UNSIGNED
+        ) AS sequence_number
+        FROM students
+        WHERE LEFT(student_number, CHAR_LENGTH(?)) = ?
+          AND SUBSTRING(student_number, CHAR_LENGTH(?) + 1)
+              REGEXP '^[0-9]+$'
+      ) AS existing_numbers
       `,
+      Array(8).fill(numberPrefix),
     );
 
-    const sequence = String(Number(numberRows[0].total) + 1).padStart(4, "0");
+    const highestExisting = Number(existingNumbers[0].last_sequence);
+    if (!Number.isSafeInteger(highestExisting) || highestExisting < 0) {
+      throw new Error("Invalid existing student-number sequence.");
+    }
 
-    const studentNumber = `${year}${course}-${sequence}`;
+    // A unique InnoDB counter row serializes assignments for this prefix.
+    // The transaction owns the counter update until commit or rollback.
+    await conn.execute(
+      `
+      INSERT INTO student_number_counters (number_prefix, last_sequence)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE
+        last_sequence = GREATEST(last_sequence, VALUES(last_sequence))
+      `,
+      [numberPrefix, highestExisting],
+    );
+
+    await conn.execute(
+      `
+      UPDATE student_number_counters
+      SET last_sequence = LAST_INSERT_ID(last_sequence + 1)
+      WHERE number_prefix = ?
+      `,
+      [numberPrefix],
+    );
+
+    const [sequenceRows] = await conn.execute(
+      "SELECT LAST_INSERT_ID() AS sequence_number",
+    );
+    const nextSequence = Number(sequenceRows[0].sequence_number);
+    if (!Number.isSafeInteger(nextSequence) || nextSequence <= 0) {
+      throw new Error("Unable to allocate a safe student number.");
+    }
+
+    const studentNumber = `${numberPrefix}${String(nextSequence).padStart(4, "0")}`;
 
     // =====================================================
     // CREATE USER ACCOUNT
@@ -1108,7 +1176,11 @@ router.post("/", async (req, res) => {
         section: {
           section_id: sectionId,
 
-          section_name: section,
+          section_name: assignedSectionName,
+          requested_section_name: useAutomaticAssignment
+            ? null
+            : requestedSectionName,
+          automatically_assigned: sectionAutoAssigned,
         },
       },
     });
@@ -1126,6 +1198,14 @@ router.post("/", async (req, res) => {
     }
 
     console.error("CREATE STUDENT ERROR:", error);
+
+    if (error instanceof SectionAssignmentError) {
+      return res.status(error.status).json({
+        success: false,
+        error: error.code,
+        message: error.message,
+      });
+    }
 
     // =====================================================
     // DUPLICATE DATABASE CONSTRAINT
@@ -1311,7 +1391,8 @@ router.put("/:id", async (req, res) => {
     await conn.beginTransaction();
 
     // =====================================================
-    // FIND + LOCK STUDENT
+    // Read student identity before locking the destination section.
+    // The student row is locked after the section row to match Create Student.
     // =====================================================
 
     const [studentRows] = await conn.execute(
@@ -1334,8 +1415,6 @@ router.put("/:id", async (req, res) => {
         WHERE student_number = ?
 
         LIMIT 1
-
-        FOR UPDATE
         `,
       [studentNumber],
     );
@@ -1349,7 +1428,7 @@ router.put("/:id", async (req, res) => {
       });
     }
 
-    const currentStudent = studentRows[0];
+    let currentStudent = studentRows[0];
 
     const studentId = Number(currentStudent.student_id);
 
@@ -1513,16 +1592,21 @@ router.put("/:id", async (req, res) => {
     const selectedSemester = semesterRows[0];
 
     // =====================================================
-    // FIND / CREATE SECTION
-    //
-    // Section must match:
-    // course
-    // academic year
-    // year level
+    // VALIDATE AND LOCK THE PREPARED DESTINATION SECTION
     // =====================================================
 
-    let sectionId;
+    const requestedSectionName =
+      typeof section === "string" ? section.trim() : "";
 
+    if (!requestedSectionName) {
+      throw new SectionAssignmentError(
+        "SECTION_NOT_PREPARED",
+        "Select an existing section prepared by the Registrar.",
+      );
+    }
+
+    // Lock the section before locking the student, matching Create Student.
+    // Only Registrar-prepared sections can be used by Edit Student.
     const [sectionRows] = await conn.execute(
       `
         SELECT
@@ -1530,58 +1614,115 @@ router.put("/:id", async (req, res) => {
             course_id,
             academic_year_id,
             year_level,
-            section_name
-
+            section_name,
+            max_students
         FROM sections
-
         WHERE section_name = ?
           AND course_id = ?
           AND academic_year_id = ?
-
+        ORDER BY section_id ASC
         LIMIT 1
-        `,
-      [section, courseId, academicYearId],
+        FOR UPDATE
+      `,
+      [requestedSectionName, courseId, academicYearId],
     );
 
-    if (sectionRows.length > 0) {
-      const selectedSection = sectionRows[0];
+    if (sectionRows.length === 0) {
+      throw new SectionAssignmentError(
+        "SECTION_NOT_PREPARED",
+        `Section '${requestedSectionName}' is not prepared for this course and academic year. Ask the Registrar to prepare it.`,
+      );
+    }
 
-      if (Number(selectedSection.year_level) !== yearLevelNum) {
-        await conn.rollback();
+    const selectedSection = sectionRows[0];
+    const sectionId = Number(selectedSection.section_id);
 
-        return res.status(409).json({
-          success: false,
+    if (Number(selectedSection.year_level) !== yearLevelNum) {
+      throw new SectionAssignmentError(
+        "SECTION_YEAR_LEVEL_MISMATCH",
+        `Section '${requestedSectionName}' belongs to year level ${selectedSection.year_level}, not year level ${yearLevelNum}.`,
+      );
+    }
 
-          message: `Section '${section}' belongs to year level ${selectedSection.year_level}, not year level ${yearLevelNum}.`,
-        });
-      }
+    const sectionCapacity = Number(selectedSection.max_students);
 
-      sectionId = Number(selectedSection.section_id);
-    } else {
-      // ===================================================
-      // CREATE NEW SECTION
-      // ===================================================
+    if (
+      !Number.isInteger(sectionCapacity) ||
+      sectionCapacity < 40 ||
+      sectionCapacity > 50
+    ) {
+      throw new SectionAssignmentError(
+        "INVALID_SECTION_CAPACITY",
+        `Section ${requestedSectionName} must have a capacity between 40 and 50.`,
+      );
+    }
 
-      const [newSectionResult] = await conn.execute(
+    // Re-read and lock the student after the destination section lock.
+    // Reject a changed academic year instead of using a stale section match.
+    const [lockedStudentRows] = await conn.execute(
+      `
+        SELECT
+            student_id,
+            user_id,
+            student_number,
+            course_id,
+            section_id,
+            academic_year_id,
+            semester_id,
+            year_level
+        FROM students
+        WHERE student_number = ?
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [studentNumber],
+    );
+
+    if (lockedStudentRows.length === 0) {
+      throw new SectionAssignmentError(
+        "STUDENT_CHANGED_RETRY",
+        "Student record changed during the update. Please reload and retry.",
+      );
+    }
+
+    const lockedStudent = lockedStudentRows[0];
+
+    if (
+      Number(lockedStudent.student_id) !== studentId ||
+      Number(lockedStudent.user_id) !== userId ||
+      Number(lockedStudent.academic_year_id) !== academicYearId
+    ) {
+      throw new SectionAssignmentError(
+        "STUDENT_CHANGED_RETRY",
+        "Student record changed during the update. Please reload and retry.",
+      );
+    }
+
+    currentStudent = lockedStudent;
+
+    // Editing within the current section does not consume another seat.
+    // Only a transfer to a different section requires a capacity check.
+    const isSectionTransfer = Number(currentStudent.section_id) !== sectionId;
+
+    if (isSectionTransfer) {
+      const [destinationMembers] = await conn.execute(
         `
-          INSERT INTO sections (
-              course_id,
-              academic_year_id,
-              year_level,
-              section_name
-          )
-
-          VALUES (
-              ?,
-              ?,
-              ?,
-              ?
-          )
-          `,
-        [courseId, academicYearId, yearLevelNum, section],
+          SELECT student_id
+          FROM students
+          WHERE section_id = ?
+            AND is_archived = 0
+          ORDER BY student_id ASC
+          FOR UPDATE
+        `,
+        [sectionId],
       );
 
-      sectionId = Number(newSectionResult.insertId);
+      if (destinationMembers.length >= sectionCapacity) {
+        throw new SectionAssignmentError(
+          "SECTION_FULL",
+          `Section '${requestedSectionName}' is full (${destinationMembers.length}/${sectionCapacity}). Choose another prepared section.`,
+        );
+      }
     }
 
     // =====================================================
@@ -2034,6 +2175,14 @@ router.put("/:id", async (req, res) => {
     }
 
     console.error("UPDATE STUDENT ERROR:", error);
+
+    if (error instanceof SectionAssignmentError) {
+      return res.status(error.status).json({
+        success: false,
+        error: error.code,
+        message: error.message,
+      });
+    }
 
     if (error?.code === "ER_DUP_ENTRY") {
       return res.status(409).json({

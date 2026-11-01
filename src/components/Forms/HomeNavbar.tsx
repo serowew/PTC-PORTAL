@@ -10,7 +10,6 @@ export default function Navbar() {
 
   return (
     <header className="header">
-
       {/* LOGO */}
       <div className="logo">
         <div className="logoMark">
@@ -22,57 +21,47 @@ export default function Navbar() {
 
       {/* NAVIGATION */}
       <nav className="nav">
-
         <NavLink
           to="/"
-          className={({ isActive }) =>
-            `navLink ${isActive ? "active" : ""}`
-          }
+          className={({ isActive }) => `navLink ${isActive ? "active" : ""}`}
         >
           Home
         </NavLink>
 
         <NavLink
           to="/about"
-          className={({ isActive }) =>
-            `navLink ${isActive ? "active" : ""}`
-          }
+          className={({ isActive }) => `navLink ${isActive ? "active" : ""}`}
         >
           About
         </NavLink>
 
         <NavLink
           to="/programs"
-          className={({ isActive }) =>
-            `navLink ${isActive ? "active" : ""}`
-          }
+          className={({ isActive }) => `navLink ${isActive ? "active" : ""}`}
         >
           Programs
         </NavLink>
 
         <NavLink
           to="/contact"
-          className={({ isActive }) =>
-            `navLink ${isActive ? "active" : ""}`
-          }
+          className={({ isActive }) => `navLink ${isActive ? "active" : ""}`}
         >
           Contact
         </NavLink>
-
+        <NavLink
+          to="/admission"
+          className={({ isActive }) => `navLink ${isActive ? "active" : ""}`}
+        >
+          Admission
+        </NavLink>
       </nav>
 
       {/* LOGIN */}
       <div className="ctaGroup">
-        <button
-          type="button"
-          className="btnLogin"
-          onClick={handleLogin}
-        >
+        <button type="button" className="btnLogin" onClick={handleLogin}>
           Log In
         </button>
       </div>
-
     </header>
   );
 }
-

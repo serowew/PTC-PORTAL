@@ -7,11 +7,6 @@ export const programHeadSoloLinks = [
     icon: "",
   },
   {
-    label: "Profile",
-    path: "/programhead/profile",
-    icon: "",
-  },
-  {
     label: "Announcement",
     path: "/programhead/announcementprog",
     icon: "",

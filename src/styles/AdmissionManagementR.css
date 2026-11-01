@@ -1,0 +1,346 @@
+.registrar-admission-management {
+  --adm-density: var(--ptc-compact-scale, 1);
+  --adm-radius: 14px;
+  min-width: 0;
+}
+
+.registrar-admission-management .registrar-student-list__hero {
+  min-height: 188px;
+}
+
+.registrar-admission-management .registrar-student-list__panel-heading,
+.registrar-admission-management .registrar-student-list__toolbar,
+.registrar-admission-management .registrar-student-list__pagination-bar {
+  gap: calc(14px * var(--adm-density));
+}
+
+.registrar-admission-management .registrar-student-list__panel-heading {
+  flex-wrap: wrap;
+}
+
+.registrar-admission-management .registrar-student-list__filters {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.registrar-admission-management .registrar-student-list__filters select {
+  max-width: 100%;
+  min-width: 145px;
+}
+
+.registrar-admission-management .registrar-student-list__table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.registrar-admission-management .registrar-student-list__table {
+  min-width: 730px;
+}
+
+.registrar-admission-management .registrar-student-list__table :is(th, td) {
+  vertical-align: middle;
+}
+
+.registrar-admission-management
+  .registrar-student-list__table
+  :is(th:first-child, td:first-child):has(input[type="checkbox"]) {
+  width: 44px;
+  min-width: 44px;
+  text-align: center;
+}
+
+.registrar-admission-management .registrar-student-list__table td:nth-child(2),
+.registrar-admission-management .registrar-student-list__table td:nth-child(3) {
+  overflow-wrap: anywhere;
+}
+
+.registrar-admission-management .registrar-student-list__student-copy small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.registrar-admission-management input[type="checkbox"] {
+  width: calc(16px * var(--ptc-font-scale, 1));
+  height: calc(16px * var(--ptc-font-scale, 1));
+  vertical-align: middle;
+  accent-color: #0f7a45;
+  cursor: pointer;
+}
+
+.registrar-admission-management input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+.registrar-admission-management .registrar-student-list__panel > .px-4.pb-4 {
+  padding-top: calc(18px * var(--adm-density));
+}
+
+.registrar-admission-management .registrar-student-list__record-count {
+  min-height: calc(82px * var(--adm-density));
+  padding: calc(14px * var(--adm-density));
+  border-radius: var(--adm-radius);
+  overflow-wrap: anywhere;
+}
+
+.registrar-admission-management .registrar-student-list__record-count small {
+  display: block;
+  margin-bottom: 7px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
+}
+
+.registrar-admission-management .registrar-student-list__record-count > div {
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.registrar-admission-management .registrar-student-list__panel label,
+.registrar-admission-management .registrar-student-list__panel p,
+.registrar-admission-management .registrar-student-list__panel .form-control,
+.registrar-admission-management .registrar-student-list__panel select {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+
+.registrar-admission-management .registrar-student-list__panel label {
+  line-height: 1.5;
+}
+
+.registrar-admission-management
+  .registrar-student-list__panel
+  textarea.form-control {
+  width: 100%;
+  min-height: calc(94px * var(--adm-density));
+  resize: vertical;
+  padding: calc(11px * var(--adm-density)) 13px;
+  border: 1px solid var(--rsl-border-strong);
+  border-radius: 12px;
+  color: var(--rsl-text-950);
+  background: var(--rsl-surface);
+  box-shadow: none;
+}
+
+.registrar-admission-management
+  .registrar-student-list__panel
+  textarea.form-control:focus,
+.registrar-admission-management
+  .registrar-student-list__panel
+  select:focus-visible,
+.registrar-admission-management input[type="checkbox"]:focus-visible {
+  outline: 2px solid #159452;
+  outline-offset: 2px;
+}
+
+.registrar-admission-management
+  .registrar-student-list__panel
+  textarea.form-control::placeholder {
+  color: var(--rsl-text-500);
+  opacity: 1;
+}
+
+.registrar-admission-management
+  .registrar-student-list__panel
+  > .px-4.pb-4
+  > .row,
+.registrar-admission-management
+  .registrar-student-list__panel
+  > .px-4.pb-4
+  > .registrar-student-list__filters {
+  margin-top: 0;
+}
+
+.registrar-admission-management
+  .registrar-student-list__panel
+  .col-lg-6:has(input[type="checkbox"]),
+.registrar-admission-management
+  .registrar-student-list__panel
+  .d-block:has(input[type="checkbox"]) {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 9px;
+  padding-top: calc(7px * var(--adm-density));
+  padding-bottom: calc(7px * var(--adm-density));
+  cursor: pointer;
+}
+
+.registrar-admission-management
+  .registrar-student-list__panel
+  .col-lg-6:has(input[type="checkbox"])
+  input,
+.registrar-admission-management
+  .registrar-student-list__panel
+  .d-block:has(input[type="checkbox"])
+  input {
+  flex: 0 0 auto;
+  margin: 3px 0 0 !important;
+}
+
+.registrar-admission-management .registrar-student-list__filter-summary {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.registrar-admission-management .registrar-student-list__action {
+  gap: 7px;
+  white-space: normal;
+  text-align: center;
+}
+
+.registrar-admission-management .registrar-student-list__action:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management {
+  --rsl-bg: #111719;
+  --rsl-surface: #171e22;
+  --rsl-border: #344046;
+  --rsl-border-strong: #445158;
+  --rsl-text-950: #f0f5f2;
+  --rsl-text-800: #e2ebe6;
+  --rsl-text-600: #c0cfc7;
+  --rsl-text-500: #a9b9b1;
+  background: #111719 !important;
+  color: #f0f5f2;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__record-count {
+  background: #20292e;
+  border-color: #344046;
+  color: #f0f5f2;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__record-count
+  :is(small, div) {
+  color: #e2ebe6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__panel {
+  background: #171e22;
+  border-color: #344046;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__panel
+  > .px-4.pb-4 {
+  background: #171e22;
+  color: #e2ebe6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__panel
+  textarea.form-control,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__filters
+  select,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table
+  select {
+  background: #20292e;
+  border-color: #445158;
+  color: #f0f5f2;
+  color-scheme: dark;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__panel
+  textarea.form-control::placeholder {
+  color: #a9b9b1;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__panel
+  :is(label, p, strong),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__panel
+  .registrar-student-list__student-copy
+  small {
+  color: #e2ebe6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table-shell,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table-scroll {
+  background: #171e22;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table
+  td {
+  background: #171e22;
+  color: #e2ebe6;
+  border-color: #344046;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table
+  tbody
+  tr:hover
+  td {
+  background: #20292e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__filter-summary {
+  background: #20292e;
+  border-color: #445158;
+  color: #e2ebe6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .text-danger {
+  color: #ff9a94 !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .registrar-admission-management .registrar-student-list__toolbar,
+  .registrar-admission-management .registrar-student-list__panel-heading {
+    align-items: stretch;
+  }
+
+  .registrar-admission-management .registrar-student-list__hero-badge {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .registrar-admission-management .registrar-student-list__panel > .px-4.pb-4 {
+    padding-inline: 16px !important;
+  }
+
+  .registrar-admission-management .registrar-student-list__filters,
+  .registrar-admission-management .registrar-student-list__filters select {
+    width: 100%;
+  }
+
+  .registrar-admission-management .registrar-student-list__filters select {
+    min-width: 0;
+  }
+
+  .registrar-admission-management .registrar-student-list__action {
+    max-width: 100%;
+  }
+}

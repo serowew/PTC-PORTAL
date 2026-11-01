@@ -14,6 +14,5 @@ export const facultyNavGroups = [
 
 export const facultySoloLinks = [
   { label: "Dashboard", path: "/faculty/dashboard", icon: "" },
-  { label: "Profile", path: "/faculty/profile", icon: "" },
   { label: "Announcement", path: "/faculty/announcementF", icon: "" },
 ];

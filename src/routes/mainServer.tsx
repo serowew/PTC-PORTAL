@@ -13,6 +13,9 @@ import OtpAuth from "../pages/auth/Otp";
 import About from "../components/Forms/about";
 import Programs from "../components/Forms/programs";
 import Contact from "../components/Forms/contact";
+import PublicAdmission from "../pages/auth/PublicAdmission";
+import ActivateStudentAccount from "../pages/auth/ActivateStudentAccount";
+
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import VerifyResetOtp from "../pages/auth/VerifyResetOtp";
 import ResetPassword from "../pages/auth/ResetPassword";
@@ -108,6 +111,8 @@ import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/Tran
 //Registrar
 import RegistrarDashboard from "../pages/registrar/Dashboard";
 
+import AdmissionManagementR from "../pages/registrar/Admissions/AdmissionManagementR";
+
 // ── Registrar: Announcement ──
 import AnnouncementListR from "../pages/registrar/Announcement/AnnouncementListR";
 
@@ -116,6 +121,7 @@ import AnnouncementCreateR from "../pages/registrar/Announcement/CreateAnnouncem
 import AnnouncementEditR from "../pages/registrar/Announcement/EditAnnouncementR";
 
 //Registrar Student Record
+
 import StudentDetailsR from "../pages/registrar/StudentRecord/StudentDetailsR";
 import RStudentlist from "../pages/registrar/StudentRecord/StudentlistR";
 import AcademicRecordsR from "../pages/registrar/StudentRecord/AcademicRecordsR";
@@ -267,7 +273,25 @@ export default function AppRoutes() {
             </>
           }
         />
-
+        <Route
+          path="/admission"
+          element={
+            <>
+              <Navbar />
+              <PublicAdmission />
+            </>
+          }
+        />
+        {/* Student Account Activation */}
+        <Route
+          path="/activate-account"
+          element={
+            <>
+              <Navbar />
+              <ActivateStudentAccount />
+            </>
+          }
+        />
         <Route path="/login" element={<LoginAuth />} />
         <Route path="/otp" element={<OtpAuth />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -277,7 +301,9 @@ export default function AppRoutes() {
         {/* Shared account settings — available to all six authenticated roles */}
         <Route
           path="/settings/appearance"
-          element={<AuthenticatedSettingsRoute element={<AppearancePreferences />} />}
+          element={
+            <AuthenticatedSettingsRoute element={<AppearancePreferences />} />
+          }
         />
 
         {/* ── Student: Solo links ── */}
@@ -586,6 +612,11 @@ export default function AppRoutes() {
         <Route
           path="/registrar/dashboard"
           element={<RegistrarRoute element={<RegistrarDashboard />} />}
+        />
+        {/* Registrar Admission Management */}
+        <Route
+          path="/registrar/admissions"
+          element={<RegistrarRoute element={<AdmissionManagementR />} />}
         />
 
         {/* ── Registrar StudentRecord ── */}

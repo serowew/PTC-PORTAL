@@ -4,11 +4,12 @@ import express from "express";
 import db from "../../db.js";
 
 import {
+  ACADEMIC_RESULT,
   ELIGIBILITY_TYPE,
+  classifyFinalRating,
   evaluateSubjectEligibility,
   getCarryOverCandidates,
 } from "../../services/academicEvaluation.service.js";
-
 const router = express.Router();
 
 // =====================================================
@@ -11241,6 +11242,75 @@ router.get("/:id/validate", async (req, res) => {
       }
     }
 
+    // Academic Clearance Review
+    if (isPending) {
+      const [historyRows] = await connection.execute(
+        `
+          SELECT
+              previous.enrollment_id,
+              es.enrollment_subject_id,
+              es.status AS subject_status,
+              s.subject_code,
+              g.final_rating
+          FROM enrollments previous
+          INNER JOIN enrollment_subjects es
+              ON es.enrollment_id = previous.enrollment_id
+          INNER JOIN subjects s
+              ON s.subject_id = es.subject_id
+          LEFT JOIN grades g
+              ON g.grade_id = (
+                  SELECT latest.grade_id
+                  FROM grades latest
+                  WHERE latest.enrollment_subject_id =
+                        es.enrollment_subject_id
+                    AND latest.grade_status = 'Approved'
+                  ORDER BY
+                      COALESCE(
+                          latest.reviewed_at,
+                          latest.updated_at,
+                          latest.created_at
+                      ) DESC,
+                      latest.grade_id DESC
+                  LIMIT 1
+              )
+          WHERE previous.student_id = ?
+            AND previous.enrollment_id <> ?
+            AND previous.enrollment_status = 'Approved'
+            AND es.status NOT IN (
+                'Dropped', 'Cancelled', 'Withdrawn'
+            )
+          ORDER BY
+              previous.enrollment_id,
+              s.subject_code
+        `,
+        [studentId, enrollmentId],
+      );
+
+      const academicReviewSubjects = historyRows
+        .map((row) => ({
+          enrollment_id: Number(row.enrollment_id),
+          enrollment_subject_id: Number(row.enrollment_subject_id),
+          subject_code: row.subject_code,
+          subject_status: row.subject_status,
+          final_rating:
+            row.final_rating === null ? null : Number(row.final_rating),
+          academic_result: classifyFinalRating(row.final_rating),
+        }))
+        .filter(
+          (subject) => subject.academic_result !== ACADEMIC_RESULT.PASSED,
+        );
+
+      if (academicReviewSubjects.length > 0) {
+        warnings.push({
+          code: "ACADEMIC_HISTORY_REQUIRES_REVIEW",
+          message:
+            "Other approved enrollment records contain academic results requiring Registrar review. This is advisory until PTC academic-clearance policy is confirmed.",
+          affected_subject_count: academicReviewSubjects.length,
+          subjects: academicReviewSubjects,
+        });
+      }
+    }
+
     // =================================================
     // 7. ACTIVE CURRICULUM
     // =================================================
@@ -11340,6 +11410,52 @@ router.get("/:id/validate", async (req, res) => {
     const activeSubjects = subjectRows.filter(
       (subject) => !["Dropped", "Withdrawn"].includes(String(subject.status)),
     );
+
+    // Required Curriculum Subject Review
+    if (isPending && curriculumId !== null) {
+      const activeSubjectIds = new Set(
+        activeSubjects.map((subject) => Number(subject.subject_id)),
+      );
+
+      const [requiredTermSubjects] = await connection.execute(
+        `
+          SELECT
+              cs.subject_id,
+              s.subject_code,
+              s.subject_name,
+              s.units
+          FROM curriculum_subjects cs
+          INNER JOIN subjects s
+              ON s.subject_id = cs.subject_id
+          WHERE cs.curriculum_id = ?
+            AND cs.year_level = ?
+            AND cs.semester_id = ?
+            AND cs.is_required = 1
+            AND s.is_active = 1
+          ORDER BY cs.display_order, s.subject_code
+        `,
+        [curriculumId, yearLevel, semesterId],
+      );
+
+      const missingRequiredSubjects = requiredTermSubjects
+        .filter((subject) => !activeSubjectIds.has(Number(subject.subject_id)))
+        .map((subject) => ({
+          subject_id: Number(subject.subject_id),
+          subject_code: subject.subject_code,
+          subject_name: subject.subject_name,
+          units: Number(subject.units),
+        }));
+
+      if (missingRequiredSubjects.length > 0) {
+        warnings.push({
+          code: "REQUIRED_CURRICULUM_SUBJECTS_MISSING",
+          message:
+            "Some required subjects for this curriculum term are not selected. Registrar must review any reduced-load or irregular enrollment according to PTC policy.",
+          missing_subject_count: missingRequiredSubjects.length,
+          subjects: missingRequiredSubjects,
+        });
+      }
+    }
 
     if (activeSubjects.length === 0) {
       errors.push({
@@ -12329,6 +12445,13 @@ router.get("/:id/validate", async (req, res) => {
 
     const canApprove = valid && enrollmentStatus === "Pending";
 
+    const requiresRegistrarReview = warnings.some((warning) =>
+      [
+        "ACADEMIC_HISTORY_REQUIRES_REVIEW",
+        "REQUIRED_CURRICULUM_SUBJECTS_MISSING",
+      ].includes(warning.code),
+    );
+
     let validationState = "NOT_READY";
 
     let validationMessage =
@@ -12342,8 +12465,28 @@ router.get("/:id/validate", async (req, res) => {
     } else if (canApprove) {
       validationState = "READY_FOR_APPROVAL";
 
+      const reviewItems = [];
+
+      if (
+        warnings.some(
+          (warning) => warning.code === "ACADEMIC_HISTORY_REQUIRES_REVIEW",
+        )
+      ) {
+        reviewItems.push("previous academic results");
+      }
+
+      if (
+        warnings.some(
+          (warning) => warning.code === "REQUIRED_CURRICULUM_SUBJECTS_MISSING",
+        )
+      ) {
+        reviewItems.push("missing required curriculum subjects");
+      }
+
       validationMessage =
-        "Enrollment passed validation and is ready for approval.";
+        reviewItems.length > 0
+          ? `Enrollment passed configured validation checks, but ${reviewItems.join(" and ")} require Registrar review before approval.`
+          : "Enrollment passed validation and is ready for approval.";
     } else if (enrollmentStatus !== "Pending") {
       validationState = "NOT_APPROVABLE";
     }
@@ -12354,6 +12497,8 @@ router.get("/:id/validate", async (req, res) => {
       valid,
 
       can_approve: canApprove,
+
+      requires_registrar_review: requiresRegistrarReview,
 
       already_approved: alreadyApproved,
 
@@ -13094,6 +13239,41 @@ router.post("/:id/approve", async (req, res) => {
       }
 
       // ===============================================
+      // FINAL ENROLLMENT TYPE CONSISTENCY
+      // ===============================================
+
+      if (
+        academicEligibility.eligible &&
+        allowedEnrollmentTypes.includes(enrollmentType)
+      ) {
+        const evaluatedEnrollmentType =
+          academicEligibility.eligibility_type || null;
+
+        const typeMatches =
+          (enrollmentType === "Regular" &&
+            evaluatedEnrollmentType === ELIGIBILITY_TYPE.REGULAR) ||
+          (enrollmentType === "Retake" &&
+            evaluatedEnrollmentType === ELIGIBILITY_TYPE.RETAKE) ||
+          (enrollmentType === "Carry Over" &&
+            carryOverValidationMap.has(subjectId));
+
+        if (!typeMatches) {
+          addError(
+            "ENROLLMENT_TYPE_ACADEMIC_MISMATCH",
+            "The persisted enrollment type no longer matches the Student's current academic eligibility.",
+            {
+              stored_enrollment_type: enrollmentType,
+              evaluated_enrollment_type:
+                enrollmentType === "Carry Over" &&
+                carryOverValidationMap.has(subjectId)
+                  ? ELIGIBILITY_TYPE.CARRY_OVER
+                  : evaluatedEnrollmentType,
+            },
+          );
+        }
+      }
+
+      // ===============================================
       // REGULAR SUBJECT CURRENT TERM
       // ===============================================
 
@@ -13108,7 +13288,6 @@ router.post("/:id/approve", async (req, res) => {
           );
         }
       }
-
       // ===============================================
       // COMPLETE PLACEMENT
       // ===============================================
