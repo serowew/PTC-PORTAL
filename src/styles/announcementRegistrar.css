@@ -23,7 +23,6 @@
   --ra-bg: #f5f8f6;
   --ra-danger: #b42318;
   --ra-danger-soft: #fff2f0;
-
   min-height: 100%;
   padding: 28px 30px 38px;
   background:
@@ -443,7 +442,7 @@
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
-    background 160ms ease;
+    background-color 160ms ease;
 }
 
 .registrar-announcements__search input::placeholder {
@@ -828,7 +827,7 @@
   transition:
     transform 160ms ease,
     color 160ms ease,
-    background 160ms ease,
+    background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
 }
@@ -958,6 +957,7 @@
   to {
     background-position: -220% 0;
   }
+
 }
 
 /* =========================================================
@@ -990,6 +990,7 @@
   .registrar-announcements__filters {
     flex-wrap: wrap;
   }
+
 }
 
 @media (max-width: 760px) {
@@ -1047,6 +1048,7 @@
   .registrar-announcements__card-grid {
     grid-template-columns: 1fr;
   }
+
 }
 
 @media (max-width: 520px) {
@@ -1090,6 +1092,7 @@
   .registrar-announcements__action-button {
     width: 100%;
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1101,8 +1104,8 @@
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
-}
 
+}
 
 /* =========================================================
    DELETE ANNOUNCEMENT FEATURE
@@ -1264,7 +1267,7 @@
   cursor: pointer;
   transition:
     color 160ms ease,
-    background 160ms ease,
+    background-color 160ms ease,
     box-shadow 160ms ease;
 }
 
@@ -1397,12 +1400,14 @@
   to {
     transform: rotate(360deg);
   }
+
 }
 
 @media (max-width: 760px) {
   .registrar-announcements__action-button--danger {
     margin-left: 0;
   }
+
 }
 
 @media (max-width: 520px) {
@@ -1434,6 +1439,7 @@
     .registrar-announcements__button {
     width: 100%;
   }
+
 }
 
 /* =========================================================
@@ -1482,6 +1488,7 @@
 }
 
 /* Never stack the three card actions vertically. */
+
 @media (max-width: 760px) {
   .registrar-announcements__card-actions {
     grid-template-columns:
@@ -1500,9 +1507,11 @@
   .registrar-announcements__action-button--danger {
     margin-left: 0;
   }
+
 }
 
 /* Extra-tight sizing for very narrow phones/cards. */
+
 @media (max-width: 390px) {
   .registrar-announcements__card-actions {
     gap: 5px;
@@ -1521,16 +1530,17 @@
   }
 
   /* The leading Eye icon already communicates the action on tight widths. */
+
   .registrar-announcements__action-button--primary svg:last-child {
     display: none;
   }
+
 }
 
 /* =========================================================
    REGISTRAR ANNOUNCEMENTS — DASHBOARD-MATCHED VISUAL REFRESH
    Reference: RegistrarDashboard.css V4/V5 and the supplied
    Registrar Dashboard screenshot.
-
    Scope: announcement LIST page only.
    No changes to shared sidebar, footer, routing or TSX.
    Existing status, form, delete-modal and action behavior stay.
@@ -1538,6 +1548,7 @@
 ========================================================= */
 
 /* Full-bleed PTC academic canvas, exactly as on the dashboard. */
+
 .dashboard-main:has(.registrar-announcements) .dashboard-content {
   padding: 0;
   overflow-x: hidden;
@@ -1548,6 +1559,7 @@
 }
 
 /* Do not create a blank strip when the shared header auto-hides. */
+
 .dashboard-main:has(.registrar-announcements)
   .header-container:has(.app-header.hide) {
   height: 0;
@@ -1593,6 +1605,7 @@
     0 0, 48px 48px, 0 0, 64px 64px,
     center, center, center, center;
   /* Deliberately no entry animation: prevents white flashes. */
+
 }
 
 .registrar-announcements::before {
@@ -1632,6 +1645,7 @@
 }
 
 /* Hero: replicate the strong green Registrar Dashboard banner. */
+
 .registrar-announcements__hero {
   z-index: 1;
   min-height: 188px;
@@ -1665,23 +1679,27 @@
 }
 
 .registrar-announcements__eyebrow { color: #dff8e8; }
+
 .registrar-announcements__eyebrow-icon {
   color: #fff;
   background: rgba(255,255,255,.14);
   border: 1px solid rgba(255,255,255,.18);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
 }
+
 .registrar-announcements__hero h1 {
   color: #fff;
   font-size: clamp(30px, 3.4vw, 40px);
   font-weight: 790;
   letter-spacing: -.035em;
 }
+
 .registrar-announcements__hero p {
   max-width: 790px;
   color: rgba(239,255,245,.84);
   font-size: 14.5px;
 }
+
 .registrar-announcements__hero-badge {
   border-color: rgba(255,255,255,.22);
   background: rgba(255,255,255,.14);
@@ -1689,13 +1707,17 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
+
 .registrar-announcements__hero-badge-icon {
   color: #0a5a34;
   background: linear-gradient(145deg, #fff, #dff7e8);
   box-shadow: 0 6px 16px rgba(0,0,0,.13);
 }
+
 .registrar-announcements__hero-badge small { color: rgba(255,255,255,.72); }
+
 .registrar-announcements__hero-badge strong { color: #fff; }
+
 .registrar-announcements__hero .registrar-announcements__button--primary {
   min-height: 44px;
   color: #0b5e37;
@@ -1703,6 +1725,7 @@
   border-color: rgba(255,255,255,.88);
   box-shadow: 0 9px 20px rgba(0,0,0,.12);
 }
+
 .registrar-announcements__hero .registrar-announcements__button--primary:hover:not(:disabled) {
   color: #064e2f;
   background: #f0fff5;
@@ -1710,6 +1733,7 @@
 }
 
 /* Glassy floating KPI strip; separate green/gold/blue/violet cards. */
+
 .registrar-announcements__stats {
   position: relative;
   z-index: 1;
@@ -1723,6 +1747,7 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+
 .registrar-announcements__stat-card {
   position: relative;
   isolation: isolate;
@@ -1733,6 +1758,7 @@
   border-radius: 19px;
   box-shadow: 0 12px 28px rgba(31,56,40,.09);
 }
+
 .registrar-announcements__stat-card::before {
   content: "";
   position: absolute;
@@ -1741,6 +1767,7 @@
   width: 5px;
   background: #159452;
 }
+
 .registrar-announcements__stat-card::after {
   content: "";
   position: absolute;
@@ -1753,58 +1780,76 @@
   background: rgba(21,148,82,.08);
   pointer-events: none;
 }
+
 .registrar-announcements__stat-card:nth-child(1) {
   background: linear-gradient(145deg, #fff, #ecfbf2);
 }
+
 .registrar-announcements__stat-card:nth-child(2) {
   background: linear-gradient(145deg, #fff, #fff8e4);
 }
+
 .registrar-announcements__stat-card:nth-child(2)::before { background: var(--ra-gold); }
+
 .registrar-announcements__stat-card:nth-child(2)::after { background: rgba(212,167,44,.10); }
+
 .registrar-announcements__stat-card:nth-child(3) {
   background: linear-gradient(145deg, #fff, #edf5ff);
 }
+
 .registrar-announcements__stat-card:nth-child(3)::before { background: var(--ra-blue); }
+
 .registrar-announcements__stat-card:nth-child(3)::after { background: rgba(37,99,235,.08); }
+
 .registrar-announcements__stat-card:nth-child(4) {
   background: linear-gradient(145deg, #fff, #f6efff);
 }
+
 .registrar-announcements__stat-card:nth-child(4)::before { background: var(--ra-violet); }
+
 .registrar-announcements__stat-card:nth-child(4)::after { background: rgba(124,58,237,.08); }
+
 .registrar-announcements__stat-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 18px 34px rgba(31,56,40,.14);
 }
+
 .registrar-announcements__stat-icon {
   width: 50px;
   height: 50px;
   border-radius: 15px;
   box-shadow: 0 8px 18px rgba(15,122,69,.10);
 }
+
 .registrar-announcements__stat-card:nth-child(2) .registrar-announcements__stat-icon {
   color: #a97908;
   background: #fff7dc;
   border-color: #edd796;
 }
+
 .registrar-announcements__stat-card:nth-child(3) .registrar-announcements__stat-icon {
   color: var(--ra-blue);
   background: #eef5ff;
   border-color: #cfe0ff;
 }
+
 .registrar-announcements__stat-card:nth-child(4) .registrar-announcements__stat-icon {
   color: var(--ra-violet);
   background: #f5f0ff;
   border-color: #dfd1ff;
 }
+
 .registrar-announcements__stat-card span:not(.registrar-announcements__stat-icon) {
   font-size: 11px;
   font-weight: 760;
   letter-spacing: .025em;
   text-transform: uppercase;
 }
+
 .registrar-announcements__stat-card strong { font-size: 26px; }
 
 /* Announcement directory: raised white panel on a mint section canvas. */
+
 .registrar-announcements__workspace {
   position: relative;
   z-index: 1;
@@ -1814,11 +1859,13 @@
   background: rgba(255,255,255,.97);
   box-shadow: 0 16px 38px rgba(7,59,36,.09);
 }
+
 .registrar-announcements__workspace-header {
   padding: 23px 26px 18px;
   border-bottom: 1px solid rgba(15,122,69,.08);
   background: linear-gradient(110deg, rgba(255,255,255,.98), rgba(239,249,242,.8));
 }
+
 .registrar-announcements__section-kicker {
   padding: 5px 10px;
   margin-bottom: 8px;
@@ -1826,33 +1873,40 @@
   background: #e9f6ee;
   color: #0d653b;
 }
+
 .registrar-announcements__workspace-header h2 {
   font-size: 20px;
   font-weight: 780;
 }
+
 .registrar-announcements__record-count {
   border-color: #c7e5d1;
   color: #0d653b;
   background: #eaf7ee;
 }
+
 .registrar-announcements__toolbar {
   gap: 14px;
   padding: 17px 26px 19px;
   background: rgba(249,253,250,.96);
 }
+
 .registrar-announcements__search input {
   height: 44px;
   border-color: #d1e2d6;
   border-radius: 12px;
   background: #fff;
 }
+
 .registrar-announcements__filters select {
   height: 44px;
   border-color: #d1e2d6;
   border-radius: 12px;
   background: #fff;
 }
+
 .registrar-announcements__clear-filters { height: 44px; }
+
 .registrar-announcements__filter-summary {
   margin-right: 26px;
   margin-left: 26px;
@@ -1860,6 +1914,7 @@
 }
 
 /* Cards keep the established view/edit/delete one-row alignment. */
+
 .registrar-announcements__card-grid {
   gap: 17px;
   padding: 22px 26px 26px;
@@ -1868,6 +1923,7 @@
     radial-gradient(circle at 8% 8%, rgba(21,148,82,.075), transparent 31%),
     linear-gradient(145deg, #f4faf6, #ecf5ef);
 }
+
 .registrar-announcements__card {
   position: relative;
   overflow: hidden;
@@ -1877,6 +1933,7 @@
   background: linear-gradient(165deg, #fff, #fbfefc);
   box-shadow: 0 9px 23px rgba(7,59,36,.07);
 }
+
 .registrar-announcements__card::before {
   content: "";
   position: absolute;
@@ -1887,11 +1944,13 @@
   background: linear-gradient(90deg, #064e2f, #159452, #b4ddc0);
   pointer-events: none;
 }
+
 .registrar-announcements__card:hover {
   transform: translateY(-3px);
   border-color: #a6d3b5;
   box-shadow: 0 16px 30px rgba(7,59,36,.12);
 }
+
 .registrar-announcements__card-icon {
   width: 42px;
   height: 42px;
@@ -1899,21 +1958,27 @@
   color: #0d653b;
   background: #eaf7ef;
 }
+
 .registrar-announcements__card-heading h3 { font-size: 18px; }
+
 .registrar-announcements__meta-item {
   border: 1px solid #e6efe9;
   background: #f7fbf8;
 }
+
 .registrar-announcements__recipient-chip { background: #ebf8ef; }
+
 .registrar-announcements__action-button {
   border-radius: 10px;
   min-height: 38px;
 }
+
 .registrar-announcements__action-button--primary {
   color: #fff;
   background: #0d653b;
   border-color: #0d653b;
 }
+
 .registrar-announcements__action-button--primary:hover:not(:disabled) {
   color: #fff;
   background: #084b2c;
@@ -1921,6 +1986,7 @@
 }
 
 /* Carefully styled empty/error/loading states; no page-wide opacity fades. */
+
 .registrar-announcements__state {
   min-height: 300px;
   margin: 18px;
@@ -1930,15 +1996,18 @@
     radial-gradient(circle at 50% 45%, rgba(21,148,82,.09), transparent 36%),
     linear-gradient(135deg, #fbfefc, #f0f8f3);
 }
+
 .registrar-announcements__state-icon {
   border-radius: 50%;
   background: #e4f7ea;
 }
+
 .registrar-announcements__skeleton-card {
   border-color: #d7e8dc;
   border-radius: 18px;
   background: #f8fcf9;
 }
+
 .registrar-announcements__skeleton-line,
 .registrar-announcements__skeleton-footer {
   background: linear-gradient(90deg, #e1eee5 25%, #f0f8f3 45%, #e1eee5 65%);
@@ -1946,12 +2015,16 @@
 }
 
 /* Keep destructive actions visibly red and dialog legible. */
+
 .registrar-announcements__delete-modal { border-radius: 22px; }
+
 .registrar-announcements__feedback { border-radius: 14px; }
 
 /* At narrower widths retain the existing layout/UX behavior. */
+
 @media (max-width: 1180px) {
   .registrar-announcements__hero-actions { align-items: stretch; }
+
 }
 
 @media (max-width: 760px) {
@@ -1960,6 +2033,7 @@
     background-size: 72px 72px, 72px 72px, 92px 92px, 92px 92px,
       auto, auto, auto, auto;
   }
+
   .registrar-announcements::before {
     top: 9px;
     right: 7px;
@@ -1967,147 +2041,619 @@
     height: 340px;
     border-radius: 22px;
   }
+
   .registrar-announcements::after { top: 510px; right: -200px; }
+
   .registrar-announcements__hero {
     min-height: 0;
     padding: 24px 22px;
     border-radius: 20px;
   }
+
   .registrar-announcements__hero h1 { font-size: clamp(28px, 6vw, 36px); }
+
   .registrar-announcements__stats {
     margin-right: 0;
     margin-left: 0;
     padding: 9px;
     border-radius: 19px;
   }
+
   .registrar-announcements__stat-card { min-height: 105px; }
+
   .registrar-announcements__workspace { border-radius: 20px; }
+
   .registrar-announcements__workspace-header,
   .registrar-announcements__toolbar { padding-right: 18px; padding-left: 18px; }
+
   .registrar-announcements__card-grid { padding: 18px; }
+
   .registrar-announcements__filter-summary { margin-right: 18px; margin-left: 18px; }
+
 }
 
 @media (max-width: 520px) {
   .registrar-announcements { padding: 14px 10px 28px; }
+
   .registrar-announcements__hero { padding: 22px 18px; }
+
   .registrar-announcements__hero-actions { min-width: 0; }
+
   .registrar-announcements__hero-badge { min-width: 0; }
+
   .registrar-announcements__stat-card { padding: 16px; }
+
   .registrar-announcements__card-grid { padding: 14px; }
+
   .registrar-announcements__card { padding: 16px; }
+
   .registrar-announcements__workspace-header,
   .registrar-announcements__toolbar { padding-right: 14px; padding-left: 14px; }
+
   .registrar-announcements__filter-summary { margin-right: 14px; margin-left: 14px; }
+
 }
 
 /* No unwanted page navigation flash or decorative motion. */
+
 @media (prefers-reduced-motion: reduce) {
   .registrar-announcements__stat-card,
   .registrar-announcements__card,
   .registrar-announcements__button {
     transition: none;
   }
-}
-/* =========================================================
-   PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
-   Page: Registrar Announcements
-   Additive color overrides. Existing layout/design untouched.
-========================================================= */
 
-/* 1. SLATE */
-.registrar-announcements__stats > .registrar-announcements__stat-card:nth-child(1) {
-  --reg-sem-accent: #64748b;
-  --reg-sem-surface: #f2f6f9;
-  --reg-sem-watermark: rgba(100,116,139,.10);
-  --reg-sem-icon-bg: #e8eef4;
-  --reg-sem-icon-border: #cfdae5;
-  --reg-sem-icon-fg: #475569;
-  --reg-sem-dark-bg: #26343c;
-  --reg-sem-dark-border: #4b606c;
-  --reg-sem-dark-watermark: rgba(148,163,184,.08);
-  --reg-sem-dark-icon-bg: #354956;
-  --reg-sem-dark-icon-fg: #d3e0e9;
 }
 
-/* 2. GREEN */
-.registrar-announcements__stats > .registrar-announcements__stat-card:nth-child(2) {
-  --reg-sem-accent: #119457;
-  --reg-sem-surface: #edf9f2;
-  --reg-sem-watermark: rgba(20,159,91,.09);
-  --reg-sem-icon-bg: #dff5e9;
-  --reg-sem-icon-border: #bfdfce;
-  --reg-sem-icon-fg: #097443;
-  --reg-sem-dark-bg: #213d2b;
-  --reg-sem-dark-border: #3c7953;
-  --reg-sem-dark-watermark: rgba(74,222,128,.07);
-  --reg-sem-dark-icon-bg: #2c5941;
-  --reg-sem-dark-icon-fg: #99e7b7;
+/* ============================================================
+   REGISTRAR ANNOUNCEMENTS — DARK MODE ONLY
+   Neutral charcoal surfaces, restrained green accents.
+   Light Mode rules above are preserved verbatim.
+   Scoped to this page; no sidebar/footer changes.
+   ============================================================ */
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements {
+  --ra-green-950: #103b29;
+  --ra-green-900: #155e3e;
+  --ra-green-800: #69d5a0;
+  --ra-green-700: #64c995;
+  --ra-green-600: #39bd81;
+  --ra-green-100: #22352e;
+  --ra-green-50: #20312b;
+  --ra-text-950: #f1f5f3;
+  --ra-text-800: #e5ece8;
+  --ra-text-700: #c9d3ce;
+  --ra-text-600: #b5c0ba;
+  --ra-text-500: #a2aea8;
+  --ra-border: #354149;
+  --ra-border-strong: #47545b;
+  --ra-surface: #1b2327;
+  --ra-bg: #111719;
+  --ra-danger: #ff9999;
+  --ra-danger-soft: #392429;
+  background: #111719;
+  color: var(--ra-text-950);
+  color-scheme: dark;
 }
 
-/* 3. SLATE */
-.registrar-announcements__stats > .registrar-announcements__stat-card:nth-child(3) {
-  --reg-sem-accent: #64748b;
-  --reg-sem-surface: #f2f6f9;
-  --reg-sem-watermark: rgba(100,116,139,.10);
-  --reg-sem-icon-bg: #e8eef4;
-  --reg-sem-icon-border: #cfdae5;
-  --reg-sem-icon-fg: #475569;
-  --reg-sem-dark-bg: #26343c;
-  --reg-sem-dark-border: #4b606c;
-  --reg-sem-dark-watermark: rgba(148,163,184,.08);
-  --reg-sem-dark-icon-bg: #354956;
-  --reg-sem-dark-icon-fg: #d3e0e9;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements) > .dashboard-content {
+  background: #111719;
+  background-image: none;
 }
 
-/* 4. VIOLET */
-.registrar-announcements__stats > .registrar-announcements__stat-card:nth-child(4) {
-  --reg-sem-accent: #8651df;
-  --reg-sem-surface: #f6f0ff;
-  --reg-sem-watermark: rgba(133,81,223,.09);
-  --reg-sem-icon-bg: #f0e7ff;
-  --reg-sem-icon-border: #dfcdfb;
-  --reg-sem-icon-fg: #6c32c6;
-  --reg-sem-dark-bg: #342a49;
-  --reg-sem-dark-border: #695590;
-  --reg-sem-dark-watermark: rgba(167,139,250,.08);
-  --reg-sem-dark-icon-bg: #46365f;
-  --reg-sem-dark-icon-fg: #d5bcff;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero {
+  background: linear-gradient(110deg, #073b28 0%, #0b5033 58%, #10683d 100%);
+  border-color: #32674a;
+  box-shadow: 0 10px 24px #0005;
 }
 
-/* Card background, status stripe and corner accent. */
-.registrar-announcements__stats > .registrar-announcements__stat-card {
-  background: linear-gradient(145deg, #ffffff 0%, var(--reg-sem-surface) 100%);
-  border-color: var(--reg-sem-icon-border);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero::after {
+  border-color: #ffffff10;
 }
-.registrar-announcements__stats > .registrar-announcements__stat-card::before {
-  background: var(--reg-sem-accent);
-}
-.registrar-announcements__stats > .registrar-announcements__stat-card::after {
-  background: var(--reg-sem-watermark);
-}
-.registrar-announcements__stats > .registrar-announcements__stat-card .registrar-announcements__stat-icon {
-  color: var(--reg-sem-icon-fg);
-  border-color: var(--reg-sem-icon-border);
-  background: var(--reg-sem-icon-bg);
-  box-shadow: none;
-}
-.registrar-announcements__stats > .registrar-announcements__stat-card .registrar-announcements__stat-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
 
-/* Dark Mode: status colors remain legible on charcoal panels. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-announcements__stats > .registrar-announcements__stat-card {
-  background: var(--reg-sem-dark-bg) !important;
-  border-color: var(--reg-sem-dark-border);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero :is(h1,p,small,strong),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__eyebrow {
+  color: #f4fcf7;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-announcements__stats > .registrar-announcements__stat-card::before {
-  background: var(--reg-sem-accent);
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__eyebrow-icon {
+  background: #ffffff1c;
+  color: #eefcf3;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-announcements__stats > .registrar-announcements__stat-card::after {
-  background: var(--reg-sem-dark-watermark);
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero-badge {
+  background: #ffffff16;
+  border-color: #ffffff45;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-announcements__stats > .registrar-announcements__stat-card .registrar-announcements__stat-icon {
-  color: var(--reg-sem-dark-icon-fg);
-  background: var(--reg-sem-dark-icon-bg);
-  border-color: var(--reg-sem-dark-border);
-  box-shadow: none;
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero-badge :is(small,strong) {
+  color: #f4fcf7;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero-badge-icon {
+  background: #edf8f1;
+  color: #135e3a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__stat-card,
+  .registrar-announcements__workspace,
+  .registrar-announcements__card,
+  .registrar-announcements__skeleton-card,
+  .registrar-announcements__delete-modal
+) {
+  background: #1b2327;
+  border-color: #36434a;
+  color: #eaf0ec;
+  box-shadow: 0 6px 18px #0003;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__card-grid,
+  .registrar-announcements__state,
+  .registrar-announcements__toolbar,
+  .registrar-announcements__filter-summary
+) {
+  background: #171e22;
+  color: #dce5e0;
+  border-color: #354149;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__meta-item,
+  .registrar-announcements__record-count,
+  .registrar-announcements__recipient-chip,
+  .registrar-announcements__recipient-chip--more,
+  .registrar-announcements__recipient-chip--muted,
+  .registrar-announcements__clear-filters
+) {
+  background: #222b30;
+  border-color: #3c4a52;
+  color: #d4dfd9;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__search input,
+  .registrar-announcements__filters select,
+  .registrar-announcements__action-button,
+  .registrar-announcements__button--secondary
+) {
+  background: #222b30;
+  border-color: #45535b;
+  color: #eaf0ec;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__search input,
+  .registrar-announcements__filters select
+):focus {
+  background: #263139;
+  border-color: #67c995;
+  outline: 2px solid #67c99577;
+  outline-offset: 1px;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__search input::placeholder {
+  color: #aeb9b4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__action-button--primary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__button--primary {
+  background: #166d45;
+  border-color: #258e60;
+  color: #fff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__action-button--primary:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__button--primary:hover:not(:disabled) {
+  background: #1b8554;
+  color: #fff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__action-button--danger,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__button--danger {
+  background: #392428;
+  border-color: #78464d;
+  color: #ffb8b8;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__status--active {
+  background: #17362a;
+  border-color: #357b57;
+  color: #94e9b8;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__status--inactive {
+  background: #2c3438;
+  border-color: #4c5b62;
+  color: #d2dce0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__section-kicker,
+  .registrar-announcements__card-icon,
+  .registrar-announcements__stat-icon,
+  .registrar-announcements__state-icon
+) {
+  color: #79d7a6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__card-icon,
+  .registrar-announcements__stat-icon,
+  .registrar-announcements__state-icon
+) {
+  background: #22342d;
+  border-color: #3d6851;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-icon--primary {
+  background: #127745;
+  color: #fff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(
+  .registrar-announcements__feedback--success,
+  .registrar-announcements__feedback--error,
+  .registrar-announcements__delete-warning,
+  .registrar-announcements__delete-record
+) {
+  background: #222b30;
+  border-color: #46535a;
+  color: #e2ece6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__skeleton-line,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__skeleton-footer {
+  background: linear-gradient(90deg,#263038 25%,#35414a 45%,#263038 65%);
+  background-size: 200% 100%;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__modal-overlay {
+  background: #000b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements :is(button, a, input, select):focus-visible {
+  outline: 2px solid #8ce5b8;
+  outline-offset: 2px;
+}
+
+/* =============================================================
+   DARK MODE — FINAL CANVAS + NEUTRAL SURFACES
+   Target actual AnnouncementListR class names and outer layout.
+   Light mode, sidebar, and site footer are intentionally untouched.
+   ============================================================= */
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements) > .dashboard-content,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements) > .dashboard-content > .registrar-announcements {
+  background: #111719 !important;
+  background-image: none !important;
+  color: #e8eeeb;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements) > .dashboard-content {
+  padding: 0 !important;
+  overflow-x: hidden;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements::after {
+  background: none !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__workspace,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__card-grid,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__workspace-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__toolbar {
+  background: #171e22 !important;
+  background-image: none !important;
+  border-color: #35424a !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-card {
+  background: #20292e !important;
+  background-image: none !important;
+  color: #eef3f0 !important;
+  border-color: #3b4a52 !important;
+}
+
+/* APPEARANCE PREFERENCES — ANNOUNCEMENT PAGE */
+
+/* Scoped to the main content only. Sidebar and footer are untouched. */
+
+/* All previous fixed font sizes are scaled using the saved per-user setting. */
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__eyebrow { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero h1 { font-size: clamp(calc(30px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1))); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero p { font-size: calc(14px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero-badge small { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero-badge strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__button { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card span:not(.registrar-announcements__stat-icon) { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card strong { font-size: calc(26px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card small { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__section-kicker { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__workspace-header h2 { font-size: calc(20px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__workspace-header p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__record-count { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__search input { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__filter-label { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__filters select { font-size: calc(12.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__clear-filters { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__filter-summary { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__status { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__card-heading > span { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__card-heading h3 { font-size: calc(18px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__preview { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__meta-item span { font-size: calc(11px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__meta-item strong { font-size: calc(12.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__recipients-label { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__recipient-chip { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__action-button { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__state h3 { font-size: calc(16px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__state p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__feedback strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__feedback p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-eyebrow { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-modal h2 { font-size: calc(21px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-modal > p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-record span { font-size: calc(11px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-record strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-warning p { font-size: calc(12.5px * var(--ptc-font-scale, 1)); }
+
+/* Compact Mode reduces only component spacing; it does not shrink sidebar or footer. */
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements {
+  padding: calc(28px * var(--ptc-compact-scale, .8)) calc(30px * var(--ptc-compact-scale, .8)) calc(38px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__hero {
+  padding: calc(25px * var(--ptc-compact-scale, .8)) calc(28px * var(--ptc-compact-scale, .8));
+  gap: calc(24px * var(--ptc-compact-scale, .8));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__stats {
+  gap: calc(14px * var(--ptc-compact-scale, .8));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__stat-card {
+  padding: calc(17px * var(--ptc-compact-scale, .8)) calc(18px * var(--ptc-compact-scale, .8));
+  gap: calc(14px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__workspace-header {
+  padding: calc(20px * var(--ptc-compact-scale, .8)) calc(22px * var(--ptc-compact-scale, .8)) calc(15px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__toolbar {
+  padding: 0 calc(22px * var(--ptc-compact-scale, .8)) calc(17px * var(--ptc-compact-scale, .8));
+  gap: calc(12px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__card-grid {
+  gap: calc(15px * var(--ptc-compact-scale, .8));
+  padding: calc(18px * var(--ptc-compact-scale, .8)) calc(22px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__card {
+  padding: calc(18px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__meta-grid {
+  gap: calc(8px * var(--ptc-compact-scale, .8));
+  padding: calc(12px * var(--ptc-compact-scale, .8)) 0;
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__meta-item {
+  padding: calc(8px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__recipients {
+  gap: calc(8px * var(--ptc-compact-scale, .8));
+  padding: calc(13px * var(--ptc-compact-scale, .8)) 0 calc(14px * var(--ptc-compact-scale, .8));
+}
+
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__delete-modal {
+  padding: calc(27px * var(--ptc-compact-scale, .8));
+}
+
+/* Keep mobile layout from overflowing, even with Extra Large text. */
+
+@media (max-width: 760px) {
+  .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__hero {
+    padding: 18px;
+  }
+
+  .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__card-grid {
+    padding: 14px;
+  }
+
+}
+
+/* LIGHT MODE — RESTORE APPROVED PTC GREEN HERO
+   Scoped to this page; Dark Mode, page panels, sidebar, footer and
+   appearance preference rules are unchanged. */
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
+  border-color: rgba(20, 115, 70, .38);
+  box-shadow: 0 10px 26px rgba(5, 61, 38, .15);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero::after {
+  border-color: rgba(255, 255, 255, .075);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero h1,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero p,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__eyebrow {
+  color: #f6fff9;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__eyebrow-icon {
+  color: #effff5;
+  background: rgba(255,255,255,.14);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero-badge {
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.28);
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero-badge small,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero-badge strong {
+  color: #f6fff9;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero .registrar-announcements__button--secondary {
+  background: rgba(13, 34, 26, .72);
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero .registrar-announcements__button--secondary:hover:not(:disabled) {
+  background: rgba(25, 68, 47, .92);
+  border-color: rgba(255,255,255,.65);
+  color: #fff;
+}
+
+/* ==========================================================
+   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
+   Scoped to this page only. Keep existing panels and layout.
+   ========================================================== */
+
+.dashboard-wrapper .registrar-announcements__hero {
+  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
+  border-color: rgba(20, 115, 70, 0.38) !important;
+  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+}
+
+.dashboard-wrapper .registrar-announcements__hero::after {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+.dashboard-wrapper .registrar-announcements__hero :is(h1, h2, p, small, strong),
+.dashboard-wrapper .registrar-announcements__hero .registrar-announcements__eyebrow {
+  color: #f6fff9 !important;
+}
+
+.dashboard-wrapper .registrar-announcements__hero .registrar-announcements__eyebrow-icon {
+  color: #effff5 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.dashboard-wrapper .registrar-announcements__hero .registrar-announcements__button--secondary {
+  background: rgba(13, 34, 26, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.dashboard-wrapper .registrar-announcements__hero .registrar-announcements__button--secondary:hover:not(:disabled) {
+  background: rgba(21, 67, 46, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   ORIGINAL DESIGN RESTORATION — STAT COLORS AND CARD ACCENTS
+   Keep this after all appearance overrides for stable visual hierarchy.
+   ============================================================ */
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(1) {
+  background: linear-gradient(145deg,#ffffff 0%,#ecfbf2 100%);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(2) {
+  background: linear-gradient(145deg,#ffffff 0%,#fff8e4 100%);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(3) {
+  background: linear-gradient(145deg,#ffffff 0%,#edf5ff 100%);
+}
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(4) {
+  background: linear-gradient(145deg,#ffffff 0%,#f6efff 100%);
+}
+.dashboard-wrapper .registrar-announcements__stat-card { position: relative; isolation: isolate; overflow: hidden; }
+.dashboard-wrapper .registrar-announcements__stat-card::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 5px;
+  border-radius: 19px 0 0 19px; z-index: 1; background: #159452;
+}
+.dashboard-wrapper .registrar-announcements__stat-card:nth-child(2)::before { background:#d4a72c; }
+.dashboard-wrapper .registrar-announcements__stat-card:nth-child(3)::before { background:#2563eb; }
+.dashboard-wrapper .registrar-announcements__stat-card:nth-child(4)::before { background:#7c3aed; }
+.dashboard-wrapper .registrar-announcements__card { position:relative; overflow:hidden; }
+.dashboard-wrapper .registrar-announcements__card::before {
+  content:""; position:absolute; z-index:1; top:0; left:0; right:0; height:4px;
+  background:linear-gradient(90deg,#064e2f,#159452,#b4ddc0); pointer-events:none;
+}
+/* Dark theme keeps the accents without allowing bright card backgrounds. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-card:nth-child(n),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__card {
+  background:#1b2327;
+  border-color:#36434a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-card::after {
+  opacity:.28;
+}
+
+
+/* ==========================================================
+   DARK MODE — KPI STRIP AND DIRECTORY LABEL SURFACES
+   Keep the four stat accent colors and the approved green hero.
+   Light Mode retains its original translucent/tinted styling.
+   ========================================================== */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stats {
+  background: #1a2226 !important;
+  background-image: none !important;
+  border: 1px solid #35434a !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .20), inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__section-kicker {
+  color: #90e2b3 !important;
+  background: #20372b !important;
+  background-image: none !important;
+  border: 1px solid #365f48;
 }
