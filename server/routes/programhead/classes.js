@@ -1,5 +1,3 @@
-// routes/programhead/classes.js
-
 import express from "express";
 import db from "../../db.js";
 import { calculateGrade } from "../../services/gradingPolicy.service.js";
@@ -2694,8 +2692,12 @@ router.get("/:offeringId/gradebook", async (req, res) => {
                   AS grade_faculty_id,
 
               
+              g.grading_policy,
+              g.grading_outcome,
+              g.outcome_reason,
               g.midterm_grade,
               g.final_grade,
+              g.overall_percentage,
               g.final_rating,
 
               g.remarks,
@@ -2756,7 +2758,8 @@ router.get("/:offeringId/gradebook", async (req, res) => {
                   'Enrolled',
                   'Completed',
                   'Failed',
-                  'Incomplete'
+                  'Incomplete',
+                  'Unofficial Drop'
               )
 
           ORDER BY
@@ -2820,6 +2823,15 @@ router.get("/:offeringId/gradebook", async (req, res) => {
 
               final_grade:
                 row.final_grade !== null ? Number(row.final_grade) : null,
+
+              overall_percentage:
+                row.overall_percentage !== null
+                  ? Number(row.overall_percentage)
+                  : null,
+
+              grading_policy: row.grading_policy,
+              grading_outcome: row.grading_outcome,
+              outcome_reason: row.outcome_reason,
 
               final_rating:
                 row.final_rating !== null ? Number(row.final_rating) : null,
@@ -3113,51 +3125,14 @@ router.put(
       } catch (error) {
         return res.status(400).json({
           success: false,
-          message: error.message,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Invalid grade information.",
         });
       }
 
-      // ===============================================
-      // COMPLETENESS
-      // ===============================================
-      //
-      // Current DB rule:
-      //
-      // Passed / Failed:
-      // all numeric components + final rating required.
-      //
-      // Incomplete:
-      // remarks required, but numeric values may
-      // remain incomplete.
-      //
-      // ===============================================
-
-      if (["Passed", "Failed"].includes(remarks)) {
-        const missingFields = [];
-
-        if (midtermResult.value === null) {
-          missingFields.push("midterm_grade");
-        }
-
-        if (finalGradeResult.value === null) {
-          missingFields.push("final_grade");
-        }
-
-        if (finalRatingResult.value === null) {
-          missingFields.push("final_rating");
-        }
-
-        if (missingFields.length > 0) {
-          return res.status(400).json({
-            success: false,
-
-            message:
-              "Complete grades and final rating are required for Passed or Failed grades.",
-
-            missing_fields: missingFields,
-          });
-        }
-      }
+      // Shared grading policy validates required scores and outcome reasons.
 
       // ===============================================
       // TRANSACTION

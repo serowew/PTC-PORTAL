@@ -9,6 +9,8 @@ import { createPortal } from "react-dom";
 import {
   AlertCircle,
   BookOpenCheck,
+  ChevronDown,
+  ChevronUp,
   CalendarDays,
   CheckCircle2,
   ClipboardList,
@@ -25,6 +27,9 @@ import "../../../styles/OfferingBatchesR.css";
 
 const BATCH_API = apiUrl("/api/registrar/offering-batches");
 const SETUP_API = apiUrl("/api/registrar/offerings/setup-data");
+const SECTION_LETTERS = Array.from({ length: 26 }, (_, index) =>
+  String.fromCharCode(65 + index),
+);
 
 interface ApiResponse {
   success: boolean;
@@ -147,6 +152,39 @@ interface BatchDetailResponse extends ApiResponse {
   batch?: BatchDetail;
 }
 
+interface FacultyAssignmentRequest {
+  request_id: number;
+  batch_id: number;
+  offering_id: number;
+  proposed_faculty_id: number;
+  original_faculty_id: number | null;
+  requested_at: string | null;
+  status: string;
+  batch_status: string;
+  academic_year: string;
+  semester_name: string;
+  course_code: string;
+  course_name: string;
+  year_level: number;
+  section_name: string;
+  subject_code: string;
+  subject_name: string;
+  current_faculty_id: number | null;
+  schedule_days: string | null;
+  schedule_time: string | null;
+  offering_status: string;
+  proposed_faculty_name: string;
+}
+
+interface FacultyRequestsResponse extends ApiResponse {
+  requests?: FacultyAssignmentRequest[];
+}
+
+interface FacultyReviewResponse extends ApiResponse {
+  request_id?: number;
+  request_status?: string;
+}
+
 interface CreateBatchResponse extends ApiResponse {
   batch?: {
     batch_id: number;
@@ -158,6 +196,13 @@ interface CreateBatchResponse extends ApiResponse {
 interface PublishResponse extends ApiResponse {
   batch_id?: number;
   published_offering_count?: number;
+}
+
+interface GenerateSectionsResponse extends ApiResponse {
+  created_count?: number;
+  skipped_count?: number;
+  created_sections?: SectionOption[];
+  skipped_sections?: string[];
 }
 
 async function readResponse<T>(response: Response): Promise<T> {
@@ -206,6 +251,15 @@ export default function ClassOfferingManagementR() {
   const [programHeadUserId, setProgramHeadUserId] = useState("");
   const [selectedSectionIds, setSelectedSectionIds] = useState<number[]>([]);
 
+  const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [generatorStartLetter, setGeneratorStartLetter] = useState("A");
+  const [generatorEndLetter, setGeneratorEndLetter] = useState("A");
+  const [generatorCapacity, setGeneratorCapacity] = useState("50");
+  const [generatingSections, setGeneratingSections] = useState(false);
+  const [generatorError, setGeneratorError] = useState("");
+  const [generatorNotice, setGeneratorNotice] = useState("");
+  const [sectionsReloadKey, setSectionsReloadKey] = useState(0);
+
   const [requiredSubjectCount, setRequiredSubjectCount] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
   const [curriculaLoading, setCurriculaLoading] = useState(false);
@@ -219,6 +273,11 @@ export default function ClassOfferingManagementR() {
   );
 
   const [batches, setBatches] = useState<BatchListItem[]>([]);
+  const [facultyRequests, setFacultyRequests] = useState<
+    FacultyAssignmentRequest[]
+  >([]);
+  const [facultyReviewId, setFacultyReviewId] = useState<number | null>(null);
+  const [facultyReviewError, setFacultyReviewError] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedBatch, setSelectedBatch] = useState<BatchDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -332,6 +391,30 @@ export default function ClassOfferingManagementR() {
       (_, index) => index + 1,
     );
   }, [selectedCourse]);
+
+  const generatorPreview = useMemo(() => {
+    if (
+      !selectedCourse ||
+      !yearLevel ||
+      generatorStartLetter > generatorEndLetter
+    ) {
+      return [] as string[];
+    }
+    const start = generatorStartLetter.charCodeAt(0);
+    const end = generatorEndLetter.charCodeAt(0);
+    return Array.from(
+      { length: end - start + 1 },
+      (_, index) =>
+        `${selectedCourse.course_code.toUpperCase()}-${yearLevel}${String.fromCharCode(start + index)}`,
+    );
+  }, [selectedCourse, yearLevel, generatorStartLetter, generatorEndLetter]);
+
+  const existingPreviewCount = useMemo(() => {
+    const existingNames = new Set(
+      sections.map((section) => section.section_name.toUpperCase()),
+    );
+    return generatorPreview.filter((name) => existingNames.has(name)).length;
+  }, [sections, generatorPreview]);
 
   const selectedPeriod = useMemo(
     () =>
@@ -488,21 +571,41 @@ export default function ClassOfferingManagementR() {
     courseId,
     yearLevel,
     curriculumId,
+    sectionsReloadKey,
     requestJson,
   ]);
 
   const loadBatches = useCallback(async () => {
     setQueueLoading(true);
     setQueueError("");
+    setFacultyReviewError("");
+
     try {
-      const data = await requestJson<BatchListResponse>(BATCH_API);
-      setBatches(data.batches || []);
-    } catch (error) {
-      setQueueError(
-        error instanceof Error
-          ? error.message
-          : "Could not load offering batches.",
-      );
+      const [batchResult, facultyResult] = await Promise.allSettled([
+        requestJson<BatchListResponse>(BATCH_API),
+        requestJson<FacultyRequestsResponse>(BATCH_API + "/faculty-requests"),
+      ]);
+
+      if (batchResult.status === "fulfilled") {
+        setBatches(batchResult.value.batches || []);
+      } else {
+        setQueueError(
+          batchResult.reason instanceof Error
+            ? batchResult.reason.message
+            : "Could not load offering batches.",
+        );
+      }
+
+      if (facultyResult.status === "fulfilled") {
+        setFacultyRequests(facultyResult.value.requests || []);
+      } else {
+        setFacultyRequests([]);
+        setFacultyReviewError(
+          facultyResult.reason instanceof Error
+            ? facultyResult.reason.message
+            : "Could not load professor approval requests.",
+        );
+      }
     } finally {
       setQueueLoading(false);
     }
@@ -562,6 +665,65 @@ export default function ClassOfferingManagementR() {
     setCurriculumId("");
     setSelectedSectionIds([]);
     setFormError("");
+  };
+
+  const handleGenerateSections = async () => {
+    setGeneratorError("");
+    setGeneratorNotice("");
+
+    if (!selectedPeriod || !selectedCourse || !yearLevel) {
+      setGeneratorError(
+        "Select an open semester, course and year level first.",
+      );
+      return;
+    }
+    if (generatorPreview.length === 0) {
+      setGeneratorError(
+        "Select a valid section range in ascending order (A–Z).",
+      );
+      return;
+    }
+    const capacity = Number(generatorCapacity);
+    if (!Number.isInteger(capacity) || capacity < 40 || capacity > 50) {
+      setGeneratorError(
+        "Section capacity must be a whole number from 40 to 50.",
+      );
+      return;
+    }
+
+    setGeneratingSections(true);
+    try {
+      const data = await requestJson<GenerateSectionsResponse>(
+        BATCH_API + "/sections/generate",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            academic_year_id: Number(academicYearId),
+            semester_id: Number(semesterId),
+            course_id: Number(courseId),
+            year_level: Number(yearLevel),
+            start_letter: generatorStartLetter,
+            end_letter: generatorEndLetter,
+            max_students: capacity,
+          }),
+        },
+      );
+      const created = Number(data.created_count || 0);
+      const skipped = Number(data.skipped_count || 0);
+      setGeneratorNotice(
+        `${created} section(s) created; ${skipped} already existed and were skipped. ` +
+          "Review the Matching sections list and choose which sections to include in the batch.",
+      );
+      setSelectedSectionIds([]);
+      setSectionsReloadKey((key) => key + 1);
+    } catch (error) {
+      setGeneratorError(
+        error instanceof Error ? error.message : "Could not generate sections.",
+      );
+    } finally {
+      setGeneratingSections(false);
+    }
   };
 
   const handleCreateBatch = async (event: FormEvent<HTMLFormElement>) => {
@@ -644,7 +806,11 @@ export default function ClassOfferingManagementR() {
   useEffect(() => {
     if (!detailLoading && !selectedBatch) return;
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !detailLoading && publishingBatchId === null) {
+      if (
+        event.key === "Escape" &&
+        !detailLoading &&
+        publishingBatchId === null
+      ) {
         setSelectedBatch(null);
       }
     };
@@ -693,9 +859,81 @@ export default function ClassOfferingManagementR() {
     }
   };
 
-  const modalHost = typeof document !== "undefined"
-    ? document.querySelector(".dashboard-wrapper")
-    : null;
+  const reviewFacultyRequest = async (
+    request: FacultyAssignmentRequest,
+    decision: "Approved" | "Rejected",
+  ) => {
+    if (facultyReviewId !== null) return;
+
+    let reviewRemarks = "";
+    if (decision === "Rejected") {
+      const entered = window.prompt(
+        `Reason for rejecting professor assignment request #${request.request_id}:`,
+      );
+      if (entered === null) return;
+      reviewRemarks = entered.trim();
+      if (!reviewRemarks || reviewRemarks.length > 500) {
+        setFacultyReviewError(
+          "A rejection reason of 1–500 characters is required.",
+        );
+        return;
+      }
+    } else if (
+      !window.confirm(
+        `Approve ${request.proposed_faculty_name} for ${request.subject_code} (${request.section_name})?`,
+      )
+    ) {
+      return;
+    }
+
+    setFacultyReviewId(request.request_id);
+    setFacultyReviewError("");
+    setNotice("");
+    try {
+      const data = await requestJson<FacultyReviewResponse>(
+        `${BATCH_API}/faculty-requests/${request.request_id}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ decision, review_remarks: reviewRemarks }),
+        },
+      );
+
+      setNotice(
+        data.message ||
+          (decision === "Approved"
+            ? "Professor assignment approved. The offering remains Open."
+            : "Professor assignment request rejected."),
+      );
+      setFacultyRequests((current) =>
+        current.filter((item) => item.request_id !== request.request_id),
+      );
+      await loadBatches();
+      if (selectedBatch?.batch_id === request.batch_id) {
+        try {
+          const refreshed = await requestJson<BatchDetailResponse>(
+            `${BATCH_API}/${request.batch_id}`,
+          );
+          setSelectedBatch(refreshed.batch || null);
+        } catch {
+          setSelectedBatch(null);
+        }
+      }
+    } catch (error) {
+      setFacultyReviewError(
+        error instanceof Error
+          ? error.message
+          : "Could not review professor assignment.",
+      );
+    } finally {
+      setFacultyReviewId(null);
+    }
+  };
+
+  const modalHost =
+    typeof document !== "undefined"
+      ? document.querySelector(".dashboard-wrapper")
+      : null;
 
   if (userRole !== "Registrar") return null;
 
@@ -911,18 +1149,182 @@ export default function ClassOfferingManagementR() {
                           : "Select the open term, course, year level, and curriculum to load sections."}
                   </p>
                 </div>
-                {sections.length > 0 && (
+                <div className="offering-batches-section-actions">
+                  {sections.length > 0 && (
+                    <button
+                      type="button"
+                      className="offering-batches-link-button"
+                      onClick={selectAllSections}
+                      disabled={generatingSections || sectionsLoading}
+                    >
+                      {selectedSectionIds.length === sections.length
+                        ? "Clear selection"
+                        : "Select all"}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="offering-batches-link-button"
-                    onClick={selectAllSections}
+                    className="offering-batches-button offering-batches-button--secondary"
+                    onClick={() => {
+                      setGeneratorOpen((open) => !open);
+                      setGeneratorError("");
+                    }}
+                    disabled={
+                      !selectedPeriod ||
+                      !courseId ||
+                      !yearLevel ||
+                      generatingSections
+                    }
+                    aria-expanded={generatorOpen}
+                    aria-controls="offering-batches-generator"
                   >
-                    {selectedSectionIds.length === sections.length
-                      ? "Clear selection"
-                      : "Select all"}
+                    <UsersRound size={16} />
+                    Generate sections
+                    {generatorOpen ? (
+                      <ChevronUp size={15} />
+                    ) : (
+                      <ChevronDown size={15} />
+                    )}
                   </button>
-                )}
+                </div>
               </div>
+
+              {generatorOpen && (
+                <div
+                  id="offering-batches-generator"
+                  className="offering-batches-generator"
+                >
+                  <div className="offering-batches-generator-heading">
+                    <h4>Create sections by letter range</h4>
+                    <p>
+                      Sections will use the selected academic year, course and
+                      year level. Existing sections are skipped, not
+                      overwritten.
+                    </p>
+                  </div>
+                  <div className="offering-batches-form-grid">
+                    <label>
+                      <span>Start letter</span>
+                      <select
+                        value={generatorStartLetter}
+                        onChange={(event) => {
+                          setGeneratorStartLetter(event.target.value);
+                          setGeneratorNotice("");
+                        }}
+                        disabled={generatingSections}
+                      >
+                        {SECTION_LETTERS.map((letter) => (
+                          <option value={letter} key={letter}>
+                            {letter}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>End letter</span>
+                      <select
+                        value={generatorEndLetter}
+                        onChange={(event) => {
+                          setGeneratorEndLetter(event.target.value);
+                          setGeneratorNotice("");
+                        }}
+                        disabled={generatingSections}
+                      >
+                        {SECTION_LETTERS.map((letter) => (
+                          <option value={letter} key={letter}>
+                            {letter}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Maximum students per section</span>
+                      <select
+                        value={generatorCapacity}
+                        onChange={(event) => {
+                          setGeneratorCapacity(event.target.value);
+                          setGeneratorNotice("");
+                        }}
+                        disabled={generatingSections}
+                      >
+                        {Array.from(
+                          { length: 11 },
+                          (_, index) => index + 40,
+                        ).map((capacity) => (
+                          <option value={String(capacity)} key={capacity}>
+                            {capacity} students
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  {generatorPreview.length > 0 ? (
+                    <div
+                      className="offering-batches-generator-preview"
+                      aria-live="polite"
+                    >
+                      <span>
+                        <strong>{generatorPreview.length} section(s)</strong> in
+                        the selected range
+                        {hasLoadedSections && existingPreviewCount > 0
+                          ? ` · ${existingPreviewCount} already listed`
+                          : ""}
+                      </span>
+                      <div className="offering-batches-generator-names">
+                        {generatorPreview.map((name) => (
+                          <code key={name}>{name}</code>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="offering-batches-generator-invalid">
+                      End letter must be the same as or later than the start
+                      letter.
+                    </p>
+                  )}
+                  {generatorError && (
+                    <div
+                      className="offering-batches-alert offering-batches-alert--error"
+                      role="alert"
+                    >
+                      <AlertCircle size={17} /> {generatorError}
+                    </div>
+                  )}
+                  {generatorNotice && (
+                    <div
+                      className="offering-batches-alert offering-batches-alert--success"
+                      role="status"
+                    >
+                      <CheckCircle2 size={17} /> {generatorNotice}
+                    </div>
+                  )}
+                  <div className="offering-batches-generator-footer">
+                    <span>
+                      New sections are created only. Offerings still require a
+                      separate batch submission.
+                    </span>
+                    <button
+                      type="button"
+                      className="offering-batches-button offering-batches-button--primary"
+                      disabled={
+                        generatingSections ||
+                        sectionsLoading ||
+                        submitting ||
+                        !selectedPeriod ||
+                        !courseId ||
+                        !yearLevel ||
+                        generatorPreview.length === 0
+                      }
+                      onClick={() => void handleGenerateSections()}
+                    >
+                      <UsersRound size={16} />
+                      {generatingSections
+                        ? "Generating sections…"
+                        : "Create sections"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {sections.length > 0 && (
                 <>
@@ -1082,130 +1484,242 @@ export default function ClassOfferingManagementR() {
           )}
         </section>
 
-        {(detailLoading || selectedBatch) && modalHost && createPortal(
-          <div
-            className="offering-batches-modal-backdrop"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget && !detailLoading && publishingBatchId === null)
-                setSelectedBatch(null);
-            }}
-          >
-            <section
-              className="offering-batches-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="offering-batches-modal-title"
+        <section
+          className="offering-batches-panel offering-batches-queue"
+          aria-label="Professor assignment approvals"
+        >
+          <div className="offering-batches-panel-heading offering-batches-panel-heading--queue">
+            <div className="offering-batches-step">3</div>
+            <div>
+              <h2>Professor Assignment Approvals</h2>
+              <p>
+                Approve or reject professors proposed by Program Heads after
+                publication. The class schedule remains unchanged.
+              </p>
+            </div>
+            <span className="offering-batches-status">
+              {facultyRequests.length} pending
+            </span>
+          </div>
+
+          {facultyReviewError && (
+            <div
+              className="offering-batches-alert offering-batches-alert--error"
+              role="alert"
             >
-              <header className="offering-batches-modal-header">
-                <div>
-                  <span className="offering-batches-eyebrow">
-                    <ClipboardList size={15} /> Registrar batch review
-                  </span>
-                  <h2 id="offering-batches-modal-title">
-                    {selectedBatch
-                      ? "Batch #" + selectedBatch.batch_id
-                      : "Loading batch…"}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  className="offering-batches-icon-button"
-                  aria-label="Close"
-                  onClick={() => setSelectedBatch(null)}
-                  disabled={detailLoading || publishingBatchId !== null}
+              <AlertCircle size={18} />
+              {facultyReviewError}
+            </div>
+          )}
+
+          {queueLoading ? (
+            <div className="offering-batches-empty">
+              <RefreshCw size={18} className="offering-batches-spin" />
+              Loading professor requests…
+            </div>
+          ) : facultyRequests.length === 0 ? (
+            <div className="offering-batches-empty">
+              No pending professor assignment requests.
+            </div>
+          ) : (
+            <div className="offering-batches-list">
+              {facultyRequests.map((request) => (
+                <article
+                  className="offering-batches-card"
+                  key={request.request_id}
                 >
-                  <X size={20} />
-                </button>
-              </header>
-              {detailLoading ? (
-                <div className="offering-batches-empty">
-                  <RefreshCw size={18} className="offering-batches-spin" />{" "}
-                  Loading batch details…
-                </div>
-              ) : selectedBatch ? (
-                <>
-                  <div className="offering-batches-detail-meta">
-                    <span>
-                      {selectedBatch.course_code} · Year{" "}
-                      {selectedBatch.year_level}
-                    </span>
-                    <span>
-                      {selectedBatch.academic_year} ·{" "}
-                      {selectedBatch.semester_name}
-                    </span>
-                    <span>{selectedBatch.curriculum_name}</span>
-                    <span
-                      className={
-                        "offering-batches-status offering-batches-status--" +
-                        statusClass(selectedBatch.batch_status)
-                      }
-                    >
-                      {selectedBatch.batch_status}
-                    </span>
-                  </div>
-                  <div className="offering-batches-table-wrap">
-                    <table className="offering-batches-table">
-                      <thead>
-                        <tr>
-                          <th>Subject</th>
-                          <th>Section</th>
-                          <th>Faculty</th>
-                          <th>Days</th>
-                          <th>Time</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(selectedBatch.offerings || []).map((offering) => (
-                          <tr key={offering.offering_id}>
-                            <td>
-                              <strong>{offering.subject_code}</strong>
-                              <small>
-                                {offering.subject_name} · {offering.units} units
-                              </small>
-                            </td>
-                            <td>{offering.section_name}</td>
-                            <td>{offering.faculty_name || "Unassigned"}</td>
-                            <td>{offering.schedule_days || "—"}</td>
-                            <td>{offering.schedule_time || "—"}</td>
-                            <td>{offering.offering_status}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <footer className="offering-batches-modal-footer">
-                    <span>
-                      <CalendarDays size={16} /> Returned{" "}
-                      {formatDate(selectedBatch.returned_at)}
-                    </span>
-                    {selectedBatch.batch_status === "Ready for Registrar" && (
-                      <button
-                        type="button"
-                        className="offering-batches-button offering-batches-button--primary"
-                        onClick={() => void publishBatch(selectedBatch)}
-                        disabled={publishingBatchId === selectedBatch.batch_id}
-                      >
-                        <CheckCircle2 size={16} />{" "}
-                        {publishingBatchId === selectedBatch.batch_id
-                          ? "Publishing…"
-                          : "Publish schedule"}
-                      </button>
-                    )}
-                    {selectedBatch.batch_status === "Published" && (
-                      <span className="offering-batches-published-note">
-                        <CheckCircle2 size={16} /> Published{" "}
-                        {formatDate(selectedBatch.published_at)}
+                  <div className="offering-batches-card-main">
+                    <div className="offering-batches-card-title">
+                      <strong>
+                        {request.subject_code} · {request.section_name}
+                      </strong>
+                      <span className="offering-batches-status offering-batches-status--ready-for-registrar">
+                        Pending review
                       </span>
-                    )}
-                  </footer>
-                </>
-              ) : null}
-            </section>
-          </div>,
-          modalHost,
-        )}
+                    </div>
+                    <p>
+                      Proposed professor:{" "}
+                      <strong>{request.proposed_faculty_name}</strong>
+                    </p>
+                    <p>
+                      {request.course_code} · Year {request.year_level} ·{" "}
+                      {request.academic_year} · {request.semester_name}
+                    </p>
+                    <small>
+                      Batch #{request.batch_id} · Offering #
+                      {request.offering_id}
+                      {" · "}
+                      {request.schedule_days || "No days"}
+                      {" · "}
+                      {request.schedule_time || "No time"}
+                      {" · Requested "}
+                      {formatDate(request.requested_at)}
+                    </small>
+                  </div>
+                  <div className="offering-batches-form-footer">
+                    <button
+                      type="button"
+                      className="offering-batches-button offering-batches-button--primary"
+                      onClick={() =>
+                        void reviewFacultyRequest(request, "Approved")
+                      }
+                      disabled={facultyReviewId !== null || queueLoading}
+                    >
+                      <CheckCircle2 size={16} />
+                      {facultyReviewId === request.request_id
+                        ? "Reviewing…"
+                        : "Approve"}
+                    </button>
+                    <button
+                      type="button"
+                      className="offering-batches-button offering-batches-button--secondary"
+                      onClick={() =>
+                        void reviewFacultyRequest(request, "Rejected")
+                      }
+                      disabled={facultyReviewId !== null || queueLoading}
+                    >
+                      <X size={16} /> Reject
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {(detailLoading || selectedBatch) &&
+          modalHost &&
+          createPortal(
+            <div
+              className="offering-batches-modal-backdrop"
+              role="presentation"
+              onMouseDown={(event) => {
+                if (
+                  event.target === event.currentTarget &&
+                  !detailLoading &&
+                  publishingBatchId === null
+                )
+                  setSelectedBatch(null);
+              }}
+            >
+              <section
+                className="offering-batches-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="offering-batches-modal-title"
+              >
+                <header className="offering-batches-modal-header">
+                  <div>
+                    <span className="offering-batches-eyebrow">
+                      <ClipboardList size={15} /> Registrar batch review
+                    </span>
+                    <h2 id="offering-batches-modal-title">
+                      {selectedBatch
+                        ? "Batch #" + selectedBatch.batch_id
+                        : "Loading batch…"}
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="offering-batches-icon-button"
+                    aria-label="Close"
+                    onClick={() => setSelectedBatch(null)}
+                    disabled={detailLoading || publishingBatchId !== null}
+                  >
+                    <X size={20} />
+                  </button>
+                </header>
+                {detailLoading ? (
+                  <div className="offering-batches-empty">
+                    <RefreshCw size={18} className="offering-batches-spin" />{" "}
+                    Loading batch details…
+                  </div>
+                ) : selectedBatch ? (
+                  <>
+                    <div className="offering-batches-detail-meta">
+                      <span>
+                        {selectedBatch.course_code} · Year{" "}
+                        {selectedBatch.year_level}
+                      </span>
+                      <span>
+                        {selectedBatch.academic_year} ·{" "}
+                        {selectedBatch.semester_name}
+                      </span>
+                      <span>{selectedBatch.curriculum_name}</span>
+                      <span
+                        className={
+                          "offering-batches-status offering-batches-status--" +
+                          statusClass(selectedBatch.batch_status)
+                        }
+                      >
+                        {selectedBatch.batch_status}
+                      </span>
+                    </div>
+                    <div className="offering-batches-table-wrap">
+                      <table className="offering-batches-table">
+                        <thead>
+                          <tr>
+                            <th>Subject</th>
+                            <th>Section</th>
+                            <th>Faculty</th>
+                            <th>Days</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(selectedBatch.offerings || []).map((offering) => (
+                            <tr key={offering.offering_id}>
+                              <td>
+                                <strong>{offering.subject_code}</strong>
+                                <small>
+                                  {offering.subject_name} · {offering.units}{" "}
+                                  units
+                                </small>
+                              </td>
+                              <td>{offering.section_name}</td>
+                              <td>{offering.faculty_name || "Unassigned"}</td>
+                              <td>{offering.schedule_days || "—"}</td>
+                              <td>{offering.schedule_time || "—"}</td>
+                              <td>{offering.offering_status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <footer className="offering-batches-modal-footer">
+                      <span>
+                        <CalendarDays size={16} /> Returned{" "}
+                        {formatDate(selectedBatch.returned_at)}
+                      </span>
+                      {selectedBatch.batch_status === "Ready for Registrar" && (
+                        <button
+                          type="button"
+                          className="offering-batches-button offering-batches-button--primary"
+                          onClick={() => void publishBatch(selectedBatch)}
+                          disabled={
+                            publishingBatchId === selectedBatch.batch_id
+                          }
+                        >
+                          <CheckCircle2 size={16} />{" "}
+                          {publishingBatchId === selectedBatch.batch_id
+                            ? "Publishing…"
+                            : "Publish schedule"}
+                        </button>
+                      )}
+                      {selectedBatch.batch_status === "Published" && (
+                        <span className="offering-batches-published-note">
+                          <CheckCircle2 size={16} /> Published{" "}
+                          {formatDate(selectedBatch.published_at)}
+                        </span>
+                      )}
+                    </footer>
+                  </>
+                ) : null}
+              </section>
+            </div>,
+            modalHost,
+          )}
       </main>
     </DashboardLayout>
   );

@@ -113,6 +113,12 @@ interface EnrollmentDetails {
     year_level: number | null;
   };
 
+  home_section?: {
+    section_id: number | null;
+    section_name: string | null;
+    year_level: number | null;
+  };
+
   academic_period: {
     academic_year_id: number;
     academic_year: string;
@@ -444,6 +450,8 @@ interface ValidationResponse {
 
   can_approve: boolean;
 
+  requires_registrar_review?: boolean;
+
   already_approved?: boolean;
 
   validation_state?:
@@ -619,6 +627,8 @@ interface RawValidationResponse {
   valid?: boolean;
 
   can_approve?: boolean;
+
+  requires_registrar_review?: boolean;
 
   already_approved?: boolean;
 
@@ -1903,8 +1913,18 @@ export default function EnrollmentDetailsR() {
           ? data.valid
           : effectiveErrors.length === 0 && invalidSubjects === 0;
 
+      const requiresRegistrarReview =
+        data.requires_registrar_review === true ||
+        rawWarnings.some((warning) =>
+          [
+            "ACADEMIC_HISTORY_REQUIRES_REVIEW",
+            "REQUIRED_CURRICULUM_SUBJECTS_MISSING",
+          ].includes(String(warning.code || "")),
+        );
+
       const canApprove =
         !alreadyApproved &&
+        !requiresRegistrarReview &&
         String(enrollment?.enrollment_status || "") === "Pending" &&
         (typeof data.can_approve === "boolean"
           ? data.can_approve
@@ -1912,15 +1932,16 @@ export default function EnrollmentDetailsR() {
             ? data.ready_for_approval
             : effectiveValid);
 
-      const validationState =
-        data.validation_state ||
-        (alreadyApproved
-          ? "ALREADY_APPROVED"
-          : canApprove
+      const validationState = alreadyApproved
+        ? "ALREADY_APPROVED"
+        : data.validation_state ||
+          (canApprove
             ? "READY_FOR_APPROVAL"
-            : String(enrollment?.enrollment_status || "") === "Pending"
-              ? "NOT_READY"
-              : "NOT_APPROVABLE");
+            : requiresRegistrarReview && effectiveValid
+              ? "REVIEW_REQUIRED"
+              : String(enrollment?.enrollment_status || "") === "Pending"
+                ? "NOT_READY"
+                : "NOT_APPROVABLE");
 
       const normalizedValidation: ValidationResponse = {
         success: true,
@@ -1932,6 +1953,8 @@ export default function EnrollmentDetailsR() {
         valid: effectiveValid,
 
         can_approve: canApprove,
+
+        requires_registrar_review: requiresRegistrarReview,
 
         already_approved: alreadyApproved,
 
@@ -2676,9 +2699,10 @@ export default function EnrollmentDetailsR() {
       // It only preselects the likely Regular section.
       // ===============================================
 
-      const homeSectionId = enrollment.student_section.section_id
-        ? Number(enrollment.student_section.section_id)
-        : null;
+      const homeSectionId =
+        enrollment.home_section?.section_id ??
+        enrollment.student_section.section_id ??
+        null;
 
       const homeSectionIsAvailable =
         homeSectionId !== null &&
@@ -3817,6 +3841,16 @@ export default function EnrollmentDetailsR() {
       return;
     }
 
+    if (validation?.requires_registrar_review) {
+      setActionError(
+        "Registrar academic review must be resolved before approval.",
+      );
+
+      setActionErrorDetails(null);
+
+      return;
+    }
+
     if (!validation?.can_approve) {
       setActionError(
         "Enrollment is not ready for approval. Resolve all validation errors first.",
@@ -4173,7 +4207,10 @@ export default function EnrollmentDetailsR() {
   ): PlacementFlags => {
     const backend = subject.placement_flags;
 
-    const homeSectionId = enrollment?.student_section.section_id;
+    const homeSectionId =
+      enrollment?.home_section?.section_id ??
+      enrollment?.student_section.section_id ??
+      null;
 
     const assignedSectionId = subject.section.section_id;
 
@@ -4187,12 +4224,9 @@ export default function EnrollmentDetailsR() {
 
     return {
       cross_section:
-        typeof backend?.cross_section === "boolean"
-          ? backend.cross_section
-          : homeSectionId !== null &&
-            homeSectionId !== undefined &&
-            assignedSectionId !== null &&
-            Number(assignedSectionId) !== Number(homeSectionId),
+        homeSectionId !== null && assignedSectionId !== null
+          ? Number(assignedSectionId) !== Number(homeSectionId)
+          : Boolean(backend?.cross_section),
 
       cross_course:
         typeof backend?.cross_course === "boolean"
@@ -4229,7 +4263,10 @@ export default function EnrollmentDetailsR() {
   ): PlacementFlags => {
     const backend = offering.placement_flags;
 
-    const homeSectionId = enrollment?.student_section.section_id;
+    const homeSectionId =
+      enrollment?.home_section?.section_id ??
+      enrollment?.student_section.section_id ??
+      null;
 
     const studentCourseId = enrollment?.course.course_id;
 
@@ -4237,11 +4274,9 @@ export default function EnrollmentDetailsR() {
 
     return {
       cross_section:
-        typeof backend?.cross_section === "boolean"
-          ? backend.cross_section
-          : homeSectionId !== null &&
-            homeSectionId !== undefined &&
-            Number(offering.section.section_id) !== Number(homeSectionId),
+        homeSectionId !== null && offering.section.section_id !== null
+          ? Number(offering.section.section_id) !== Number(homeSectionId)
+          : Boolean(backend?.cross_section),
 
       cross_course:
         typeof backend?.cross_course === "boolean"
@@ -4305,10 +4340,15 @@ export default function EnrollmentDetailsR() {
   // HOME SECTION LABEL
   // =====================================================
 
-  const homeSectionLabel = enrollment?.student_section.section_name
-    ? `${enrollment.student_section.section_name}${
-        enrollment.student_section.section_id !== null
-          ? ` (#${enrollment.student_section.section_id})`
+  const currentHomeSection =
+    enrollment?.home_section?.section_id != null
+      ? enrollment.home_section
+      : enrollment?.student_section;
+
+  const homeSectionLabel = currentHomeSection?.section_name
+    ? `${currentHomeSection.section_name}${
+        currentHomeSection.section_id !== null
+          ? ` (#${currentHomeSection.section_id})`
           : ""
       }`
     : "Not Assigned";
@@ -4731,12 +4771,23 @@ export default function EnrollmentDetailsR() {
 
             <div className="detail-item">
               <span>Home Section</span>
-
               <strong>{homeSectionLabel}</strong>
-
               <small>
-                Student profile reference. Individual irregular placement does
-                not change this.
+                Designated section for this enrollment. The student profile is
+                updated after approval.
+              </small>
+            </div>
+
+            <div className="detail-item">
+              <span>Current Profile Section</span>
+              <strong>
+                {enrollment.student_section.section_name
+                  ? `${enrollment.student_section.section_name} (#${enrollment.student_section.section_id})`
+                  : "Not Assigned"}
+              </strong>
+              <small>
+                Current student profile reference. Updated when the new
+                enrollment is approved.
               </small>
             </div>
 
@@ -4891,6 +4942,19 @@ export default function EnrollmentDetailsR() {
                     additional approval action is required.
                   </p>
                 </div>
+              ) : validation.requires_registrar_review ? (
+                <div className="remarks-box">
+                  <span>Academic Review Required</span>
+
+                  <p>
+                    <strong>REVIEW REQUIRED — APPROVAL BLOCKED</strong>
+                  </p>
+
+                  <p>
+                    {validation.message ||
+                      "Registrar academic review must be resolved before approval."}
+                  </p>
+                </div>
               ) : validation.can_approve ? (
                 <div className="remarks-box">
                   <span>Approval Validation</span>
@@ -4929,9 +4993,11 @@ export default function EnrollmentDetailsR() {
                   <strong>
                     {validation.already_approved
                       ? "ALREADY APPROVED"
-                      : validation.can_approve
-                        ? "READY"
-                        : "NOT READY"}
+                      : validation.requires_registrar_review
+                        ? "REVIEW REQUIRED"
+                        : validation.can_approve
+                          ? "READY"
+                          : "NOT READY"}
                   </strong>
                 </div>
 
@@ -5362,8 +5428,8 @@ export default function EnrollmentDetailsR() {
                                 value={subject.subject_id}
                                 disabled={eligibility?.eligible === false}
                               >
-                                {subject.subject_code} — {subject.subject_name} ·{" "}
-                                {subject.units} unit
+                                {subject.subject_code} — {subject.subject_name}{" "}
+                                · {subject.units} unit
                                 {subject.units !== 1 ? "s" : ""} ·{" "}
                                 {candidateLabel}
                               </option>
@@ -5444,8 +5510,8 @@ export default function EnrollmentDetailsR() {
 
                         <p>
                           <strong>
-                            {selectedAddSubject.academic_eligibility?.eligible ===
-                            false
+                            {selectedAddSubject.academic_eligibility
+                              ?.eligible === false
                               ? "BLOCKED"
                               : "ELIGIBLE"}
                           </strong>
@@ -5732,9 +5798,12 @@ export default function EnrollmentDetailsR() {
                             Number(section.section_id);
 
                           const isHomeSection =
-                            enrollment.student_section.section_id !== null &&
-                            Number(enrollment.student_section.section_id) ===
-                              Number(section.section_id);
+                            (enrollment.home_section?.section_id ??
+                              enrollment.student_section.section_id) != null &&
+                            Number(
+                              enrollment.home_section?.section_id ??
+                                enrollment.student_section.section_id,
+                            ) === Number(section.section_id);
 
                           return (
                             <button
@@ -6821,7 +6890,8 @@ export default function EnrollmentDetailsR() {
                     approvalLoading ||
                     rejectionLoading ||
                     validationLoading ||
-                    !validation?.can_approve
+                    !validation?.can_approve ||
+                    validation?.requires_registrar_review === true
                   }
                   onClick={() => void approveEnrollment()}
                 >

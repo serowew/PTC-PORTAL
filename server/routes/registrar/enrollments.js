@@ -1,6 +1,7 @@
 // routes/registrar/enrollments.js
 
 import express from "express";
+import { createHash } from "node:crypto";
 import db from "../../db.js";
 
 import {
@@ -24,6 +25,48 @@ function toPositiveInt(value) {
   }
 
   return number;
+}
+
+async function getActiveAcademicLoadPolicy(
+  connection,
+  { academicYearId, semesterId, courseId, yearLevel, lock = false },
+) {
+  const [rows] = await connection.execute(
+    `
+      SELECT
+          policy_id,
+          max_units,
+          approved_by,
+          approved_at
+      FROM academic_load_policies
+      WHERE academic_year_id = ?
+        AND semester_id = ?
+        AND course_id = ?
+        AND year_level = ?
+        AND status = 'Active'
+      LIMIT 1
+      ${lock ? "FOR UPDATE" : ""}
+    `,
+    [academicYearId, semesterId, courseId, yearLevel],
+  );
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const row = rows[0];
+  const maxUnits = row.max_units === null ? null : Number(row.max_units);
+
+  return {
+    policy_id: Number(row.policy_id),
+    max_units: maxUnits,
+    configured:
+      Number.isFinite(maxUnits) &&
+      maxUnits > 0 &&
+      Number.isInteger(Number(row.approved_by)) &&
+      Number(row.approved_by) > 0 &&
+      Boolean(row.approved_at),
+  };
 }
 
 // =====================================================
@@ -63,6 +106,99 @@ function getRegistrarActor(req, res) {
   return {
     user_id: userId,
     username: req.user.username || null,
+  };
+}
+
+/* Academic Load Exception Reviewer Authorization */
+
+// Remains empty until PTC confirms authorized reviewer roles.
+const ACADEMIC_LOAD_REVIEWER_ROLES = new Set();
+
+async function getAcademicLoadReviewerActor(
+  req,
+  res,
+  connection,
+  requestedBy = null,
+) {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      code: "AUTHENTICATION_REQUIRED",
+      message: "Authentication is required.",
+    });
+    return null;
+  }
+
+  const userId = toPositiveInt(req.user.user_id);
+
+  if (!userId) {
+    res.status(401).json({
+      success: false,
+      code: "INVALID_REVIEWER_ID",
+      message: "Authenticated reviewer ID is invalid.",
+    });
+    return null;
+  }
+
+  // Verify the actual database role and explicit permission.
+  // Call this helper inside the review transaction.
+
+  const [rows] = await connection.execute(
+    `
+      SELECT
+        ar.user_id,
+        ar.status,
+        ar.granted_by,
+        ar.granted_at,
+        r.role_name
+      FROM academic_load_exception_reviewers ar
+      INNER JOIN users u
+        ON u.user_id = ar.user_id
+      INNER JOIN roles r
+        ON r.role_id = u.role_id
+      WHERE ar.user_id = ?
+      LIMIT 1
+      FOR UPDATE
+    `,
+    [userId],
+  );
+
+  const reviewer = rows[0];
+
+  if (
+    !reviewer ||
+    reviewer.status !== "Active" ||
+    !toPositiveInt(reviewer.granted_by) ||
+    !reviewer.granted_at ||
+    Number(reviewer.granted_by) === userId ||
+    !ACADEMIC_LOAD_REVIEWER_ROLES.has(reviewer.role_name) ||
+    reviewer.role_name !== req.user.role_name
+  ) {
+    res.status(403).json({
+      success: false,
+      code: "ACADEMIC_LOAD_REVIEWER_NOT_AUTHORIZED",
+      message:
+        "You are not authorized to review academic-load exception requests.",
+    });
+    return null;
+  }
+
+  // A reviewer cannot approve or reject their own request.
+
+  if (Number(requestedBy) === userId) {
+    res.status(403).json({
+      success: false,
+      code: "ACADEMIC_LOAD_SELF_REVIEW_FORBIDDEN",
+      message:
+        "You cannot review an academic-load exception request that you submitted.",
+    });
+    return null;
+  }
+
+  return {
+    user_id: userId,
+    username: req.user.username || null,
+    role_name: reviewer.role_name,
   };
 }
 
@@ -2000,6 +2136,9 @@ router.get("/", async (req, res) => {
 
         e.academic_year_id,
         e.semester_id,
+        e.home_section_id AS enrollment_home_section_id,
+home_sec.section_name AS enrollment_home_section_name,
+home_sec.year_level AS enrollment_home_section_year_level,
 
         e.enrollment_status,
         e.remarks,
@@ -2548,6 +2687,9 @@ router.get("/:id", async (req, res) => {
               ON student_sec.section_id =
                  s.section_id
 
+                 LEFT JOIN sections home_sec
+    ON home_sec.section_id = e.home_section_id
+
           INNER JOIN academic_years ay
               ON ay.academic_year_id =
                  e.academic_year_id
@@ -2736,13 +2878,37 @@ es.status
     // FORMAT SUBJECTS
     // =================================================
 
+    // Resolve the home section for this enrollment.
+    const legacyRegularSections = new Map();
+
+    for (const subject of subjectRows) {
+      if (
+        subject.enrollment_type === "Regular" &&
+        ["Enrolled", "Completed", "Failed", "Incomplete"].includes(
+          subject.enrollment_subject_status,
+        ) &&
+        subject.section_id != null
+      ) {
+        legacyRegularSections.set(Number(subject.section_id), subject);
+      }
+    }
+
+    const legacyHome =
+      legacyRegularSections.size === 1
+        ? [...legacyRegularSections.values()][0]
+        : null;
+
+    const enrollmentHomeSectionId =
+      row.enrollment_home_section_id == null
+        ? legacyHome == null
+          ? null
+          : Number(legacyHome.section_id)
+        : Number(row.enrollment_home_section_id);
+
     const subjects = subjectRows.map((subject) => {
       const enrollmentType = String(subject.enrollment_type || "Regular");
 
-      const studentHomeSectionId =
-        row.student_section_id !== null && row.student_section_id !== undefined
-          ? Number(row.student_section_id)
-          : null;
+      const studentHomeSectionId = enrollmentHomeSectionId;
 
       const assignedSectionId =
         subject.section_id !== null && subject.section_id !== undefined
@@ -2973,6 +3139,15 @@ es.status
         course_code: row.course_code || null,
 
         course_name: row.course_name || null,
+      },
+      home_section: {
+        section_id: enrollmentHomeSectionId,
+        section_name:
+          row.enrollment_home_section_name || legacyHome?.section_name || null,
+        year_level:
+          row.enrollment_home_section_year_level == null
+            ? (legacyHome?.section_year_level ?? null)
+            : Number(row.enrollment_home_section_year_level),
       },
 
       student_section: {
@@ -3592,7 +3767,7 @@ current_es.enrollment_type,
             -- Room is OPTIONAL.
             -- =========================================
 
-            AND so.faculty_id IS NOT NULL
+            
 
             AND so.schedule_days IS NOT NULL
 
@@ -4078,11 +4253,12 @@ router.post("/:id/assign-section", async (req, res) => {
     const [enrollmentRows] = await connection.execute(
       `
           SELECT
-              e.enrollment_id,
-              e.student_id,
-              e.academic_year_id,
-              e.semester_id,
-              e.enrollment_status,
+        e.enrollment_id,
+e.student_id,
+e.home_section_id,
+e.academic_year_id,
+e.semester_id,
+e.enrollment_status,
 
               s.student_number,
               s.first_name,
@@ -4135,6 +4311,13 @@ router.post("/:id/assign-section", async (req, res) => {
     }
 
     const enrollment = enrollmentRows[0];
+
+    const previousHomeSectionId =
+      enrollment.home_section_id == null
+        ? null
+        : Number(enrollment.home_section_id);
+
+    const homeSectionChanged = previousHomeSectionId !== sectionId;
 
     // =================================================
     // BULK PLACEMENT IS PENDING ONLY
@@ -4783,7 +4966,7 @@ router.post("/:id/assign-section", async (req, res) => {
 
             AND ss.status = 'Open'
 
-            AND so.faculty_id IS NOT NULL
+            
 
             AND so.schedule_days IS NOT NULL
 
@@ -5171,8 +5354,36 @@ router.post("/:id/assign-section", async (req, res) => {
     // assigned to this section.
     // =================================================
 
+    // All regular subjects are already assigned
+
     if (placementPlan.length === 0) {
-      await connection.rollback();
+      if (homeSectionChanged) {
+        await connection.commit();
+      } else {
+        await connection.rollback();
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "All regular subjects are already assigned to the selected section.",
+        section: {
+          section_id: sectionId,
+          section_name: section.section_name,
+        },
+        summary: {
+          regular_subjects: regularSubjects.length,
+          assigned: 0,
+          already_correct: skippedSubjects.length,
+          manual_subjects: manualSubjects.length,
+        },
+        already_correct: skippedSubjects,
+        manual_subjects: manualSubjects,
+        actor: {
+          user_id: actor.user_id,
+          username: actor.username,
+        },
+      });
 
       return res.status(200).json({
         success: true,
@@ -6645,10 +6856,6 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
 
     const missingConfiguration = [];
 
-    if (!offering.faculty_id) {
-      missingConfiguration.push("faculty");
-    }
-
     if (!offering.schedule_days || !String(offering.schedule_days).trim()) {
       missingConfiguration.push("schedule_days");
     }
@@ -7094,7 +7301,8 @@ router.put("/:id/subjects/:enrollmentSubjectId", async (req, res) => {
 
         section_year_level: Number(offering.section_year_level),
 
-        faculty_id: Number(offering.faculty_id),
+        faculty_id:
+          offering.faculty_id == null ? null : Number(offering.faculty_id),
 
         room_id: offering.room_id !== null ? Number(offering.room_id) : null,
 
@@ -8086,10 +8294,6 @@ router.post("/:id/subjects", async (req, res) => {
     const maxStudents = Number(offering.max_students || 0);
 
     const configurationMissing = [];
-
-    if (!offering.faculty_id) {
-      configurationMissing.push("faculty");
-    }
 
     if (!offering.schedule_days || !String(offering.schedule_days).trim()) {
       configurationMissing.push("schedule_days");
@@ -9732,10 +9936,6 @@ router.get("/:id/available-subjects", async (req, res) => {
       const maxStudents = Number(row.max_students || 0);
       const enrolledCount = Number(row.enrolled_count || 0);
 
-      if (!row.faculty_id) {
-        continue;
-      }
-
       if (!row.schedule_days || !String(row.schedule_days).trim()) {
         continue;
       }
@@ -11050,6 +11250,1258 @@ router.patch("/:id/subjects/:enrollmentSubjectId/drop", async (req, res) => {
 // Room assignment remains optional.
 // =====================================================
 
+/* Academic Load Exception Requests */
+
+router.post("/:id/academic-load-exceptions", async (req, res) => {
+  const actor = getRegistrarActor(req, res);
+  if (!actor) return;
+
+  const enrollmentId = toPositiveInt(req.params.id);
+  const reason =
+    typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+
+  if (!enrollmentId) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_ENROLLMENT_ID",
+      message: "A valid enrollment ID is required.",
+    });
+  }
+
+  if (!reason || reason.length > 500) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_EXCEPTION_REASON",
+      message: "A reason of 1 to 500 characters is required.",
+    });
+  }
+
+  let connection;
+  let transactionActive = false;
+
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    transactionActive = true;
+
+    const reject = async (status, code, message, extra = {}) => {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(status).json({
+        success: false,
+        code,
+        message,
+        ...extra,
+      });
+    };
+
+    /* Enrollment */
+
+    const [enrollmentRows] = await connection.execute(
+      `
+        SELECT
+          e.enrollment_id,
+          e.student_id,
+          e.academic_year_id,
+          e.semester_id,
+          e.enrollment_status,
+          s.course_id,
+          s.year_level
+        FROM enrollments e
+        INNER JOIN students s
+          ON s.student_id = e.student_id
+        WHERE e.enrollment_id = ?
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [enrollmentId],
+    );
+
+    if (enrollmentRows.length === 0) {
+      return await reject(404, "ENROLLMENT_NOT_FOUND", "Enrollment not found.");
+    }
+
+    const enrollment = enrollmentRows[0];
+
+    if (enrollment.enrollment_status !== "Pending") {
+      return await reject(
+        409,
+        "ENROLLMENT_NOT_PENDING",
+        "Only Pending enrollments may request an academic-load exception.",
+      );
+    }
+
+    /* Active Subjects */
+
+    const [subjectRows] = await connection.execute(
+      `
+        SELECT
+          es.enrollment_subject_id,
+          es.subject_id,
+          es.enrollment_type,
+          es.status,
+          es.offering_id,
+          es.section_id,
+          es.section_subject_id,
+          s.units
+        FROM enrollment_subjects es
+        INNER JOIN subjects s
+          ON s.subject_id = es.subject_id
+        WHERE es.enrollment_id = ?
+          AND es.status NOT IN ('Dropped', 'Withdrawn')
+        ORDER BY es.enrollment_subject_id ASC
+        FOR UPDATE
+      `,
+      [enrollmentId],
+    );
+
+    if (
+      subjectRows.length === 0 ||
+      subjectRows.some(
+        (row) =>
+          row.units === null ||
+          !Number.isFinite(Number(row.units)) ||
+          Number(row.units) < 0,
+      )
+    ) {
+      return await reject(
+        409,
+        "INVALID_ENROLLMENT_SUBJECT_LOAD",
+        "The enrollment has no valid active subject load.",
+      );
+    }
+
+    /* Academic Load Policy */
+
+    const policy = await getActiveAcademicLoadPolicy(connection, {
+      academicYearId: Number(enrollment.academic_year_id),
+      semesterId: Number(enrollment.semester_id),
+      courseId: Number(enrollment.course_id),
+      yearLevel: Number(enrollment.year_level),
+      lock: true,
+    });
+
+    if (!policy) {
+      return await reject(
+        409,
+        "ACADEMIC_LOAD_POLICY_NOT_ACTIVE",
+        "No Active academic-load policy applies to this enrollment.",
+      );
+    }
+
+    if (!policy.configured) {
+      return await reject(
+        409,
+        "INVALID_ACTIVE_ACADEMIC_LOAD_POLICY",
+        "The Active academic-load policy is incomplete or unapproved.",
+      );
+    }
+
+    const requestedUnits = Number(
+      subjectRows.reduce((sum, row) => sum + Number(row.units), 0).toFixed(2),
+    );
+
+    if (requestedUnits <= policy.max_units) {
+      return await reject(
+        409,
+        "ACADEMIC_LOAD_EXCEPTION_NOT_REQUIRED",
+        "The enrollment does not exceed the configured maximum units.",
+        {
+          requested_units: requestedUnits,
+          max_units: policy.max_units,
+        },
+      );
+    }
+
+    /* Duplicate Request Protection */
+
+    const [existingRows] = await connection.execute(
+      `
+        SELECT request_id
+        FROM academic_load_exception_requests
+        WHERE enrollment_id = ?
+          AND policy_id = ?
+          AND status = 'Pending'
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [enrollmentId, policy.policy_id],
+    );
+
+    if (existingRows.length > 0) {
+      return await reject(
+        409,
+        "ACADEMIC_LOAD_EXCEPTION_ALREADY_PENDING",
+        "A Pending request already exists for this enrollment and policy.",
+        {
+          request_id: Number(existingRows[0].request_id),
+        },
+      );
+    }
+
+    /* Subject Snapshot */
+
+    const snapshot = subjectRows.map((row) => ({
+      enrollment_subject_id: Number(row.enrollment_subject_id),
+      subject_id: Number(row.subject_id),
+      enrollment_type: String(row.enrollment_type || ""),
+      status: String(row.status || ""),
+      offering_id: row.offering_id == null ? null : Number(row.offering_id),
+      section_id: row.section_id == null ? null : Number(row.section_id),
+      section_subject_id:
+        row.section_subject_id == null ? null : Number(row.section_subject_id),
+      units: Number(row.units).toFixed(2),
+    }));
+
+    const subjectSnapshotHash = createHash("sha256")
+      .update(JSON.stringify(snapshot))
+      .digest("hex");
+
+    /* Create Pending Request */
+
+    const [result] = await connection.execute(
+      `
+        INSERT INTO academic_load_exception_requests (
+          enrollment_id,
+          policy_id,
+          requested_units,
+          authorized_max_units,
+          reason,
+          status,
+          requested_by,
+          reviewed_by,
+          reviewed_at,
+          review_remarks,
+          subject_snapshot_hash
+        )
+        VALUES (
+          ?, ?, ?, NULL, ?, 'Pending',
+          ?, NULL, NULL, NULL, ?
+        )
+      `,
+      [
+        enrollmentId,
+        policy.policy_id,
+        requestedUnits,
+        reason,
+        actor.user_id,
+        subjectSnapshotHash,
+      ],
+    );
+
+    /* Audit Trail */
+
+    await connection.execute(
+      `
+        INSERT INTO audit_trail (
+          user_id,
+          table_name,
+          record_id,
+          action,
+          old_values,
+          new_values
+        )
+        VALUES (
+          ?,
+          'academic_load_exception_requests',
+          ?,
+          'INSERT',
+          ?,
+          ?
+        )
+      `,
+      [
+        actor.user_id,
+        Number(result.insertId),
+        JSON.stringify(null),
+        JSON.stringify({
+          enrollment_id: enrollmentId,
+          policy_id: policy.policy_id,
+          requested_units: requestedUnits,
+          reason,
+          status: "Pending",
+          requested_by: actor.user_id,
+          subject_snapshot_hash: subjectSnapshotHash,
+        }),
+      ],
+    );
+
+    await connection.commit();
+    transactionActive = false;
+
+    return res.status(201).json({
+      success: true,
+      message: "Academic-load exception request submitted for review.",
+      request: {
+        request_id: Number(result.insertId),
+        enrollment_id: enrollmentId,
+        policy_id: policy.policy_id,
+        requested_units: requestedUnits,
+        policy_max_units: policy.max_units,
+        excess_units: Number((requestedUnits - policy.max_units).toFixed(2)),
+        authorized_max_units: null,
+        status: "Pending",
+        requested_by: actor.user_id,
+        subject_snapshot_hash: subjectSnapshotHash,
+      },
+    });
+  } catch (error) {
+    if (connection && transactionActive) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("ACADEMIC LOAD EXCEPTION ROLLBACK ERROR:", rollbackError);
+      }
+    }
+
+    /* Concurrent Duplicate Protection */
+
+    if (
+      error?.code === "ER_DUP_ENTRY" &&
+      String(error.sqlMessage || "").includes("uq_exception_pending_per_policy")
+    ) {
+      return res.status(409).json({
+        success: false,
+        code: "ACADEMIC_LOAD_EXCEPTION_ALREADY_PENDING",
+        message:
+          "A Pending request already exists for this enrollment and policy.",
+      });
+    }
+
+    console.error("CREATE ACADEMIC LOAD EXCEPTION ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to submit academic-load exception request.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
+/* Get Academic Load Exception Requests */
+
+router.get("/:id/academic-load-exceptions", async (req, res) => {
+  const actor = getRegistrarActor(req, res);
+  if (!actor) return;
+
+  const enrollmentId = toPositiveInt(req.params.id);
+
+  if (!enrollmentId) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_ENROLLMENT_ID",
+      message: "A valid enrollment ID is required.",
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await db.getConnection();
+
+    const [enrollmentRows] = await connection.execute(
+      `
+        SELECT
+          enrollment_id,
+          enrollment_status
+        FROM enrollments
+        WHERE enrollment_id = ?
+        LIMIT 1
+      `,
+      [enrollmentId],
+    );
+
+    if (enrollmentRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        code: "ENROLLMENT_NOT_FOUND",
+        message: "Enrollment not found.",
+      });
+    }
+
+    const [rows] = await connection.execute(
+      `
+        SELECT
+          r.request_id,
+          r.enrollment_id,
+          r.policy_id,
+          r.requested_units,
+          r.authorized_max_units,
+          r.reason,
+          r.status,
+
+          r.requested_by,
+          requester.username AS requested_by_username,
+
+          r.reviewed_by,
+          reviewer.username AS reviewed_by_username,
+          r.reviewed_at,
+          r.review_remarks,
+
+          r.subject_snapshot_hash,
+          r.created_at,
+          r.updated_at,
+
+          p.max_units AS policy_max_units,
+          p.status AS policy_status
+
+        FROM academic_load_exception_requests r
+
+        INNER JOIN academic_load_policies p
+          ON p.policy_id = r.policy_id
+
+        LEFT JOIN users requester
+          ON requester.user_id = r.requested_by
+
+        LEFT JOIN users reviewer
+          ON reviewer.user_id = r.reviewed_by
+
+        WHERE r.enrollment_id = ?
+
+        ORDER BY
+          r.created_at DESC,
+          r.request_id DESC
+      `,
+      [enrollmentId],
+    );
+
+    const requests = rows.map((row) => ({
+      request_id: Number(row.request_id),
+      enrollment_id: Number(row.enrollment_id),
+      policy_id: Number(row.policy_id),
+
+      requested_units: Number(row.requested_units),
+
+      authorized_max_units:
+        row.authorized_max_units === null
+          ? null
+          : Number(row.authorized_max_units),
+
+      reason: row.reason,
+      status: row.status,
+
+      requested_by: Number(row.requested_by),
+      requested_by_username: row.requested_by_username || null,
+
+      reviewed_by: row.reviewed_by === null ? null : Number(row.reviewed_by),
+
+      reviewed_by_username: row.reviewed_by_username || null,
+
+      reviewed_at: row.reviewed_at,
+      review_remarks: row.review_remarks,
+
+      subject_snapshot_hash: row.subject_snapshot_hash,
+
+      policy: {
+        policy_id: Number(row.policy_id),
+        max_units: Number(row.policy_max_units),
+        status: row.policy_status,
+      },
+
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      enrollment_id: enrollmentId,
+      enrollment_status: enrollmentRows[0].enrollment_status,
+      count: requests.length,
+      requests,
+    });
+  } catch (error) {
+    console.error("GET ACADEMIC LOAD EXCEPTIONS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve academic-load exception requests.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
+/* Academic Load Exception Details */
+
+router.get("/:id/academic-load-exceptions/:requestId", async (req, res) => {
+  const actor = getRegistrarActor(req, res);
+  if (!actor) return;
+
+  const enrollmentId = toPositiveInt(req.params.id);
+  const requestId = toPositiveInt(req.params.requestId);
+
+  if (!enrollmentId || !requestId) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_EXCEPTION_REFERENCE",
+      message: "Valid enrollment and exception request IDs are required.",
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await db.getConnection();
+
+    const [rows] = await connection.execute(
+      `
+        SELECT
+          r.request_id,
+          r.enrollment_id,
+          r.policy_id,
+          r.requested_units,
+          r.authorized_max_units,
+          r.reason,
+          r.status,
+          r.requested_by,
+          requester.username AS requested_by_username,
+          r.reviewed_by,
+          reviewer.username AS reviewed_by_username,
+          r.reviewed_at,
+          r.review_remarks,
+          r.subject_snapshot_hash,
+          r.created_at,
+          r.updated_at,
+
+          e.enrollment_status,
+
+          p.max_units AS policy_max_units,
+          p.status AS policy_status
+
+        FROM academic_load_exception_requests r
+
+        INNER JOIN enrollments e
+          ON e.enrollment_id = r.enrollment_id
+
+        INNER JOIN academic_load_policies p
+          ON p.policy_id = r.policy_id
+
+        LEFT JOIN users requester
+          ON requester.user_id = r.requested_by
+
+        LEFT JOIN users reviewer
+          ON reviewer.user_id = r.reviewed_by
+
+        WHERE r.enrollment_id = ?
+          AND r.request_id = ?
+
+        LIMIT 1
+      `,
+      [enrollmentId, requestId],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        code: "ACADEMIC_LOAD_EXCEPTION_NOT_FOUND",
+        message:
+          "Academic-load exception request not found for this enrollment.",
+      });
+    }
+
+    const row = rows[0];
+
+    return res.status(200).json({
+      success: true,
+      enrollment_id: Number(row.enrollment_id),
+      enrollment_status: row.enrollment_status,
+
+      request: {
+        request_id: Number(row.request_id),
+        enrollment_id: Number(row.enrollment_id),
+        policy_id: Number(row.policy_id),
+
+        requested_units: Number(row.requested_units),
+        authorized_max_units:
+          row.authorized_max_units === null
+            ? null
+            : Number(row.authorized_max_units),
+
+        reason: row.reason,
+        status: row.status,
+
+        requested_by: Number(row.requested_by),
+        requested_by_username: row.requested_by_username || null,
+
+        reviewed_by: row.reviewed_by === null ? null : Number(row.reviewed_by),
+
+        reviewed_by_username: row.reviewed_by_username || null,
+        reviewed_at: row.reviewed_at,
+        review_remarks: row.review_remarks,
+
+        subject_snapshot_hash: row.subject_snapshot_hash,
+
+        policy: {
+          policy_id: Number(row.policy_id),
+          max_units: Number(row.policy_max_units),
+          status: row.policy_status,
+        },
+
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      },
+    });
+  } catch (error) {
+    console.error("GET ACADEMIC LOAD EXCEPTION DETAILS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve academic-load exception details.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
+/* Academic Load Exception Review */
+
+router.post(
+  "/:id/academic-load-exceptions/:requestId/review",
+  async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        code: "AUTHENTICATION_REQUIRED",
+        message: "Authentication is required.",
+      });
+    }
+
+    const enrollmentId = toPositiveInt(req.params.id);
+    const requestId = toPositiveInt(req.params.requestId);
+
+    if (!enrollmentId || !requestId) {
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_EXCEPTION_REFERENCE",
+        message: "Valid enrollment and request IDs are required.",
+      });
+    }
+
+    const decision = req.body?.decision;
+
+    if (!["Approved", "Rejected"].includes(decision)) {
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_EXCEPTION_DECISION",
+        message: "Decision must be Approved or Rejected.",
+      });
+    }
+
+    let connection;
+    let transactionActive = false;
+
+    try {
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+      transactionActive = true;
+
+      /* Get Exception Request */
+
+      const [rows] = await connection.execute(
+        `SELECT
+    e.enrollment_status,
+    r.request_id,
+    r.policy_id,
+    r.status,
+    r.requested_by
+          FROM enrollments e
+          INNER JOIN academic_load_exception_requests r
+            ON r.enrollment_id = e.enrollment_id
+          WHERE e.enrollment_id = ?
+            AND r.request_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [enrollmentId, requestId],
+      );
+
+      if (rows.length === 0) {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(404).json({
+          success: false,
+          code: "ACADEMIC_LOAD_EXCEPTION_NOT_FOUND",
+          message: "Exception request not found.",
+        });
+      }
+
+      const request = rows[0];
+
+      /* Reviewer Authorization */
+
+      const reviewer = await getAcademicLoadReviewerActor(
+        req,
+        res,
+        connection,
+        request.requested_by,
+      );
+
+      if (!reviewer) {
+        await connection.rollback();
+        transactionActive = false;
+        return;
+      }
+
+      /* Review Transaction Safeguards */
+
+      const rejectReview = async (status, code, message) => {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(status).json({
+          success: false,
+          code,
+          message,
+        });
+      };
+
+      if (request.status !== "Pending") {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_EXCEPTION_NOT_PENDING",
+          "Only Pending exception requests can be reviewed.",
+        );
+      }
+
+      if (request.enrollment_status !== "Pending") {
+        return await rejectReview(
+          409,
+          "ENROLLMENT_NOT_PENDING",
+          "Academic-load exceptions can only be reviewed for Pending enrollments.",
+        );
+      }
+
+      /* Verify Active Policy */
+
+      const [policyRows] = await connection.execute(
+        `
+          SELECT
+            policy_id,
+            status,
+            max_units,
+            approved_by,
+            approved_at
+          FROM academic_load_policies
+          WHERE policy_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [request.policy_id],
+      );
+
+      if (policyRows.length === 0) {
+        return await rejectReview(
+          404,
+          "ACADEMIC_LOAD_POLICY_NOT_FOUND",
+          "Academic-load policy not found.",
+        );
+      }
+
+      const reviewPolicy = policyRows[0];
+
+      if (reviewPolicy.status !== "Active") {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_POLICY_NOT_ACTIVE",
+          "An Archived or inactive academic-load policy cannot authorize an exception.",
+        );
+      }
+
+      const policyMaximum = Number(reviewPolicy.max_units);
+
+      if (
+        !Number.isFinite(policyMaximum) ||
+        policyMaximum <= 0 ||
+        !toPositiveInt(reviewPolicy.approved_by) ||
+        !reviewPolicy.approved_at
+      ) {
+        return await rejectReview(
+          409,
+          "INVALID_ACTIVE_ACADEMIC_LOAD_POLICY",
+          "The Active academic-load policy is incomplete or unapproved.",
+        );
+      }
+
+      /* Exception Subject and Policy Verification */
+
+      const [contextRows] = await connection.execute(
+        `
+          SELECT
+            r.requested_units,
+            r.subject_snapshot_hash,
+
+            e.academic_year_id,
+            e.semester_id,
+
+            s.course_id,
+            s.year_level,
+
+            p.academic_year_id AS policy_academic_year_id,
+            p.semester_id AS policy_semester_id,
+            p.course_id AS policy_course_id,
+            p.year_level AS policy_year_level,
+
+            CASE
+              WHEN p.approved_at IS NOT NULL
+                AND p.approved_at <= r.created_at
+              THEN 1
+              ELSE 0
+            END AS policy_authorization_valid
+
+          FROM academic_load_exception_requests r
+
+          INNER JOIN enrollments e
+            ON e.enrollment_id = r.enrollment_id
+
+          INNER JOIN students s
+            ON s.student_id = e.student_id
+
+          INNER JOIN academic_load_policies p
+            ON p.policy_id = r.policy_id
+
+          WHERE r.request_id = ?
+            AND r.enrollment_id = ?
+
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [requestId, enrollmentId],
+      );
+
+      if (contextRows.length === 0) {
+        return await rejectReview(
+          404,
+          "ACADEMIC_LOAD_EXCEPTION_NOT_FOUND",
+          "Exception request no longer exists.",
+        );
+      }
+
+      const context = contextRows[0];
+
+      /* Verify Policy Scope */
+
+      const policyScopeMatches =
+        Number(context.academic_year_id) ===
+          Number(context.policy_academic_year_id) &&
+        Number(context.semester_id) === Number(context.policy_semester_id) &&
+        Number(context.course_id) === Number(context.policy_course_id) &&
+        Number(context.year_level) === Number(context.policy_year_level);
+
+      if (!policyScopeMatches) {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_EXCEPTION_SCOPE_CHANGED",
+          "The enrollment no longer matches the academic-load policy scope.",
+        );
+      }
+
+      if (Number(context.policy_authorization_valid) !== 1) {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_EXCEPTION_POLICY_CHANGED",
+          "The policy authorization is no longer valid for this request.",
+        );
+      }
+
+      /* Lock Current Enrollment Subjects */
+
+      const [currentSubjects] = await connection.execute(
+        `
+          SELECT
+            es.enrollment_subject_id,
+            es.subject_id,
+            es.enrollment_type,
+            es.status,
+            es.offering_id,
+            es.section_id,
+            es.section_subject_id,
+            sub.units
+
+          FROM enrollment_subjects es
+
+          INNER JOIN subjects sub
+            ON sub.subject_id = es.subject_id
+
+          WHERE es.enrollment_id = ?
+            AND es.status NOT IN ('Dropped', 'Withdrawn')
+
+          ORDER BY es.enrollment_subject_id ASC
+
+          FOR UPDATE
+        `,
+        [enrollmentId],
+      );
+
+      if (
+        currentSubjects.length === 0 ||
+        currentSubjects.some(
+          (subject) =>
+            subject.units === null ||
+            !Number.isFinite(Number(subject.units)) ||
+            Number(subject.units) < 0,
+        )
+      ) {
+        return await rejectReview(
+          409,
+          "INVALID_ENROLLMENT_SUBJECT_LOAD",
+          "Enrollment subjects contain an invalid academic load.",
+        );
+      }
+
+      /* Recalculate Academic Units */
+
+      const currentUnits = Number(
+        currentSubjects
+          .reduce((total, subject) => total + Number(subject.units), 0)
+          .toFixed(2),
+      );
+
+      const originallyRequestedUnits = Number(context.requested_units);
+
+      if (
+        !Number.isFinite(originallyRequestedUnits) ||
+        Math.abs(currentUnits - originallyRequestedUnits) > 0.001
+      ) {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_EXCEPTION_UNITS_CHANGED",
+          "The enrollment's academic units changed after the exception request was submitted.",
+        );
+      }
+
+      /* Recalculate Subject Snapshot */
+
+      const currentSnapshot = currentSubjects.map((subject) => ({
+        enrollment_subject_id: Number(subject.enrollment_subject_id),
+        subject_id: Number(subject.subject_id),
+        enrollment_type: String(subject.enrollment_type || ""),
+        status: String(subject.status || ""),
+        offering_id:
+          subject.offering_id == null ? null : Number(subject.offering_id),
+        section_id:
+          subject.section_id == null ? null : Number(subject.section_id),
+        section_subject_id:
+          subject.section_subject_id == null
+            ? null
+            : Number(subject.section_subject_id),
+        units: Number(subject.units).toFixed(2),
+      }));
+
+      const currentSnapshotHash = createHash("sha256")
+        .update(JSON.stringify(currentSnapshot))
+        .digest("hex");
+
+      if (
+        !context.subject_snapshot_hash ||
+        context.subject_snapshot_hash !== currentSnapshotHash
+      ) {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_EXCEPTION_SUBJECTS_CHANGED",
+          "The enrollment subject selection or placement changed after the exception request was submitted.",
+        );
+      }
+
+      /* Verify Exception Is Still Required */
+
+      if (currentUnits <= policyMaximum) {
+        return await rejectReview(
+          409,
+          "ACADEMIC_LOAD_EXCEPTION_NOT_REQUIRED",
+          "The enrollment no longer exceeds the configured academic-load maximum.",
+        );
+      }
+
+      /* Review Not Yet Enabled */
+
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "ACADEMIC_LOAD_EXCEPTION_REVIEW_DISABLED",
+        message:
+          "Academic-load exception decisions are disabled until the authorized review workflow is configured.",
+      });
+    } catch (error) {
+      if (connection && transactionActive) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("ACADEMIC LOAD REVIEW ROLLBACK ERROR:", rollbackError);
+        }
+      }
+
+      console.error("ACADEMIC LOAD REVIEW ERROR:", error);
+
+      if (res.headersSent) return;
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to process academic-load exception review.",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
+  },
+);
+
+/* Academic Load Exception Preflight */
+
+router.get(
+  "/:id/academic-load-exceptions/:requestId/preflight",
+  async (req, res) => {
+    const actor = getRegistrarActor(req, res);
+    if (!actor) return;
+
+    const enrollmentId = toPositiveInt(req.params.id);
+    const requestId = toPositiveInt(req.params.requestId);
+
+    if (!enrollmentId || !requestId) {
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_EXCEPTION_REFERENCE",
+        message: "Valid enrollment and request IDs are required.",
+      });
+    }
+
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+
+      const [rows] = await connection.execute(
+        `
+          SELECT
+            r.request_id,
+            r.enrollment_id,
+            r.policy_id,
+            r.status AS request_status,
+            r.requested_units,
+            r.subject_snapshot_hash,
+            r.created_at AS requested_at,
+
+            e.enrollment_status,
+            e.academic_year_id,
+            e.semester_id,
+
+            s.course_id,
+            s.year_level,
+
+            p.status AS policy_status,
+            p.max_units,
+            p.approved_by AS policy_approved_by,
+            p.approved_at AS policy_approved_at,
+            p.academic_year_id AS policy_academic_year_id,
+            p.semester_id AS policy_semester_id,
+            p.course_id AS policy_course_id,
+            p.year_level AS policy_year_level
+
+          FROM academic_load_exception_requests r
+
+          INNER JOIN enrollments e
+            ON e.enrollment_id = r.enrollment_id
+
+          INNER JOIN students s
+            ON s.student_id = e.student_id
+
+          INNER JOIN academic_load_policies p
+            ON p.policy_id = r.policy_id
+
+          WHERE r.enrollment_id = ?
+            AND r.request_id = ?
+
+          LIMIT 1
+        `,
+        [enrollmentId, requestId],
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          code: "ACADEMIC_LOAD_EXCEPTION_NOT_FOUND",
+          message: "Exception request not found.",
+        });
+      }
+
+      const request = rows[0];
+
+      /* Current Subject Selection */
+
+      const [subjects] = await connection.execute(
+        `
+          SELECT
+            es.enrollment_subject_id,
+            es.subject_id,
+            es.enrollment_type,
+            es.status,
+            es.offering_id,
+            es.section_id,
+            es.section_subject_id,
+            s.units
+
+          FROM enrollment_subjects es
+
+          INNER JOIN subjects s
+            ON s.subject_id = es.subject_id
+
+          WHERE es.enrollment_id = ?
+            AND es.status NOT IN ('Dropped', 'Withdrawn')
+
+          ORDER BY es.enrollment_subject_id ASC
+        `,
+        [enrollmentId],
+      );
+
+      const validUnitValues = subjects.every(
+        (subject) =>
+          subject.units !== null &&
+          Number.isFinite(Number(subject.units)) &&
+          Number(subject.units) >= 0,
+      );
+
+      const currentUnits = validUnitValues
+        ? Number(
+            subjects
+              .reduce((sum, subject) => sum + Number(subject.units), 0)
+              .toFixed(2),
+          )
+        : null;
+
+      /* Snapshot Verification */
+
+      const snapshot = subjects.map((subject) => ({
+        enrollment_subject_id: Number(subject.enrollment_subject_id),
+        subject_id: Number(subject.subject_id),
+        enrollment_type: String(subject.enrollment_type || ""),
+        status: String(subject.status || ""),
+        offering_id:
+          subject.offering_id == null ? null : Number(subject.offering_id),
+        section_id:
+          subject.section_id == null ? null : Number(subject.section_id),
+        section_subject_id:
+          subject.section_subject_id == null
+            ? null
+            : Number(subject.section_subject_id),
+        units: subject.units === null ? null : Number(subject.units).toFixed(2),
+      }));
+
+      const currentHash = createHash("sha256")
+        .update(JSON.stringify(snapshot))
+        .digest("hex");
+
+      /* Preflight Checks */
+
+      const scopeMatches =
+        Number(request.academic_year_id) ===
+          Number(request.policy_academic_year_id) &&
+        Number(request.semester_id) === Number(request.policy_semester_id) &&
+        Number(request.course_id) === Number(request.policy_course_id) &&
+        Number(request.year_level) === Number(request.policy_year_level);
+
+      const approvedAt = request.policy_approved_at
+        ? new Date(request.policy_approved_at).getTime()
+        : NaN;
+
+      const requestedAt = request.requested_at
+        ? new Date(request.requested_at).getTime()
+        : NaN;
+
+      const checks = {
+        enrollment_pending: request.enrollment_status === "Pending",
+
+        request_pending: request.request_status === "Pending",
+
+        policy_active: request.policy_status === "Active",
+
+        policy_configured:
+          Number(request.max_units) > 0 &&
+          Number(request.policy_approved_by) > 0 &&
+          Boolean(request.policy_approved_at),
+
+        policy_scope_matches: scopeMatches,
+
+        policy_approval_predates_request:
+          Number.isFinite(approvedAt) &&
+          Number.isFinite(requestedAt) &&
+          approvedAt <= requestedAt,
+
+        subject_load_valid: subjects.length > 0 && validUnitValues,
+
+        subject_snapshot_matches:
+          validUnitValues && request.subject_snapshot_hash === currentHash,
+
+        requested_units_unchanged:
+          currentUnits !== null &&
+          Math.abs(currentUnits - Number(request.requested_units)) < 0.001,
+
+        exceeds_policy_maximum:
+          currentUnits !== null && currentUnits > Number(request.max_units),
+      };
+
+      const failedChecks = Object.entries(checks)
+        .filter(([, passed]) => !passed)
+        .map(([name]) => name);
+
+      return res.status(200).json({
+        success: true,
+
+        enrollment_id: enrollmentId,
+        request_id: requestId,
+
+        request_status: request.request_status,
+        enrollment_status: request.enrollment_status,
+        policy_status: request.policy_status,
+
+        requested_units: Number(request.requested_units),
+        current_units: currentUnits,
+        policy_max_units: Number(request.max_units),
+
+        checks,
+        failed_checks: failedChecks,
+
+        request_checks_passed: failedChecks.length === 0,
+
+        authorization_granted: false,
+
+        message:
+          failedChecks.length === 0
+            ? "Request data checks passed. Separate reviewer authorization and final transactional validation are still required."
+            : "Exception request is not eligible for a review decision until the failed checks are resolved.",
+      });
+    } catch (error) {
+      console.error("ACADEMIC LOAD EXCEPTION PREFLIGHT ERROR:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to check academic-load exception eligibility.",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
+  },
+);
+
 router.get("/:id/validate", async (req, res) => {
   let connection;
 
@@ -11410,7 +12862,7 @@ router.get("/:id/validate", async (req, res) => {
     const activeSubjects = subjectRows.filter(
       (subject) => !["Dropped", "Withdrawn"].includes(String(subject.status)),
     );
-
+    let activeAcademicLoadPolicy = null;
     // Required Curriculum Subject Review
     if (isPending && curriculumId !== null) {
       const activeSubjectIds = new Set(
@@ -11454,6 +12906,71 @@ router.get("/:id/validate", async (req, res) => {
           missing_subject_count: missingRequiredSubjects.length,
           subjects: missingRequiredSubjects,
         });
+      }
+
+      // Academic Load Comparison
+      const selectedUnits = activeSubjects.reduce(
+        (total, subject) => total + Number(subject.units || 0),
+        0,
+      );
+
+      const requiredTermUnits = requiredTermSubjects.reduce(
+        (total, subject) => total + Number(subject.units || 0),
+        0,
+      );
+
+      const unitsAboveBaseline = selectedUnits - requiredTermUnits;
+
+      if (requiredTermUnits > 0 && unitsAboveBaseline > 0) {
+        warnings.push({
+          code: "ACADEMIC_LOAD_ABOVE_CURRICULUM_BASELINE",
+          category: "ACADEMIC_LOAD",
+          message:
+            "Selected units exceed this term's required curriculum load. This is not an official maximum-unit violation; confirm whether the additional load is permitted under PTC policy.",
+          selected_units: selectedUnits,
+          required_term_units: requiredTermUnits,
+          units_above_baseline: unitsAboveBaseline,
+        });
+      }
+    }
+
+    // Configured Academic Load Policy
+    if (isPending) {
+      activeAcademicLoadPolicy = await getActiveAcademicLoadPolicy(connection, {
+        academicYearId,
+        semesterId,
+        courseId,
+        yearLevel,
+      });
+
+      if (activeAcademicLoadPolicy) {
+        const selectedUnitsForPolicy = activeSubjects.reduce(
+          (total, subject) => total + Number(subject.units || 0),
+          0,
+        );
+
+        if (!activeAcademicLoadPolicy.configured) {
+          errors.push({
+            code: "INVALID_ACTIVE_ACADEMIC_LOAD_POLICY",
+            message:
+              "The active academic load policy is incomplete or has not been approved.",
+            policy_id: activeAcademicLoadPolicy.policy_id,
+          });
+        } else if (
+          selectedUnitsForPolicy > activeAcademicLoadPolicy.max_units
+        ) {
+          warnings.push({
+            code: "ACADEMIC_LOAD_MAXIMUM_EXCEEDED",
+            category: "ACADEMIC_LOAD",
+            message:
+              "Selected units exceed the approved maximum. Authorized resolution is required before enrollment approval.",
+            policy_id: activeAcademicLoadPolicy.policy_id,
+            selected_units: selectedUnitsForPolicy,
+            max_units: activeAcademicLoadPolicy.max_units,
+            excess_units:
+              selectedUnitsForPolicy - activeAcademicLoadPolicy.max_units,
+          });
+        }
       }
     }
 
@@ -11708,6 +13225,7 @@ router.get("/:id/validate", async (req, res) => {
           curriculumSubject = curriculumSubjectRows[0];
         }
       }
+
       // ===============================================
       // ACADEMIC ELIGIBILITY
       //
@@ -12142,14 +13660,6 @@ router.get("/:id/validate", async (req, res) => {
 
           const maxStudents = Number(offering.max_students || 0);
 
-          if (!offering.faculty_id) {
-            subjectErrors.push({
-              code: "OFFERING_FACULTY_MISSING",
-
-              message: "Assigned offering has no faculty.",
-            });
-          }
-
           if (
             !offering.schedule_days ||
             !String(offering.schedule_days).trim()
@@ -12443,14 +13953,15 @@ router.get("/:id/validate", async (req, res) => {
 
     const alreadyApproved = enrollmentStatus === "Approved";
 
-    const canApprove = valid && enrollmentStatus === "Pending";
-
     const requiresRegistrarReview = warnings.some((warning) =>
       [
         "ACADEMIC_HISTORY_REQUIRES_REVIEW",
         "REQUIRED_CURRICULUM_SUBJECTS_MISSING",
+        "ACADEMIC_LOAD_MAXIMUM_EXCEEDED",
       ].includes(warning.code),
     );
+
+    const canApprove = valid && isPending && !requiresRegistrarReview;
 
     let validationState = "NOT_READY";
 
@@ -12462,8 +13973,8 @@ router.get("/:id/validate", async (req, res) => {
 
       validationMessage =
         "Enrollment is already approved. No additional approval action is required.";
-    } else if (canApprove) {
-      validationState = "READY_FOR_APPROVAL";
+    } else if (valid && isPending && requiresRegistrarReview) {
+      validationState = "REVIEW_REQUIRED";
 
       const reviewItems = [];
 
@@ -12483,10 +13994,20 @@ router.get("/:id/validate", async (req, res) => {
         reviewItems.push("missing required curriculum subjects");
       }
 
+      if (
+        warnings.some(
+          (warning) => warning.code === "ACADEMIC_LOAD_MAXIMUM_EXCEEDED",
+        )
+      ) {
+        reviewItems.push("academic load above the configured maximum");
+      }
+
+      validationMessage = `Enrollment passed configured validation checks, but ${reviewItems.join(" and ")} require Registrar review before approval.`;
+    } else if (canApprove) {
+      validationState = "READY_FOR_APPROVAL";
+
       validationMessage =
-        reviewItems.length > 0
-          ? `Enrollment passed configured validation checks, but ${reviewItems.join(" and ")} require Registrar review before approval.`
-          : "Enrollment passed validation and is ready for approval.";
+        "Enrollment passed validation and is ready for approval.";
     } else if (enrollmentStatus !== "Pending") {
       validationState = "NOT_APPROVABLE";
     }
@@ -12548,6 +14069,14 @@ router.get("/:id/validate", async (req, res) => {
           }
         : null,
 
+      academic_load_policy: activeAcademicLoadPolicy
+        ? {
+            policy_id: activeAcademicLoadPolicy.policy_id,
+            max_units: activeAcademicLoadPolicy.max_units,
+            configured: activeAcademicLoadPolicy.configured,
+          }
+        : null,
+
       summary: {
         total_records: subjectRows.length,
 
@@ -12588,6 +14117,7 @@ router.get("/:id/validate", async (req, res) => {
     }
   }
 });
+
 // =====================================================
 // APPROVE ENROLLMENT
 //
@@ -12946,6 +14476,202 @@ router.post("/:id/approve", async (req, res) => {
         message:
           "Enrollment cannot be approved because it has no active subjects.",
       });
+    }
+
+    // Academic Load Approval Guard
+    const activeLoadPolicy = await getActiveAcademicLoadPolicy(connection, {
+      academicYearId,
+      semesterId,
+      courseId,
+      yearLevel,
+      lock: true,
+    });
+
+    if (activeLoadPolicy && !activeLoadPolicy.configured) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "INVALID_ACTIVE_ACADEMIC_LOAD_POLICY",
+        message:
+          "Enrollment approval is blocked because the active academic load policy is incomplete or unapproved.",
+        can_approve: false,
+      });
+    }
+
+    const selectedUnitsForApproval = subjectRows.reduce(
+      (total, subject) => total + Number(subject.units || 0),
+      0,
+    );
+
+    if (
+      activeLoadPolicy &&
+      selectedUnitsForApproval > activeLoadPolicy.max_units
+    ) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "ACADEMIC_LOAD_MAXIMUM_EXCEEDED",
+        message:
+          "Enrollment exceeds the approved maximum academic load. A separately authorized exception is required before approval.",
+        policy_id: activeLoadPolicy.policy_id,
+        selected_units: selectedUnitsForApproval,
+        max_units: activeLoadPolicy.max_units,
+        excess_units: selectedUnitsForApproval - activeLoadPolicy.max_units,
+        can_approve: false,
+        requires_registrar_review: true,
+      });
+    }
+
+    // Academic Review Approval Guard
+    const [previousGradeRows] = await connection.execute(
+      `
+        SELECT
+            es.enrollment_subject_id,
+            (
+              SELECT g.final_rating
+              FROM grades g
+              WHERE g.enrollment_subject_id = es.enrollment_subject_id
+                AND g.grade_status = 'Approved'
+              ORDER BY
+                  COALESCE(g.reviewed_at, g.updated_at, g.created_at) DESC,
+                  g.grade_id DESC
+              LIMIT 1
+            ) AS final_rating
+        FROM enrollments previous
+        INNER JOIN enrollment_subjects es
+            ON es.enrollment_id = previous.enrollment_id
+        WHERE previous.student_id = ?
+          AND previous.enrollment_id <> ?
+          AND previous.enrollment_status = 'Approved'
+          AND es.status NOT IN ('Dropped', 'Cancelled', 'Withdrawn')
+      `,
+      [studentId, enrollmentId],
+    );
+
+    const unresolvedAcademicHistory = previousGradeRows.some(
+      (row) => classifyFinalRating(row.final_rating) !== ACADEMIC_RESULT.PASSED,
+    );
+
+    const [requiredTermRows] = await connection.execute(
+      `
+        SELECT cs.subject_id
+        FROM curriculum_subjects cs
+        INNER JOIN subjects s ON s.subject_id = cs.subject_id
+        WHERE cs.curriculum_id = ?
+          AND cs.year_level = ?
+          AND cs.semester_id = ?
+          AND cs.is_required = 1
+          AND s.is_active = 1
+      `,
+      [curriculumId, yearLevel, semesterId],
+    );
+
+    const selectedSubjectIds = new Set(
+      subjectRows.map((subject) => Number(subject.subject_id)),
+    );
+
+    const missingRequiredSubjects = requiredTermRows.some(
+      (subject) => !selectedSubjectIds.has(Number(subject.subject_id)),
+    );
+
+    if (unresolvedAcademicHistory || missingRequiredSubjects) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "ACADEMIC_REVIEW_REQUIRED",
+        message: "Registrar academic review must be resolved before approval.",
+        can_approve: false,
+        requires_registrar_review: true,
+        review: {
+          academic_history: unresolvedAcademicHistory,
+          missing_required_subjects: missingRequiredSubjects,
+        },
+      });
+    }
+
+    // Update the current student section only after approval.
+    if (enrollment.home_section_id != null) {
+      const homeSectionId = Number(enrollment.home_section_id);
+
+      const [homeRows] = await connection.execute(
+        `SELECT section_id
+     FROM sections
+     WHERE section_id = ?
+       AND course_id = ?
+       AND academic_year_id = ?
+       AND year_level = ?
+     LIMIT 1
+     FOR UPDATE`,
+        [homeSectionId, courseId, academicYearId, yearLevel],
+      );
+
+      if (homeRows.length !== 1) {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(409).json({
+          success: false,
+          code: "ENROLLMENT_HOME_SECTION_INVALID",
+          message:
+            "The designated home section does not match this enrollment.",
+        });
+      }
+
+      const [profileRows] = await connection.execute(
+        `SELECT section_id
+     FROM students
+     WHERE student_id = ?
+     FOR UPDATE`,
+        [studentId],
+      );
+
+      const previousSectionId = profileRows[0]?.section_id ?? null;
+
+      if (Number(previousSectionId || 0) !== homeSectionId) {
+        const [profileUpdate] = await connection.execute(
+          `UPDATE students
+       SET section_id = ?
+       WHERE student_id = ?
+         AND course_id = ?
+         AND year_level = ?`,
+          [homeSectionId, studentId, courseId, yearLevel],
+        );
+
+        if (profileUpdate.affectedRows !== 1) {
+          await connection.rollback();
+          transactionActive = false;
+
+          return res.status(409).json({
+            success: false,
+            code: "STUDENT_HOME_SECTION_UPDATE_CONFLICT",
+            message: "The student profile could not be synchronized.",
+          });
+        }
+
+        await connection.execute(
+          `INSERT INTO audit_trail
+        (user_id, table_name, record_id, action,
+         old_values, new_values)
+       VALUES (?, 'students', ?, 'UPDATE', ?, ?)`,
+          [
+            approvedBy,
+            studentId,
+            JSON.stringify({
+              section_id: previousSectionId,
+            }),
+            JSON.stringify({
+              section_id: homeSectionId,
+              approved_enrollment_id: enrollmentId,
+            }),
+          ],
+        );
+      }
     }
 
     // =================================================
@@ -13567,10 +15293,6 @@ router.post("/:id/approve", async (req, res) => {
       const maxStudents = Number(offering.max_students || 0);
 
       const missingConfiguration = [];
-
-      if (!offering.faculty_id) {
-        missingConfiguration.push("faculty");
-      }
 
       if (!offering.schedule_days || !String(offering.schedule_days).trim()) {
         missingConfiguration.push("schedule_days");

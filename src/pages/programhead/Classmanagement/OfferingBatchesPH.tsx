@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowLeft,
   CalendarDays,
+  WandSparkles,
   CheckCircle2,
   ClipboardList,
   RefreshCw,
@@ -96,11 +97,20 @@ interface FacultyOption {
   role_name: string;
 }
 
+interface PendingFacultyRequest {
+  request_id: number;
+  offering_id: number;
+  proposed_faculty_id: number;
+  proposed_faculty_name: string;
+  status: string;
+}
+
 interface BatchDetail extends BatchListItem {
   department_id: number;
   department_name: string;
   offerings: BatchOffering[];
   faculty_options: FacultyOption[];
+  faculty_requests?: PendingFacultyRequest[];
 }
 
 interface OfferingDraft {
@@ -122,8 +132,8 @@ interface SaveOfferingResponse extends ApiResponse {
   offering?: {
     offering_id: number;
     batch_id: number;
-    faculty_id: number;
-    faculty_name: string;
+    faculty_id: number | null;
+    faculty_name: string | null;
     schedule_days: string;
     schedule_time: string;
     schedule_start_time: string;
@@ -135,6 +145,66 @@ interface SaveOfferingResponse extends ApiResponse {
 interface ReturnBatchResponse extends ApiResponse {
   batch_id?: number;
   batch_status?: string;
+}
+
+interface AutoScheduleEntry {
+  offering_id: number;
+  section_id: number;
+  section_name: string;
+  subject_code: string;
+  subject_name: string;
+  units: number;
+  faculty_id: number | null;
+  schedule_days: string | null;
+  schedule_start_time: string | null;
+  schedule_end_time: string | null;
+  schedule_time: string | null;
+  generated: boolean;
+}
+
+interface AutoScheduleResponse extends ApiResponse {
+  preview_only: boolean;
+  preview_signature: string;
+  generated_count: number;
+  preserved_count: number;
+  entries: AutoScheduleEntry[];
+}
+
+type DurationMode = "units" | "fixed";
+
+interface AutoScheduleForm {
+  allowed_days: WeekDay[];
+  day_start: string;
+  day_end: string;
+  duration_mode: DurationMode;
+  minutes_per_unit: number;
+  fixed_minutes: number;
+  slot_minutes: number;
+  replace_existing: boolean;
+}
+
+const DEFAULT_AUTO_FORM: AutoScheduleForm = {
+  allowed_days: [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ],
+  day_start: "07:00",
+  day_end: "21:00",
+  duration_mode: "units",
+  minutes_per_unit: 60,
+  fixed_minutes: 90,
+  slot_minutes: 30,
+  replace_existing: false,
+};
+
+interface FacultyRequestResponse extends ApiResponse {
+  request_id?: number;
+  offering_id?: number;
+  request_status?: string;
 }
 
 class RequestError extends Error {
@@ -245,7 +315,6 @@ function makeDraft(offering: BatchOffering): OfferingDraft {
 
 function isScheduled(offering: BatchOffering): boolean {
   return Boolean(
-    offering.faculty_id &&
     parseDays(offering.schedule_days).length > 0 &&
     toTimeInput(offering.schedule_start_time) &&
     toTimeInput(offering.schedule_end_time),
@@ -274,8 +343,20 @@ export default function OfferingBatchesPH() {
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
   const [savingOfferingId, setSavingOfferingId] = useState<number | null>(null);
+  const [requestingFacultyId, setRequestingFacultyId] = useState<number | null>(
+    null,
+  );
   const [returningBatch, setReturningBatch] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [autoForm, setAutoForm] = useState<AutoScheduleForm>(DEFAULT_AUTO_FORM);
+  const [autoPreview, setAutoPreview] = useState<AutoScheduleResponse | null>(
+    null,
+  );
+  const [autoPreviewConfig, setAutoPreviewConfig] = useState("");
+  const [autoLoading, setAutoLoading] = useState<"preview" | "apply" | null>(
+    null,
+  );
+  const [autoError, setAutoError] = useState("");
 
   const requestJson = useCallback(
     async <T extends ApiResponse>(url: string, options: RequestInit = {}) => {
@@ -396,6 +477,150 @@ export default function OfferingBatchesPH() {
 
   const canEdit = selectedBatch?.batch_status === "Pending Program Head";
 
+  const canUpdateProfessor =
+    selectedBatch?.batch_status === "Ready for Registrar";
+
+  const setAutoOption = (patch: Partial<AutoScheduleForm>) => {
+    setAutoForm((current) => ({ ...current, ...patch }));
+    setAutoPreview(null);
+    setAutoPreviewConfig("");
+    setAutoError("");
+  };
+
+  const toggleAutoDay = (day: WeekDay) => {
+    setAutoForm((current) => ({
+      ...current,
+      allowed_days: WEEK_DAYS.filter((candidate) =>
+        candidate === day
+          ? !current.allowed_days.includes(candidate)
+          : current.allowed_days.includes(candidate),
+      ),
+    }));
+    setAutoPreview(null);
+    setAutoPreviewConfig("");
+    setAutoError("");
+  };
+
+  const autoSchedule = async (mode: "preview" | "apply") => {
+    if (!selectedBatch || selectedBatch.batch_status !== "Pending Program Head")
+      return;
+    if (
+      !autoForm.allowed_days.length ||
+      !autoForm.day_start ||
+      !autoForm.day_end ||
+      autoForm.day_start >= autoForm.day_end
+    ) {
+      setAutoError(
+        "Select at least one allowed day and a valid daily time range.",
+      );
+      return;
+    }
+    const configKey = JSON.stringify(autoForm);
+    if (mode === "apply" && (!autoPreview || configKey !== autoPreviewConfig)) {
+      setAutoError(
+        "Preview the current settings before applying the schedule.",
+      );
+      return;
+    }
+    if (
+      mode === "apply" &&
+      !window.confirm(
+        `Save ${autoPreview?.generated_count ?? 0} generated class schedules for every section in this batch? ` +
+          "This will not assign professors or publish classes.",
+      )
+    )
+      return;
+
+    setAutoError("");
+    setActionError("");
+    setActionMessage("");
+    setAutoLoading(mode);
+    try {
+      const data = await requestJson<AutoScheduleResponse>(
+        `${BATCH_API}/${selectedBatch.batch_id}/auto-schedule/${mode}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...autoForm,
+            preview_signature:
+              mode === "apply" ? autoPreview?.preview_signature : undefined,
+            day_start: `${autoForm.day_start}:00`,
+            day_end: `${autoForm.day_end}:00`,
+          }),
+        },
+      );
+      if (!Array.isArray(data.entries)) {
+        throw new Error("The server did not return a schedule preview.");
+      }
+      if (mode === "preview") {
+        setAutoPreview(data);
+        setAutoPreviewConfig(configKey);
+        return;
+      }
+
+      const byId = new Map(
+        data.entries.map((entry) => [entry.offering_id, entry]),
+      );
+      const updatedOfferings = selectedBatch.offerings.map((offering) => {
+        const next = byId.get(offering.offering_id);
+        if (!next) return offering;
+        return {
+          ...offering,
+          schedule_days: next.schedule_days,
+          schedule_start_time: next.schedule_start_time,
+          schedule_end_time: next.schedule_end_time,
+          schedule_time: next.schedule_time,
+          offering_status: next.generated ? "Closed" : offering.offering_status,
+        };
+      });
+      setSelectedBatch((current) =>
+        current
+          ? {
+              ...current,
+              offerings: updatedOfferings,
+            }
+          : current,
+      );
+      setDrafts(
+        Object.fromEntries(
+          updatedOfferings.map((offering) => [
+            offering.offering_id,
+            makeDraft(offering),
+          ]),
+        ),
+      );
+      setBatches((current) =>
+        current.map((batch) =>
+          batch.batch_id === selectedBatch.batch_id
+            ? {
+                ...batch,
+                scheduled_count: updatedOfferings.filter(isScheduled).length,
+              }
+            : batch,
+        ),
+      );
+      setRowErrors({});
+      setConflicts({});
+      setAutoPreview(null);
+      setAutoPreviewConfig("");
+      setActionMessage(
+        data.message ||
+          "Automatic schedules saved. Review each section before returning the batch.",
+      );
+    } catch (error) {
+      setAutoError(
+        error instanceof Error ? error.message : "Automatic scheduling failed.",
+      );
+      if (mode === "apply") {
+        setAutoPreview(null);
+        setAutoPreviewConfig("");
+      }
+    } finally {
+      setAutoLoading(null);
+    }
+  };
+
   const openBatch = async (batchId: number) => {
     setSelectedBatch(null);
     setDetailLoading(true);
@@ -404,6 +629,9 @@ export default function OfferingBatchesPH() {
     setActionError("");
     setConflicts({});
     setRowErrors({});
+    setAutoPreview(null);
+    setAutoPreviewConfig("");
+    setAutoError("");
 
     try {
       const data = await requestJson<BatchDetailResponse>(
@@ -461,21 +689,19 @@ export default function OfferingBatchesPH() {
       };
     });
   };
-
   const saveOffering = async (offering: BatchOffering) => {
-    if (!selectedBatch) return;
+    if (
+      !selectedBatch ||
+      !["Pending Program Head", "Ready for Registrar"].includes(
+        selectedBatch.batch_status,
+      )
+    ) {
+      return;
+    }
 
     const draft = drafts[offering.offering_id];
 
     if (!draft) return;
-
-    if (!draft.faculty_id) {
-      setRowErrors((current) => ({
-        ...current,
-        [offering.offering_id]: "Select an instructor.",
-      }));
-      return;
-    }
 
     if (!draft.schedule_days.length) {
       setRowErrors((current) => ({
@@ -513,7 +739,7 @@ export default function OfferingBatchesPH() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            faculty_id: Number(draft.faculty_id),
+            faculty_id: draft.faculty_id ? Number(draft.faculty_id) : null,
             schedule_days: draft.schedule_days.join(", "),
             schedule_start_time: `${draft.start_time}:00`,
             schedule_end_time: `${draft.end_time}:00`,
@@ -565,8 +791,11 @@ export default function OfferingBatchesPH() {
         }),
       );
 
+      setAutoPreview(null);
+      setAutoPreviewConfig("");
       setActionMessage(
-        "Schedule saved. This offering stays closed until the Registrar publishes the batch.",
+        data.message ||
+          "Schedule saved. Professor assignment is optional; Registrar can publish without one.",
       );
     } catch (error) {
       if (error instanceof RequestError && error.conflicts?.length) {
@@ -588,11 +817,83 @@ export default function OfferingBatchesPH() {
     }
   };
 
+  const requestFacultyApproval = async (offering: BatchOffering) => {
+    if (!selectedBatch || selectedBatch.batch_status !== "Published") return;
+    const draft = drafts[offering.offering_id];
+    const facultyId = draft?.faculty_id ? Number(draft.faculty_id) : 0;
+    if (!facultyId || facultyId === Number(offering.faculty_id || 0)) {
+      setRowErrors((current) => ({
+        ...current,
+        [offering.offering_id]:
+          "Select a different professor for Registrar approval.",
+      }));
+      return;
+    }
+    if (
+      selectedBatch.faculty_requests?.some(
+        (request) => request.offering_id === offering.offering_id,
+      )
+    ) {
+      setRowErrors((current) => ({
+        ...current,
+        [offering.offering_id]:
+          "This subject already has a pending professor request.",
+      }));
+      return;
+    }
+    setRequestingFacultyId(offering.offering_id);
+    setRowErrors((current) => ({ ...current, [offering.offering_id]: "" }));
+    setActionError("");
+    setActionMessage("");
+    try {
+      const data = await requestJson<FacultyRequestResponse>(
+        `${BATCH_API}/${selectedBatch.batch_id}/offerings/${offering.offering_id}/request-faculty`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ faculty_id: facultyId }),
+        },
+      );
+      const faculty = selectedBatch.faculty_options.find(
+        (item) => item.faculty_id === facultyId,
+      );
+      setSelectedBatch((current) =>
+        current
+          ? {
+              ...current,
+              faculty_requests: [
+                ...(current.faculty_requests || []),
+                {
+                  request_id: Number(data.request_id),
+                  offering_id: offering.offering_id,
+                  proposed_faculty_id: facultyId,
+                  proposed_faculty_name:
+                    faculty?.faculty_name || "Selected professor",
+                  status: "Pending",
+                },
+              ],
+            }
+          : current,
+      );
+      setActionMessage(data.message || "Professor request sent to Registrar.");
+    } catch (error) {
+      setRowErrors((current) => ({
+        ...current,
+        [offering.offering_id]:
+          error instanceof Error
+            ? error.message
+            : "Could not request professor approval.",
+      }));
+    } finally {
+      setRequestingFacultyId(null);
+    }
+  };
+
   const returnBatch = async () => {
     if (!selectedBatch || !allOfferingsScheduled) return;
 
     const confirmed = window.confirm(
-      "Return this completed batch to the Registrar for review? You will no longer be able to edit its schedules.",
+      "Send these class days and times to the Registrar for publication? A professor may be assigned later with a second Registrar approval.",
     );
 
     if (!confirmed) return;
@@ -644,8 +945,8 @@ export default function OfferingBatchesPH() {
               <div>
                 <h1>Offering Batches</h1>
                 <p>
-                  Assign instructors and schedules to the batches sent by the
-                  Registrar.
+                  Set class days and times first. Professors are optional and
+                  can be proposed after publication.
                 </p>
               </div>
 
@@ -831,6 +1132,261 @@ export default function OfferingBatchesPH() {
               </div>
             )}
 
+            {canEdit && (
+              <section className="ph-offering-batches__panel ph-offering-batches__auto-panel">
+                <div className="ph-offering-batches__panel-heading">
+                  <h2>
+                    <WandSparkles size={17} /> Auto-Generate Class Schedules
+                  </h2>
+                  <span>All subjects · All sections in this batch</span>
+                </div>
+                <p className="ph-offering-batches__auto-help">
+                  Choose the days and daily hours available for scheduling.
+                  Classes in the same section will not overlap; classes in
+                  different sections may run simultaneously when no professor or
+                  room is shared. Professors are optional. Preview before
+                  saving.
+                </p>
+                <div
+                  className="ph-offering-batches__auto-presets"
+                  aria-label="Quick allowed-day selections"
+                >
+                  {(
+                    [
+                      { label: "Monday only", days: ["Monday"] },
+                      { label: "Tuesday only", days: ["Tuesday"] },
+                      { label: "Wednesday only", days: ["Wednesday"] },
+                      { label: "Mon–Fri", days: WEEK_DAYS.slice(0, 5) },
+                      { label: "Mon–Sat", days: WEEK_DAYS.slice(0, 6) },
+                    ] as { label: string; days: readonly WeekDay[] }[]
+                  ).map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      className="ph-offering-batches__button ph-offering-batches__button--light"
+                      onClick={() =>
+                        setAutoOption({ allowed_days: [...preset.days] })
+                      }
+                      disabled={autoLoading !== null}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <fieldset
+                  className="ph-offering-batches__auto-days"
+                  disabled={autoLoading !== null}
+                >
+                  <legend>Allowed days</legend>
+                  <div>
+                    {WEEK_DAYS.map((day) => (
+                      <label key={day}>
+                        <input
+                          type="checkbox"
+                          checked={autoForm.allowed_days.includes(day)}
+                          onChange={() => toggleAutoDay(day)}
+                        />{" "}
+                        {day.slice(0, 3)}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <div className="ph-offering-batches__auto-fields">
+                  <label>
+                    <span>Earliest class start</span>
+                    <input
+                      type="time"
+                      step="1800"
+                      value={autoForm.day_start}
+                      onChange={(event) =>
+                        setAutoOption({ day_start: event.target.value })
+                      }
+                      disabled={autoLoading !== null}
+                    />
+                  </label>
+                  <label>
+                    <span>Latest class end</span>
+                    <input
+                      type="time"
+                      step="1800"
+                      value={autoForm.day_end}
+                      onChange={(event) =>
+                        setAutoOption({ day_end: event.target.value })
+                      }
+                      disabled={autoLoading !== null}
+                    />
+                  </label>
+                  <label>
+                    <span>Meeting duration</span>
+                    <select
+                      value={autoForm.duration_mode}
+                      onChange={(event) =>
+                        setAutoOption({
+                          duration_mode: event.target.value as DurationMode,
+                        })
+                      }
+                      disabled={autoLoading !== null}
+                    >
+                      <option value="units">Based on subject units</option>
+                      <option value="fixed">
+                        Fixed duration for all subjects
+                      </option>
+                    </select>
+                  </label>
+                  {autoForm.duration_mode === "units" ? (
+                    <label>
+                      <span>Minutes per unit</span>
+                      <select
+                        value={autoForm.minutes_per_unit}
+                        onChange={(event) =>
+                          setAutoOption({
+                            minutes_per_unit: Number(event.target.value),
+                          })
+                        }
+                        disabled={autoLoading !== null}
+                      >
+                        <option value={30}>30 minutes</option>
+                        <option value={60}>60 minutes</option>
+                        <option value={90}>90 minutes</option>
+                      </select>
+                    </label>
+                  ) : (
+                    <label>
+                      <span>Minutes per subject</span>
+                      <select
+                        value={autoForm.fixed_minutes}
+                        onChange={(event) =>
+                          setAutoOption({
+                            fixed_minutes: Number(event.target.value),
+                          })
+                        }
+                        disabled={autoLoading !== null}
+                      >
+                        {[60, 90, 120, 150, 180, 210, 240].map((value) => (
+                          <option key={value} value={value}>
+                            {value} minutes
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <label>
+                    <span>Time increments</span>
+                    <select
+                      value={autoForm.slot_minutes}
+                      onChange={(event) =>
+                        setAutoOption({
+                          slot_minutes: Number(event.target.value),
+                        })
+                      }
+                      disabled={autoLoading !== null}
+                    >
+                      <option value={30}>Every 30 minutes</option>
+                      <option value={60}>Every 60 minutes</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="ph-offering-batches__auto-keep">
+                  <input
+                    type="checkbox"
+                    checked={autoForm.replace_existing}
+                    onChange={(event) =>
+                      setAutoOption({ replace_existing: event.target.checked })
+                    }
+                    disabled={autoLoading !== null}
+                  />
+                  <span>
+                    Replace existing schedules in this unpublished batch (off by
+                    default)
+                  </span>
+                </label>
+                <p className="ph-offering-batches__auto-help">
+                  Each subject receives one meeting day per week; duration is
+                  estimated from units or the fixed duration you choose. Verify
+                  official lecture/laboratory contact-hour requirements before
+                  Registrar approval. If the selected days cannot fit the
+                  subjects, the generator will not create overlapping schedules.
+                </p>
+                {autoError && (
+                  <div
+                    className="ph-offering-batches__alert ph-offering-batches__alert--error"
+                    role="alert"
+                  >
+                    <AlertCircle size={16} /> {autoError}
+                  </div>
+                )}
+                <div className="ph-offering-batches__auto-actions">
+                  <button
+                    type="button"
+                    className="ph-offering-batches__button ph-offering-batches__button--light"
+                    onClick={() => void autoSchedule("preview")}
+                    disabled={
+                      autoLoading !== null ||
+                      savingOfferingId !== null ||
+                      returningBatch
+                    }
+                  >
+                    <WandSparkles size={15} />{" "}
+                    {autoLoading === "preview"
+                      ? "Building preview…"
+                      : "Preview schedules"}
+                  </button>
+                  <button
+                    type="button"
+                    className="ph-offering-batches__button ph-offering-batches__button--primary"
+                    onClick={() => void autoSchedule("apply")}
+                    disabled={
+                      autoLoading !== null ||
+                      !autoPreview ||
+                      autoPreviewConfig !== JSON.stringify(autoForm) ||
+                      savingOfferingId !== null ||
+                      returningBatch
+                    }
+                  >
+                    <Save size={15} />{" "}
+                    {autoLoading === "apply"
+                      ? "Saving schedules…"
+                      : "Apply schedule to all sections"}
+                  </button>
+                </div>
+                {autoPreview && (
+                  <div className="ph-offering-batches__auto-preview">
+                    <p>
+                      <strong>Preview:</strong> {autoPreview.generated_count} to
+                      generate · {autoPreview.preserved_count} unchanged.
+                      Nothing saved yet.
+                    </p>
+                    <div className="ph-offering-batches__table-wrap">
+                      <table className="ph-offering-batches__table">
+                        <thead>
+                          <tr>
+                            <th>Section</th>
+                            <th>Subject</th>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {autoPreview.entries.map((item) => (
+                            <tr key={item.offering_id}>
+                              <td>{item.section_name}</td>
+                              <td>
+                                {item.subject_code} · {item.subject_name}
+                              </td>
+                              <td>{item.schedule_days || "—"}</td>
+                              <td>{item.schedule_time || "—"}</td>
+                              <td>{item.generated ? "Generate" : "Keep"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
             <section className="ph-offering-batches__panel ph-offering-batches__schedule-panel">
               <div className="ph-offering-batches__panel-heading">
                 <h2>Schedules by section</h2>
@@ -880,6 +1436,16 @@ export default function OfferingBatchesPH() {
                               drafts[offering.offering_id] ||
                               makeDraft(offering);
                             const scheduled = isScheduled(offering);
+                            const pendingFacultyRequest =
+                              selectedBatch.faculty_requests?.find(
+                                (request) =>
+                                  request.offering_id === offering.offering_id,
+                              );
+                            const canProposeFaculty =
+                              selectedBatch.batch_status === "Published" &&
+                              offering.offering_status === "Open" &&
+                              scheduled &&
+                              !pendingFacultyRequest;
                             const rowConflictList =
                               conflicts[offering.offering_id] || [];
 
@@ -906,7 +1472,7 @@ export default function OfferingBatchesPH() {
 
                                 <div className="ph-offering-item__fields">
                                   <label className="ph-offering-item__field">
-                                    <span>Instructor</span>
+                                    <span>Professor (optional)</span>
                                     <select
                                       value={draft.faculty_id}
                                       onChange={(event) =>
@@ -919,13 +1485,20 @@ export default function OfferingBatchesPH() {
                                         )
                                       }
                                       disabled={
-                                        !canEdit ||
+                                        !(
+                                          canEdit ||
+                                          canUpdateProfessor ||
+                                          canProposeFaculty
+                                        ) ||
                                         savingOfferingId ===
+                                          offering.offering_id ||
+                                        autoLoading !== null ||
+                                        requestingFacultyId ===
                                           offering.offering_id
                                       }
                                     >
                                       <option value="">
-                                        Select instructor
+                                        Professor not assigned
                                       </option>
                                       {selectedBatch.faculty_options.map(
                                         (faculty) => (
@@ -1060,13 +1633,44 @@ export default function OfferingBatchesPH() {
                                 )}
 
                                 <footer className="ph-offering-item__footer">
-                                  {offering.faculty_name && scheduled && (
+                                  <small>
+                                    {offering.faculty_name
+                                      ? `Assigned: ${offering.faculty_name}`
+                                      : "Professor: Not assigned"}
+                                  </small>
+                                  {pendingFacultyRequest && (
                                     <small>
-                                      Assigned: {offering.faculty_name}
+                                      Registrar approval pending:{" "}
+                                      {
+                                        pendingFacultyRequest.proposed_faculty_name
+                                      }
                                     </small>
                                   )}
 
-                                  {canEdit && (
+                                  {canProposeFaculty && (
+                                    <button
+                                      type="button"
+                                      className="ph-offering-batches__button ph-offering-batches__button--primary"
+                                      onClick={() =>
+                                        void requestFacultyApproval(offering)
+                                      }
+                                      disabled={
+                                        requestingFacultyId ===
+                                          offering.offering_id ||
+                                        !draft.faculty_id ||
+                                        Number(draft.faculty_id) ===
+                                          Number(offering.faculty_id || 0)
+                                      }
+                                    >
+                                      <Send size={14} />
+                                      {requestingFacultyId ===
+                                      offering.offering_id
+                                        ? "Requesting…"
+                                        : "Request Professor Approval"}
+                                    </button>
+                                  )}
+
+                                  {(canEdit || canUpdateProfessor) && (
                                     <button
                                       type="button"
                                       className="ph-offering-batches__button ph-offering-batches__button--primary"
@@ -1075,13 +1679,19 @@ export default function OfferingBatchesPH() {
                                       }
                                       disabled={
                                         savingOfferingId ===
-                                        offering.offering_id
+                                          offering.offering_id ||
+                                        autoLoading !== null ||
+                                        (canUpdateProfessor &&
+                                          Number(draft.faculty_id || 0) ===
+                                            Number(offering.faculty_id || 0))
                                       }
                                     >
                                       <Save size={14} />
                                       {savingOfferingId === offering.offering_id
                                         ? "Saving…"
-                                        : "Save"}
+                                        : canUpdateProfessor
+                                          ? "Update Professor"
+                                          : "Save"}
                                     </button>
                                   )}
                                 </footer>
@@ -1109,7 +1719,8 @@ export default function OfferingBatchesPH() {
                   disabled={
                     !allOfferingsScheduled ||
                     returningBatch ||
-                    savingOfferingId !== null
+                    savingOfferingId !== null ||
+                    autoLoading !== null
                   }
                 >
                   <Send size={15} />
@@ -1118,8 +1729,11 @@ export default function OfferingBatchesPH() {
               </footer>
             ) : (
               <div className="ph-offering-batches__read-only-note">
-                Scheduling is locked while this batch is{" "}
-                {selectedBatch.batch_status.toLowerCase()}.
+                {selectedBatch.batch_status === "Published"
+                  ? "Published schedules remain unchanged. Select a professor and request a second Registrar approval above."
+                  : canUpdateProfessor
+                    ? "Registrar review is pending. Days and times are locked; you may update the professor before publication."
+                    : `Scheduling is locked while this batch is ${selectedBatch.batch_status.toLowerCase()}.`}
               </div>
             )}
           </>

@@ -117,12 +117,10 @@ router.get("/open-periods", async (req, res) => {
     return res.json({ success: true, open_periods: rows });
   } catch (error) {
     console.error("GET OFFERING BATCH OPEN PERIODS ERROR:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to load open academic periods.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load open academic periods.",
+    });
   }
 });
 
@@ -153,13 +151,11 @@ router.get("/sections", async (req, res) => {
       [academicYearId, semesterId],
     );
     if (!periodRows.length) {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The selected academic year and semester are not open in the Registrar.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The selected academic year and semester are not open in the Registrar.",
+      });
     }
 
     const [curriculumRows] = await db.execute(
@@ -167,13 +163,11 @@ router.get("/sections", async (req, res) => {
       [curriculumId, courseId],
     );
     if (!curriculumRows.length) {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The active curriculum does not belong to the selected course.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The active curriculum does not belong to the selected course.",
+      });
     }
 
     const [subjectRows] = await db.execute(
@@ -192,13 +186,11 @@ router.get("/sections", async (req, res) => {
       subjectRows[0]?.required_subject_count || 0,
     );
     if (!requiredSubjectCount) {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "No required curriculum subjects are configured for this year level and semester.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "No required curriculum subjects are configured for this year level and semester.",
+      });
     }
 
     const [sections] = await db.execute(
@@ -258,6 +250,195 @@ router.get("/sections", async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Failed to load available sections." });
+  }
+});
+
+// Generate Year-Level Sections
+router.post("/sections/generate", async (req, res) => {
+  const actor = getRegistrar(req, res);
+  if (!actor) return;
+
+  const strictId = (value) => {
+    if (typeof value !== "number" && typeof value !== "string") return null;
+    if (typeof value === "string" && !/^[1-9]\d*$/.test(value)) return null;
+    const id = Number(value);
+    return Number.isSafeInteger(id) && id > 0 ? id : null;
+  };
+
+  const academicYearId = strictId(req.body?.academic_year_id);
+  const semesterId = strictId(req.body?.semester_id);
+  const courseId = strictId(req.body?.course_id);
+  const yearLevel = strictId(req.body?.year_level);
+  const startLetter =
+    typeof req.body?.start_letter === "string"
+      ? req.body.start_letter.trim().toUpperCase()
+      : "";
+  const endLetter =
+    typeof req.body?.end_letter === "string"
+      ? req.body.end_letter.trim().toUpperCase()
+      : "";
+  const maxStudents = req.body?.max_students;
+
+  if (!academicYearId || !semesterId || !courseId || !yearLevel) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_SECTION_SETUP",
+      message: "Select a valid academic year, semester, course and year level.",
+    });
+  }
+  if (
+    !/^[A-Z]$/.test(startLetter) ||
+    !/^[A-Z]$/.test(endLetter) ||
+    startLetter > endLetter
+  ) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_SECTION_RANGE",
+      message:
+        "Select a valid section range from A through Z, in ascending order.",
+    });
+  }
+  if (!Number.isInteger(maxStudents) || maxStudents < 40 || maxStudents > 50) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_SECTION_CAPACITY",
+      message: "Section capacity must be a whole number from 40 to 50.",
+    });
+  }
+
+  const letters = Array.from(
+    { length: endLetter.charCodeAt(0) - startLetter.charCodeAt(0) + 1 },
+    (_, index) => String.fromCharCode(startLetter.charCodeAt(0) + index),
+  );
+
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // Lock the term to serialize overlapping generation requests.
+    const [periodRows] = await connection.execute(
+      `SELECT enrollment_period_id FROM enrollment_periods
+       WHERE academic_year_id = ? AND semester_id = ? AND status = 'Open'
+       LIMIT 1 FOR UPDATE`,
+      [academicYearId, semesterId],
+    );
+    if (!periodRows.length) {
+      await connection.rollback();
+      return res.status(409).json({
+        success: false,
+        code: "ENROLLMENT_PERIOD_NOT_OPEN",
+        message: "The selected enrollment period is not open.",
+      });
+    }
+
+    const [courseRows] = await connection.execute(
+      `SELECT course_id, course_code, total_years
+       FROM courses WHERE course_id = ? LIMIT 1`,
+      [courseId],
+    );
+    if (!courseRows.length) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        code: "COURSE_NOT_FOUND",
+        message: "The selected course was not found.",
+      });
+    }
+    const course = courseRows[0];
+    const totalYears = Number(course.total_years || 4);
+    const courseCode = String(course.course_code || "")
+      .trim()
+      .toUpperCase();
+    if (yearLevel > totalYears || !/^[A-Z0-9-]{2,20}$/.test(courseCode)) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_SECTION_SETUP",
+        message: "The selected course code or year level is not valid.",
+      });
+    }
+
+    const names = letters.map(
+      (letter) => `${courseCode}-${yearLevel}${letter}`,
+    );
+    const placeholders = names.map(() => "?").join(", ");
+    const [existing] = await connection.execute(
+      `SELECT section_id, section_name FROM sections
+       WHERE academic_year_id = ? AND course_id = ? AND year_level = ?
+         AND section_name IN (${placeholders})
+       FOR UPDATE`,
+      [academicYearId, courseId, yearLevel, ...names],
+    );
+    const existingNames = new Set(
+      existing.map((row) => String(row.section_name).toUpperCase()),
+    );
+
+    const createdSections = [];
+    const skippedSections = [];
+    for (const name of names) {
+      if (existingNames.has(name)) {
+        skippedSections.push(name);
+        continue;
+      }
+      const [result] = await connection.execute(
+        `INSERT INTO sections
+           (course_id, academic_year_id, year_level, section_name, max_students)
+         VALUES (?, ?, ?, ?, ?)`,
+        [courseId, academicYearId, yearLevel, name, maxStudents],
+      );
+      const newSection = {
+        section_id: Number(result.insertId),
+        section_name: name,
+        course_id: courseId,
+        academic_year_id: academicYearId,
+        year_level: yearLevel,
+        max_students: maxStudents,
+      };
+      await writeOfferingAudit(
+        connection,
+        actor.user_id,
+        "sections",
+        newSection.section_id,
+        "INSERT",
+        null,
+        newSection,
+      );
+      createdSections.push(newSection);
+    }
+
+    await connection.commit();
+    return res.status(createdSections.length ? 201 : 200).json({
+      success: true,
+      message: createdSections.length
+        ? `${createdSections.length} section(s) created successfully.`
+        : "All requested sections already exist. No duplicates were created.",
+      academic_year_id: academicYearId,
+      semester_id: semesterId,
+      course_id: courseId,
+      year_level: yearLevel,
+      created_count: createdSections.length,
+      skipped_count: skippedSections.length,
+      created_sections: createdSections,
+      skipped_sections: skippedSections,
+    });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error("GENERATE CLASS OFFERING SECTIONS ERROR:", error);
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        success: false,
+        code: "SECTION_ALREADY_EXISTS",
+        message:
+          "One of the requested sections already exists. No new sections were saved.",
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate sections. No partial sections were saved.",
+    });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
@@ -387,11 +568,11 @@ router.get("/", async (req, res) => {
             cob.returned_at,
             cob.published_at,
             (SELECT COUNT(*) FROM subject_offerings so WHERE so.batch_id = cob.batch_id) AS offering_count,
-            (SELECT COUNT(*) FROM subject_offerings so
-             WHERE so.batch_id = cob.batch_id
-               AND so.faculty_id IS NOT NULL
-               AND so.schedule_start_time IS NOT NULL
-               AND so.schedule_end_time IS NOT NULL) AS scheduled_count
+           (SELECT COUNT(*) FROM subject_offerings so
+ WHERE so.batch_id = cob.batch_id
+   AND so.schedule_days IS NOT NULL
+   AND so.schedule_start_time IS NOT NULL
+   AND so.schedule_end_time IS NOT NULL) AS scheduled_count
         FROM class_offering_batches cob
         INNER JOIN academic_years ay ON ay.academic_year_id = cob.academic_year_id
         INNER JOIN semesters sem ON sem.semester_id = cob.semester_id
@@ -451,13 +632,11 @@ router.post("/", async (req, res) => {
     );
     if (!periodRows.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The selected academic year and semester are not open in the Registrar.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The selected academic year and semester are not open in the Registrar.",
+      });
     }
 
     const [courseRows] = await connection.execute(
@@ -472,13 +651,11 @@ router.post("/", async (req, res) => {
     );
     if (!courseRows.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The selected active curriculum does not belong to the selected course.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The selected active curriculum does not belong to the selected course.",
+      });
     }
     const course = courseRows[0];
 
@@ -506,13 +683,11 @@ router.post("/", async (req, res) => {
     );
     if (!programHeadRows.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The selected Program Head is not active and assigned to this course department.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The selected Program Head is not active and assigned to this course department.",
+      });
     }
     const programHead = programHeadRows[0];
 
@@ -533,13 +708,11 @@ router.post("/", async (req, res) => {
     );
     if (!subjectRows.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The selected curriculum has no required subjects for this year level and semester.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The selected curriculum has no required subjects for this year level and semester.",
+      });
     }
 
     const sectionPlaceholders = sectionIds.map(() => "?").join(",");
@@ -557,13 +730,11 @@ router.post("/", async (req, res) => {
     );
     if (sectionRows.length !== sectionIds.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "One or more selected sections do not match the academic year, course, and year level.",
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "One or more selected sections do not match the academic year, course, and year level.",
+      });
     }
 
     const subjectIds = subjectRows.map((row) => Number(row.subject_id));
@@ -587,14 +758,12 @@ router.post("/", async (req, res) => {
     );
     if (canceledSectionSubject) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "A selected section already has a cancelled subject row required by this curriculum.",
-          section_subject_id: Number(canceledSectionSubject.section_subject_id),
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "A selected section already has a cancelled subject row required by this curriculum.",
+        section_subject_id: Number(canceledSectionSubject.section_subject_id),
+      });
     }
     const duplicateOffering = existingRows.find(
       (row) => row.offering_id !== null,
@@ -758,22 +927,426 @@ router.post("/", async (req, res) => {
     if (connection) await connection.rollback();
     console.error("CREATE OFFERING BATCH ERROR:", error);
     if (error.code === "ER_DUP_ENTRY") {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "An offering already exists for one of the selected section-subject-term combinations.",
-        });
-    }
-    return res
-      .status(500)
-      .json({
+      return res.status(409).json({
         success: false,
-        message: "Failed to create and submit the class offering batch.",
+        message:
+          "An offering already exists for one of the selected section-subject-term combinations.",
       });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create and submit the class offering batch.",
+    });
   } finally {
     if (connection) connection.release();
+  }
+});
+
+/* Professor Assignment Requests */
+
+router.get("/faculty-requests", async (req, res) => {
+  if (!getRegistrar(req, res)) return;
+
+  try {
+    const [requests] = await db.execute(
+      `
+        SELECT
+          fr.request_id,
+          fr.batch_id,
+          fr.offering_id,
+          fr.proposed_faculty_id,
+          fr.original_faculty_id,
+          fr.requested_at,
+          fr.status,
+          cob.batch_status,
+          ay.academic_year,
+          sem.semester_name,
+          c.course_code,
+          c.course_name,
+          cob.year_level,
+          sec.section_name,
+          sub.subject_code,
+          sub.subject_name,
+          so.faculty_id AS current_faculty_id,
+          so.schedule_days,
+          so.schedule_time,
+          so.status AS offering_status,
+          CONCAT_WS(
+            ' ',
+            f.first_name,
+            NULLIF(f.middle_name, ''),
+            f.last_name
+          ) AS proposed_faculty_name
+        FROM class_offering_faculty_requests fr
+        INNER JOIN class_offering_batches cob
+          ON cob.batch_id = fr.batch_id
+        INNER JOIN subject_offerings so
+          ON so.offering_id = fr.offering_id
+        INNER JOIN academic_years ay
+          ON ay.academic_year_id = cob.academic_year_id
+        INNER JOIN semesters sem
+          ON sem.semester_id = cob.semester_id
+        INNER JOIN courses c
+          ON c.course_id = cob.course_id
+        INNER JOIN sections sec
+          ON sec.section_id = so.section_id
+        INNER JOIN subjects sub
+          ON sub.subject_id = so.subject_id
+        INNER JOIN faculty f
+          ON f.faculty_id = fr.proposed_faculty_id
+        WHERE fr.status = 'Pending'
+        ORDER BY
+          fr.requested_at ASC,
+          fr.request_id ASC
+      `,
+    );
+
+    return res.json({
+      success: true,
+      requests,
+    });
+  } catch (error) {
+    console.error("GET CLASS OFFERING FACULTY REQUESTS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load pending professor assignments.",
+    });
+  }
+});
+
+/* Review Professor Assignment */
+
+router.post("/faculty-requests/:requestId/review", async (req, res) => {
+  const actor = getRegistrar(req, res);
+  if (!actor) return;
+
+  const requestId = toPositiveInt(req.params.requestId);
+  const decision = req.body?.decision;
+
+  const reviewRemarks =
+    typeof req.body?.review_remarks === "string"
+      ? req.body.review_remarks.trim()
+      : "";
+
+  if (
+    !requestId ||
+    !["Approved", "Rejected"].includes(decision) ||
+    reviewRemarks.length > 500 ||
+    (decision === "Rejected" && !reviewRemarks)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Valid request ID and decision are required; rejection needs a reason (max 500 characters).",
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    const [idRows] = await connection.execute(
+      `
+          SELECT batch_id, offering_id
+          FROM class_offering_faculty_requests
+          WHERE request_id = ?
+          LIMIT 1
+        `,
+      [requestId],
+    );
+
+    if (!idRows.length) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Instructor request not found.",
+      });
+    }
+
+    const batchId = Number(idRows[0].batch_id);
+    const offeringId = Number(idRows[0].offering_id);
+
+    // Lock batch, offering and request in order.
+
+    const [batchRows] = await connection.execute(
+      `
+          SELECT cob.*, c.department_id
+          FROM class_offering_batches cob
+          INNER JOIN courses c
+            ON c.course_id = cob.course_id
+          WHERE cob.batch_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+      [batchId],
+    );
+
+    const [offeringRows] = await connection.execute(
+      `
+          SELECT *
+          FROM subject_offerings
+          WHERE offering_id = ?
+            AND batch_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+      [offeringId, batchId],
+    );
+
+    const [requestRows] = await connection.execute(
+      `
+          SELECT *
+          FROM class_offering_faculty_requests
+          WHERE request_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+      [requestId],
+    );
+
+    const batch = batchRows[0];
+    const offering = offeringRows[0];
+    const request = requestRows[0];
+
+    if (
+      !batch ||
+      !offering ||
+      !request ||
+      Number(request.batch_id) !== batchId ||
+      Number(request.offering_id) !== offeringId
+    ) {
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "Request and offering are inconsistent.",
+      });
+    }
+
+    if (request.status !== "Pending") {
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "This professor request has already been reviewed.",
+      });
+    }
+
+    if (batch.batch_status !== "Published" || offering.status !== "Open") {
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "Only an Open offering in a Published batch can be reviewed.",
+      });
+    }
+
+    if (decision === "Approved") {
+      // Reject stale assignment requests.
+
+      if (
+        !hasCompleteSchedule(offering) ||
+        String(offering.schedule_days) !==
+          String(request.original_schedule_days) ||
+        String(offering.schedule_start_time) !==
+          String(request.original_start_time) ||
+        String(offering.schedule_end_time) !==
+          String(request.original_end_time) ||
+        Number(offering.faculty_id || 0) !==
+          Number(request.original_faculty_id || 0)
+      ) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "The published offering changed since the request; it must be re-evaluated.",
+        });
+      }
+
+      // Validate the proposed professor.
+
+      const [facultyRows] = await connection.execute(
+        `
+            SELECT
+              f.faculty_id,
+              f.department_id,
+              u.is_active,
+              u.is_verified,
+              u.is_archived,
+              r.role_name
+            FROM faculty f
+            INNER JOIN users u
+              ON u.user_id = f.user_id
+            INNER JOIN roles r
+              ON r.role_id = u.role_id
+            WHERE f.faculty_id = ?
+            LIMIT 1
+            FOR UPDATE
+          `,
+        [request.proposed_faculty_id],
+      );
+
+      const faculty = facultyRows[0];
+
+      if (
+        !faculty ||
+        !["Faculty", "Program Head"].includes(faculty.role_name) ||
+        Number(faculty.is_active) !== 1 ||
+        Number(faculty.is_verified) !== 1 ||
+        Number(faculty.is_archived) !== 0 ||
+        Number(faculty.department_id) !== Number(batch.department_id)
+      ) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "The proposed professor is no longer eligible for this course.",
+        });
+      }
+
+      // Do not change professors after grades exist.
+
+      const [existingGrades] = await connection.execute(
+        `
+            SELECT g.grade_id
+            FROM enrollment_subjects es
+            INNER JOIN grades g
+              ON g.enrollment_subject_id =
+                 es.enrollment_subject_id
+            WHERE es.offering_id = ?
+            LIMIT 1
+          `,
+        [offeringId],
+      );
+
+      if (existingGrades.length) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          message: "Cannot change professor after grades are recorded.",
+        });
+      }
+
+      // Revalidate professor schedule conflicts.
+
+      const conflicts = await findScheduleConflicts(
+        connection,
+        {
+          ...offering,
+          faculty_id: Number(request.proposed_faculty_id),
+        },
+        offeringId,
+      );
+
+      if (conflicts.length) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          message: "Professor schedule conflicts must be resolved.",
+          conflicts,
+        });
+      }
+
+      // Apply the approved professor assignment.
+
+      await connection.execute(
+        `
+            UPDATE subject_offerings
+            SET faculty_id = ?
+            WHERE offering_id = ?
+              AND batch_id = ?
+              AND status = 'Open'
+          `,
+        [request.proposed_faculty_id, offeringId, batchId],
+      );
+
+      await writeOfferingAudit(
+        connection,
+        actor.user_id,
+        "subject_offerings",
+        offeringId,
+        "UPDATE",
+        { faculty_id: offering.faculty_id },
+        {
+          faculty_id: request.proposed_faculty_id,
+        },
+      );
+    }
+
+    // Record Registrar decision.
+
+    await connection.execute(
+      `
+          UPDATE class_offering_faculty_requests
+          SET
+            status = ?,
+            reviewed_by = ?,
+            reviewed_at = NOW(),
+            review_remarks = ?
+          WHERE request_id = ?
+            AND status = 'Pending'
+        `,
+      [decision, actor.user_id, reviewRemarks || null, requestId],
+    );
+
+    await writeOfferingAudit(
+      connection,
+      actor.user_id,
+      "class_offering_faculty_requests",
+      requestId,
+      "UPDATE",
+      { status: "Pending" },
+      {
+        status: decision,
+        reviewed_by: actor.user_id,
+        review_remarks: reviewRemarks || null,
+      },
+    );
+
+    await createSystemNotification(
+      connection,
+      Number(request.requested_by),
+      `Professor assignment ${decision.toLowerCase()}`,
+      `Registrar ${decision.toLowerCase()} professor assignment request #${requestId} for offering #${offeringId}.`,
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      request_id: requestId,
+      request_status: decision,
+      batch_id: batchId,
+      offering_id: offeringId,
+      offering_status: "Open",
+      message:
+        decision === "Approved"
+          ? "Professor assigned. Published offering stays Open and needs no republishing."
+          : "Professor request rejected. Published offering remains unchanged.",
+    });
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
+
+    console.error("REVIEW CLASS OFFERING FACULTY REQUEST ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not review professor assignment.",
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
@@ -825,13 +1398,10 @@ router.post("/:batchId/publish", async (req, res) => {
     const batch = batchRows[0];
     if (batch.batch_status !== "Ready for Registrar") {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "Only a batch returned by the Program Head can be published.",
-        });
+      return res.status(409).json({
+        success: false,
+        message: "Only a batch returned by the Program Head can be published.",
+      });
     }
 
     const [offeringRows] = await connection.execute(
@@ -840,28 +1410,23 @@ router.post("/:batchId/publish", async (req, res) => {
     );
     if (!offeringRows.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message: "This batch has no subject offerings.",
-        });
+      return res.status(409).json({
+        success: false,
+        message: "This batch has no subject offerings.",
+      });
     }
-    const incomplete = offeringRows.filter(
-      (row) => !row.faculty_id || !hasCompleteSchedule(row),
-    );
+
+    const incomplete = offeringRows.filter((row) => !hasCompleteSchedule(row));
     if (incomplete.length) {
       await connection.rollback();
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "Every offering must have an instructor and schedule before publication.",
-          incomplete_offering_ids: incomplete.map((row) =>
-            Number(row.offering_id),
-          ),
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "Every offering must have valid class days and start/end times before publication.",
+        incomplete_offering_ids: incomplete.map((row) =>
+          Number(row.offering_id),
+        ),
+      });
     }
 
     for (const offering of offeringRows) {
@@ -872,14 +1437,12 @@ router.post("/:batchId/publish", async (req, res) => {
       );
       if (conflicts.length) {
         await connection.rollback();
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message: "Schedule conflicts must be resolved before publication.",
-            offering_id: Number(offering.offering_id),
-            conflicts,
-          });
+        return res.status(409).json({
+          success: false,
+          message: "Schedule conflicts must be resolved before publication.",
+          offering_id: Number(offering.offering_id),
+          conflicts,
+        });
       }
     }
 
@@ -927,12 +1490,10 @@ router.post("/:batchId/publish", async (req, res) => {
   } catch (error) {
     if (connection) await connection.rollback();
     console.error("PUBLISH OFFERING BATCH ERROR:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to publish the offering batch.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to publish the offering batch.",
+    });
   } finally {
     if (connection) connection.release();
   }
