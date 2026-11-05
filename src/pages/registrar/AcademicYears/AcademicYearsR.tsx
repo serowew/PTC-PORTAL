@@ -9,7 +9,6 @@ import {
   History,
   Loader2,
   Plus,
-  RefreshCw,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -194,36 +193,55 @@ export default function AcademicYearsR() {
   return (
     <DashboardLayout>
       <main className="registrar-academic-years">
-        <header className="ayr-hero">
-          <div className="ayr-hero-copy">
-            <div className="ayr-eyebrow">
-              <CalendarDays size={15} /> Registrar · Academic Management
+        <div className="ayr-overview-frame">
+          <header className="ayr-hero">
+            <div className="ayr-hero-copy">
+              <div className="ayr-eyebrow">
+                <CalendarDays size={15} /> REGISTRAR · ACADEMIC MANAGEMENT
+              </div>
+              <h1>Academic Years</h1>
+              <p>
+                Manage academic year records, review enrollment periods, and maintain
+                the institution&apos;s academic year history in one organized workspace.
+              </p>
             </div>
-            <h1>Academic Years</h1>
-            <p>
-              Create and review academic-year records. Opening student enrollment
-              remains a separate Registrar action.
-            </p>
-          </div>
-          <div className="ayr-hero-actions">
-            <button
-              type="button"
-              className="ayr-hero-button"
-              onClick={() => navigate("/registrar/enrollment/periodM")}
-            >
-              Enrollment Period <ArrowRight size={16} />
-            </button>
-            <button
-              type="button"
-              className="ayr-hero-button"
-              disabled={loading || refreshing}
-              onClick={() => void loadYears(true)}
-            >
-              <RefreshCw size={16} className={refreshing ? "ayr-spin" : ""} />
-              Refresh
-            </button>
-          </div>
-        </header>
+            <div className="ayr-hero-actions">
+              <button
+                type="button"
+                className="ayr-hero-button"
+                onClick={() => navigate("/registrar/enrollment/periodM")}
+              >
+                Enrollment Period <ArrowRight size={16} />
+              </button>
+            </div>
+          </header>
+
+          <section className="ayr-stats" aria-label="Academic year summary">
+            <div className="ayr-stat ayr-stat-green">
+              <CalendarDays size={22} />
+              <div>
+                <span>Current academic year</span>
+                <strong>{loading ? "Loading…" : current?.academic_year || "Not assigned"}</strong>
+              </div>
+            </div>
+            <div className="ayr-stat ayr-stat-blue">
+              <History size={22} />
+              <div>
+                <span>Academic years recorded</span>
+                <strong>{loading ? "—" : years.length}</strong>
+              </div>
+            </div>
+            <div className="ayr-stat ayr-stat-gold">
+              <Clock3 size={22} />
+              <div>
+                <span>Open enrollment periods</span>
+                <strong>
+                  {loading ? "—" : years.reduce((sum, year) => sum + year.open_period_count, 0)}
+                </strong>
+              </div>
+            </div>
+          </section>
+        </div>
 
         {error && (
           <div role="alert" className="ayr-alert ayr-alert-error">
@@ -243,32 +261,6 @@ export default function AcademicYearsR() {
             </button>
           </div>
         )}
-
-        <section className="ayr-stats" aria-label="Academic year summary">
-          <div className="ayr-stat ayr-stat-green">
-            <CalendarDays size={22} />
-            <div>
-              <span>Current academic year</span>
-              <strong>{loading ? "Loading…" : current?.academic_year || "Not assigned"}</strong>
-            </div>
-          </div>
-          <div className="ayr-stat ayr-stat-blue">
-            <History size={22} />
-            <div>
-              <span>Academic years recorded</span>
-              <strong>{loading ? "—" : years.length}</strong>
-            </div>
-          </div>
-          <div className="ayr-stat ayr-stat-gold">
-            <Clock3 size={22} />
-            <div>
-              <span>Open enrollment periods</span>
-              <strong>
-                {loading ? "—" : years.reduce((sum, year) => sum + year.open_period_count, 0)}
-              </strong>
-            </div>
-          </div>
-        </section>
 
         <div className="ayr-content">
           <section className="ayr-panel ayr-create" aria-labelledby="ayr-create-heading">

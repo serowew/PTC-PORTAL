@@ -577,8 +577,7 @@ export default function AnnouncementEditR() {
             </div>
             <h1>Edit Announcement</h1>
             <p>
-              Update the message, audience, publication dates, status, and files
-              while preserving the existing announcement record.
+              Update announcement information, manage recipients, and modify publication settings.
             </p>
           </div>
 

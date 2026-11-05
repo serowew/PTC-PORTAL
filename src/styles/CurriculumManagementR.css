@@ -1,7 +1,4 @@
-/* =========================================================
-   REGISTRAR — CURRICULUM MANAGEMENT
-   Scoped to the Curriculum Management page and Add modal.
-========================================================= */
+/* Page Layout */
 .registrar-curriculum-management {
   --rcm-green-950: #073b24;
   --rcm-green-900: #0a4b2d;
@@ -54,9 +51,7 @@
   }
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* Header */
 .registrar-curriculum-management__hero {
   position: relative;
   overflow: hidden;
@@ -64,30 +59,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 25px 28px;
-  margin-bottom: 20px;
-  border: 0;
-  outline: none;
-  border-radius: 18px;
-  background: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(247, 253, 249, 0.98) 66%,
-    rgba(230, 247, 237, 0.98) 100%
-  );
-  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+  min-height: 132px;
+  margin-bottom: calc(20px * var(--rcm-spacing, 1));
+  padding: calc(30px * var(--rcm-spacing, 1)) calc(32px * var(--rcm-spacing, 1));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  box-shadow: none;
 }
 
+.registrar-curriculum-management__hero::before,
 .registrar-curriculum-management__hero::after {
-  content: "";
-  position: absolute;
-  top: -90px;
-  right: -72px;
-  width: 230px;
-  height: 230px;
-  border: 38px solid rgba(15, 122, 69, 0.055);
-  border-radius: 50%;
-  pointer-events: none;
+  content: none;
 }
 
 .registrar-curriculum-management__hero-copy,
@@ -105,9 +88,9 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  color: var(--rcm-green-800);
+  color: #f6fff9;
   font-size: calc(12px * var(--ptc-font-scale, 1));
-  font-weight: 760;
+  font-weight: 750;
   letter-spacing: 0.055em;
   text-transform: uppercase;
 }
@@ -118,15 +101,16 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: var(--rcm-green-700);
-  background: var(--rcm-green-100);
+  color: #f6fff9;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 9px;
 }
 
 .registrar-curriculum-management__hero h1 {
   margin: 0;
-  color: var(--rcm-text-950);
-  font-size: clamp(calc(30px * var(--ptc-font-scale, 1)), calc(3.4vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
+  color: #f6fff9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3.4vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -135,7 +119,7 @@
 .registrar-curriculum-management__hero p {
   max-width: 720px;
   margin: 9px 0 0;
-  color: var(--rcm-text-600);
+  color: #f6fff9;
   font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
@@ -147,9 +131,7 @@
   gap: 10px;
 }
 
-/* =========================================================
-   BUTTONS
-========================================================= */
+/* Buttons */
 .registrar-curriculum-management__button,
 .registrar-curriculum-modal__button {
   display: inline-flex;
@@ -208,9 +190,7 @@
   border-color: rgba(15, 122, 69, 0.34);
 }
 
-/* =========================================================
-   SUMMARY CARDS
-========================================================= */
+/* Summary Cards */
 .registrar-curriculum-management__stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -287,9 +267,7 @@
   text-overflow: ellipsis;
 }
 
-/* =========================================================
-   WORKSPACE
-========================================================= */
+/* Workspace */
 .registrar-curriculum-management__workspace {
   overflow: hidden;
   background: var(--rcm-surface);
@@ -354,9 +332,7 @@
   font-weight: 680;
 }
 
-/* =========================================================
-   TOOLBAR / FILTERS
-========================================================= */
+/* Toolbar / Filters */
 .registrar-curriculum-management__toolbar {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) auto;
@@ -543,9 +519,7 @@
   text-align: right;
 }
 
-/* =========================================================
-   TABLE
-========================================================= */
+/* Table */
 .registrar-curriculum-management__table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -740,9 +714,7 @@
   border-color: rgba(15, 122, 69, 0.38);
 }
 
-/* =========================================================
-   LOADING / EMPTY / ERROR
-========================================================= */
+/* Loading / Empty / Error */
 .registrar-curriculum-management__skeleton-row:hover {
   background: #ffffff !important;
 }
@@ -837,9 +809,7 @@
   line-height: 1.55;
 }
 
-/* =========================================================
-   PAGINATION
-========================================================= */
+/* Pagination */
 .registrar-curriculum-management__pagination-bar {
   display: flex;
   align-items: center;
@@ -927,9 +897,17 @@
   font-size: calc(12px * var(--ptc-font-scale, 1));
 }
 
-/* =========================================================
-   ADD CURRICULUM MODAL
-========================================================= */
+/* Add Curriculum Modal */
+.dashboard-wrapper .dashboard-main:has(.registrar-curriculum-modal__overlay) > .dashboard-content {
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+}
+
+.dashboard-wrapper .registrar-curriculum-management:has(> .registrar-curriculum-modal__overlay) {
+  overflow: visible;
+}
+
 .registrar-curriculum-modal__overlay {
   position: fixed;
   inset: 0;
@@ -938,6 +916,8 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgba(7, 32, 20, 0.5);
   backdrop-filter: blur(5px);
   animation: registrar-curriculum-overlay-in 160ms ease-out;
@@ -956,6 +936,7 @@
 .registrar-curriculum-modal {
   width: min(720px, 100%);
   max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   overflow: hidden auto;
   color: var(--rcm-text-950);
   background: #ffffff;
@@ -1346,9 +1327,7 @@
   background: linear-gradient(to top, #ffffff 75%, rgba(255, 255, 255, 0.72));
 }
 
-/* =========================================================
-   FOCUS / ACCESSIBILITY
-========================================================= */
+/* Focus */
 .registrar-curriculum-management button:focus-visible,
 .registrar-curriculum-management input:focus-visible,
 .registrar-curriculum-management select:focus-visible,
@@ -1366,7 +1345,6 @@
   padding: calc(28px * var(--rcm-spacing)) calc(30px * var(--rcm-spacing)) calc(38px * var(--rcm-spacing));
 }
 
-.registrar-curriculum-management__hero { padding: calc(25px * var(--rcm-spacing)) calc(28px * var(--rcm-spacing)); margin-bottom: calc(20px * var(--rcm-spacing)); }
 .registrar-curriculum-management__stats { gap: calc(14px * var(--rcm-spacing)); margin-bottom: calc(20px * var(--rcm-spacing)); }
 .registrar-curriculum-management__stat-card { gap: calc(14px * var(--rcm-spacing)); padding: calc(17px * var(--rcm-spacing)) calc(18px * var(--rcm-spacing)); }
 .registrar-curriculum-management__workspace-header { padding: calc(22px * var(--rcm-spacing)) calc(24px * var(--rcm-spacing)) calc(18px * var(--rcm-spacing)); }
@@ -1390,12 +1368,10 @@
 @media (max-width: 620px) {
   .registrar-curriculum-management { padding: calc(16px * var(--rcm-spacing)) calc(13px * var(--rcm-spacing)) calc(24px * var(--rcm-spacing)); }
   .registrar-curriculum-management__hero { padding: calc(19px * var(--rcm-spacing)); }
-  .registrar-curriculum-management__hero h1 { font-size: calc(25px * var(--ptc-font-scale, 1)); }
+  .registrar-curriculum-management__hero h1 { font-size: calc(27px * var(--ptc-font-scale, 1)); }
 }
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+/* Responsive */
 @media (max-width: 1280px) {
   .registrar-curriculum-management__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1484,7 +1460,7 @@
   }
 
   .registrar-curriculum-management__hero h1 {
-    font-size: calc(25px * var(--ptc-font-scale, 1));
+    font-size: calc(27px * var(--ptc-font-scale, 1));
   }
 
   .registrar-curriculum-management__hero-actions {
@@ -1536,6 +1512,7 @@
   .registrar-curriculum-modal {
     width: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     border: 0;
     border-radius: 0;
   }
@@ -1583,7 +1560,7 @@
   }
 }
 
-/* Light Mode page framing — matches Department Management */
+/* Light Mode Canvas */
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management {
   position: relative;
   isolation: isolate;
@@ -1629,71 +1606,51 @@
   }
 }
 
-/* Approved Course Management Light Mode */
+/* Light Mode */
+/* Header */
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero {
   z-index: 1;
-  min-height: 188px;
+  min-height: 132px;
   padding: calc(30px * var(--rcm-spacing, 1)) calc(32px * var(--rcm-spacing, 1));
-  border: 0 !important;
-  outline: none;
-  border-radius: 24px;
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
-  box-shadow: 0 10px 26px rgba(5,61,38,.15);
+  background: linear-gradient(105deg, #07512f, #0d7444) !important;
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  box-shadow: none;
 }
 
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero::before {
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero::before,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero::after {
   content: none;
 }
 
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border: 44px solid rgba(255,255,255,.055);
-}
-
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__eyebrow {
-  color: #dff8e8;
-  letter-spacing: .045em;
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__eyebrow,
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero :is(h1, p) {
+  color: #f6fff9;
 }
 
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__eyebrow-icon {
-  color: #fff;
+  color: #f6fff9;
   background: rgba(255,255,255,.14);
-  border: 1px solid rgba(255,255,255,.18);
-  box-shadow: inset 0 1px rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.22);
 }
 
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero h1 {
-  color: #fff;
-  font-weight: 790;
-  letter-spacing: -.035em;
-}
-
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero p {
-  max-width: 790px;
-  color: rgba(239,255,245,.88);
-}
-
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero-actions .registrar-curriculum-management__button {
-  min-height: 43px;
-  padding: 11px 15px;
-  border-radius: 11px;
-}
-
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero-actions .registrar-curriculum-management__button--secondary {
-  color: #0a633a;
-  background: #fff;
-  border-color: rgba(255,255,255,.6);
-  box-shadow: 0 6px 17px rgba(4,44,22,.12);
+  font-weight: 760;
 }
 
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero-actions .registrar-curriculum-management__button--primary {
-  color: #074427;
-  background: #eaf9ef;
-  border-color: #dbf4e4;
-  box-shadow: 0 6px 17px rgba(4,44,22,.13);
+  min-height: 43px;
+  padding: 11px 15px;
+  color: #0a4b2e;
+  background: #e5f7ec;
+  border: 1px solid #b7e4c8;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero-actions .registrar-curriculum-management__button--primary:hover:not(:disabled) {
+  background: #d4f0df;
+  box-shadow: none;
 }
 
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__stats {
@@ -1782,7 +1739,21 @@
 }
 
 /* Dark Mode */
-/* Disable shared canvas tiles at their source for this page only. */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .registrar-curriculum-management) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main > .dashboard-content > .registrar-curriculum-management {
+  background: #111719 !important;
+  background-image: none !important;
+  background-color: #111719 !important;
+  background-size: auto !important;
+}
+
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management::before,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management::after {
+  content: none;
+}
+
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curriculum-management) {
   --ptc-canvas-color: #111719;
   --ptc-canvas-pattern: none;
@@ -1795,9 +1766,9 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curri
   --rcm-text-800: #dde6e1;
   --rcm-text-600: #b5c3bb;
   --rcm-text-500: #9aa9a1;
-  --rcm-border: #354149;
-  --rcm-border-strong: #45535a;
-  --rcm-surface: #171e22;
+  --rcm-border: #35464b;
+  --rcm-border-strong: #35464b;
+  --rcm-surface: #20292e;
   --rcm-bg: #111719;
   --rcm-green-50: #203029;
   --rcm-green-100: #233c30;
@@ -1811,21 +1782,46 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curri
   color-scheme: dark;
 }
 
+/* Header */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero {
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
-  border: 0 !important;
-  outline: none;
-  box-shadow: 0 10px 24px #0005;
+  background: linear-gradient(105deg, #093522, #0b5133) !important;
+  border: 1px solid #245642;
+  border-radius: 14px;
+  box-shadow: none;
 }
 
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero::after { border-color: rgba(255, 255, 255, 0.055); }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero :is(h1,p),
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__eyebrow { color: #f4fcf7; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__eyebrow-icon { color: #eefcf3; background: #ffffff1c; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero::after {
+  content: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero :is(h1, p),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__eyebrow {
+  color: #f6fff9;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__eyebrow-icon {
+  color: #f6fff9;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.22);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero-actions .registrar-curriculum-management__button--primary {
+  color: #0a4b2e;
+  background: #e5f7ec;
+  border: 1px solid #b7e4c8;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero-actions .registrar-curriculum-management__button--primary:hover:not(:disabled) {
+  background: #d4f0df;
+}
+
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__stat-card {
   background: #20292e;
-  border-color: #354149;
-  box-shadow: 0 6px 18px #0003;
+  border-color: #35464b;
+  box-shadow: none;
 }
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__stat-card:nth-child(1) { border-left: 3px solid #39b87a; }
@@ -1837,14 +1833,14 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curri
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__stat-card:nth-child(3) .registrar-curriculum-management__stat-icon { color: #8bbaf9; background: #23364b; border-color: #344b63; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__stat-card:nth-child(4) .registrar-curriculum-management__stat-icon { color: #c0abf7; background: #332b47; border-color: #4d4064; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__workspace,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal { background: #171e22; border-color: #354149; box-shadow: 0 10px 28px #0003; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal { background: #192226; border-color: #35464b; box-shadow: 0 10px 28px #0003; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__workspace-header,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__filter-meta { background: #171e22; border-color: #354149; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__filter-meta { background: #192226; border-color: #35464b; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__toolbar,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__pagination-bar,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table thead { background: #20292e; border-color: #354149; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table thead { background: #20292e; border-color: #35464b; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table td,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table th { border-color: #354149; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table th { border-color: #35464b; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table th { color: #aebeb6; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__table tbody tr:hover,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__skeleton-row:hover { background: #253036 !important; }
@@ -1877,8 +1873,8 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curri
   --rcm-text-800: #dde6e1;
   --rcm-text-600: #b5c3bb;
   --rcm-text-500: #9aa9a1;
-  --rcm-border: #354149;
-  --rcm-border-strong: #45535a;
+  --rcm-border: #35464b;
+  --rcm-border-strong: #35464b;
   --rcm-green-50: #203029;
   --rcm-green-100: #233c30;
   --rcm-green-700: #65d69b;
@@ -1886,14 +1882,18 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curri
   --rcm-danger: #f3a2a2;
   --rcm-danger-soft: #37262c;
   color: #eff5f2;
-  background: #171e22;
+  background: #192226;
 }
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__header,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__actions { background: #20292e; border-color: #354149; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__actions {
+  background: #20292e;
+  background-image: none;
+  border-color: #35464b;
+}
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__section {
   background: #20292e;
-  border-color: #354149;
+  border-color: #35464b;
 }
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__section-heading p,
@@ -1927,23 +1927,16 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-curri
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__button--primary:hover:not(:disabled) { background: #1b8554; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__button--secondary:hover:not(:disabled) { background: #2c383e; border-color: #58666d; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero .registrar-curriculum-management__button--primary {
-  color: #0b5e37;
-  background: #e2fff0;
-  border-color: #b5e8cd;
-  box-shadow: none;
-}
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero .registrar-curriculum-management__button--secondary {
-  color: #ffffff;
-  background: #173028;
-  border-color: #7da891;
-  box-shadow: none;
-}
-
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__status-option.is-selected { background: #24372d; border-color: #4b8e65; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__loading-field { background: #253036; color: #b5c3bb; border-color: #45535a; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__field-error,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__message--error { background: #37262c; color: #f3a2a2; border-color: #654148; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__message--success { background: #24372d; color: #9de3b9; border-color: #365440; }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-modal__control :is(input,select):disabled { background: #293238; color: #a8b7b0; }
+
+@media (max-width: 620px) {
+  .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-curriculum-management__hero,
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-curriculum-management__hero {
+    padding: calc(19px * var(--rcm-spacing, 1));
+  }
+}

@@ -1,8 +1,4 @@
-/* =========================================================
-   REGISTRAR — CREATE ANNOUNCEMENT
-   Scoped light PTC-green design matching Announcement
-   Management, Details, Edit, and the Registrar UI system.
-========================================================= */
+/* Page Layout */
 
 .registrar-announcement-create {
   --rac-green-950: #073b24;
@@ -20,15 +16,13 @@
   --rac-border: #dfe8e2;
   --rac-border-strong: #cfdcd3;
   --rac-surface: #ffffff;
-  --rac-bg: #f5f8f6;
+  --rac-bg: #ffffff;
   --rac-danger: #b42318;
   --rac-danger-soft: #fff2f0;
 
   min-height: 100%;
   padding: 28px 30px 38px;
-  background:
-    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
-    var(--rac-bg);
+  background: var(--rac-bg);
   color: var(--rac-text-950);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -48,9 +42,7 @@
   font: inherit;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* Header */
 
 .registrar-announcement-create__hero {
   position: relative;
@@ -59,29 +51,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 25px 28px;
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
   margin-bottom: 20px;
-  border: 1px solid rgba(15, 122, 69, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(247, 253, 249, 0.98) 66%,
-    rgba(230, 247, 237, 0.98) 100%
-  );
-  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f 0%, #0d7444 100%);
+  box-shadow: none;
 }
 
+.registrar-announcement-create__hero::before,
 .registrar-announcement-create__hero::after {
-  content: "";
-  position: absolute;
-  right: -75px;
-  top: -95px;
-  width: 230px;
-  height: 230px;
-  border: 38px solid rgba(15, 122, 69, 0.055);
-  border-radius: 50%;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 .registrar-announcement-create__hero-copy,
@@ -99,7 +80,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  color: var(--rac-green-800);
+  color: #f6fff9;
   font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
@@ -112,15 +93,16 @@
   justify-content: center;
   width: 28px;
   height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 9px;
-  color: var(--rac-green-700);
-  background: var(--rac-green-100);
+  color: #effff5;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .registrar-announcement-create__hero h1 {
   margin: 0;
-  color: var(--rac-text-950);
-  font-size: clamp(26px, 3vw, 34px);
+  color: #f6fff9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3.1vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -129,7 +111,7 @@
 .registrar-announcement-create__hero p {
   max-width: 720px;
   margin: 9px 0 0;
-  color: var(--rac-text-600);
+  color: #f6fff9;
   font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.65;
 }
@@ -141,9 +123,7 @@
   gap: 10px;
 }
 
-/* =========================================================
-   BUTTONS
-========================================================= */
+/* Buttons */
 
 .registrar-announcement-create__button {
   display: inline-flex;
@@ -153,7 +133,7 @@
   min-height: 40px;
   padding: 9px 14px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   outline: 0;
   font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
@@ -163,12 +143,7 @@
     background-color 0.18s ease,
     border-color 0.18s ease,
     color 0.18s ease,
-    transform 0.18s ease,
     box-shadow 0.18s ease;
-}
-
-.registrar-announcement-create__button:hover:not(:disabled) {
-  transform: translateY(-1px);
 }
 
 .registrar-announcement-create__button:disabled {
@@ -178,25 +153,27 @@
 
 .registrar-announcement-create__button--primary {
   color: #ffffff;
-  background: var(--rac-green-800);
-  border-color: var(--rac-green-800);
-  box-shadow: 0 5px 13px rgba(13, 101, 59, 0.18);
+  background: linear-gradient(105deg, #117846 0%, #0b6338 100%);
+  border-color: #0b6338;
+  box-shadow: none;
 }
 
 .registrar-announcement-create__button--primary:hover:not(:disabled) {
-  background: var(--rac-green-900);
-  border-color: var(--rac-green-900);
+  background: linear-gradient(105deg, #0f6a3e 0%, #084b2d 100%);
+  border-color: #084b2d;
 }
 
 .registrar-announcement-create__button--secondary {
-  color: var(--rac-green-800);
-  background: #ffffff;
-  border-color: #c9ddd0;
+  color: #0a4b2e;
+  background: #e5f7ec;
+  border-color: #b7e4c8;
+  border-radius: 11px;
+  box-shadow: none;
 }
 
 .registrar-announcement-create__button--secondary:hover:not(:disabled) {
-  background: var(--rac-green-50);
-  border-color: #a8cdb7;
+  background: #d4f0df;
+  border-color: #b7e4c8;
 }
 
 .registrar-announcement-create__button:focus-visible,
@@ -211,9 +188,7 @@
   box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.17);
 }
 
-/* =========================================================
-   ERROR NOTICE
-========================================================= */
+/* Alerts */
 
 .registrar-announcement-create__notice {
   display: grid;
@@ -261,9 +236,7 @@
   background: rgba(180, 35, 24, 0.07);
 }
 
-/* =========================================================
-   FORM LAYOUT
-========================================================= */
+/* Form Layout */
 
 .registrar-announcement-create__form-grid {
   display: grid;
@@ -282,9 +255,9 @@
 .registrar-announcement-create__checklist-panel,
 .registrar-announcement-create__save-panel {
   border: 1px solid var(--rac-border);
-  border-radius: 18px;
+  border-radius: 14px;
   background: #ffffff;
-  box-shadow: 0 9px 28px rgba(31, 56, 40, 0.055);
+  box-shadow: none;
 }
 
 .registrar-announcement-create__panel {
@@ -342,8 +315,8 @@
 .registrar-announcement-create__save-panel h2 {
   margin: 0;
   color: var(--rac-text-950);
-  font-size: calc(17px * var(--ptc-font-scale, 1));
-  font-weight: 760;
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 740;
   line-height: 1.3;
   letter-spacing: -0.012em;
 }
@@ -352,7 +325,7 @@
   max-width: 650px;
   margin: 4px 0 0;
   color: var(--rac-text-500);
-  font-size: calc(11.5px * var(--ptc-font-scale, 1));
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   line-height: 1.45;
 }
 
@@ -371,9 +344,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-   FIELDS
-========================================================= */
+/* Form Fields */
 
 .registrar-announcement-create__fields {
   display: grid;
@@ -391,8 +362,8 @@
   align-items: center;
   gap: 5px;
   color: var(--rac-text-700);
-  font-size: calc(11.5px * var(--ptc-font-scale, 1));
-  font-weight: 720;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
 }
 
 .registrar-announcement-create__field em {
@@ -461,9 +432,7 @@
   text-align: left;
 }
 
-/* =========================================================
-   RECIPIENTS
-========================================================= */
+/* Recipients */
 
 .registrar-announcement-create__recipient-grid {
   display: grid;
@@ -568,9 +537,7 @@
   font-weight: 720;
 }
 
-/* =========================================================
-   ATTACHMENT UPLOAD
-========================================================= */
+/* Attachment Upload */
 
 .registrar-announcement-create__upload-box {
   position: relative;
@@ -706,9 +673,7 @@
   background: var(--rac-danger-soft);
 }
 
-/* =========================================================
-   STATUS PREVIEW
-========================================================= */
+/* Status Preview */
 
 .registrar-announcement-create__status-preview {
   display: flex;
@@ -749,9 +714,7 @@
   background: #f5f7f6;
 }
 
-/* =========================================================
-   PUBLICATION CHECKLIST
-========================================================= */
+/* Publication Checklist */
 
 .registrar-announcement-create__checklist-panel {
   padding: 18px;
@@ -839,9 +802,7 @@
   background: var(--rac-green-700);
 }
 
-/* =========================================================
-   SAVE PANEL
-========================================================= */
+/* Form Actions */
 
 .registrar-announcement-create__save-panel {
   padding: 19px;
@@ -891,9 +852,7 @@
   }
 }
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+/* Responsive */
 
 @media (max-width: 1120px) {
   .registrar-announcement-create__form-grid {
@@ -1046,19 +1005,20 @@
   --rac-text-700: #c9d5ce;
   --rac-text-600: #b3c0b8;
   --rac-text-500: #a5b2aa;
-  --rac-border: #36464d;
-  --rac-border-strong: #50616a;
+  --rac-border: #35464b;
+  --rac-border-strong: #35464b;
   --rac-surface: #20292e;
   --rac-bg: #111719;
   --rac-danger: #ffaaaa;
   --rac-danger-soft: #38242a;
-  color: #edf4ef;
+  color: #f3f4f6;
   color-scheme: dark;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__hero {
-  background: linear-gradient(115deg,#073b28,#0b5736 65%,#11693f) !important;
-  color: #fff;
-  border-color: #2e6748;
+  background: linear-gradient(105deg, #093522 0%, #0b5133 100%) !important;
+  color: #f6fff9;
+  border-color: #245642;
+  box-shadow: none;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__hero :is(h1,p,small,strong),
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__eyebrow { color:#f0fff5; }
@@ -1068,14 +1028,14 @@
   .registrar-announcement-create__checklist-panel,
   .registrar-announcement-create__save-panel
 ) {
-  background: #1c252a !important;
-  color: #e9f0ec;
-  border-color: #35454c;
-  box-shadow: 0 8px 20px #0003;
+  background: #192226 !important;
+  color: #f3f4f6;
+  border-color: #35464b;
+  box-shadow: none;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__panel-header {
-  background: #1c252a !important;
-  border-bottom-color: #3b4b51;
+  background: #192226 !important;
+  border-bottom-color: #35464b;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(
   .registrar-announcement-create__panel-header h2,
@@ -1095,9 +1055,9 @@
   .registrar-announcement-create__field select,
   .registrar-announcement-create__field textarea
 ) {
-  background:#141d21 !important;
-  color:#eef5f0;
-  border-color:#4c5d65;
+  background:#20292e !important;
+  color:#f3f4f6;
+  border-color:#35464b;
   color-scheme: dark;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create :is(input,textarea)::placeholder {color:#a8b7af;}
@@ -1115,15 +1075,15 @@
   .registrar-announcement-create__checklist,
   .registrar-announcement-create__count-badge
 ) {
-  background:#222c31 !important;
-  color:#e0ebe4;
-  border-color:#46565e;
+  background:#20292e !important;
+  color:#f3f4f6;
+  border-color:#35464b;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-card:hover,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__upload-box:hover {background:#29363b !important;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__upload-box:hover {background:#293339 !important;}
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-card--selected {
-  background:#183b2c !important;
-  border-color:#49a971;
+  background:#293339 !important;
+  border-color:#5c8b70;
   color:#a5f0c5;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__recipient-check {background:#162228;border-color:#60736b;}
@@ -1138,12 +1098,16 @@
   background:#28383c;color:#e6f3eb;border-color:#597169;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--secondary {
-  color:#eaf3ed;background:#273238;border-color:#53636b;
+  color:#0a4b2e;background:#e5f7ec;border-color:#b7e4c8;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--primary {
-  color:#fff;background:#137347;border-color:#25965d;
+  color:#fff;background:linear-gradient(105deg,#117846,#0b6338);border-color:#0b6338;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--primary:hover:not(:disabled) {background:#178956;}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--primary:hover:not(:disabled) {background:linear-gradient(105deg,#0f6a3e,#084b2d);}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__button--secondary:hover:not(:disabled) {
+  background: #d4f0df;
+  border-color: #b7e4c8;
+}
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__status-preview--active {background:#173b2b !important;color:#b0f2ca;border-color:#3b845c;}
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-create__status-preview--inactive {background:#2b3338 !important;color:#d0d9d4;border-color:#566068;}
 @media (prefers-reduced-motion: reduce) {
@@ -1213,14 +1177,13 @@
 .registrar-announcement-create__calendar-button:hover:not(:disabled) {
   background: #2c4045;
 }
-/* The same appearance preference tokens used by the Registrar Dashboard. */
+/* Compact Mode */
 .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-create {
   padding: calc(28px * var(--ptc-compact-scale, .8))
            calc(30px * var(--ptc-compact-scale, .8))
            calc(38px * var(--ptc-compact-scale, .8));
 }
 .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-create :is(
-  .registrar-announcement-create__hero,
   .registrar-announcement-create__panel,
   .registrar-announcement-create__checklist-panel,
   .registrar-announcement-create__save-panel
@@ -1272,37 +1235,6 @@
   background: #167247 !important;
   border-color: #329764;
   color: #ffffff;
-}
-
-/* ==========================================================
-   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
-   Scoped to this page only. Keep existing panels and layout.
-   ========================================================== */
-.dashboard-wrapper .registrar-announcement-create__hero {
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
-  border-color: rgba(20, 115, 70, 0.38) !important;
-  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
-}
-.dashboard-wrapper .registrar-announcement-create__hero::after {
-  border-color: rgba(255, 255, 255, 0.075) !important;
-}
-.dashboard-wrapper .registrar-announcement-create__hero :is(h1, h2, p, small, strong),
-.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__eyebrow {
-  color: #f6fff9 !important;
-}
-.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__eyebrow-icon {
-  color: #effff5 !important;
-  background: rgba(255, 255, 255, 0.14) !important;
-}
-.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__button--secondary {
-  background: rgba(13, 34, 26, 0.72) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  color: #ffffff !important;
-}
-.dashboard-wrapper .registrar-announcement-create__hero .registrar-announcement-create__button--secondary:hover:not(:disabled) {
-  background: rgba(21, 67, 46, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  color: #ffffff !important;
 }
 
 /* ==========================================================

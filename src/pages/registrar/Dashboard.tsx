@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowRight,
   BellRing,
+  ArrowRight,
   CalendarClock,
   CalendarDays,
   CheckCircle2,
@@ -14,7 +14,6 @@ import {
   GraduationCap,
   LayoutDashboard,
   Megaphone,
-  RefreshCw,
   School,
   Settings2,
   ShieldCheck,
@@ -135,14 +134,6 @@ interface Announcement {
   recipients: string | null;
 }
 
-interface AnnouncementResponse {
-  success?: boolean;
-  data?: Announcement[];
-  announcements?: Announcement[];
-  message?: string;
-  error?: string;
-}
-
 interface OfferingBatch {
   batch_id: number;
   batch_status: string;
@@ -151,6 +142,12 @@ interface OfferingBatch {
 interface OfferingBatchesResponse {
   success: boolean;
   batches?: OfferingBatch[];
+}
+
+interface AnnouncementResponse {
+  success?: boolean;
+  data?: Announcement[];
+  announcements?: Announcement[];
   message?: string;
   error?: string;
 }
@@ -231,10 +228,9 @@ export default function RegistrarDashboard() {
   const [pendingTotal, setPendingTotal] = useState<number | null>(null);
   const [periodData, setPeriodData] = useState<PeriodResponse | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [offeringBatches, setOfferingBatches] = useState<OfferingBatch[]>([]);
+  const [pendingOfferingCount, setPendingOfferingCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [warnings, setWarnings] = useState<DashboardSource[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -275,14 +271,13 @@ export default function RegistrarDashboard() {
   );
 
   const loadDashboard = useCallback(
-    async (mode: "initial" | "refresh" = "initial") => {
+    async () => {
       if (!authenticated || userRole !== "Registrar") return;
 
       const controller = new AbortController();
 
       try {
-        if (mode === "initial") setLoading(true);
-        if (mode === "refresh") setRefreshing(true);
+        setLoading(true);
         setWarnings([]);
 
         const requests = await Promise.allSettled([
@@ -421,7 +416,7 @@ export default function RegistrarDashboard() {
           nextWarnings.push("announcements");
         }
 
-        // Pending class-offering batches: awaiting Program Head or Registrar action.
+        // Class offerings
         if (requests[4].status === "fulfilled") {
           const response = requests[4].value;
           if (!handleAuthResponse(response)) {
@@ -430,7 +425,12 @@ export default function RegistrarDashboard() {
             try {
               const data = await parseJsonResponse<OfferingBatchesResponse>(response);
               if (data.success && Array.isArray(data.batches)) {
-                setOfferingBatches(data.batches);
+                setPendingOfferingCount(
+                  data.batches.filter((batch) =>
+                    batch.batch_status === "Pending Program Head" ||
+                    batch.batch_status === "Ready for Registrar",
+                  ).length,
+                );
               } else {
                 nextWarnings.push("offerings");
               }
@@ -448,7 +448,6 @@ export default function RegistrarDashboard() {
         setLastUpdated(new Date());
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [authenticated, userRole, handleAuthResponse],
@@ -456,7 +455,7 @@ export default function RegistrarDashboard() {
 
   useEffect(() => {
     if (!authenticated || userRole !== "Registrar") return;
-    void loadDashboard("initial");
+    void loadDashboard();
   }, [authenticated, userRole, loadDashboard]);
 
   const latestPeriod = periodData?.enrollment_period || null;
@@ -473,21 +472,6 @@ export default function RegistrarDashboard() {
   const activeAnnouncements = useMemo(
     () => announcements.filter((item) => Number(item.is_active) === 1).length,
     [announcements],
-  );
-
-  const pendingOfferingTotal = useMemo(
-    () => offeringBatches.filter(
-      (batch) => batch.batch_status === "Pending Program Head" ||
-        batch.batch_status === "Ready for Registrar",
-    ).length,
-    [offeringBatches],
-  );
-
-  const readyOfferingTotal = useMemo(
-    () => offeringBatches.filter(
-      (batch) => batch.batch_status === "Ready for Registrar",
-    ).length,
-    [offeringBatches],
   );
 
   const recentAnnouncements = useMemo(
@@ -563,12 +547,12 @@ export default function RegistrarDashboard() {
               <span className="registrar-dashboard__eyebrow-icon">
                 <LayoutDashboard size={16} strokeWidth={2.2} />
               </span>
-              Registrar · Operations
+              REGISTRAR · DASHBOARD
             </div>
             <h1>Registrar Dashboard</h1>
             <p>
-              Review enrollment priorities, academic-period status, student
-              records, and official announcements from one Registrar workspace.
+              Monitor student records, enrollment activities, and essential
+              registrar operations from one organized workspace.
             </p>
           </div>
 
@@ -583,18 +567,6 @@ export default function RegistrarDashboard() {
               </span>
             </div>
 
-            <button
-              type="button"
-              className="registrar-dashboard__button registrar-dashboard__button--secondary"
-              onClick={() => void loadDashboard("refresh")}
-              disabled={refreshing}
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "registrar-dashboard__spin" : undefined}
-              />
-              {refreshing ? "Refreshing" : "Refresh"}
-            </button>
           </div>
         </section>
 
@@ -602,7 +574,7 @@ export default function RegistrarDashboard() {
           <div className="registrar-dashboard__notice" role="status">
             <AlertCircle size={18} />
             <div>
-              <strong>Some dashboard data could not be refreshed.</strong>
+              <strong>Some dashboard data could not be loaded.</strong>
               <p>
                 Unavailable:{" "}
                 {warnings.map((item) => sourceLabels[item]).join(", ")}. You can
@@ -710,25 +682,16 @@ export default function RegistrarDashboard() {
 
           <button
             type="button"
-            className="registrar-dashboard__stat-card registrar-dashboard__stat-card--offerings"
+            className="registrar-dashboard__stat-card registrar-dashboard__stat-card--offering"
             onClick={() => navigate("/registrar/offering/managementR")}
-            aria-label={`Pending class offerings: ${loading || warnings.includes("offerings") ? "unavailable" : pendingOfferingTotal}. Open class offering management.`}
           >
-            <span className="registrar-dashboard__stat-icon registrar-dashboard__stat-icon--offerings">
+            <span className="registrar-dashboard__stat-icon registrar-dashboard__stat-icon--offering">
               <BellRing size={20} />
             </span>
             <span className="registrar-dashboard__stat-copy">
               <span>Pending Class Offerings</span>
-              <strong>
-                {loading || warnings.includes("offerings") ? "—" : pendingOfferingTotal}
-              </strong>
-              <small>
-                {warnings.includes("offerings")
-                  ? "Unable to load offerings"
-                  : readyOfferingTotal > 0
-                    ? `${readyOfferingTotal} ready for Registrar review`
-                    : "Awaiting review or publication"}
-              </small>
+              <strong>{loading || pendingOfferingCount === null ? "—" : pendingOfferingCount}</strong>
+              <small>Awaiting review or publication</small>
             </span>
             <ChevronRight size={17} className="registrar-dashboard__stat-arrow" />
           </button>

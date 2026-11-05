@@ -1,9 +1,4 @@
-/* =========================================================
-   REGISTRAR — ANNOUNCEMENT MANAGEMENT
-   Scoped light PTC-green design matching Student List,
-   Student Enrollment, Class Offerings, and Enrollment Period.
-========================================================= */
-
+/* Page Layout */
 .registrar-announcements {
   --ra-green-950: #073b24;
   --ra-green-900: #0a4b2d;
@@ -46,10 +41,7 @@
   font: inherit;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
-
+/* Header */
 .registrar-announcements__hero {
   position: relative;
   overflow: hidden;
@@ -182,10 +174,7 @@
   font-weight: 720;
 }
 
-/* =========================================================
-   BUTTONS
-========================================================= */
-
+/* Buttons */
 .registrar-announcements__button,
 .registrar-announcements__action-button,
 .registrar-announcements__search-clear,
@@ -251,10 +240,7 @@
   box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.17);
 }
 
-/* =========================================================
-   SUMMARY CARDS
-========================================================= */
-
+/* Summary Cards */
 .registrar-announcements__stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -336,10 +322,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-   WORKSPACE
-========================================================= */
-
+/* Announcements Section */
 .registrar-announcements__workspace {
   overflow: hidden;
   border: 1px solid var(--ra-border);
@@ -400,10 +383,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-   SEARCH / FILTERS
-========================================================= */
-
+/* Filters */
 .registrar-announcements__toolbar {
   display: flex;
   align-items: center;
@@ -442,7 +422,7 @@
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
-    background-color 160ms ease;
+    background 160ms ease;
 }
 
 .registrar-announcements__search input::placeholder {
@@ -562,10 +542,7 @@
   text-transform: capitalize;
 }
 
-/* =========================================================
-   ANNOUNCEMENT GRID / CARDS
-========================================================= */
-
+/* Announcement Cards */
 .registrar-announcements__card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -827,7 +804,7 @@
   transition:
     transform 160ms ease,
     color 160ms ease,
-    background-color 160ms ease,
+    background 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
 }
@@ -855,10 +832,6 @@
 .registrar-announcements__action-button--primary svg:last-child {
   margin-left: 1px;
 }
-
-/* =========================================================
-   LOADING / EMPTY / ERROR STATES
-========================================================= */
 
 .registrar-announcements__card-grid--loading {
   border-top: 1px solid var(--ra-border);
@@ -957,13 +930,9 @@
   to {
     background-position: -220% 0;
   }
-
 }
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
+/* Responsive Layout */
 @media (max-width: 1180px) {
   .registrar-announcements__hero {
     align-items: flex-start;
@@ -990,7 +959,6 @@
   .registrar-announcements__filters {
     flex-wrap: wrap;
   }
-
 }
 
 @media (max-width: 760px) {
@@ -1048,7 +1016,6 @@
   .registrar-announcements__card-grid {
     grid-template-columns: 1fr;
   }
-
 }
 
 @media (max-width: 520px) {
@@ -1092,7 +1059,6 @@
   .registrar-announcements__action-button {
     width: 100%;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1104,14 +1070,9 @@
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
-
 }
 
-/* =========================================================
-   DELETE ANNOUNCEMENT FEATURE
-   Uses the existing DELETE /api/announcement-management/:id
-========================================================= */
-
+/* Delete Buttons */
 .registrar-announcements__button--danger {
   color: #ffffff;
   background: var(--ra-danger);
@@ -1144,6 +1105,7 @@
   border-color: #e5aaa3;
 }
 
+/* Status Messages */
 .registrar-announcements__feedback {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1220,6 +1182,7 @@
   background: #ffe4e0;
 }
 
+/* Delete Modal */
 .registrar-announcements__modal-overlay {
   position: fixed;
   inset: 0;
@@ -1267,7 +1230,7 @@
   cursor: pointer;
   transition:
     color 160ms ease,
-    background-color 160ms ease,
+    background 160ms ease,
     box-shadow 160ms ease;
 }
 
@@ -1400,14 +1363,12 @@
   to {
     transform: rotate(360deg);
   }
-
 }
 
 @media (max-width: 760px) {
   .registrar-announcements__action-button--danger {
     margin-left: 0;
   }
-
 }
 
 @media (max-width: 520px) {
@@ -1439,14 +1400,9 @@
     .registrar-announcements__button {
     width: 100%;
   }
-
 }
 
-/* =========================================================
-   ANNOUNCEMENT CARD ACTION ALIGNMENT FIX
-   Keeps View Details / Edit / Delete on one row.
-========================================================= */
-
+/* Card Actions */
 .registrar-announcements__card-actions {
   display: grid;
   grid-template-columns:
@@ -1487,8 +1443,7 @@
   margin-left: 0;
 }
 
-/* Never stack the three card actions vertically. */
-
+/* Card Actions - Mobile */
 @media (max-width: 760px) {
   .registrar-announcements__card-actions {
     grid-template-columns:
@@ -1507,11 +1462,9 @@
   .registrar-announcements__action-button--danger {
     margin-left: 0;
   }
-
 }
 
-/* Extra-tight sizing for very narrow phones/cards. */
-
+/* Small Screens */
 @media (max-width: 390px) {
   .registrar-announcements__card-actions {
     gap: 5px;
@@ -1529,26 +1482,12 @@
     height: 13px;
   }
 
-  /* The leading Eye icon already communicates the action on tight widths. */
-
   .registrar-announcements__action-button--primary svg:last-child {
     display: none;
   }
-
 }
 
-/* =========================================================
-   REGISTRAR ANNOUNCEMENTS — DASHBOARD-MATCHED VISUAL REFRESH
-   Reference: RegistrarDashboard.css V4/V5 and the supplied
-   Registrar Dashboard screenshot.
-   Scope: announcement LIST page only.
-   No changes to shared sidebar, footer, routing or TSX.
-   Existing status, form, delete-modal and action behavior stay.
-   No page-entry animation or white loading overlay.
-========================================================= */
-
-/* Full-bleed PTC academic canvas, exactly as on the dashboard. */
-
+/* Page Container */
 .dashboard-main:has(.registrar-announcements) .dashboard-content {
   padding: 0;
   overflow-x: hidden;
@@ -1558,8 +1497,7 @@
     linear-gradient(180deg, #eef7f1 0%, #e8f3ec 48%, #e4f0e8 100%);
 }
 
-/* Do not create a blank strip when the shared header auto-hides. */
-
+/* Page Header */
 .dashboard-main:has(.registrar-announcements)
   .header-container:has(.app-header.hide) {
   height: 0;
@@ -1604,8 +1542,6 @@
   background-position:
     0 0, 48px 48px, 0 0, 64px 64px,
     center, center, center, center;
-  /* Deliberately no entry animation: prevents white flashes. */
-
 }
 
 .registrar-announcements::before {
@@ -1644,8 +1580,7 @@
   pointer-events: none;
 }
 
-/* Hero: replicate the strong green Registrar Dashboard banner. */
-
+/* Header Styles */
 .registrar-announcements__hero {
   z-index: 1;
   min-height: 188px;
@@ -1678,7 +1613,9 @@
   border: 44px solid rgba(255,255,255,.055);
 }
 
-.registrar-announcements__eyebrow { color: #dff8e8; }
+.registrar-announcements__eyebrow {
+  color: #dff8e8;
+}
 
 .registrar-announcements__eyebrow-icon {
   color: #fff;
@@ -1714,9 +1651,13 @@
   box-shadow: 0 6px 16px rgba(0,0,0,.13);
 }
 
-.registrar-announcements__hero-badge small { color: rgba(255,255,255,.72); }
+.registrar-announcements__hero-badge small {
+  color: rgba(255,255,255,.72);
+}
 
-.registrar-announcements__hero-badge strong { color: #fff; }
+.registrar-announcements__hero-badge strong {
+  color: #fff;
+}
 
 .registrar-announcements__hero .registrar-announcements__button--primary {
   min-height: 44px;
@@ -1732,8 +1673,7 @@
   border-color: #fff;
 }
 
-/* Glassy floating KPI strip; separate green/gold/blue/violet cards. */
-
+/* Summary Cards */
 .registrar-announcements__stats {
   position: relative;
   z-index: 1;
@@ -1789,25 +1729,37 @@
   background: linear-gradient(145deg, #fff, #fff8e4);
 }
 
-.registrar-announcements__stat-card:nth-child(2)::before { background: var(--ra-gold); }
+.registrar-announcements__stat-card:nth-child(2)::before {
+  background: var(--ra-gold);
+}
 
-.registrar-announcements__stat-card:nth-child(2)::after { background: rgba(212,167,44,.10); }
+.registrar-announcements__stat-card:nth-child(2)::after {
+  background: rgba(212,167,44,.10);
+}
 
 .registrar-announcements__stat-card:nth-child(3) {
   background: linear-gradient(145deg, #fff, #edf5ff);
 }
 
-.registrar-announcements__stat-card:nth-child(3)::before { background: var(--ra-blue); }
+.registrar-announcements__stat-card:nth-child(3)::before {
+  background: var(--ra-blue);
+}
 
-.registrar-announcements__stat-card:nth-child(3)::after { background: rgba(37,99,235,.08); }
+.registrar-announcements__stat-card:nth-child(3)::after {
+  background: rgba(37,99,235,.08);
+}
 
 .registrar-announcements__stat-card:nth-child(4) {
   background: linear-gradient(145deg, #fff, #f6efff);
 }
 
-.registrar-announcements__stat-card:nth-child(4)::before { background: var(--ra-violet); }
+.registrar-announcements__stat-card:nth-child(4)::before {
+  background: var(--ra-violet);
+}
 
-.registrar-announcements__stat-card:nth-child(4)::after { background: rgba(124,58,237,.08); }
+.registrar-announcements__stat-card:nth-child(4)::after {
+  background: rgba(124,58,237,.08);
+}
 
 .registrar-announcements__stat-card:hover {
   transform: translateY(-3px);
@@ -1846,9 +1798,9 @@
   text-transform: uppercase;
 }
 
-.registrar-announcements__stat-card strong { font-size: 26px; }
-
-/* Announcement directory: raised white panel on a mint section canvas. */
+.registrar-announcements__stat-card strong {
+  font-size: 26px;
+}
 
 .registrar-announcements__workspace {
   position: relative;
@@ -1905,7 +1857,9 @@
   background: #fff;
 }
 
-.registrar-announcements__clear-filters { height: 44px; }
+.registrar-announcements__clear-filters {
+  height: 44px;
+}
 
 .registrar-announcements__filter-summary {
   margin-right: 26px;
@@ -1913,8 +1867,7 @@
   background: #effaf3;
 }
 
-/* Cards keep the established view/edit/delete one-row alignment. */
-
+/* Announcement Cards */
 .registrar-announcements__card-grid {
   gap: 17px;
   padding: 22px 26px 26px;
@@ -1959,14 +1912,18 @@
   background: #eaf7ef;
 }
 
-.registrar-announcements__card-heading h3 { font-size: 18px; }
+.registrar-announcements__card-heading h3 {
+  font-size: 18px;
+}
 
 .registrar-announcements__meta-item {
   border: 1px solid #e6efe9;
   background: #f7fbf8;
 }
 
-.registrar-announcements__recipient-chip { background: #ebf8ef; }
+.registrar-announcements__recipient-chip {
+  background: #ebf8ef;
+}
 
 .registrar-announcements__action-button {
   border-radius: 10px;
@@ -1984,8 +1941,6 @@
   background: #084b2c;
   border-color: #084b2c;
 }
-
-/* Carefully styled empty/error/loading states; no page-wide opacity fades. */
 
 .registrar-announcements__state {
   min-height: 300px;
@@ -2014,17 +1969,18 @@
   background-size: 220% 100%;
 }
 
-/* Keep destructive actions visibly red and dialog legible. */
+.registrar-announcements__delete-modal {
+  border-radius: 22px;
+}
 
-.registrar-announcements__delete-modal { border-radius: 22px; }
-
-.registrar-announcements__feedback { border-radius: 14px; }
-
-/* At narrower widths retain the existing layout/UX behavior. */
+.registrar-announcements__feedback {
+  border-radius: 14px;
+}
 
 @media (max-width: 1180px) {
-  .registrar-announcements__hero-actions { align-items: stretch; }
-
+  .registrar-announcements__hero-actions {
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 760px) {
@@ -2042,7 +1998,10 @@
     border-radius: 22px;
   }
 
-  .registrar-announcements::after { top: 510px; right: -200px; }
+  .registrar-announcements::after {
+    top: 510px;
+    right: -200px;
+  }
 
   .registrar-announcements__hero {
     min-height: 0;
@@ -2050,7 +2009,9 @@
     border-radius: 20px;
   }
 
-  .registrar-announcements__hero h1 { font-size: clamp(28px, 6vw, 36px); }
+  .registrar-announcements__hero h1 {
+    font-size: clamp(28px, 6vw, 36px);
+  }
 
   .registrar-announcements__stats {
     margin-right: 0;
@@ -2059,42 +2020,70 @@
     border-radius: 19px;
   }
 
-  .registrar-announcements__stat-card { min-height: 105px; }
+  .registrar-announcements__stat-card {
+    min-height: 105px;
+  }
 
-  .registrar-announcements__workspace { border-radius: 20px; }
+  .registrar-announcements__workspace {
+    border-radius: 20px;
+  }
 
   .registrar-announcements__workspace-header,
-  .registrar-announcements__toolbar { padding-right: 18px; padding-left: 18px; }
+  .registrar-announcements__toolbar {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
 
-  .registrar-announcements__card-grid { padding: 18px; }
+  .registrar-announcements__card-grid {
+    padding: 18px;
+  }
 
-  .registrar-announcements__filter-summary { margin-right: 18px; margin-left: 18px; }
-
+  .registrar-announcements__filter-summary {
+    margin-right: 18px;
+    margin-left: 18px;
+  }
 }
 
 @media (max-width: 520px) {
-  .registrar-announcements { padding: 14px 10px 28px; }
+  .registrar-announcements {
+    padding: 14px 10px 28px;
+  }
 
-  .registrar-announcements__hero { padding: 22px 18px; }
+  .registrar-announcements__hero {
+    padding: 22px 18px;
+  }
 
-  .registrar-announcements__hero-actions { min-width: 0; }
+  .registrar-announcements__hero-actions {
+    min-width: 0;
+  }
 
-  .registrar-announcements__hero-badge { min-width: 0; }
+  .registrar-announcements__hero-badge {
+    min-width: 0;
+  }
 
-  .registrar-announcements__stat-card { padding: 16px; }
+  .registrar-announcements__stat-card {
+    padding: 16px;
+  }
 
-  .registrar-announcements__card-grid { padding: 14px; }
+  .registrar-announcements__card-grid {
+    padding: 14px;
+  }
 
-  .registrar-announcements__card { padding: 16px; }
+  .registrar-announcements__card {
+    padding: 16px;
+  }
 
   .registrar-announcements__workspace-header,
-  .registrar-announcements__toolbar { padding-right: 14px; padding-left: 14px; }
+  .registrar-announcements__toolbar {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
 
-  .registrar-announcements__filter-summary { margin-right: 14px; margin-left: 14px; }
-
+  .registrar-announcements__filter-summary {
+    margin-right: 14px;
+    margin-left: 14px;
+  }
 }
-
-/* No unwanted page navigation flash or decorative motion. */
 
 @media (prefers-reduced-motion: reduce) {
   .registrar-announcements__stat-card,
@@ -2102,16 +2091,9 @@
   .registrar-announcements__button {
     transition: none;
   }
-
 }
 
-/* ============================================================
-   REGISTRAR ANNOUNCEMENTS — DARK MODE ONLY
-   Neutral charcoal surfaces, restrained green accents.
-   Light Mode rules above are preserved verbatim.
-   Scoped to this page; no sidebar/footer changes.
-   ============================================================ */
-
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements {
   --ra-green-950: #103b29;
   --ra-green-900: #155e3e;
@@ -2318,12 +2300,7 @@
   outline-offset: 2px;
 }
 
-/* =============================================================
-   DARK MODE — FINAL CANVAS + NEUTRAL SURFACES
-   Target actual AnnouncementListR class names and outer layout.
-   Light mode, sidebar, and site footer are intentionally untouched.
-   ============================================================= */
-
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements),
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements) > .dashboard-content,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcements) > .dashboard-content > .registrar-announcements {
@@ -2362,88 +2339,156 @@
   border-color: #3b4a52 !important;
 }
 
-/* APPEARANCE PREFERENCES — ANNOUNCEMENT PAGE */
+/* Font Size */
+.dashboard-wrapper .dashboard-content .registrar-announcements__eyebrow {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
 
-/* Scoped to the main content only. Sidebar and footer are untouched. */
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero h1 {
+  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(34px * var(--ptc-font-scale, 1)));
+}
 
-/* All previous fixed font sizes are scaled using the saved per-user setting. */
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero p {
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__eyebrow { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero-badge small {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__hero h1 { font-size: clamp(calc(30px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1))); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero-badge strong {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__hero p { font-size: calc(14px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__button {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__hero-badge small { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card span:not(.registrar-announcements__stat-icon) {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__hero-badge strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card strong {
+  font-size: calc(24px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__button { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card small {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card span:not(.registrar-announcements__stat-icon) { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__section-kicker {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card strong { font-size: calc(26px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__workspace-header h2 {
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__stat-card small { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__workspace-header p {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__section-kicker { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__record-count {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__workspace-header h2 { font-size: calc(20px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__search input {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__workspace-header p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__filter-label {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__record-count { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__filters select {
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__search input { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__clear-filters {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__filter-label { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__filter-summary {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__filters select { font-size: calc(12.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__status {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__clear-filters { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__card-heading > span {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__filter-summary { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__card-heading h3 {
+  font-size: calc(17px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__status { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__preview {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__card-heading > span { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__meta-item span {
+  font-size: calc(9.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__card-heading h3 { font-size: calc(18px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__meta-item strong {
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__preview { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__recipients-label {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__meta-item span { font-size: calc(11px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__recipient-chip {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__meta-item strong { font-size: calc(12.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__action-button {
+  font-size: calc(10.75px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__recipients-label { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__state h3 {
+  font-size: calc(16px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__recipient-chip { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__state p {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__action-button { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__feedback strong {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__state h3 { font-size: calc(16px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__feedback p {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__state p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-eyebrow {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__feedback strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-modal h2 {
+  font-size: calc(21px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__feedback p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-modal > p {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__delete-eyebrow { font-size: calc(11.5px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-record span {
+  font-size: calc(9.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__delete-modal h2 { font-size: calc(21px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-record strong {
+  font-size: calc(12.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__delete-modal > p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.dashboard-wrapper .dashboard-content .registrar-announcements__delete-warning p {
+  font-size: calc(11.5px * var(--ptc-font-scale, 1));
+}
 
-.dashboard-wrapper .dashboard-content .registrar-announcements__delete-record span { font-size: calc(11px * var(--ptc-font-scale, 1)); }
-
-.dashboard-wrapper .dashboard-content .registrar-announcements__delete-record strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
-
-.dashboard-wrapper .dashboard-content .registrar-announcements__delete-warning p { font-size: calc(12.5px * var(--ptc-font-scale, 1)); }
-
-/* Compact Mode reduces only component spacing; it does not shrink sidebar or footer. */
-
+/* Compact Mode */
 .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements {
   padding: calc(28px * var(--ptc-compact-scale, .8)) calc(30px * var(--ptc-compact-scale, .8)) calc(38px * var(--ptc-compact-scale, .8));
 }
@@ -2500,8 +2545,6 @@
   padding: calc(27px * var(--ptc-compact-scale, .8));
 }
 
-/* Keep mobile layout from overflowing, even with Extra Large text. */
-
 @media (max-width: 760px) {
   .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__hero {
     padding: 18px;
@@ -2510,13 +2553,9 @@
   .dashboard-wrapper[data-ptc-compact="true"] .registrar-announcements__card-grid {
     padding: 14px;
   }
-
 }
 
-/* LIGHT MODE — RESTORE APPROVED PTC GREEN HERO
-   Scoped to this page; Dark Mode, page panels, sidebar, footer and
-   appearance preference rules are unchanged. */
-
+/* Light Mode */
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__hero {
   background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
   border-color: rgba(20, 115, 70, .38);
@@ -2560,11 +2599,7 @@
   color: #fff;
 }
 
-/* ==========================================================
-   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
-   Scoped to this page only. Keep existing panels and layout.
-   ========================================================== */
-
+/* Header */
 .dashboard-wrapper .registrar-announcements__hero {
   background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
   border-color: rgba(20, 115, 70, 0.38) !important;
@@ -2597,63 +2632,202 @@
   color: #ffffff !important;
 }
 
-/* ============================================================
-   ORIGINAL DESIGN RESTORATION — STAT COLORS AND CARD ACCENTS
-   Keep this after all appearance overrides for stable visual hierarchy.
-   ============================================================ */
+/* Cards */
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(1) {
   background: linear-gradient(145deg,#ffffff 0%,#ecfbf2 100%);
 }
+
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(2) {
   background: linear-gradient(145deg,#ffffff 0%,#fff8e4 100%);
 }
+
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(3) {
   background: linear-gradient(145deg,#ffffff 0%,#edf5ff 100%);
 }
+
 .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcements__stat-card:nth-child(4) {
   background: linear-gradient(145deg,#ffffff 0%,#f6efff 100%);
 }
-.dashboard-wrapper .registrar-announcements__stat-card { position: relative; isolation: isolate; overflow: hidden; }
+
+.dashboard-wrapper .registrar-announcements__stat-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
 .dashboard-wrapper .registrar-announcements__stat-card::before {
   content: ""; position: absolute; inset: 0 auto 0 0; width: 5px;
   border-radius: 19px 0 0 19px; z-index: 1; background: #159452;
 }
-.dashboard-wrapper .registrar-announcements__stat-card:nth-child(2)::before { background:#d4a72c; }
-.dashboard-wrapper .registrar-announcements__stat-card:nth-child(3)::before { background:#2563eb; }
-.dashboard-wrapper .registrar-announcements__stat-card:nth-child(4)::before { background:#7c3aed; }
-.dashboard-wrapper .registrar-announcements__card { position:relative; overflow:hidden; }
+
+.dashboard-wrapper .registrar-announcements__stat-card:nth-child(2)::before {
+  background: #d4a72c;
+}
+
+.dashboard-wrapper .registrar-announcements__stat-card:nth-child(3)::before {
+  background: #2563eb;
+}
+
+.dashboard-wrapper .registrar-announcements__stat-card:nth-child(4)::before {
+  background: #7c3aed;
+}
+
+.dashboard-wrapper .registrar-announcements__card {
+  position: relative;
+  overflow: hidden;
+}
+
 .dashboard-wrapper .registrar-announcements__card::before {
   content:""; position:absolute; z-index:1; top:0; left:0; right:0; height:4px;
   background:linear-gradient(90deg,#064e2f,#159452,#b4ddc0); pointer-events:none;
 }
-/* Dark theme keeps the accents without allowing bright card backgrounds. */
+
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-card:nth-child(n),
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__card {
   background:#1b2327;
   border-color:#36434a;
 }
+
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-card::after {
   opacity:.28;
 }
 
+/* Header */
+.dashboard-wrapper .registrar-announcements__hero {
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b !important;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f 0%, #0d7444 100%) !important;
+  box-shadow: none;
+}
 
-/* ==========================================================
-   DARK MODE — KPI STRIP AND DIRECTORY LABEL SURFACES
-   Keep the four stat accent colors and the approved green hero.
-   Light Mode retains its original translucent/tinted styling.
-   ========================================================== */
+.dashboard-wrapper .registrar-announcements__hero::before,
+.dashboard-wrapper .registrar-announcements__hero::after {
+  content: none !important;
+  display: none !important;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__eyebrow {
+  color: #f6fff9 !important;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero h1 {
+  color: #f6fff9 !important;
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    calc(3.1vw * var(--ptc-font-scale, 1)),
+    calc(40px * var(--ptc-font-scale, 1))
+  );
+}
+
+.dashboard-wrapper .dashboard-content .registrar-announcements__hero p {
+  color: #f6fff9 !important;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+
+.dashboard-wrapper .registrar-announcements__eyebrow-icon {
+  color: #effff5 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.dashboard-wrapper .registrar-announcements__hero-badge {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.dashboard-wrapper .registrar-announcements__hero-badge-icon {
+  border-radius: 11px;
+  color: #ffffff;
+  background: #0b6338;
+}
+
+.dashboard-wrapper .registrar-announcements__hero-badge small,
+.dashboard-wrapper .registrar-announcements__hero-badge strong {
+  color: #f6fff9 !important;
+}
+
+/* Cards */
+.dashboard-wrapper .registrar-announcements__stat-card,
+.dashboard-wrapper .registrar-announcements__card,
+.dashboard-wrapper .registrar-announcements__workspace {
+  box-shadow: 0 2px 8px rgba(16, 40, 28, 0.06);
+}
+
+.dashboard-wrapper .registrar-announcements__stat-card::after {
+  content: none !important;
+}
+
+/* Buttons */
+.dashboard-wrapper .registrar-announcements__button,
+.dashboard-wrapper .registrar-announcements__action-button {
+  border-radius: 8px;
+  box-shadow: none;
+  transform: none;
+}
+
+.dashboard-wrapper .registrar-announcements__button--primary,
+.dashboard-wrapper .registrar-announcements__action-button--primary {
+  color: #ffffff;
+  border-color: #0b6338;
+  background: linear-gradient(180deg, #117846 0%, #0b6338 100%);
+}
+
+.dashboard-wrapper .registrar-announcements__button--primary:hover:not(:disabled),
+.dashboard-wrapper .registrar-announcements__action-button--primary:hover:not(:disabled) {
+  color: #ffffff;
+  background: linear-gradient(180deg, #0f6a3e 0%, #084b2d 100%);
+  transform: none;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__hero {
+  border-color: #245642 !important;
+  background: linear-gradient(105deg, #093522 0%, #0b5133 100%) !important;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stat-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__workspace {
+  box-shadow: none;
+}
+
+/* Header Button */
+.dashboard-wrapper .registrar-announcements__hero .registrar-announcements__button--primary {
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid #b7e4c8 !important;
+  border-radius: 11px;
+  color: #0a4b2e !important;
+  background: #e5f7ec !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper .registrar-announcements__hero .registrar-announcements__button--primary:hover:not(:disabled) {
+  border-color: #91d2a9 !important;
+  color: #083f27 !important;
+  background: #d4f0df !important;
+  box-shadow: none !important;
+}
+
+/* Summary Cards */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__stats {
-  background: #1a2226 !important;
-  background-image: none !important;
-  border: 1px solid #35434a !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, .20), inset 0 1px 0 rgba(255, 255, 255, .025) !important;
+  border: 1px solid #35464b;
+  background: #192226;
+  box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
+/* Announcement Directory */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcements__section-kicker {
-  color: #90e2b3 !important;
-  background: #20372b !important;
-  background-image: none !important;
-  border: 1px solid #365f48;
+  border: 1px solid #335748;
+  color: #b5e2c9;
+  background: #263b32;
 }

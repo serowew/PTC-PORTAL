@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
@@ -10,7 +11,6 @@ import {
   Filter,
   GraduationCap,
   MapPin,
-  RefreshCw,
   RotateCcw,
   Search,
   UserRound,
@@ -289,6 +289,7 @@ export default function FacultySchedulesR() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [modalBackdropStyle, setModalBackdropStyle] = useState<CSSProperties>({});
   const [teachingRole, setTeachingRole] = useState<
     "All" | "Faculty" | "Program Head"
   >("All");
@@ -392,6 +393,49 @@ export default function FacultySchedulesR() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedClass]);
+  useLayoutEffect(() => {
+    if (!selectedClass) return;
+    const dashboardMain = document.querySelector<HTMLElement>(".dashboard-wrapper .dashboard-main");
+    const sidebar = document.querySelector<HTMLElement>(".dashboard-wrapper .sidebar");
+    const page = document.querySelector<HTMLElement>(".registrar-teaching-schedule");
+    if (!dashboardMain || !page) return;
+
+    const updateModalBounds = () => {
+      const mainRect = dashboardMain.getBoundingClientRect();
+      const viewportWidth = document.documentElement.clientWidth;
+      let left = Math.max(0, mainRect.left);
+      if (sidebar) {
+        const sidebarRect = sidebar.getBoundingClientRect();
+        const sidebarIsVisible = sidebarRect.right > 0 && sidebarRect.left < viewportWidth;
+        const sidebarOverlapsMain = sidebarIsVisible && sidebarRect.left < mainRect.right && sidebarRect.right > mainRect.left;
+        if (sidebarOverlapsMain) left = Math.max(left, sidebarRect.right);
+      }
+      left = Math.min(Math.max(0, left), Math.max(0, viewportWidth - 1));
+      const pageStyles = window.getComputedStyle(page);
+      setModalBackdropStyle({
+        "--rts-modal-left": `${left}px`,
+        "--ptc-font-scale": pageStyles.getPropertyValue("--ptc-font-scale").trim() || "1",
+        "--ptc-compact-scale": pageStyles.getPropertyValue("--ptc-compact-scale").trim() || "1",
+      } as CSSProperties);
+    };
+
+    updateModalBounds();
+    const resizeObserver = new ResizeObserver(updateModalBounds);
+    resizeObserver.observe(dashboardMain);
+    if (sidebar) resizeObserver.observe(sidebar);
+    const mutationObserver = new MutationObserver(updateModalBounds);
+    if (sidebar) mutationObserver.observe(sidebar, { attributes: true, attributeFilter: ["class", "style"] });
+    window.addEventListener("resize", updateModalBounds);
+    if (sidebar) sidebar.addEventListener("transitionend", updateModalBounds);
+    window.addEventListener("ptc-appearance-updated", updateModalBounds);
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+      window.removeEventListener("resize", updateModalBounds);
+      if (sidebar) sidebar.removeEventListener("transitionend", updateModalBounds);
+      window.removeEventListener("ptc-appearance-updated", updateModalBounds);
+    };
   }, [selectedClass]);
   const teachingUserOptions = useMemo<TeachingUserOption[]>(() => {
     return teachingUsers
@@ -573,7 +617,7 @@ export default function FacultySchedulesR() {
               <span>
                 <CalendarDays size={16} strokeWidth={2.2} />
               </span>
-              Registrar · Teaching Schedule Monitoring
+              REGISTRAR · TEACHING SCHEDULE MONITORING
             </div>
             <h1>Teaching Schedules</h1>
             <p>
@@ -581,15 +625,6 @@ export default function FacultySchedulesR() {
               teaching users across class offerings. This page is view-only.
             </p>
           </div>
-          <button
-            type="button"
-            className="registrar-teaching-schedule__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={loading ? "is-spinning" : ""} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
         <section className="registrar-teaching-schedule__faculty">
           <div className="registrar-teaching-schedule__faculty-main">
@@ -977,6 +1012,7 @@ export default function FacultySchedulesR() {
         {selectedClass && createPortal(
           <div
             className="registrar-teaching-detail-backdrop"
+            style={modalBackdropStyle}
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) setSelectedClass(null);
             }}

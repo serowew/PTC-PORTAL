@@ -1,7 +1,4 @@
-/* =========================================================
-   REGISTRAR — SUBJECT ADD / EDIT MODAL
-========================================================= */
-
+/* Modal */
 .registrar-subject-modal__overlay {
   --rsm-modal-green-900: #0a4b2d;
   --rsm-modal-green-800: #0d653b;
@@ -26,8 +23,9 @@
   justify-content: center;
   overflow-y: auto;
   padding: 24px;
-  background: rgba(7, 25, 15, 0.52);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 20, 13, 0.46);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   animation: registrar-subject-modal-overlay-in 0.16s ease;
 }
 
@@ -45,7 +43,7 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid rgba(207, 220, 211, 0.92);
-  border-radius: 18px;
+  border-radius: 16px;
   background: #fff;
   color: var(--rsm-modal-text-950);
   box-shadow:
@@ -76,7 +74,7 @@
   outline-offset: 2px;
 }
 
-/* HEADER */
+/* Header */
 
 .registrar-subject-modal__header {
   display: flex;
@@ -85,7 +83,7 @@
   gap: 18px;
   padding: 21px 22px;
   border-bottom: 1px solid var(--rsm-modal-border);
-  background: linear-gradient(108deg, #ffffff 0%, #f7fcf9 68%, #ecf8f0 100%);
+  background: linear-gradient(105deg, #ffffff 0%, #f4faf6 100%);
 }
 
 .registrar-subject-modal__identity {
@@ -163,7 +161,7 @@
   cursor: not-allowed;
 }
 
-/* BODY */
+/* Form Fields */
 
 .registrar-subject-modal__body {
   flex: 1 1 auto;
@@ -351,7 +349,7 @@
   font-size: calc(13px * var(--ptc-font-scale, 1));
 }
 
-/* FOOTER */
+/* Actions */
 
 .registrar-subject-modal__footer {
   display: flex;
@@ -525,7 +523,7 @@
   }
 }
 
-/* Appearance preferences */
+/* Appearance Preferences */
 .registrar-subject-modal__overlay {
   padding: calc(24px * var(--ptc-compact-scale, 1));
 }
@@ -557,14 +555,14 @@
   color-scheme: dark;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal {
-  background: #171e22;
+  background: #192226;
   color: #f0f5f2;
-  border-color: #415159;
+  border-color: #35464B;
   box-shadow: 0 26px 65px rgba(0,0,0,.4);
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__header {
-  background: #20292e;
-  border-color: #35434a;
+  background: #20292E;
+  border-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__icon {
   color: #a6e2bc;
@@ -585,17 +583,17 @@
   border-color: #688078;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__body {
-  background: #171e22;
-  scrollbar-color: #40565a #171e22;
+  background: #192226;
+  scrollbar-color: #40565a #192226;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__section {
-  border-color: #35434a;
+  border-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field input,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__field textarea,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__number-input {
   color: #eef5f0;
-  background: #20292e;
+  background: #20292E;
   border-color: #4b5b63;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__number-input input {
@@ -616,7 +614,7 @@
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__load-preview span {
   color: #c2d1c9;
-  background: #20292e;
+  background: #20292E;
   border-color: #40525a;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__load-preview strong {
@@ -624,8 +622,8 @@
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__footer {
   color: #c6d4cb;
-  background: #20292e;
-  border-color: #35434a;
+  background: #20292E;
+  border-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--secondary {
   color: #f0f5f2;
@@ -639,14 +637,27 @@
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--primary {
   color: #ffffff;
-  background: #087444;
+  background: linear-gradient(180deg, #117846, #0B6338);
   border-color: #24875a;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__button--primary:hover:not(:disabled) {
-  background: #0a8550;
+  background: linear-gradient(180deg, #0F6A3E, #084B2D);
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-modal__error {
   color: #ffcbc5;
   background: #382625;
   border-color: #75443c;
+}
+
+
+/* Modal Backdrop */
+.dashboard-wrapper:has(.registrar-subject-modal__overlay) .dashboard-content > .registrar-subject-management,
+.dashboard-wrapper:has(.registrar-subject-modal__overlay) .ptc-footer {
+  filter: blur(5px) brightness(0.7);
+}
+
+.dashboard-wrapper .registrar-subject-modal__overlay {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

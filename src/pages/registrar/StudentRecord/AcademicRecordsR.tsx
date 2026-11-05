@@ -781,13 +781,12 @@ export default function AcademicRecordsR() {
               <span className="registrar-academic-record__eyebrow-icon">
                 <LibraryBig size={15} strokeWidth={2.2} />
               </span>
-              Registrar · Student Records
+              REGISTRAR · STUDENT RECORDS
             </span>
 
             <h1>Academic Records</h1>
             <p>
-              Review the student&apos;s official academic history, including
-              approved PTC grades and completed transfer credits.
+              View and manage student academic records, grades, and academic performance in one organized workspace.
             </p>
           </div>
 
@@ -801,18 +800,6 @@ export default function AcademicRecordsR() {
               Back
             </button>
 
-            <button
-              type="button"
-              className="registrar-academic-record__button registrar-academic-record__button--primary"
-              onClick={refresh}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={15}
-                className={loading ? "registrar-academic-record__spin" : ""}
-              />
-              {loading ? "Refreshing" : "Refresh"}
-            </button>
           </div>
         </section>
 

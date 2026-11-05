@@ -1,7 +1,4 @@
-/* =========================================================
-   REGISTRAR — DEPARTMENT MANAGEMENT
-   Fully scoped to the Department Management page.
-========================================================= */
+/* Page Layout */
 .registrar-department-management {
   --rdm-green-950: #073b24;
   --rdm-green-900: #0a4b2d;
@@ -41,39 +38,26 @@
   font: inherit;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* Hero */
 .registrar-department-management__hero {
   position: relative;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: calc(24px * var(--ptc-compact-scale, 1));
-  padding: calc(25px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1));
+  min-width: 0;
   margin-bottom: 20px;
-  border: 1px solid rgba(15, 122, 69, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(247, 253, 249, 0.98) 66%,
-    rgba(230, 247, 237, 0.98) 100%
-  );
-  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0C633B;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512F, #0D7444);
+  box-shadow: none;
 }
 
+.registrar-department-management__hero::before,
 .registrar-department-management__hero::after {
-  content: "";
-  position: absolute;
-  top: -90px;
-  right: -72px;
-  width: 230px;
-  height: 230px;
-  border: 38px solid rgba(15, 122, 69, 0.055);
-  border-radius: 50%;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 .registrar-department-management__hero-copy,
@@ -91,7 +75,7 @@
   align-items: center;
   gap: calc(8px * var(--ptc-compact-scale, 1));
   margin-bottom: 10px;
-  color: var(--rdm-green-800);
+  color: #F6FFF9;
   font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
@@ -102,17 +86,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  color: var(--rdm-green-700);
-  background: var(--rdm-green-100);
+  width: 29px;
+  height: 29px;
+  color: #F6FFF9;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 9px;
 }
 
 .registrar-department-management__hero h1 {
   margin: 0;
-  color: var(--rdm-text-950);
-  font-size: calc(clamp(26px, 3vw, 34px) * var(--ptc-font-scale, 1));
+  color: #F6FFF9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -121,9 +106,9 @@
 .registrar-department-management__hero p {
   max-width: 760px;
   margin: 9px 0 0;
-  color: var(--rdm-text-600);
+  color: #F6FFF9;
   font-size: calc(14px * var(--ptc-font-scale, 1));
-  line-height: 1.65;
+  line-height: 1.55;
 }
 
 .registrar-department-management__hero-actions {
@@ -133,9 +118,24 @@
   gap: calc(10px * var(--ptc-compact-scale, 1));
 }
 
-/* =========================================================
-   BUTTONS
-========================================================= */
+
+.registrar-department-management__hero-actions .registrar-department-management__button--primary {
+  min-height: 42px;
+  padding: calc(9px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
+  border: 1px solid #B7E4C8;
+  border-radius: 11px;
+  background: #E5F7EC;
+  color: #0A4B2E;
+  box-shadow: none;
+}
+.registrar-department-management__hero-actions .registrar-department-management__button--primary:hover:not(:disabled) {
+  background: #D4F0DF;
+  border-color: #B7E4C8;
+  color: #0A4B2E;
+  box-shadow: none;
+}
+
+/* Buttons */
 .registrar-department-management__button {
   display: inline-flex;
   align-items: center;
@@ -187,9 +187,7 @@
   border-color: rgba(15, 122, 69, 0.34);
 }
 
-/* =========================================================
-   SUMMARY
-========================================================= */
+/* Summary */
 .registrar-department-management__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -274,9 +272,7 @@
   text-overflow: ellipsis;
 }
 
-/* =========================================================
-   WORKSPACE
-========================================================= */
+/* Workspace */
 .registrar-department-management__workspace {
   overflow: hidden;
   background: var(--rdm-surface);
@@ -335,9 +331,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-   TOOLBAR
-========================================================= */
+/* Toolbar */
 .registrar-department-management__toolbar {
   display: flex;
   align-items: center;
@@ -449,9 +443,7 @@
   background: rgba(15, 122, 69, 0.1);
 }
 
-/* =========================================================
-   TABLE
-========================================================= */
+/* Table */
 .registrar-department-management__table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -613,9 +605,7 @@
   border-color: rgba(15, 122, 69, 0.32);
 }
 
-/* =========================================================
-   STATES / SKELETONS
-========================================================= */
+/* States / Skeletons */
 .registrar-department-management__state {
   display: flex;
   align-items: center;
@@ -689,9 +679,7 @@
   margin-left: auto;
 }
 
-/* =========================================================
-   FOOTER
-========================================================= */
+/* Footer */
 .registrar-department-management__workspace-footer {
   display: flex;
   align-items: center;
@@ -717,9 +705,7 @@
   text-align: right;
 }
 
-/* =========================================================
-   ACCESSIBILITY / ANIMATION
-========================================================= */
+/* Accessibility / Animation */
 .registrar-department-management button:focus-visible,
 .registrar-department-management input:focus-visible {
   outline: 3px solid rgba(15, 122, 69, 0.19);
@@ -746,9 +732,7 @@
   }
 }
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+/* Responsive */
 @media (max-width: 980px) {
   .registrar-department-management {
     padding: calc(22px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
@@ -849,12 +833,7 @@
   }
 }
 
-/* ==========================================================
-   REGISTRAR ACADEMIC / DEPARTMENTS — 2026 VISUAL ALIGNMENT
-   Companion to the Registrar Dashboard / Courses / Curriculum.
-   Keeps ALL original TSX class names and business logic.
-   No sidebar/footer styling and no page entrance animation.
-========================================================== */
+/* Layout */
 .registrar-department-management {
   position: relative;
   isolation: isolate;
@@ -909,90 +888,7 @@
   pointer-events: none;
 }
 
-/* Green hero matches the visual system of the Dashboard. */
-.registrar-department-management__hero {
-  position: relative;
-  z-index: 1;
-  min-height: 188px;
-  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
-  margin-bottom: 0;
-  border: 0;
-  border-radius: 24px;
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  box-shadow: 0 18px 42px rgba(6, 78, 47, .24);
-}
-
-.registrar-department-management__hero::before {
-  content: "";
-  position: absolute;
-  right: -60px;
-  bottom: -95px;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255, 255, 255, .12);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.registrar-department-management__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border: 44px solid rgba(255, 255, 255, .055);
-}
-
-.registrar-department-management__eyebrow { color: #dff8e8; }
-
-.registrar-department-management__eyebrow-icon {
-  color: #fff;
-  background: rgba(255, 255, 255, .14);
-  border: 1px solid rgba(255, 255, 255, .18);
-  box-shadow: inset 0 1px rgba(255, 255, 255, .15);
-}
-
-.registrar-department-management__hero h1 {
-  color: #fff;
-  font-size: calc(clamp(30px, 3.4vw, 40px) * var(--ptc-font-scale, 1));
-  font-weight: 790;
-  letter-spacing: -.035em;
-}
-
-.registrar-department-management__hero p {
-  max-width: 790px;
-  color: rgba(239, 255, 245, .88);
-  font-size: calc(14px * var(--ptc-font-scale, 1));
-}
-
-.registrar-department-management__hero-actions { align-self: center; gap: calc(10px * var(--ptc-compact-scale, 1)); }
-
-.registrar-department-management__hero-actions .registrar-department-management__button {
-  min-height: 43px;
-  padding: calc(11px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
-  border-radius: 11px;
-}
-
-.registrar-department-management__hero-actions .registrar-department-management__button--secondary {
-  color: #0a633a;
-  background: #fff;
-  border-color: rgba(255, 255, 255, .6);
-  box-shadow: 0 6px 17px rgba(4, 44, 22, .12);
-}
-
-.registrar-department-management__hero-actions .registrar-department-management__button--primary {
-  color: #074427;
-  background: #eaf9ef;
-  border-color: #dbf4e4;
-  box-shadow: 0 6px 17px rgba(4, 44, 22, .13);
-}
-
-.registrar-department-management__hero-actions .registrar-department-management__button:hover:not(:disabled) {
-  background: #e2f5e8;
-  color: #074427;
-  box-shadow: 0 8px 20px rgba(4, 44, 22, .20);
-}
-
-/* Dashboard-like three-color metrics. Exactly three cards exist in TSX. */
+/* Summary Cards */
 .registrar-department-management__stats {
   position: relative;
   z-index: 1;
@@ -1066,7 +962,7 @@
   box-shadow: 0 8px 16px rgba(31, 56, 40, .08);
 }
 
-/* Explicitly preserve dark-green fill behind the first white SVG. */
+
 .registrar-department-management__stat-card:first-child .registrar-department-management__stat-icon--primary {
   color: #fff;
   background: linear-gradient(145deg, #0f7a45, #07532f);
@@ -1104,7 +1000,7 @@
 
 .registrar-department-management__stat-card small { font-size: calc(11px * var(--ptc-font-scale, 1)); }
 
-/* Full-width Academic Departments directory card. */
+/* Department Table */
 .registrar-department-management__workspace {
   position: relative;
   z-index: 1;
@@ -1239,7 +1135,7 @@
   background-size: 200% 100%;
 }
 
-/* Small screens: retain original breakpoint behavior, avoid horizontal overflow. */
+/* Responsive */
 @media (max-width: 980px) {
   .registrar-department-management { padding: calc(23px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1)); }
 
@@ -1288,16 +1184,16 @@
   --rdm-text-800: #e2eaeb;
   --rdm-text-600: #bdcacc;
   --rdm-text-500: #a3b3b7;
-  --rdm-border: #37464d;
+  --rdm-border: #35464B;
   --rdm-border-strong: #4a5a61;
-  --rdm-surface: #171e22;
+  --rdm-surface: #20292E;
   --rdm-bg: #111719;
   color: #f1f5f4;
   color-scheme: dark;
   background: #111719;
 }
 
-/* The shared canvas targets the page and its workspace with !important. */
+
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-department-management) > .dashboard-content,
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .registrar-department-management {
   background-color: #111719 !important;
@@ -1312,50 +1208,32 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
   display: none;
 }
 
-/* Dark Mode header */
+/* Dark Mode Header */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero {
-  background-color: #073b28;
-  background-image: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  border: 0;
-  outline: none;
-  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero::before {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: none;
+  border-color: #245642;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #093522, #0B5133);
   box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero::after {
-  border-color: rgba(255, 255, 255, 0.075);
-  background: none;
-  box-shadow: none;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--secondary {
-  background: #20292e;
-  border-color: #4a5a61;
-  color: #f1f5f4;
-  box-shadow: none;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--secondary:hover:not(:disabled) {
-  background: #2c383e;
-  border-color: #6c8580;
-  color: #fff;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero :is(h1, p, .registrar-department-management__eyebrow),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__eyebrow-icon {
+  color: #F6FFF9;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--primary {
-  background: #dbf8e5;
-  border-color: #c4e9d2;
-  color: #073b24;
+  background: #E5F7EC;
+  border-color: #B7E4C8;
+  color: #0A4B2E;
   box-shadow: none;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__hero-actions .registrar-department-management__button--primary:hover:not(:disabled) {
-  background: #c5efd5;
-  border-color: #a8dfbd;
-  color: #073b24;
+  background: #D4F0DF;
+  border-color: #B7E4C8;
+  color: #0A4B2E;
 }
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stats {
-  background: #171e22;
-  border-color: #38464c;
+  background: #192226;
+  border-color: #35464B;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -1363,7 +1241,7 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__stat-card {
   background: #20292e;
-  border: 1px solid #3a4850;
+  border: 1px solid #35464B;
   box-shadow: none;
 }
 
@@ -1412,8 +1290,8 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-header,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__toolbar,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-department-management__workspace-footer {
-  background: #171e22;
-  border-color: #35434a;
+  background: #192226;
+  border-color: #35464B;
   box-shadow: none;
 }
 
@@ -1494,7 +1372,7 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
   background-size: 200% 100%;
 }
 
-/* Remove only the page shell gutter, never the shared sidebar/footer. */
+
 .dashboard-main:has(.registrar-department-management) > .dashboard-content {
   padding: 0;
   overflow-x: hidden;
@@ -1520,4 +1398,15 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
   .registrar-department-management__edit-button:hover {
     transform: none !important;
   }
+}
+
+/* Modal Layer */
+.dashboard-main:has(.registrar-department-modal__overlay) > .dashboard-content {
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+}
+.registrar-department-management:has(.registrar-department-modal__overlay) {
+  isolation: auto;
+  overflow: visible;
 }

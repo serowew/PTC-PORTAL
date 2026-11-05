@@ -709,22 +709,13 @@ export default function AdmissionManagementR() {
               <span className="registrar-student-list__eyebrow-icon">
                 <ClipboardCheck size={16} />
               </span>
-              Registrar · Admissions
+              REGISTRAR · ADMISSIONS
             </div>
             <h1>Admission Management</h1>
             <p>
               Review applicants, record in-person verification, and import
               verified students into the PTC Portal.
             </p>
-          </div>
-          <div className="registrar-student-list__hero-badge">
-            <span className="registrar-student-list__hero-badge-icon">
-              <ShieldCheck size={18} />
-            </span>
-            <span>
-              <small>Import Policy</small>
-              <strong>Verified applicants only</strong>
-            </span>
           </div>
         </section>
 

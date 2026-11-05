@@ -1,11 +1,4 @@
-/* =========================================================
-
-   REGISTRAR — SUBJECT MANAGEMENT
-
-   Scoped to Subject Management only.
-
-========================================================= */
-
+/* Page Layout */
 .registrar-subject-management {
   --rsm-green-950: #073b24;
   --rsm-green-900: #0a4b2d;
@@ -57,11 +50,7 @@
   outline-offset: 2px;
 }
 
-/* =========================================================
-
-   HERO
-
-========================================================= */
+/* Header */
 
 .registrar-subject-management__hero {
   position: relative;
@@ -70,29 +59,18 @@
   align-items: center;
   justify-content: space-between;
   gap: calc(24px * var(--ptc-compact-scale, 1));
-  padding: calc(25px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
   margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
-  border: 1px solid rgba(15, 122, 69, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(247, 253, 249, 0.98) 66%,
-    rgba(230, 247, 237, 0.98) 100%
-  );
-  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+  border: 1px solid #0C633B;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512F, #0D7444);
+  box-shadow: none;
 }
 
+.registrar-subject-management__hero::before,
 .registrar-subject-management__hero::after {
-  content: "";
-  position: absolute;
-  top: -90px;
-  right: -72px;
-  width: 230px;
-  height: 230px;
-  border: 38px solid rgba(15, 122, 69, 0.055);
-  border-radius: 50%;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 .registrar-subject-management__hero-copy,
@@ -111,7 +89,7 @@
   align-items: center;
   gap: calc(8px * var(--ptc-compact-scale, 1));
   margin-bottom: calc(10px * var(--ptc-compact-scale, 1));
-  color: var(--rsm-green-800);
+  color: #F6FFF9;
   font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
   letter-spacing: 0.055em;
@@ -124,15 +102,16 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: var(--rsm-green-700);
-  background: var(--rsm-green-100);
+  color: #F6FFF9;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 9px;
 }
 
 .registrar-subject-management__hero h1 {
   margin: 0;
-  color: var(--rsm-text-950);
-  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(34px * var(--ptc-font-scale, 1)));
+  color: #F6FFF9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
   font-weight: 760;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -141,9 +120,9 @@
 .registrar-subject-management__hero p {
   max-width: 760px;
   margin: 9px 0 0;
-  color: var(--rsm-text-600);
+  color: #F6FFF9;
   font-size: calc(14px * var(--ptc-font-scale, 1));
-  line-height: 1.65;
+  line-height: 1.5;
 }
 
 .registrar-subject-management__hero-actions {
@@ -153,11 +132,7 @@
   gap: calc(10px * var(--ptc-compact-scale, 1));
 }
 
-/* =========================================================
-
-   BUTTONS
-
-========================================================= */
+/* Buttons */
 
 .registrar-subject-management__button {
   display: inline-flex;
@@ -212,6 +187,26 @@
   color: var(--rsm-green-800);
 }
 
+.registrar-subject-management__hero-actions .registrar-subject-management__button--primary {
+  min-height: 42px;
+  padding: 0 calc(14px * var(--ptc-compact-scale, 1));
+  border: 1px solid #B7E4C8;
+  border-radius: 11px;
+  background: #E5F7EC;
+  color: #0A4B2E;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 600;
+  box-shadow: none;
+  transform: none;
+}
+.registrar-subject-management__hero-actions .registrar-subject-management__button--primary:hover:not(:disabled) {
+  border-color: #B7E4C8;
+  background: #D4F0DF;
+  color: #0A4B2E;
+  box-shadow: none;
+  transform: none;
+}
+
 .is-spinning {
   animation: registrar-subject-spin 0.8s linear infinite;
 }
@@ -222,11 +217,7 @@
   }
 }
 
-/* =========================================================
-
-   SUMMARY
-
-========================================================= */
+/* Summary Cards */
 
 .registrar-subject-management__stats {
   display: grid;
@@ -293,11 +284,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-
-   WORKSPACE
-
-========================================================= */
+/* Page Layout */
 
 .registrar-subject-management__workspace {
   overflow: hidden;
@@ -362,11 +349,7 @@
   font-size: calc(12px * var(--ptc-font-scale, 1));
 }
 
-/* =========================================================
-
-   TOOLBAR / SEARCH
-
-========================================================= */
+/* Search and Filters */
 
 .registrar-subject-management__toolbar {
   display: flex;
@@ -473,11 +456,7 @@
   background: #dff2e6;
 }
 
-/* =========================================================
-
-   TABLE
-
-========================================================= */
+/* Subject Table */
 
 .registrar-subject-management__table-wrap {
   width: 100%;
@@ -693,11 +672,7 @@
   background: #ffe9e6;
 }
 
-/* =========================================================
-
-   STATES
-
-========================================================= */
+/* Summary Cards */
 
 .registrar-subject-management__state {
   display: flex;
@@ -757,11 +732,7 @@
   color: var(--rsm-green-700);
 }
 
-/* =========================================================
-
-   SKELETON
-
-========================================================= */
+/* Page Layout */
 
 .registrar-subject-management__skeleton {
   display: block;
@@ -788,11 +759,7 @@
   }
 }
 
-/* =========================================================
-
-   PAGINATION
-
-========================================================= */
+/* Page Layout */
 
 .registrar-subject-management__pagination {
   display: flex;
@@ -864,11 +831,7 @@
   color: var(--rsm-text-500);
 }
 
-/* =========================================================
-
-   RESPONSIVE
-
-========================================================= */
+/* Responsive */
 
 @media (max-width: 1180px) {
   .registrar-subject-management__stats {
@@ -960,17 +923,7 @@
   }
 }
 
-/* ============================================================
-
-   PTC PORTAL 2026 — REGISTRAR ACADEMIC / SUBJECTS
-
-   Visual reference: Registrar Dashboard, Courses & Curriculum.
-
-   Scoped to Subjects page and its existing TSX class names.
-
-   No changes to navigation, footer, API or form behavior.
-
-============================================================ */
+/* Page Layout */
 
 .registrar-subject-management {
   position: relative;
@@ -989,7 +942,7 @@
   background-size: auto, auto, 180px 180px, 260px 260px, auto;
 }
 
-/* Light Mode page framing */
+/* Light Mode */
 .registrar-subject-management::before {
   content: "";
   position: absolute;
@@ -1018,9 +971,6 @@
   pointer-events: none;
 }
 
-/* Use full content width. Shell-only override fixes the white gutter without
-
-   changing sidebar width, navigation, global header or footer styling. */
 
 .dashboard-main:has(.registrar-subject-management) > .dashboard-content {
   padding: 0;
@@ -1039,95 +989,7 @@
   min-height: 58px;
 }
 
-/* Header */
-
-.registrar-subject-management__hero {
-  isolation: isolate;
-  min-height: 186px;
-  padding: calc(29px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1));
-  margin-bottom: 0;
-  border: 0 !important;
-  outline: none;
-  border-radius: 24px;
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  box-shadow: 0 18px 40px rgba(6,78,47,.22);
-}
-
-.registrar-subject-management__hero::before {
-  content: "";
-  position: absolute;
-  right: -60px;
-  bottom: -110px;
-  width: 295px;
-  height: 295px;
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.registrar-subject-management__hero::after {
-  top: -115px;
-  right: 99px;
-  width: 270px;
-  height: 270px;
-  border: 45px solid rgba(255,255,255,.058);
-}
-
-.registrar-subject-management__eyebrow {
-  color: #e4ffed;
-  font-size: calc(11px * var(--ptc-font-scale, 1));
-  letter-spacing: .012em;
-}
-
-.registrar-subject-management__eyebrow-icon {
-  color: #fff;
-  background: rgba(255,255,255,.15);
-  border: 1px solid rgba(255,255,255,.23);
-}
-
-.registrar-subject-management__hero h1 {
-  color: #fff;
-  font-size: clamp(calc(30px * var(--ptc-font-scale, 1)), calc(3.4vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
-  font-weight: 760;
-  letter-spacing: -0.025em;
-}
-
-.registrar-subject-management__hero p {
-  color: rgba(242,255,248,.91);
-  font-size: calc(14px * var(--ptc-font-scale, 1));
-  line-height: 1.65;
-}
-
-.registrar-subject-management__hero-actions {
-  align-self: center;
-}
-
-.registrar-subject-management__hero-actions .registrar-subject-management__button {
-  min-height: 43px;
-  padding: calc(11px * var(--ptc-compact-scale, 1)) calc(16px * var(--ptc-compact-scale, 1));
-  border-radius: 11px;
-}
-
-.registrar-subject-management__hero-actions .registrar-subject-management__button--secondary {
-  color: #09643c;
-  background: #fff;
-  border-color: rgba(255,255,255,.65);
-  box-shadow: 0 7px 17px rgba(4,44,22,.12);
-}
-
-.registrar-subject-management__hero-actions .registrar-subject-management__button--primary {
-  color: #074427;
-  background: #eaf9ee;
-  border-color: #d9f3e1;
-  box-shadow: 0 7px 17px rgba(4,44,22,.13);
-}
-
-.registrar-subject-management__hero-actions .registrar-subject-management__button:hover:not(:disabled) {
-  background: #dbf3e4;
-  color: #064528;
-}
-
-/* Four metrics, same order and real data as TSX. */
+/* Summary Cards */
 
 .registrar-subject-management__stats {
   position: relative;
@@ -1252,7 +1114,7 @@
   font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
-/* Directory card */
+/* Subject Table */
 
 .registrar-subject-management__workspace {
   position: relative;
@@ -1377,7 +1239,7 @@
   background: #0b7141;
 }
 
-/* Responsive: visual panels can wrap, but table stays horizontally scrollable. */
+/* Responsive */
 
 @media (max-width: 1250px) {
   .registrar-subject-management__stats { gap: calc(10px * var(--ptc-compact-scale, 1)); }
@@ -1398,7 +1260,7 @@
 
 @media (max-width: 580px) {
   .registrar-subject-management { padding: calc(16px * var(--ptc-compact-scale, 1)) calc(12px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1)); }
-  .registrar-subject-management__hero { padding: calc(23px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1)); border-radius: 17px; }
+  .registrar-subject-management__hero { padding: calc(23px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1)); border-radius: 14px; }
   .registrar-subject-management__stats { grid-template-columns: 1fr; padding: calc(7px * var(--ptc-compact-scale, 1)); border-radius: 17px; }
   .registrar-subject-management__stat-card { min-height: 98px; }
   .registrar-subject-management__workspace { border-radius: 17px; }
@@ -1419,35 +1281,35 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
   --rsm-text-800: #dce5e1;
   --rsm-text-600: #b9c9c4;
   --rsm-text-500: #a2b5ae;
-  --rsm-border: #35444a;
-  --rsm-border-strong: #4b5e64;
-  --rsm-surface: #171e22;
+  --rsm-border: #35464B;
+  --rsm-border-strong: #4b5d63;
+  --rsm-surface: #20292E;
   --rsm-bg: #111719;
   color: #f0f5f3;
   color-scheme: dark;
   background: #111719;
 }
-/* Keep the Light Mode framing out of Dark Mode */
+
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management::before,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management::after {
   content: none;
 }
-/* Keep the hero borderless and consistent in Dark Mode. */
+
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__hero {
-  border: 0 !important;
-  outline: none !important;
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+  border: 1px solid #245642;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #093522, #0B5133);
+  box-shadow: none;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__stats {
-  background: #171e22;
-  border-color: #35444a;
+  background: #192226;
+  border-color: #35464B;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__stat-card {
-  background: #20292e;
-  border: 1px solid #394a50;
+  background: #20292E;
+  border: 1px solid #35464B;
   box-shadow: none;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__stat-card strong,
@@ -1471,8 +1333,8 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__workspace-header,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__toolbar,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__pagination {
-  background: #171e22;
-  border-color: #35444a;
+  background: #192226;
+  border-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__table th {
   background: #263238;
@@ -1528,4 +1390,18 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
   color: #f0f5f3;
   background: #20292e;
   border-color: #55676b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__hero :is(h1, p, .registrar-subject-management__eyebrow),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__eyebrow-icon {
+  color: #F6FFF9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__hero-actions .registrar-subject-management__button--primary {
+  border-color: #B7E4C8;
+  background: #E5F7EC;
+  color: #0A4B2E;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-subject-management__hero-actions .registrar-subject-management__button--primary:hover:not(:disabled) {
+  background: #D4F0DF;
+  color: #0A4B2E;
 }

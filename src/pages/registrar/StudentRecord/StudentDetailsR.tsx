@@ -361,13 +361,12 @@ export default function StudentDetailsR() {
               <span className="registrar-student-details__eyebrow-icon">
                 <IdCard size={15} strokeWidth={2.2} />
               </span>
-              Student Records
+              REGISTRAR · STUDENT RECORDS
             </span>
 
             <h1>Student Details</h1>
             <p>
-              Review the student&apos;s profile, academic placement, contact
-              information, and available Registrar record actions.
+              View and manage student information, academic records, and enrollment details in one organized workspace.
             </p>
           </div>
 
@@ -381,18 +380,6 @@ export default function StudentDetailsR() {
               Back to Student List
             </button>
 
-            <button
-              type="button"
-              className="registrar-student-details__button registrar-student-details__button--primary"
-              onClick={() => setRefreshKey((current) => current + 1)}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? "registrar-student-details__spin" : ""}
-              />
-              {loading ? "Refreshing" : "Refresh"}
-            </button>
           </div>
         </section>
 

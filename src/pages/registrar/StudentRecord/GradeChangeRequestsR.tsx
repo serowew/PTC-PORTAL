@@ -11,7 +11,6 @@ import {
   FilePenLine,
   GraduationCap,
   History,
-  RefreshCw,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -575,22 +574,14 @@ export default function GradeChangeRequestsR() {
   if (!authenticated || userRole !== "Registrar") return null;
   return (
     <DashboardLayout>
-      <main className="registrar-grade-change-page">
+      <main className="registrar-grade-change-page" aria-busy={loading || refreshing}>
         <section className="registrar-grade-change-hero">
           <div className="registrar-grade-change-hero-copy">
-            <button
-              type="button"
-              className="registrar-grade-change-back"
-              onClick={() => navigate("/registrar/dashboard")}
-            >
-              <ArrowLeft size={15} />
-              Dashboard
-            </button>
             <div className="registrar-grade-change-eyebrow">
               <span className="registrar-grade-change-eyebrow-icon">
                 <FileCheck2 size={16} />
               </span>
-              Registrar · Official Grade Changes
+              REGISTRAR · STUDENT RECORDS
             </div>
             <h1>INC Completion Processing</h1>
             <p>
@@ -602,18 +593,11 @@ export default function GradeChangeRequestsR() {
           <div className="registrar-grade-change-hero-actions">
             <button
               type="button"
-              className="registrar-grade-change-refresh"
-              onClick={() => {
-                setNotice(null);
-                setRefreshKey((current) => current + 1);
-              }}
-              disabled={loading || refreshing || processingId !== null}
+              className="registrar-grade-change-back"
+              onClick={() => navigate("/registrar/dashboard")}
             >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "registrar-grade-change-spin" : ""}
-              />
-              {refreshing ? "Refreshing..." : "Refresh Queue"}
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Registrar
             </button>
           </div>
         </section>

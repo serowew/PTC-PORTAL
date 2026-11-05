@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCcw, Search, ShieldCheck } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
@@ -80,27 +80,20 @@ export default function ManualPaymentVerifications() {
   return (
     <DashboardLayout>
       <main className="registrar-manual-payment">
-        <header className="registrar-manual-payment__header">
-          <div>
-            <span>
-              <ShieldCheck size={16} />
-              Registrar
-            </span>
+        <div className="registrar-manual-payment__header-frame">
+          <header className="registrar-manual-payment__header">
+            <div>
+              <span>
+                <ShieldCheck size={16} />
+                REGISTRAR · FINANCE
+              </span>
 
-            <h1>Finance Payment History</h1>
+              <h1>Payment History</h1>
 
-            <p>View paid Finance transactions. This page is read-only.</p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void load(page, search)}
-            disabled={loading}
-          >
-            <RefreshCcw size={16} />
-            Refresh
-          </button>
-        </header>
+              <p>View paid Finance transactions. This page is read-only.</p>
+            </div>
+          </header>
+        </div>
 
         {error && <p className="registrar-manual-payment__error">{error}</p>}
 

@@ -704,7 +704,7 @@ export default function EnrollmentManagementR() {
               <span className="registrar-enrollment-management__eyebrow-icon">
                 <ClipboardCheck size={16} aria-hidden="true" />
               </span>
-              Registrar · Enrollment
+              REGISTRAR · ENROLLMENT
             </div>
             <h1>Student Enrollment</h1>
             <p>
@@ -725,21 +725,6 @@ export default function EnrollmentManagementR() {
               </button>
             )}
 
-            <button
-              type="button"
-              className="registrar-enrollment-management__button registrar-enrollment-management__button--primary"
-              onClick={() => setRefreshKey((value) => value + 1)}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={16}
-                className={
-                  loading ? "registrar-enrollment-management__spin" : ""
-                }
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
           </div>
         </section>
 

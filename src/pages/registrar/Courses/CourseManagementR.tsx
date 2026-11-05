@@ -331,11 +331,6 @@ export default function CoursemanagementR() {
     setDepartment("All");
   };
 
-  const handleRefresh = () => {
-    void loadDepartments();
-    void loadCourses();
-  };
-
   const handleCourseAdded = async () => {
     setShowAddCourse(false);
     await loadCourses();
@@ -455,31 +450,16 @@ export default function CoursemanagementR() {
               <span className="registrar-course-management__eyebrow-icon">
                 <GraduationCap size={16} aria-hidden="true" />
               </span>
-              Registrar · Academic Setup
+              REGISTRAR · ACADEMIC SETUP
             </div>
 
             <h1>Course Management</h1>
             <p>
-              Maintain the academic programs offered by PTC, their department
-              assignments, and standard program duration.
+              Manage academic courses, program information, and course offerings in one organized workspace.
             </p>
           </div>
 
           <div className="registrar-course-management__hero-actions">
-            <button
-              type="button"
-              className="registrar-course-management__button registrar-course-management__button--secondary"
-              onClick={handleRefresh}
-              disabled={loading || loadingDepartments}
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? "is-spinning" : ""}
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
-
             <button
               type="button"
               className="registrar-course-management__button registrar-course-management__button--primary"
