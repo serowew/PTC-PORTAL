@@ -2167,3 +2167,127 @@
     max-height: 130px;
   }
 }
+
+/* Batch Review Period */
+
+.offering-batches-review-period-filters {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(180px, 1fr))
+    minmax(210px, 1.25fr);
+  align-items: end;
+  gap: 14px;
+  margin: -4px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--ob-border);
+  border-radius: 14px;
+  background: #f5fbf7;
+}
+
+.offering-batches-review-period-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.offering-batches-review-period-field > span {
+  color: #4f6357;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.offering-batches-review-period-field select {
+  width: 100%;
+  min-height: 45px;
+  padding: 0 13px;
+  border: 1px solid #d2e4d7;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ob-ink);
+  font: inherit;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+
+.offering-batches-review-period-field select:focus-visible {
+  outline: 2px solid rgba(15, 151, 83, 0.3);
+  outline-offset: 1px;
+  border-color: #159452;
+}
+
+.offering-batches-review-period-field select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.offering-batches-review-period-context {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding-bottom: 6px;
+  color: var(--ob-muted);
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  line-height: 1.5;
+}
+
+.offering-batches-review-period-context svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.offering-batches-review-period-context small {
+  display: block;
+  margin-top: 3px;
+}
+
+/* Responsive */
+
+@media (max-width: 950px) {
+  .offering-batches-review-period-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .offering-batches-review-period-context {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .offering-batches-review-period-filters {
+    grid-template-columns: 1fr;
+    padding: 13px;
+  }
+
+  .offering-batches-review-period-context {
+    grid-column: auto;
+  }
+}
+
+/* Dark Mode */
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .offering-batches-review-period-filters {
+  background: #20292e;
+  border-color: #35464b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .offering-batches-review-period-field
+  > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .offering-batches-review-period-context {
+  color: #c1d3c4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .offering-batches-review-period-field
+  select {
+  background: #192226;
+  border-color: #42624a;
+  color: #eef8f0;
+  color-scheme: dark;
+}

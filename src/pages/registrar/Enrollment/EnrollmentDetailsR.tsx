@@ -4815,51 +4815,61 @@ export default function EnrollmentDetailsR() {
               <strong>{enrollment.academic_period.semester_name}</strong>
             </div>
 
-            <div className="detail-item">
+            <div className="detail-item enrollment-metric enrollment-metric--total">
               <span>Total Subjects</span>
-
               <strong>{summary?.total_subjects ?? subjects.length}</strong>
             </div>
 
-            <div className="detail-item">
+            <div className="detail-item enrollment-metric enrollment-metric--total">
               <span>Total Units</span>
-
               <strong>{summary?.total_units ?? 0}</strong>
             </div>
 
-            <div className="detail-item">
+            <div className="detail-item enrollment-metric enrollment-metric--regular">
               <span>Regular</span>
-
               <strong>{regularSubjectCount}</strong>
             </div>
 
-            <div className="detail-item">
+            <div
+              className={`detail-item enrollment-metric enrollment-metric--retake ${
+                retakeSubjectCount > 0 ? "is-active" : "is-zero"
+              }`}
+            >
               <span>Retake</span>
-
               <strong>{retakeSubjectCount}</strong>
             </div>
 
-            <div className="detail-item">
+            <div
+              className={`detail-item enrollment-metric enrollment-metric--carry ${
+                carryOverSubjectCount > 0 ? "is-active" : "is-zero"
+              }`}
+            >
               <span>Carry Over</span>
-
               <strong>{carryOverSubjectCount}</strong>
             </div>
 
-            <div className="detail-item">
+            <div
+              className={`detail-item enrollment-metric enrollment-metric--irregular ${
+                irregularSubjectCount > 0 ? "is-active" : "is-zero"
+              }`}
+            >
               <span>Irregular Subjects</span>
-
               <strong>{irregularSubjectCount}</strong>
             </div>
 
-            <div className="detail-item">
+            <div className="detail-item enrollment-metric enrollment-metric--assigned">
               <span>Assigned</span>
-
               <strong>{summary?.assigned_subjects ?? 0}</strong>
             </div>
 
-            <div className="detail-item">
+            <div
+              className={`detail-item enrollment-metric enrollment-metric--unassigned ${
+                Number(summary?.unassigned_subjects ?? 0) > 0
+                  ? "is-active"
+                  : "is-zero"
+              }`}
+            >
               <span>Unassigned</span>
-
               <strong>{summary?.unassigned_subjects ?? 0}</strong>
             </div>
 

@@ -148,6 +148,13 @@ interface BatchListResponse extends ApiResponse {
   batches?: BatchListItem[];
 }
 
+interface ReviewPeriodOption {
+  academic_year_id: number;
+  academic_year: string;
+  semester_id: number;
+  semester_name: string;
+}
+
 interface BatchDetailResponse extends ApiResponse {
   batch?: BatchDetail;
 }
@@ -279,6 +286,9 @@ export default function ClassOfferingManagementR() {
   const [facultyReviewId, setFacultyReviewId] = useState<number | null>(null);
   const [facultyReviewError, setFacultyReviewError] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [reviewAcademicYearId, setReviewAcademicYearId] = useState("");
+  const [reviewSemesterId, setReviewSemesterId] = useState("");
+  const [reviewPeriodInitialized, setReviewPeriodInitialized] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<BatchDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [initialError, setInitialError] = useState("");
@@ -615,27 +625,167 @@ export default function ClassOfferingManagementR() {
     if (userRole === "Registrar") void loadBatches();
   }, [userRole, loadBatches, refreshKey]);
 
+  // Batch Review Period
+
+  const reviewPeriods = useMemo<ReviewPeriodOption[]>(() => {
+    const options = new Map<string, ReviewPeriodOption>();
+
+    for (const batch of batches) {
+      options.set(`${batch.academic_year_id}:${batch.semester_id}`, {
+        academic_year_id: Number(batch.academic_year_id),
+        academic_year: batch.academic_year,
+        semester_id: Number(batch.semester_id),
+        semester_name: batch.semester_name,
+      });
+    }
+
+    // Include open terms even before their first batch exists.
+    for (const period of periods) {
+      const key = `${period.academic_year_id}:${period.semester_id}`;
+
+      if (!options.has(key)) {
+        options.set(key, {
+          academic_year_id: Number(period.academic_year_id),
+          academic_year: period.academic_year,
+          semester_id: Number(period.semester_id),
+          semester_name: period.semester_name,
+        });
+      }
+    }
+
+    return Array.from(options.values()).sort((a, b) => {
+      const yearOrder = b.academic_year.localeCompare(
+        a.academic_year,
+        undefined,
+        { numeric: true },
+      );
+
+      return yearOrder || b.semester_id - a.semester_id;
+    });
+  }, [batches, periods]);
+
+  const reviewAcademicYears = useMemo(() => {
+    const unique = new Map<number, string>();
+
+    for (const period of reviewPeriods) {
+      unique.set(period.academic_year_id, period.academic_year);
+    }
+
+    return Array.from(unique, ([id, name]) => ({
+      id,
+      name,
+    })).sort((a, b) =>
+      b.name.localeCompare(a.name, undefined, { numeric: true }),
+    );
+  }, [reviewPeriods]);
+
+  const reviewSemesters = useMemo(
+    () =>
+      reviewPeriods.filter(
+        (period) => String(period.academic_year_id) === reviewAcademicYearId,
+      ),
+    [reviewPeriods, reviewAcademicYearId],
+  );
+
+  // Select the open term when the page first loads.
+  useEffect(() => {
+    if (
+      reviewPeriodInitialized ||
+      initialLoading ||
+      queueLoading ||
+      reviewPeriods.length === 0
+    ) {
+      return;
+    }
+
+    const openTerm = periods.find((period) => period.status === "Open");
+
+    const defaultPeriod =
+      reviewPeriods.find(
+        (period) =>
+          openTerm &&
+          period.academic_year_id === Number(openTerm.academic_year_id) &&
+          period.semester_id === Number(openTerm.semester_id),
+      ) ?? reviewPeriods[0];
+
+    setReviewAcademicYearId(String(defaultPeriod.academic_year_id));
+
+    setReviewSemesterId(String(defaultPeriod.semester_id));
+
+    setReviewPeriodInitialized(true);
+  }, [
+    reviewPeriodInitialized,
+    initialLoading,
+    queueLoading,
+    reviewPeriods,
+    periods,
+  ]);
+
+  // Only show batches from the selected academic period.
+  const reviewPeriodBatches = useMemo(
+    () =>
+      batches.filter(
+        (batch) =>
+          String(batch.academic_year_id) === reviewAcademicYearId &&
+          String(batch.semester_id) === reviewSemesterId,
+      ),
+    [batches, reviewAcademicYearId, reviewSemesterId],
+  );
+
   const visibleBatches = useMemo(
     () =>
       statusFilter === "All"
-        ? batches
-        : batches.filter((batch) => batch.batch_status === statusFilter),
-    [batches, statusFilter],
+        ? reviewPeriodBatches
+        : reviewPeriodBatches.filter(
+            (batch) => batch.batch_status === statusFilter,
+          ),
+    [reviewPeriodBatches, statusFilter],
   );
 
   const statusCounts = useMemo(
     () => ({
-      pending: batches.filter(
+      pending: reviewPeriodBatches.filter(
         (batch) => batch.batch_status === "Pending Program Head",
       ).length,
-      ready: batches.filter(
+
+      ready: reviewPeriodBatches.filter(
         (batch) => batch.batch_status === "Ready for Registrar",
       ).length,
-      published: batches.filter((batch) => batch.batch_status === "Published")
-        .length,
+
+      published: reviewPeriodBatches.filter(
+        (batch) => batch.batch_status === "Published",
+      ).length,
     }),
-    [batches],
+    [reviewPeriodBatches],
   );
+
+  // Keep pending work in other periods discoverable.
+  const otherPeriodInProgressCount = useMemo(
+    () =>
+      batches.filter(
+        (batch) =>
+          batch.batch_status !== "Published" &&
+          !(
+            String(batch.academic_year_id) === reviewAcademicYearId &&
+            String(batch.semester_id) === reviewSemesterId
+          ),
+      ).length,
+    [batches, reviewAcademicYearId, reviewSemesterId],
+  );
+
+  const handleReviewAcademicYearChange = (value: string) => {
+    setReviewAcademicYearId(value);
+
+    const latestSemester = reviewPeriods.find(
+      (period) => String(period.academic_year_id) === value,
+    );
+
+    setReviewSemesterId(
+      latestSemester ? String(latestSemester.semester_id) : "",
+    );
+
+    setStatusFilter("All");
+  };
 
   const toggleSection = (sectionId: number) => {
     setSelectedSectionIds((current) =>
@@ -1428,6 +1578,77 @@ export default function ClassOfferingManagementR() {
               </select>
             </label>
           </div>
+
+          <div
+            className="offering-batches-review-period-filters"
+            aria-label="Batch review academic period"
+          >
+            <label className="offering-batches-review-period-field">
+              <span>Academic Year</span>
+
+              <select
+                value={reviewAcademicYearId}
+                onChange={(event) =>
+                  handleReviewAcademicYearChange(event.target.value)
+                }
+                disabled={reviewAcademicYears.length === 0}
+              >
+                {reviewAcademicYears.length === 0 && (
+                  <option value="">No academic years</option>
+                )}
+
+                {reviewAcademicYears.map((year) => (
+                  <option key={year.id} value={String(year.id)}>
+                    {year.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="offering-batches-review-period-field">
+              <span>Semester</span>
+
+              <select
+                value={reviewSemesterId}
+                onChange={(event) => {
+                  setReviewSemesterId(event.target.value);
+                  setStatusFilter("All");
+                }}
+                disabled={!reviewAcademicYearId || reviewSemesters.length === 0}
+              >
+                {reviewSemesters.length === 0 && (
+                  <option value="">No semesters</option>
+                )}
+
+                {reviewSemesters.map((period) => (
+                  <option
+                    key={`${period.academic_year_id}-${period.semester_id}`}
+                    value={String(period.semester_id)}
+                  >
+                    {period.semester_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="offering-batches-review-period-context">
+              <CalendarDays size={17} aria-hidden="true" />
+
+              <span>
+                {reviewAcademicYearId && reviewSemesterId
+                  ? `${reviewPeriodBatches.length} batch(es) in selected term`
+                  : "Choose an academic period to review batches."}
+
+                {otherPeriodInProgressCount > 0 && (
+                  <small>
+                    {otherPeriodInProgressCount} in-progress batch(es) in other
+                    periods. Use the filters to review them.
+                  </small>
+                )}
+              </span>
+            </div>
+          </div>
+
           {queueError && (
             <div className="offering-batches-alert offering-batches-alert--error">
               <AlertCircle size={18} />
@@ -1441,7 +1662,7 @@ export default function ClassOfferingManagementR() {
             </div>
           ) : visibleBatches.length === 0 ? (
             <div className="offering-batches-empty">
-              No batches match this status.
+              No batches match the selected academic period and status.
             </div>
           ) : (
             <div className="offering-batches-list">

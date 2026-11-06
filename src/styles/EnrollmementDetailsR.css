@@ -2309,7 +2309,10 @@
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
 
 .registrar-enrollment-details .back-btn:hover {
@@ -3023,17 +3026,44 @@
   color: var(--details-text);
   background-color: #deeee4;
   background-image:
-    radial-gradient(circle at 90% 2%, rgba(240, 212, 116, 0.15), transparent 24%),
-    radial-gradient(circle at 11% 45%, rgba(44, 149, 97, 0.14), transparent 34%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.17) 0 17px, rgba(38, 120, 77, 0.045) 17px 45px, transparent 45px 83px),
-    repeating-linear-gradient(45deg, transparent 0 70px, rgba(70, 147, 108, 0.075) 70px 89px, transparent 89px 144px),
+    radial-gradient(
+      circle at 90% 2%,
+      rgba(240, 212, 116, 0.15),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 11% 45%,
+      rgba(44, 149, 97, 0.14),
+      transparent 34%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.17) 0 17px,
+      rgba(38, 120, 77, 0.045) 17px 45px,
+      transparent 45px 83px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 70px,
+      rgba(70, 147, 108, 0.075) 70px 89px,
+      transparent 89px 144px
+    ),
     linear-gradient(120deg, #d9eee1 0%, #e9f4ec 51%, #d8eadd 100%);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .registrar-enrollment-details *,
 .registrar-enrollment-details *::before,
-.registrar-enrollment-details *::after { box-sizing: border-box; }
+.registrar-enrollment-details *::after {
+  box-sizing: border-box;
+}
 
 /* Back navigation: remains in the normal flow, above the hero. */
 .registrar-enrollment-details .enrollment-details-back-row {
@@ -3151,7 +3181,9 @@
   color: #d6f4e3;
   font-size: 0.9rem;
 }
-.registrar-enrollment-details .enrollment-header-badges { gap: 8px; }
+.registrar-enrollment-details .enrollment-header-badges {
+  gap: 8px;
+}
 .registrar-enrollment-details .enrollment-details-identity .status,
 .registrar-enrollment-details .enrollment-details-identity .irregular-badge {
   border-color: rgba(255, 255, 255, 0.28);
@@ -3204,21 +3236,51 @@
   background: rgba(22, 142, 77, 0.075);
   pointer-events: none;
 }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(2) {
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(2) {
   background: #fff8e6;
 }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(2)::before { background: #e2a414; }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(2)::after { background: rgba(225, 161, 12, 0.09); }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(3) {
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(2)::before {
+  background: #e2a414;
+}
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(2)::after {
+  background: rgba(225, 161, 12, 0.09);
+}
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(3) {
   background: #f0f6ff;
 }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(3)::before { background: #3174ef; }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(3)::after { background: rgba(42, 106, 220, 0.08); }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(4) {
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(3)::before {
+  background: #3174ef;
+}
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(3)::after {
+  background: rgba(42, 106, 220, 0.08);
+}
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(4) {
   background: #f8f2ff;
 }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(4)::before { background: #8640e3; }
-.registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(4)::after { background: rgba(118, 44, 206, 0.085); }
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(4)::before {
+  background: #8640e3;
+}
+.registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(4)::after {
+  background: rgba(118, 44, 206, 0.085);
+}
 .registrar-enrollment-details .enrollment-details-header-summary span {
   margin-bottom: 6px;
   color: #63766c;
@@ -3255,8 +3317,12 @@
   font-size: 1.1rem;
   font-weight: 800;
 }
-.registrar-enrollment-details .details-card-header span { color: #667b70; }
-.registrar-enrollment-details .details-grid { padding: 5px 0; }
+.registrar-enrollment-details .details-card-header span {
+  color: #667b70;
+}
+.registrar-enrollment-details .details-grid {
+  padding: 5px 0;
+}
 .registrar-enrollment-details .detail-item {
   border-color: #edf1ed;
   padding: 17px 22px;
@@ -3275,7 +3341,9 @@
   background: #eff9f2;
 }
 .registrar-enrollment-details .remarks-box p,
-.registrar-enrollment-details .remarks-box li { color: #375143; }
+.registrar-enrollment-details .remarks-box li {
+  color: #375143;
+}
 
 /* Large subject table stays horizontally scrollable on narrow screens. */
 .registrar-enrollment-details .subjects-table-wrapper {
@@ -3296,11 +3364,19 @@
   border-bottom-color: #edf3ee;
   color: #354c3e;
 }
-.registrar-enrollment-details .subjects-table tbody tr:nth-child(even) { background: #fbfdfb; }
-.registrar-enrollment-details .subjects-table tbody tr:hover { background: #eff9f2; }
+.registrar-enrollment-details .subjects-table tbody tr:nth-child(even) {
+  background: #fbfdfb;
+}
+.registrar-enrollment-details .subjects-table tbody tr:hover {
+  background: #eff9f2;
+}
 .registrar-enrollment-details .subject-name-cell strong,
-.registrar-enrollment-details .assigned-class-cell strong { color: #173923; }
-.registrar-enrollment-details .subjects-empty { background: #f8fcf8; }
+.registrar-enrollment-details .assigned-class-cell strong {
+  color: #173923;
+}
+.registrar-enrollment-details .subjects-empty {
+  background: #f8fcf8;
+}
 
 /* Buttons and form controls remain native interactive elements. */
 .registrar-enrollment-details .subject-action-btn {
@@ -3314,11 +3390,30 @@
   border-color: #0b7546;
   color: #ffffff;
 }
-.registrar-enrollment-details .subject-action-btn.danger { background: #fff0ed; border-color: #f7cbc5; color: #b42318; }
-.registrar-enrollment-details .subject-action-btn.danger:hover:not(:disabled) { background: #b42318; color: #ffffff; }
-.registrar-enrollment-details .subject-replace-btn { background: #fff8e9; border-color: #f5d99f; color: #905d0c; }
-.registrar-enrollment-details .subject-replace-btn:hover:not(:disabled) { background: #9b5c17; border-color: #9b5c17; color: #ffffff; }
-.registrar-enrollment-details .bulk-section-btn { background: #daf7e4; border-color: #a1dcb6; color: #0b6339; }
+.registrar-enrollment-details .subject-action-btn.danger {
+  background: #fff0ed;
+  border-color: #f7cbc5;
+  color: #b42318;
+}
+.registrar-enrollment-details .subject-action-btn.danger:hover:not(:disabled) {
+  background: #b42318;
+  color: #ffffff;
+}
+.registrar-enrollment-details .subject-replace-btn {
+  background: #fff8e9;
+  border-color: #f5d99f;
+  color: #905d0c;
+}
+.registrar-enrollment-details .subject-replace-btn:hover:not(:disabled) {
+  background: #9b5c17;
+  border-color: #9b5c17;
+  color: #ffffff;
+}
+.registrar-enrollment-details .bulk-section-btn {
+  background: #daf7e4;
+  border-color: #a1dcb6;
+  color: #0b6339;
+}
 .registrar-enrollment-details button:focus-visible,
 .registrar-enrollment-details select:focus-visible,
 .registrar-enrollment-details textarea:focus-visible,
@@ -3343,7 +3438,9 @@
   background: #0b7544;
   color: #ffffff;
 }
-.registrar-enrollment-details .approve-enrollment-btn:hover:not(:disabled) { background: #086137; }
+.registrar-enrollment-details .approve-enrollment-btn:hover:not(:disabled) {
+  background: #086137;
+}
 
 /* Keep existing dialog behavior; only align surface and visual hierarchy. */
 .registrar-enrollment-details .assignment-modal-backdrop {
@@ -3361,16 +3458,26 @@
   background: linear-gradient(110deg, #064b30, #08703f 78%, #14884e);
 }
 .registrar-enrollment-details .assignment-modal-header h2,
-.registrar-enrollment-details .assignment-modal-header .assignment-modal-eyebrow { color: #ffffff; }
+.registrar-enrollment-details
+  .assignment-modal-header
+  .assignment-modal-eyebrow {
+  color: #ffffff;
+}
 .registrar-enrollment-details .assignment-modal-header p,
-.registrar-enrollment-details .assignment-modal-header small { color: #d6f3e2; }
+.registrar-enrollment-details .assignment-modal-header small {
+  color: #d6f3e2;
+}
 .registrar-enrollment-details .assignment-modal-close {
   border-color: rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
-.registrar-enrollment-details .assignment-modal-close:hover { background: rgba(255, 255, 255, 0.24); }
-.registrar-enrollment-details .assignment-modal-body { background: #ffffff; }
+.registrar-enrollment-details .assignment-modal-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+.registrar-enrollment-details .assignment-modal-body {
+  background: #ffffff;
+}
 .registrar-enrollment-details .assignment-modal-footer {
   background: #f4faf5;
   border-color: #dfebe2;
@@ -3384,15 +3491,24 @@
   background: #075c36;
   border-color: #075c36;
 }
-.registrar-enrollment-details .assignment-offering-option { border-radius: 12px; }
-.registrar-enrollment-details .assignment-offering-option:hover { border-color: #8ac9a0; }
+.registrar-enrollment-details .assignment-offering-option {
+  border-radius: 12px;
+}
+.registrar-enrollment-details .assignment-offering-option:hover {
+  border-color: #8ac9a0;
+}
 .registrar-enrollment-details .assignment-offering-option.selected,
-.registrar-enrollment-details .assignment-offering-option.is-selected { border-color: #12914f; background: #eff9f3; }
+.registrar-enrollment-details .assignment-offering-option.is-selected {
+  border-color: #12914f;
+  background: #eff9f3;
+}
 .registrar-enrollment-details .assignment-selected-summary {
   border-color: #cfe7d6;
   background: #f0f9f3;
 }
-.registrar-enrollment-details .assignment-modal-spinner { border-top-color: #0b7544; }
+.registrar-enrollment-details .assignment-modal-spinner {
+  border-top-color: #0b7544;
+}
 
 /* Loading + error surfaces use this page's palette with no white overlay. */
 .registrar-enrollment-details .enrollment-details-loading {
@@ -3407,32 +3523,82 @@
 
 /* Accessibility and narrow content-width responses. */
 @media (max-width: 1150px) {
-  .registrar-enrollment-details .enrollment-details-header-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .registrar-enrollment-details .enrollment-details-header-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 760px) {
-  .registrar-enrollment-details { padding: 17px 15px 32px; }
-  .registrar-enrollment-details .enrollment-details-identity { min-height: 145px; padding: 23px 20px; border-radius: 17px; }
-  .registrar-enrollment-details .enrollment-details-header-summary { gap: 9px; padding: 9px; border-radius: 16px; }
-  .registrar-enrollment-details .enrollment-details-header-summary > div { min-height: 91px; padding: 15px 12px 14px 17px; }
-  .registrar-enrollment-details .enrollment-details-card { border-radius: 14px; }
-  .registrar-enrollment-details .details-card-header { padding: 16px 17px; }
+  .registrar-enrollment-details {
+    padding: 17px 15px 32px;
+  }
+  .registrar-enrollment-details .enrollment-details-identity {
+    min-height: 145px;
+    padding: 23px 20px;
+    border-radius: 17px;
+  }
+  .registrar-enrollment-details .enrollment-details-header-summary {
+    gap: 9px;
+    padding: 9px;
+    border-radius: 16px;
+  }
+  .registrar-enrollment-details .enrollment-details-header-summary > div {
+    min-height: 91px;
+    padding: 15px 12px 14px 17px;
+  }
+  .registrar-enrollment-details .enrollment-details-card {
+    border-radius: 14px;
+  }
+  .registrar-enrollment-details .details-card-header {
+    padding: 16px 17px;
+  }
 }
 @media (max-width: 500px) {
-  .registrar-enrollment-details { padding: 14px 11px 26px; }
-  .registrar-enrollment-details .enrollment-details-identity { gap: 12px; padding: 20px 16px; }
-  .registrar-enrollment-details .enrollment-details-avatar { flex-basis: 46px; width: 46px; height: 46px; border-radius: 12px; }
-  .registrar-enrollment-details .enrollment-details-header-summary { grid-template-columns: 1fr; }
-  .registrar-enrollment-details .enrollment-details-header-summary > div { min-height: 72px; }
-  .registrar-enrollment-details .enrollment-details-name-row h1 { font-size: 1.5rem; }
+  .registrar-enrollment-details {
+    padding: 14px 11px 26px;
+  }
+  .registrar-enrollment-details .enrollment-details-identity {
+    gap: 12px;
+    padding: 20px 16px;
+  }
+  .registrar-enrollment-details .enrollment-details-avatar {
+    flex-basis: 46px;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+  .registrar-enrollment-details .enrollment-details-header-summary {
+    grid-template-columns: 1fr;
+  }
+  .registrar-enrollment-details .enrollment-details-header-summary > div {
+    min-height: 72px;
+  }
+  .registrar-enrollment-details .enrollment-details-name-row h1 {
+    font-size: 1.5rem;
+  }
 }
 
 /* Dark mode: charcoal page canvas prevents a bright white page transition.
    Shared Sidebar and Footer deliberately receive no overrides here. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .dashboard-main:has(.registrar-enrollment-details) > .dashboard-content {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .dashboard-main:has(.registrar-enrollment-details)
+  > .dashboard-content {
   background-color: #101b14;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
   .registrar-enrollment-details {
   --details-bg: #101b14;
   --details-card: #1a2b20;
@@ -3448,96 +3614,547 @@
   background: #101b14;
   color: #dcece0;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .back-btn { background: #203829; color: #d6f4df; border-color: #3b6048; box-shadow: none; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary { background: #1b2d21; border-color: #345340; box-shadow: none; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary > div { background: #203d2b; border-color: #355542; box-shadow: none; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(2) { background: #3b321e; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(3) { background: #22334a; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary > div:nth-child(4) { background: #332543; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary span { color: #bfd3c5; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-header-summary strong { color: #f1f9f3; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-card { background: #1b2c21; border-color: #34513f; box-shadow: none; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .details-card-header { background: #23372a; border-color: #365241; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .details-card-header h2,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .detail-item strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subject-name-cell strong,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assigned-class-cell strong { color: #edf7f0; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .details-card-header span,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .detail-item > span:first-child,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .detail-item small { color: #b9cdbf; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .detail-item { border-color: #345140; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .remarks-box,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-selected-summary { background: #213d2b; border-color: #3b6249; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .remarks-box p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .remarks-box li { color: #d8ebdd; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subjects-table thead th { background: #263d2d; border-color: #375543; color: #cce0d0; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subjects-table tbody td { background: transparent; color: #d7eadd; border-color: #365040; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subjects-table tbody tr:nth-child(even),
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subjects-empty { background: #203329; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subjects-table tbody tr:hover { background: #2b4b35; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .subject-action-btn { color: #c8f3d7; background: #254c34; border-color: #3c704e; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .detail-item select,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .detail-item textarea,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-reason-field textarea,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-reason-field select,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .remarks-box textarea {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .back-btn {
+  background: #203829;
+  color: #d6f4df;
+  border-color: #3b6048;
+  box-shadow: none;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary {
+  background: #1b2d21;
+  border-color: #345340;
+  box-shadow: none;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div {
+  background: #203d2b;
+  border-color: #355542;
+  box-shadow: none;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(2) {
+  background: #3b321e;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(3) {
+  background: #22334a;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary
+  > div:nth-child(4) {
+  background: #332543;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary
+  span {
+  color: #bfd3c5;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-header-summary
+  strong {
+  color: #f1f9f3;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-card {
+  background: #1b2c21;
+  border-color: #34513f;
+  box-shadow: none;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .details-card-header {
+  background: #23372a;
+  border-color: #365241;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .details-card-header
+  h2,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .detail-item
+  strong,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subject-name-cell
+  strong,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assigned-class-cell
+  strong {
+  color: #edf7f0;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .details-card-header
+  span,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .detail-item
+  > span:first-child,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .detail-item
+  small {
+  color: #b9cdbf;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .detail-item {
+  border-color: #345140;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .remarks-box,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-selected-summary {
+  background: #213d2b;
+  border-color: #3b6249;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .remarks-box
+  p,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .remarks-box
+  li {
+  color: #d8ebdd;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subjects-table
+  thead
+  th {
+  background: #263d2d;
+  border-color: #375543;
+  color: #cce0d0;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subjects-table
+  tbody
+  td {
+  background: transparent;
+  color: #d7eadd;
+  border-color: #365040;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subjects-table
+  tbody
+  tr:nth-child(even),
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subjects-empty {
+  background: #203329;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subjects-table
+  tbody
+  tr:hover {
+  background: #2b4b35;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .subject-action-btn {
+  color: #c8f3d7;
+  background: #254c34;
+  border-color: #3c704e;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .detail-item
+  select,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .detail-item
+  textarea,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-reason-field
+  textarea,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-reason-field
+  select,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .remarks-box
+  textarea {
   background: #15291e;
   border-color: #3b6149;
   color: #ecf7ee;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-modal { background: #1b2d21; border-color: #3b5c45; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-modal-body,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-modal-footer { background: #1b2d21; border-color: #3b5c45; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-modal-footer-note,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-modal-section-heading,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-offering-meta { color: #c4daca; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-offering-option { background: #233a2a; border-color: #42624c; color: #e6f2e9; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-offering-option:hover { background: #2e4b36; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .assignment-modal-cancel { background: #263c2c; border-color: #456a51; color: #e0f0e5; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .enrollment-details-loading { background: #1e3024; border-color: #3b5e45; color: #c7e5d0; }
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-modal {
+  background: #1b2d21;
+  border-color: #3b5c45;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-modal-body,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-modal-footer {
+  background: #1b2d21;
+  border-color: #3b5c45;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-modal-footer-note,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-modal-section-heading,
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-offering-meta {
+  color: #c4daca;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-offering-option {
+  background: #233a2a;
+  border-color: #42624c;
+  color: #e6f2e9;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-offering-option:hover {
+  background: #2e4b36;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .assignment-modal-cancel {
+  background: #263c2c;
+  border-color: #456a51;
+  color: #e0f0e5;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .enrollment-details-loading {
+  background: #1e3024;
+  border-color: #3b5e45;
+  color: #c7e5d0;
+}
 
 /* Specific information blocks inside Add Subject (retain semantic class hooks). */
 .registrar-enrollment-details .add-subject-eligibility {
@@ -3548,8 +4165,191 @@
   background: #f2f7ff;
   border-color: #c9dcfa;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .registrar-enrollment-details .add-subject-availability {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-enrollment-details
+  .add-subject-availability {
   background: #202f44;
   border-color: #355880;
+}
+
+/* Enrollment Summary Highlights */
+
+.registrar-enrollment-details .detail-item.enrollment-metric {
+  --metric-bg: #f1f5f9;
+  --metric-accent: #64748b;
+  --metric-text: #475569;
+
+  min-width: 0;
+  min-height: 76px;
+  margin: 5px 4px;
+  padding: 13px 16px;
+
+  border-radius: 10px;
+  background: var(--metric-bg);
+
+  box-shadow: inset 4px 0 0 var(--metric-accent);
+
+  transition: background-color 0.2s ease;
+}
+
+.registrar-enrollment-details
+  .detail-item.enrollment-metric
+  > span:first-child {
+  color: var(--metric-text);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+}
+
+.registrar-enrollment-details .detail-item.enrollment-metric strong {
+  color: var(--metric-text);
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Total Subjects and Units */
+
+.registrar-enrollment-details .enrollment-metric--total {
+  --metric-bg: #eff6ff;
+  --metric-accent: #3b82f6;
+  --metric-text: #1d4ed8;
+}
+
+/* Regular and Assigned */
+
+.registrar-enrollment-details .enrollment-metric--regular,
+.registrar-enrollment-details .enrollment-metric--assigned {
+  --metric-bg: #f0fdf4;
+  --metric-accent: #16a34a;
+  --metric-text: #166534;
+}
+
+/* Retake */
+
+.registrar-enrollment-details .enrollment-metric--retake.is-active {
+  --metric-bg: #fff7ed;
+  --metric-accent: #ea580c;
+  --metric-text: #9a3412;
+}
+
+/* Carry Over */
+
+.registrar-enrollment-details .enrollment-metric--carry.is-active {
+  --metric-bg: #f5f3ff;
+  --metric-accent: #8b5cf6;
+  --metric-text: #6d28d9;
+}
+
+/* Irregular Subjects */
+
+.registrar-enrollment-details .enrollment-metric--irregular.is-active {
+  --metric-bg: #fffbeb;
+  --metric-accent: #d97706;
+  --metric-text: #92400e;
+}
+
+/* Unassigned Subjects */
+
+.registrar-enrollment-details .enrollment-metric--unassigned.is-active {
+  --metric-bg: #fef2f2;
+  --metric-accent: #dc2626;
+  --metric-text: #991b1b;
+}
+
+/* Zero Counts */
+
+.registrar-enrollment-details .detail-item.enrollment-metric.is-zero {
+  --metric-bg: #f1f5f9;
+  --metric-accent: #94a3b8;
+  --metric-text: #64748b;
+}
+
+/* Dark Mode */
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .detail-item.enrollment-metric {
+  background: #20292e;
+  box-shadow: inset 4px 0 0 var(--metric-accent);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .detail-item.enrollment-metric
+  > span:first-child,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .detail-item.enrollment-metric
+  strong {
+  color: var(--metric-dark-text, #e2e8f0);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--total {
+  --metric-dark-text: #93c5fd;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--regular,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--assigned {
+  --metric-dark-text: #86efac;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--retake.is-active {
+  --metric-dark-text: #fdba74;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--carry.is-active {
+  --metric-dark-text: #c4b5fd;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--irregular.is-active {
+  --metric-dark-text: #fcd34d;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .enrollment-metric--unassigned.is-active {
+  --metric-dark-text: #fca5a5;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details
+  .detail-item.enrollment-metric.is-zero {
+  --metric-accent: #64748b;
+  --metric-dark-text: #a8b7c3;
+}
+
+/* Mobile */
+
+@media (max-width: 520px) {
+  .registrar-enrollment-details .detail-item.enrollment-metric {
+    min-height: 68px;
+    margin: 4px 10px;
+    padding: 12px 14px;
+  }
+
+  .registrar-enrollment-details .detail-item.enrollment-metric strong {
+    font-size: 21px;
+  }
 }

@@ -2319,11 +2319,17 @@ home_sec.year_level AS enrollment_home_section_year_level,
         ON sub.subject_id =
            es.subject_id
 
-    LEFT JOIN sections assigned_sec
-        ON assigned_sec.section_id =
-           es.section_id
+  
+LEFT JOIN sections assigned_sec
+    ON assigned_sec.section_id =
+       es.section_id
 
-    ${whereClause}
+LEFT JOIN sections home_sec
+    ON home_sec.section_id =
+       e.home_section_id
+
+${whereClause}
+
 
     GROUP BY
         e.enrollment_id,
@@ -5345,6 +5351,51 @@ e.enrollment_status,
 
         manual_subjects: manualSubjects,
       });
+    }
+
+    // Save Enrollment Home Section
+
+    if (homeSectionChanged) {
+      const [homeResult] = await connection.execute(
+        `
+          UPDATE enrollments
+          SET home_section_id = ?
+          WHERE enrollment_id = ?
+            AND enrollment_status = 'Pending'
+        `,
+        [sectionId, enrollmentId],
+      );
+
+      if (homeResult.affectedRows !== 1) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          code: "ENROLLMENT_HOME_SECTION_UPDATE_CONFLICT",
+          message: "Enrollment Home Section could not be saved.",
+        });
+      }
+
+      await connection.execute(
+        `
+          INSERT INTO audit_trail
+            (user_id, table_name, record_id, action,
+             old_values, new_values)
+          VALUES (?, 'enrollments', ?, 'UPDATE', ?, ?)
+        `,
+        [
+          actor.user_id,
+          enrollmentId,
+          JSON.stringify({
+            home_section_id: previousHomeSectionId,
+          }),
+          JSON.stringify({
+            home_section_id: sectionId,
+            home_section_name: section.section_name,
+            reason: "Registrar Regular Section Placement",
+          }),
+        ],
+      );
     }
 
     // =================================================
@@ -12748,15 +12799,20 @@ router.get("/:id/validate", async (req, res) => {
             row.final_rating === null ? null : Number(row.final_rating),
           academic_result: classifyFinalRating(row.final_rating),
         }))
+
         .filter(
-          (subject) => subject.academic_result !== ACADEMIC_RESULT.PASSED,
+          (subject) =>
+            subject.academic_result !== ACADEMIC_RESULT.PASSED &&
+            subject.academic_result !== ACADEMIC_RESULT.FAILED,
         );
 
       if (academicReviewSubjects.length > 0) {
         warnings.push({
           code: "ACADEMIC_HISTORY_REQUIRES_REVIEW",
+
           message:
-            "Other approved enrollment records contain academic results requiring Registrar review. This is advisory until PTC academic-clearance policy is confirmed.",
+            "Previous academic records contain missing, incomplete, invalid, or unofficial-drop results requiring Registrar review.",
+
           affected_subject_count: academicReviewSubjects.length,
           subjects: academicReviewSubjects,
         });
@@ -14226,12 +14282,11 @@ router.post("/:id/approve", async (req, res) => {
     const [enrollmentRows] = await connection.execute(
       `
           SELECT
-              e.enrollment_id,
-              e.student_id,
-
-              e.academic_year_id,
-              e.semester_id,
-
+            e.enrollment_id,
+e.student_id,
+e.home_section_id,
+e.academic_year_id,
+e.semester_id,
               e.enrollment_status,
               e.remarks,
 
@@ -14552,9 +14607,13 @@ router.post("/:id/approve", async (req, res) => {
       [studentId, enrollmentId],
     );
 
-    const unresolvedAcademicHistory = previousGradeRows.some(
-      (row) => classifyFinalRating(row.final_rating) !== ACADEMIC_RESULT.PASSED,
-    );
+    const unresolvedAcademicHistory = previousGradeRows.some((row) => {
+      const result = classifyFinalRating(row.final_rating);
+
+      return (
+        result !== ACADEMIC_RESULT.PASSED && result !== ACADEMIC_RESULT.FAILED
+      );
+    });
 
     const [requiredTermRows] = await connection.execute(
       `
@@ -14593,85 +14652,6 @@ router.post("/:id/approve", async (req, res) => {
           missing_required_subjects: missingRequiredSubjects,
         },
       });
-    }
-
-    // Update the current student section only after approval.
-    if (enrollment.home_section_id != null) {
-      const homeSectionId = Number(enrollment.home_section_id);
-
-      const [homeRows] = await connection.execute(
-        `SELECT section_id
-     FROM sections
-     WHERE section_id = ?
-       AND course_id = ?
-       AND academic_year_id = ?
-       AND year_level = ?
-     LIMIT 1
-     FOR UPDATE`,
-        [homeSectionId, courseId, academicYearId, yearLevel],
-      );
-
-      if (homeRows.length !== 1) {
-        await connection.rollback();
-        transactionActive = false;
-
-        return res.status(409).json({
-          success: false,
-          code: "ENROLLMENT_HOME_SECTION_INVALID",
-          message:
-            "The designated home section does not match this enrollment.",
-        });
-      }
-
-      const [profileRows] = await connection.execute(
-        `SELECT section_id
-     FROM students
-     WHERE student_id = ?
-     FOR UPDATE`,
-        [studentId],
-      );
-
-      const previousSectionId = profileRows[0]?.section_id ?? null;
-
-      if (Number(previousSectionId || 0) !== homeSectionId) {
-        const [profileUpdate] = await connection.execute(
-          `UPDATE students
-       SET section_id = ?
-       WHERE student_id = ?
-         AND course_id = ?
-         AND year_level = ?`,
-          [homeSectionId, studentId, courseId, yearLevel],
-        );
-
-        if (profileUpdate.affectedRows !== 1) {
-          await connection.rollback();
-          transactionActive = false;
-
-          return res.status(409).json({
-            success: false,
-            code: "STUDENT_HOME_SECTION_UPDATE_CONFLICT",
-            message: "The student profile could not be synchronized.",
-          });
-        }
-
-        await connection.execute(
-          `INSERT INTO audit_trail
-        (user_id, table_name, record_id, action,
-         old_values, new_values)
-       VALUES (?, 'students', ?, 'UPDATE', ?, ?)`,
-          [
-            approvedBy,
-            studentId,
-            JSON.stringify({
-              section_id: previousSectionId,
-            }),
-            JSON.stringify({
-              section_id: homeSectionId,
-              approved_enrollment_id: enrollmentId,
-            }),
-          ],
-        );
-      }
     }
 
     // =================================================
@@ -15616,6 +15596,65 @@ router.post("/:id/approve", async (req, res) => {
       });
     }
 
+    // Resolve Enrollment Home Section
+
+    const storedHomeSectionId =
+      enrollment.home_section_id == null
+        ? null
+        : Number(enrollment.home_section_id);
+
+    let resolvedHomeSectionId = storedHomeSectionId;
+
+    const regularSubjectsForHome = subjectRows.filter(
+      (subject) =>
+        subject.status === "Enrolled" && subject.enrollment_type === "Regular",
+    );
+
+    if (resolvedHomeSectionId === null && regularSubjectsForHome.length > 0) {
+      const sectionIds = regularSubjectsForHome.map((subject) =>
+        Number(subject.section_id),
+      );
+
+      const validIds = sectionIds.filter(
+        (id) => Number.isInteger(id) && id > 0,
+      );
+
+      const uniqueIds = new Set(validIds);
+
+      if (
+        validIds.length !== regularSubjectsForHome.length ||
+        uniqueIds.size !== 1
+      ) {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(409).json({
+          success: false,
+          code: "ENROLLMENT_HOME_SECTION_REQUIRED",
+          message:
+            "Regular subjects do not establish one Home Section. Use Assign Regular Section before approval.",
+          can_approve: false,
+        });
+      }
+
+      resolvedHomeSectionId = [...uniqueIds][0];
+    }
+
+    if (
+      resolvedHomeSectionId !== null &&
+      (!Number.isInteger(resolvedHomeSectionId) || resolvedHomeSectionId <= 0)
+    ) {
+      await connection.rollback();
+      transactionActive = false;
+
+      return res.status(409).json({
+        success: false,
+        code: "ENROLLMENT_HOME_SECTION_INVALID",
+        message: "Enrollment Home Section ID is invalid.",
+        can_approve: false,
+      });
+    }
+
     // =================================================
     // 14. TOTAL UNITS
     // =================================================
@@ -15631,7 +15670,7 @@ router.post("/:id/approve", async (req, res) => {
 
     const oldValues = {
       enrollment_status: enrollment.enrollment_status,
-
+      home_section_id: storedHomeSectionId,
       remarks: enrollment.remarks || null,
 
       approved_by:
@@ -15649,29 +15688,17 @@ router.post("/:id/approve", async (req, res) => {
 
     const [updateResult] = await connection.execute(
       `
-          UPDATE enrollments
-
-          SET
-              enrollment_status =
-                  'Approved',
-
-              approved_by = ?,
-
-              approved_at =
-                  CURRENT_TIMESTAMP,
-
-              remarks =
-                  COALESCE(
-                    ?,
-                    remarks
-                  )
-
-          WHERE enrollment_id = ?
-
-            AND enrollment_status =
-                'Pending'
-        `,
-      [approvedBy, approvalRemarks, enrollmentId],
+        UPDATE enrollments
+        SET
+          enrollment_status = 'Approved',
+          home_section_id = ?,
+          approved_by = ?,
+          approved_at = CURRENT_TIMESTAMP,
+          remarks = COALESCE(?, remarks)
+        WHERE enrollment_id = ?
+          AND enrollment_status = 'Pending'
+      `,
+      [resolvedHomeSectionId, approvedBy, approvalRemarks, enrollmentId],
     );
 
     // =================================================
@@ -15688,6 +15715,142 @@ router.post("/:id/approve", async (req, res) => {
         message:
           "Enrollment could not be approved because its status changed before approval.",
       });
+    }
+
+    // Sync Current Student Section
+
+    const approvedHomeSectionId = resolvedHomeSectionId;
+
+    if (approvedHomeSectionId !== null) {
+      const [homeRows] = await connection.execute(
+        `
+          SELECT section_id
+          FROM sections
+          WHERE section_id = ?
+            AND course_id = ?
+            AND year_level = ?
+            AND academic_year_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [approvedHomeSectionId, courseId, yearLevel, academicYearId],
+      );
+
+      if (homeRows.length !== 1) {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(409).json({
+          success: false,
+          code: "INVALID_ENROLLMENT_HOME_SECTION",
+          message:
+            "Enrollment home section does not match the student's course, year level, or academic year.",
+        });
+      }
+
+      const [profileRows] = await connection.execute(
+        `
+          SELECT
+            section_id,
+            academic_year_id,
+            semester_id
+          FROM students
+          WHERE student_id = ?
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [studentId],
+      );
+
+      if (profileRows.length !== 1) {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(409).json({
+          success: false,
+          code: "STUDENT_PROFILE_NOT_FOUND",
+          message: "Student profile was not found.",
+        });
+      }
+
+      const profile = profileRows[0];
+
+      if (
+        Number(profile.academic_year_id) !== academicYearId ||
+        Number(profile.semester_id) !== semesterId
+      ) {
+        await connection.rollback();
+        transactionActive = false;
+
+        return res.status(409).json({
+          success: false,
+          code: "STUDENT_PROFILE_PERIOD_MISMATCH",
+          message:
+            "Student academic period does not match the enrollment being approved.",
+        });
+      }
+
+      const previousSectionId =
+        profile.section_id == null ? null : Number(profile.section_id);
+
+      if (previousSectionId !== approvedHomeSectionId) {
+        const [profileUpdate] = await connection.execute(
+          `
+            UPDATE students
+            SET section_id = ?
+            WHERE student_id = ?
+              AND course_id = ?
+              AND year_level = ?
+              AND academic_year_id = ?
+              AND semester_id = ?
+          `,
+          [
+            approvedHomeSectionId,
+            studentId,
+            courseId,
+            yearLevel,
+            academicYearId,
+            semesterId,
+          ],
+        );
+
+        if (profileUpdate.affectedRows !== 1) {
+          await connection.rollback();
+          transactionActive = false;
+
+          return res.status(409).json({
+            success: false,
+            code: "PROFILE_SECTION_SYNC_FAILED",
+            message: "Student section could not be updated during approval.",
+          });
+        }
+
+        await connection.execute(
+          `
+            INSERT INTO audit_trail
+              (
+                user_id,
+                table_name,
+                record_id,
+                action,
+                old_values,
+                new_values
+              )
+            VALUES (?, 'students', ?, 'UPDATE', ?, ?)
+          `,
+          [
+            approvedBy,
+            studentId,
+            JSON.stringify({
+              section_id: previousSectionId,
+            }),
+            JSON.stringify({
+              section_id: approvedHomeSectionId,
+              approved_enrollment_id: enrollmentId,
+            }),
+          ],
+        );
+      }
     }
 
     // =================================================
@@ -15728,7 +15891,7 @@ router.post("/:id/approve", async (req, res) => {
 
     const newValues = {
       enrollment_status: approvedEnrollment.enrollment_status,
-
+      home_section_id: approvedHomeSectionId,
       remarks: approvedEnrollment.remarks || null,
 
       approved_by:
