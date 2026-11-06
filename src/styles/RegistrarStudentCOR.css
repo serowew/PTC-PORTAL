@@ -1,9 +1,4 @@
-/* ====================================================================
-   PTC PORTAL — REGISTRAR / CERTIFICATE OF REGISTRATION
-   Screen-only interface refresh. The official COR contents and their
-   inline formatting are left intact in StudentCORR.tsx.
-   ==================================================================== */
-
+/* Page Layout */
 @media screen {
   /* Scope the shared layout gutter fix to this specific page. */
   .dashboard-main:has(> .dashboard-content > .registrar-cor) > .dashboard-content {
@@ -402,6 +397,204 @@
     }
   :is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
     .registrar-cor__state-card .registrar-cor__button--secondary { color: #104d2d; }
+
+  /* Header */
+  .registrar-cor__hero {
+    min-height: 0;
+    padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+    border: 1px solid #0C633B;
+    border-radius: 14px;
+    background: linear-gradient(105deg, #07512F, #0D7444);
+    box-shadow: none;
+  }
+  .registrar-cor__hero::before,
+  .registrar-cor__hero::after { content: none; display: none; }
+  .registrar-cor__eyebrow {
+    font-size: calc(12px * var(--ptc-font-scale, 1));
+    font-weight: 750;
+    color: #F6FFF9;
+  }
+  .registrar-cor__hero h1 {
+    font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), 3vw, calc(40px * var(--ptc-font-scale, 1)));
+    font-weight: 760;
+    color: #F6FFF9;
+  }
+  .registrar-cor__hero p {
+    font-size: calc(14px * var(--ptc-font-scale, 1));
+    color: #F6FFF9;
+  }
+  .registrar-cor__status { font-size: calc(12px * var(--ptc-font-scale, 1)); }
+  .registrar-cor__button {
+    min-height: 40px;
+    padding: calc(10px * var(--ptc-compact-scale, 1)) calc(14px * var(--ptc-compact-scale, 1));
+    font-size: calc(13px * var(--ptc-font-scale, 1));
+    font-weight: 650;
+    box-shadow: none;
+  }
+  .registrar-cor__button--secondary,
+  .registrar-cor__button--primary {
+    color: #0A4B2E;
+    background: #E5F7EC;
+    border-color: #B7E4C8;
+  }
+  .registrar-cor__button--secondary:hover:not(:disabled),
+  .registrar-cor__button--primary:hover:not(:disabled) { background: #D4F0DF; }
+
+  /* Summary Cards */
+  .registrar-cor__summary {
+    gap: calc(12px * var(--ptc-compact-scale, 1));
+    padding: calc(12px * var(--ptc-compact-scale, 1));
+    border-radius: 16px;
+    box-shadow: none;
+  }
+  .registrar-cor__metric {
+    gap: calc(12px * var(--ptc-compact-scale, 1));
+    min-height: 104px;
+    padding: calc(16px * var(--ptc-compact-scale, 1));
+    border-radius: 13px;
+    box-shadow: none;
+  }
+  .registrar-cor__metric-label { font-size: calc(10px * var(--ptc-font-scale, 1)); }
+  .registrar-cor__metric strong {
+    font-size: clamp(calc(18px * var(--ptc-font-scale, 1)), 1.7vw, calc(26px * var(--ptc-font-scale, 1)));
+    font-weight: 760;
+  }
+  .registrar-cor__metric small { font-size: calc(11px * var(--ptc-font-scale, 1)); }
+
+  /* Academic Period */
+  .registrar-cor__period-panel {
+    padding: calc(22px * var(--ptc-compact-scale, 1)) calc(26px * var(--ptc-compact-scale, 1));
+    border-radius: 14px;
+    box-shadow: none;
+  }
+  .registrar-cor__section-label { font-size: calc(10px * var(--ptc-font-scale, 1)); }
+  .registrar-cor__section-heading h2 { font-size: calc(21px * var(--ptc-font-scale, 1)); font-weight: 740; }
+  .registrar-cor__section-heading p { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+  .registrar-cor__period-label { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+  .registrar-cor__select {
+    min-height: calc(45px * var(--ptc-compact-scale, 1));
+    padding: calc(10px * var(--ptc-compact-scale, 1)) calc(12px * var(--ptc-compact-scale, 1));
+    font-size: calc(13px * var(--ptc-font-scale, 1));
+  }
+  .registrar-cor__error { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+  .registrar-cor__state-card h1 { font-size: calc(26px * var(--ptc-font-scale, 1)); }
+
+  /* Light Mode Frames */
+  .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+    .registrar-cor__hero {
+    margin: 12px 12px 16px;
+    box-shadow:
+      0 0 0 10px #ffffff,
+      0 0 0 11px #d9e9df,
+      0 8px 22px 12px rgba(15, 78, 46, 0.055);
+  }
+
+  .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+    .registrar-cor__summary {
+    padding: calc(12px * var(--ptc-compact-scale, 1));
+    border: 1px solid #d9e9df;
+    border-radius: 21px;
+    background: #ffffff;
+    box-shadow: 0 8px 22px rgba(15, 78, 46, 0.055);
+  }
+
+  .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+    .registrar-cor__metric {
+    border-color: #dce9e0;
+    box-shadow: none;
+  }
+
+  @media (max-width: 580px) {
+    .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+      .registrar-cor__hero {
+      margin: 11px 11px 15px;
+    }
+  }
+
+  /* Dark Mode */
+  html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-cor) {
+    --ptc-canvas-color: #111719;
+    --ptc-canvas-pattern: none;
+  }
+  html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+    .dashboard-main:has(> .dashboard-content > .registrar-cor),
+  html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+    .dashboard-main:has(> .dashboard-content > .registrar-cor) > .dashboard-content,
+  html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+    .dashboard-main .dashboard-content > .registrar-cor {
+    background-color: #111719 !important;
+    background-image: none !important;
+    background-repeat: no-repeat !important;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor {
+    --rcor-ink: #EFF5F2;
+    --rcor-muted: #B6C6C8;
+    --rcor-border: #35464B;
+    --rcor-surface: #192226;
+    --rcor-bg: #111719;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__hero {
+    background: linear-gradient(105deg, #093522, #0B5133);
+    border-color: #245642;
+    box-shadow: none;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__summary,
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__period-panel,
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__state-card {
+    color: #EFF5F2;
+    background: #192226;
+    border-color: #35464B;
+    box-shadow: none;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__metric {
+    background: #20292E;
+    border-color: #35464B;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__metric-label,
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__metric small {
+    color: #B6C6C8;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__metric strong {
+    color: #F3F7F5;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__metric-icon {
+    background: #2B3A40;
+    border-color: #35464B;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__section-label {
+    background: #294039;
+    color: #BFF0D0;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__select {
+    background: #20292E;
+    border-color: #35464B;
+    color: #F3F7F5;
+    color-scheme: dark;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__select option {
+    background: #20292E;
+    color: #F3F7F5;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor__state-card .registrar-cor__button--secondary {
+    color: #0A4B2E;
+  }
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-cor .registrar-cor__paper {
+    color-scheme: light;
+    background: #fff;
+    color: #111827;
+    outline-color: #35464B;
+  }
+
+  /* Responsive */
+  @media (max-width: 870px) {
+    .registrar-cor__hero { padding: calc(26px * var(--ptc-compact-scale, 1)) calc(23px * var(--ptc-compact-scale, 1)); }
+  }
+  @media (max-width: 580px) {
+    .registrar-cor__hero { border-radius: 14px; padding: calc(23px * var(--ptc-compact-scale, 1)) calc(19px * var(--ptc-compact-scale, 1)); }
+    .registrar-cor__summary { padding: calc(9px * var(--ptc-compact-scale, 1)); }
+    .registrar-cor__period-panel { padding: calc(20px * var(--ptc-compact-scale, 1)) calc(16px * var(--ptc-compact-scale, 1)); }
+  }
+
 }
 
 /* Print the official COR in the original plain A4 format. No dashboard

@@ -4538,25 +4538,24 @@ export default function EnrollmentDetailsR() {
             PAGE HEADER
         ================================================= */}
 
-        <div className="enrollment-details-back-row">
-          <button
-            type="button"
-            className="back-btn"
-            onClick={() => navigate("/registrar/enrollment/management")}
-          >
-            ← Back to Enrollment Management
-          </button>
-        </div>
-
         <section className="enrollment-details-header">
           <div className="enrollment-details-identity">
+            <div className="enrollment-details-header-back">
+              <button
+                type="button"
+                className="back-btn"
+                onClick={() => navigate("/registrar/enrollment/management")}
+              >
+                ← Back to Enrollment Management
+              </button>
+            </div>
             <div className="enrollment-details-avatar" aria-hidden="true">
               {enrollment.student.first_name?.charAt(0).toUpperCase() || "S"}
             </div>
 
             <div className="enrollment-details-identity-copy">
               <span className="enrollment-details-eyebrow">
-                Enrollment Review
+                REGISTRAR · ENROLLMENT REVIEW
               </span>
 
               <div className="enrollment-details-name-row">

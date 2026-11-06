@@ -14,7 +14,6 @@ import {
   Pencil,
   Plus,
   Search,
-  ShieldCheck,
   Trash2,
   UserRound,
   UsersRound,
@@ -482,16 +481,6 @@ export default function AnnouncementListR() {
           </div>
 
           <div className="registrar-announcements__hero-actions">
-            <div className="registrar-announcements__hero-badge">
-              <span className="registrar-announcements__hero-badge-icon">
-                <ShieldCheck size={19} strokeWidth={2.1} />
-              </span>
-              <span>
-                <small>Access</small>
-                <strong>Registrar Manager</strong>
-              </span>
-            </div>
-
             <button
               type="button"
               className="registrar-announcements__button registrar-announcements__button--primary"

@@ -513,8 +513,8 @@ export default function CertificateOfGradesR() {
             </div>
             <h1>Certificate of Grades</h1>
             <p>
-              Review and print an official term-based Certificate of Grades
-              using only approved academic results recorded in the PTC Portal.
+              View and manage student certificates of grades and their academic
+              document details in one organized workspace.
             </p>
           </div>
 
@@ -526,15 +526,6 @@ export default function CertificateOfGradesR() {
             >
               <ArrowLeft size={15} aria-hidden="true" />
               Back
-            </button>
-            <button
-              type="button"
-              className="registrar-cog__button registrar-cog__button--primary"
-              onClick={refresh}
-              disabled={loading || refreshing}
-            >
-              <RefreshCw size={15} aria-hidden="true" />
-              Refresh
             </button>
           </div>
         </section>

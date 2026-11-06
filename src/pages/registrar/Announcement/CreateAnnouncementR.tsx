@@ -27,9 +27,7 @@ import "../../../styles/announcementCreateR.css";
 const ANNOUNCEMENT_API_URL = apiUrl("/api/announcement-management");
 const FILE_UPLOAD_URL = apiUrl("/api/files/upload");
 
-// =====================================================
-// TYPES
-// =====================================================
+// Types
 
 type Role = {
   role_id: number;
@@ -56,9 +54,7 @@ interface CreateAnnouncementResponse {
   error?: string;
 }
 
-// =====================================================
-// EXISTING RECIPIENT ROLE IDS
-// =====================================================
+// Existing Recipient Role Ids
 
 const RECIPIENT_ROLES: Role[] = [
   { role_id: 1, role_name: "Admin" },
@@ -68,25 +64,19 @@ const RECIPIENT_ROLES: Role[] = [
   { role_id: 5, role_name: "Student" },
 ];
 
-// =====================================================
-// COMPONENT
-// =====================================================
+// Component
 
 export default function AnnouncementCreateR() {
   const navigate = useNavigate();
 
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
+  // Authentication
 
   const session = authService.getSession();
   const token = authService.getToken();
   const userRole = session?.role;
   const authenticated = Boolean(session && token);
 
-  // =====================================================
-  // FORM STATE
-  // =====================================================
+  // Form State
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -114,9 +104,7 @@ export default function AnnouncementCreateR() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // =====================================================
-  // AUTHORIZATION
-  // =====================================================
+  // Authorization
 
   useEffect(() => {
     if (!authenticated) {
@@ -134,9 +122,7 @@ export default function AnnouncementCreateR() {
     }
   }, [authenticated, userRole, navigate]);
 
-  // =====================================================
-  // FILE UPLOAD
-  // =====================================================
+  // File Upload
 
   async function uploadFile(): Promise<number | null> {
     if (!selectedFile) {
@@ -207,9 +193,7 @@ export default function AnnouncementCreateR() {
     return fileId;
   }
 
-  // =====================================================
-  // RECIPIENT CHANGE
-  // =====================================================
+  // Recipient Change
 
   const handleRecipientChange = (roleId: number, checked: boolean) => {
     setRecipients((current) => {
@@ -227,9 +211,7 @@ export default function AnnouncementCreateR() {
     setError("");
   };
 
-  // =====================================================
-  // SUBMIT
-  // =====================================================
+  // Submit
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -354,9 +336,7 @@ export default function AnnouncementCreateR() {
     }
   }
 
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
+  // Auth Guard
 
   if (!authenticated || !session || userRole !== "Registrar") {
     return null;
@@ -368,9 +348,7 @@ export default function AnnouncementCreateR() {
     recipients.includes(role.role_id),
   ).map((role) => role.role_name);
 
-  // =====================================================
-  // RENDER
-  // =====================================================
+  // Render
 
   return (
     <DashboardLayout>
@@ -381,12 +359,12 @@ export default function AnnouncementCreateR() {
               <span className="registrar-announcement-create__eyebrow-icon">
                 <Megaphone size={16} strokeWidth={2.2} />
               </span>
-              Registrar · Announcements
+              Registrar · Create Announcement
             </div>
             <h1>Create Announcement</h1>
             <p>
-              Prepare and publish an official portal announcement for the
-              selected PTC audiences.
+              Create and publish official announcements for students, faculty,
+              and other portal users.
             </p>
           </div>
 

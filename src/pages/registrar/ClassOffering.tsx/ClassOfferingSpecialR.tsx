@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -822,15 +821,15 @@ export default function ClassOfferingSpecialR() {
     [1, 2].includes(Number(semester.semester_id)),
   );
 
-  const courses = setupData?.courses || [];
+  const courses = useMemo(() => setupData?.courses || [], [setupData?.courses]);
 
   const curricula = setupData?.curricula || [];
 
   const sections = setupData?.sections || [];
 
-  const faculty = setupData?.faculty || [];
+  const faculty = useMemo(() => setupData?.faculty || [], [setupData?.faculty]);
 
-  const rooms = setupData?.rooms || [];
+  const rooms = useMemo(() => setupData?.rooms || [], [setupData?.rooms]);
 
   // =====================================================
   // SELECTED SETUP OBJECTS
@@ -1626,7 +1625,7 @@ export default function ClassOfferingSpecialR() {
               <span className="registrar-class-offering__eyebrow-icon">
                 <BookOpenCheck size={16} aria-hidden="true" />
               </span>
-              Registrar · Special Classes
+              REGISTRAR · SPECIAL CLASSES
             </div>
 
             <h1>Special / Retake Offerings</h1>
@@ -1648,24 +1647,6 @@ export default function ClassOfferingSpecialR() {
                 Reset Setup
               </button>
             )}
-
-            <button
-              type="button"
-              className="registrar-class-offering__button registrar-class-offering__button--primary"
-              onClick={refreshOfferingData}
-              disabled={setupLoading || readinessLoading}
-            >
-              <RefreshCw
-                size={16}
-                className={
-                  setupLoading || readinessLoading
-                    ? "registrar-class-offering__spin"
-                    : undefined
-                }
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
           </div>
         </section>
 

@@ -222,31 +222,17 @@ export default function DepartmentManagementR() {
               <span className="registrar-department-management__eyebrow-icon">
                 <Building2 size={15} aria-hidden="true" />
               </span>
-              Academic Structure
+              REGISTRAR · ACADEMIC STRUCTURE
             </span>
 
             <h1>Department Management</h1>
             <p>
-              Maintain the academic departments used to organize courses,
-              curricula, faculty assignments, and other Registrar records.
+              Manage academic departments, maintain official department
+              information, and organize institutional records in one workspace.
             </p>
           </div>
 
           <div className="registrar-department-management__hero-actions">
-            <button
-              type="button"
-              className="registrar-department-management__button registrar-department-management__button--secondary"
-              onClick={() => void loadDepartments()}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? "is-spinning" : undefined}
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
-
             <button
               type="button"
               className="registrar-department-management__button registrar-department-management__button--primary"

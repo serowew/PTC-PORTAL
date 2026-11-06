@@ -307,29 +307,16 @@ export default function SubjectManagementR() {
               <span className="registrar-subject-management__eyebrow-icon">
                 <BookOpen size={16} aria-hidden="true" />
               </span>
-              Academic Setup
+              REGISTRAR · ACADEMIC SETUP
             </span>
             <h1>Subject Management</h1>
             <p>
-              Maintain the master subject catalog used by curricula, class
-              offerings, enrollment, and academic records.
+              Manage academic subjects, maintain subject information, and
+              organize the master subject catalog in one workspace.
             </p>
           </div>
 
           <div className="registrar-subject-management__hero-actions">
-            <button
-              type="button"
-              className="registrar-subject-management__button registrar-subject-management__button--secondary"
-              onClick={() => void loadSubjects()}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? "is-spinning" : ""}
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
             <button
               type="button"
               className="registrar-subject-management__button registrar-subject-management__button--primary"

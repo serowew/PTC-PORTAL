@@ -1,9 +1,4 @@
-/* =========================================================
-   REGISTRAR — CLASS OFFERINGS
-   Light PTC-green workspace matching Student Enrollment.
-   All legacy child components are scoped under this page.
-========================================================= */
-
+/* Page Layout */
 .registrar-class-offering {
   --co-green-950: #073b24;
   --co-green-900: #0a4b2d;
@@ -52,9 +47,7 @@
   font: inherit;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* Header */
 
 .registrar-class-offering__hero {
   position: relative;
@@ -145,9 +138,7 @@
   gap: calc(10px * var(--ptc-compact-scale, 1));
 }
 
-/* =========================================================
-   PAGE BUTTONS
-========================================================= */
+/* Buttons */
 
 .registrar-class-offering__button {
   display: inline-flex;
@@ -223,9 +214,7 @@
   }
 }
 
-/* =========================================================
-   SELECTED SETUP OVERVIEW
-========================================================= */
+/* Summary Cards */
 
 .registrar-class-offering__overview {
   display: grid;
@@ -300,9 +289,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-   COMMON WHITE PANELS
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-section {
   margin: 0 0 calc(18px * var(--ptc-compact-scale, 1));
@@ -395,9 +382,7 @@
   border-color: var(--co-green-900);
 }
 
-/* =========================================================
-   CASCADING SETUP FILTERS
-========================================================= */
+/* Academic Filters */
 
 .registrar-class-offering .class-offering-filter-grid {
   display: grid;
@@ -470,9 +455,7 @@
   line-height: 1.45;
 }
 
-/* =========================================================
-   ERRORS / LOADING / EMPTY STATES
-========================================================= */
+/* Loading State */
 
 .registrar-class-offering .class-offering-error {
   display: flex;
@@ -569,9 +552,7 @@
   min-height: 170px;
 }
 
-/* =========================================================
-   READINESS HEADER STATUS
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-readiness-status {
   display: inline-flex;
@@ -597,9 +578,7 @@
   border: 1px solid #f2d88e;
 }
 
-/* =========================================================
-   READINESS COMPLETION BANNER
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-section-completion {
   display: grid;
@@ -686,9 +665,7 @@
   white-space: nowrap;
 }
 
-/* =========================================================
-   READINESS SUMMARY CARDS
-========================================================= */
+/* Summary Cards */
 
 .registrar-class-offering .class-offering-summary-grid {
   display: grid;
@@ -744,9 +721,7 @@
   line-height: 1.45;
 }
 
-/* =========================================================
-   READINESS PROGRESS
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-readiness-progress {
   margin-top: calc(12px * var(--ptc-compact-scale, 1));
@@ -851,9 +826,7 @@
   font-weight: 760;
 }
 
-/* =========================================================
-   PREPARE SECTION SUBJECT CTA
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-prepare-section {
   display: flex;
@@ -922,9 +895,7 @@
   background: #8e5f00;
 }
 
-/* =========================================================
-   OFFERING TABLE
-========================================================= */
+/* Offering Table */
 
 .registrar-class-offering .class-offering-table-wrapper {
   width: 100%;
@@ -1157,9 +1128,7 @@
   text-align: center;
 }
 
-/* =========================================================
-   OFFERING STATUS BADGES
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-status-badge {
   display: inline-flex;
@@ -1220,9 +1189,7 @@
   border-color: #dfe5e1;
 }
 
-/* =========================================================
-   TABLE ACTIONS
-========================================================= */
+/* Offering Table */
 
 .registrar-class-offering .class-offering-actions {
   display: flex;
@@ -1277,9 +1244,7 @@
   line-height: 1.35;
 }
 
-/* =========================================================
-   MODAL BACKDROP / SHELL
-========================================================= */
+/* Modal */
 
 .registrar-class-offering .class-offering-modal-backdrop {
   position: fixed;
@@ -1391,9 +1356,7 @@
   gap: calc(14px * var(--ptc-compact-scale, 1));
 }
 
-/* =========================================================
-   MODAL INFO / REQUIREMENT BLOCKS
-========================================================= */
+/* Modal */
 
 .registrar-class-offering .class-offering-open-requirements,
 .registrar-class-offering .class-offering-prepare-notice {
@@ -1464,9 +1427,7 @@
   font-size: calc(11.5px * var(--ptc-font-scale, 1));
 }
 
-/* =========================================================
-   PREPARE SUBJECT LIST
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-prepare-subjects {
   margin-top: calc(14px * var(--ptc-compact-scale, 1));
@@ -1550,9 +1511,7 @@
   line-height: 1.5;
 }
 
-/* =========================================================
-   CONFLICT ALERT
-========================================================= */
+/* Content Panels */
 
 .registrar-class-offering .class-offering-conflict-alert {
   margin-top: calc(14px * var(--ptc-compact-scale, 1));
@@ -1619,9 +1578,7 @@
   font-size: calc(9.8px * var(--ptc-font-scale, 1));
 }
 
-/* =========================================================
-   MODAL FOOTER
-========================================================= */
+/* Modal */
 
 .registrar-class-offering .class-offering-modal-footer {
   display: flex;
@@ -1672,9 +1629,7 @@
   cursor: not-allowed;
 }
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+/* Responsive */
 
 @media (max-width: 1180px) {
   .registrar-class-offering__overview {
@@ -1826,14 +1781,9 @@
   }
 }
 
-/* ========================================================================
-   REGISTRAR / SPECIAL OFFERINGS — PTC DASHBOARD VISUAL ALIGNMENT
-   CSS-only, scoped to the Special / Retake Offerings page.
-   Original component selectors, dialogs, and interactions are retained.
-   ======================================================================== */
+/* Page Styling */
 
-/* DashboardLayout's default inset caused a visible white gutter beside
-   the sidebar. Remove it only when this Special Offerings page is mounted. */
+/* Page Layout */
 .dashboard-main:has(.registrar-class-offering) > .dashboard-content {
   padding: 0;
   overflow-x: clip;
@@ -1846,7 +1796,7 @@
   border: 0;
 }
 
-/* The geometric mint workspace continues directly from the sidebar edge. */
+/* Page Background */
 .registrar-class-offering {
   --co-green-950: #063b24;
   --co-green-900: #075b36;
@@ -1883,7 +1833,7 @@
   overflow-x: clip;
 }
 
-/* Light Mode frame */
+/* Page Frame */
 .registrar-class-offering::before {
   content: "";
   position: absolute;
@@ -1903,7 +1853,7 @@
   content: none;
 }
 
-/* Dashboard green hero + decorative circles (not an animation). */
+/* Header */
 .registrar-class-offering__hero {
   isolation: isolate;
   width: 100%;
@@ -1991,7 +1941,7 @@
   background: #fff;
 }
 
-/* The four overview cards reflect actual TSX-selected values. */
+/* Summary Cards */
 .registrar-class-offering__overview {
   gap: calc(13px * var(--ptc-compact-scale, 1));
   margin-bottom: calc(18px * var(--ptc-compact-scale, 1));
@@ -2084,7 +2034,7 @@
   font-size: calc(10.5px * var(--ptc-font-scale, 1));
 }
 
-/* White directory panels, setup filters, and actions. */
+/* Academic Filters */
 .registrar-class-offering .class-offering-section {
   margin-bottom: calc(18px * var(--ptc-compact-scale, 1));
   padding: calc(23px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1)) calc(25px * var(--ptc-compact-scale, 1));
@@ -2196,7 +2146,7 @@
   font-size: calc(10px * var(--ptc-font-scale, 1));
 }
 
-/* All modal types share the existing scoped component classes. */
+/* Modal */
 .registrar-class-offering .class-offering-modal-backdrop {
   background: rgba(4,35,19,.66);
   backdrop-filter: blur(4px);
@@ -2233,7 +2183,7 @@
 .registrar-class-offering .class-offering-modal-subject { border-radius: 12px; }
 .registrar-class-offering .class-offering-modal-footer { background: #fff; }
 
-/* Adapt to narrower screens without modifying shared layout dimensions. */
+/* Responsive */
 @media (max-width: 1180px) {
   .registrar-class-offering { padding: 23px 20px 38px; }
   .registrar-class-offering__hero { padding: 26px 24px; }
@@ -2254,8 +2204,7 @@
   .registrar-class-offering .class-offering-modal { border-radius: 16px; max-height: 94dvh; }
 }
 
-/* Dark mode: charcoal canvas, cards, form fields and dialogs, with no white
-   page-entry overlay or flash transition. Only this workspace is overridden. */
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   .dashboard-main:has(.registrar-class-offering) > .dashboard-content {
   background: #111719;
@@ -2461,7 +2410,7 @@
   .registrar-class-offering .class-offering-modal * { transition: none; }
 }
 
-/* Add Offering already renders this success message; retain its visual state. */
+/* Success State */
 .registrar-class-offering .class-offering-success {
   display: block;
   margin: calc(12px * var(--ptc-compact-scale, 1)) 0;
@@ -2481,7 +2430,7 @@
   background: #224331;
 }
 
-/* Dark table details */
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   .registrar-class-offering .class-offering-section-kicker,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
@@ -2529,11 +2478,289 @@
   color: #ffffff;
 }
 
-/* Dark canvas */
+/* Dark Canvas */
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-class-offering) > .dashboard-content,
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .registrar-class-offering {
   background-color: #111719 !important;
   background-image: none !important;
   background-size: auto !important;
   background-repeat: no-repeat !important;
+}
+
+
+/* Header */
+.registrar-class-offering .registrar-class-offering__hero {
+  min-height: 0;
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0C633B;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512F, #0D7444);
+  box-shadow: none;
+}
+.registrar-class-offering .registrar-class-offering__hero::before,
+.registrar-class-offering .registrar-class-offering__hero::after {
+  content: none;
+  display: none;
+}
+.registrar-class-offering .registrar-class-offering__eyebrow {
+  color: #F6FFF9;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+.registrar-class-offering .registrar-class-offering__eyebrow-icon {
+  color: #F6FFF9;
+}
+.registrar-class-offering .registrar-class-offering__hero h1 {
+  color: #F6FFF9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3.2vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
+  font-weight: 760;
+}
+.registrar-class-offering .registrar-class-offering__hero p {
+  color: #F6FFF9;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+.registrar-class-offering .registrar-class-offering__hero .registrar-class-offering__button--secondary {
+  border: 1px solid #B7E4C8;
+  border-radius: 11px;
+  background: #E5F7EC;
+  color: #0A4B2E;
+  box-shadow: none;
+  font-weight: 650;
+}
+.registrar-class-offering .registrar-class-offering__hero .registrar-class-offering__button--secondary:hover:not(:disabled) {
+  border-color: #B7E4C8;
+  background: #D4F0DF;
+  color: #0A4B2E;
+}
+
+/* Summary Cards */
+.registrar-class-offering .registrar-class-offering__overview {
+  align-items: stretch;
+  border-color: #E0E9E3;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .8);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.registrar-class-offering .registrar-class-offering__overview-card,
+.registrar-class-offering .registrar-class-offering__overview-card--ready {
+  min-height: 108px;
+  border-top-color: #E1EAE4;
+  border-right-color: #E1EAE4;
+  border-bottom-color: #E1EAE4;
+  border-radius: 12px;
+  background: #FFFFFF;
+  box-shadow: none;
+}
+.registrar-class-offering .registrar-class-offering__overview-card::before {
+  content: none;
+  display: none;
+}
+.registrar-class-offering .registrar-class-offering__overview-card > div > span {
+  font-weight: 700;
+}
+.registrar-class-offering .registrar-class-offering__overview-card strong {
+  font-weight: 740;
+}
+
+/* Academic Filters */
+.registrar-class-offering .class-offering-section {
+  border-color: #DFE9E2;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(15, 75, 42, .045);
+}
+.registrar-class-offering .class-offering-section-header h2 {
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 740;
+}
+.registrar-class-offering .class-offering-field label {
+  font-weight: 650;
+}
+.registrar-class-offering .class-offering-field input,
+.registrar-class-offering .class-offering-field select,
+.registrar-class-offering .class-offering-field textarea {
+  border-radius: 9px;
+}
+.registrar-class-offering .registrar-class-offering__button,
+.registrar-class-offering .class-offering-section-action,
+.registrar-class-offering .class-offering-section-header > button {
+  font-weight: 650;
+  box-shadow: none;
+}
+.registrar-class-offering .class-offering-section-action,
+.registrar-class-offering .class-offering-section-header > button {
+  background: linear-gradient(105deg, #117846, #0B6338);
+  border-color: #0B6338;
+  border-radius: 8px;
+}
+.registrar-class-offering .class-offering-section-action:hover:not(:disabled),
+.registrar-class-offering .class-offering-section-header > button:hover:not(:disabled) {
+  background: linear-gradient(105deg, #0F6A3E, #084B2D);
+  border-color: #084B2D;
+}
+
+/* Offering Table */
+.registrar-class-offering .class-offering-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  border-color: #DFE9E2;
+}
+.registrar-class-offering .class-offering-table th {
+  font-weight: 700;
+}
+
+/* Modal */
+.registrar-class-offering .class-offering-modal {
+  max-height: min(92dvh, 900px);
+  border-radius: 14px;
+}
+.registrar-class-offering .class-offering-modal-footer button {
+  font-weight: 650;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering {
+  --co-border: #35464B;
+  --co-border-strong: #35464B;
+  --co-surface: #192226;
+  --co-bg: #111719;
+  background-color: #111719;
+  background-image: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__hero {
+  background: linear-gradient(105deg, #093522, #0B5133);
+  border-color: #245642;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-section,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-modal {
+  background: #192226;
+  border-color: #35464B;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-summary-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-readiness-details,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-readiness-detail,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-section-completion,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-prepare-section,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-modal-subject {
+  background: #20292E;
+  border-color: #35464B;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-field input,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-field select,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-field textarea,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-table tbody td,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-table tbody tr {
+  background: #20292E;
+  border-color: #35464B;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-table-wrapper,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-table th,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-modal-body,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-modal-footer {
+  background: #192226;
+  border-color: #35464B;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-modal-footer button:not(.class-offering-primary-button) {
+  background: #20292E;
+  border-color: #35464B;
+  color: #EFF7F2;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .class-offering-table tbody tr:hover td {
+  background: #29373D;
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .registrar-class-offering .registrar-class-offering__hero {
+    padding: calc(22px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
+  }
+  .registrar-class-offering .registrar-class-offering__hero h1 {
+    font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(6vw * var(--ptc-font-scale, 1)), calc(36px * var(--ptc-font-scale, 1)));
+  }
+}
+
+/* Modal Layer */
+.dashboard-main:has(.registrar-class-offering .class-offering-modal-backdrop) > .dashboard-content {
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+}
+
+.registrar-class-offering .class-offering-modal-backdrop {
+  box-sizing: border-box;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding-block: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.registrar-class-offering .class-offering-modal {
+  max-height: calc(100dvh - 24px);
+  min-height: 0;
+}
+
+.registrar-class-offering .class-offering-modal-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.registrar-class-offering .class-offering-modal-header,
+.registrar-class-offering .class-offering-modal-footer {
+  flex-shrink: 0;
+}
+
+/* Summary Cards */
+.registrar-class-offering .registrar-class-offering__overview-card,
+.registrar-class-offering .registrar-class-offering__overview-card--ready {
+  border-left: 1px solid #E1EAE4;
+}
+
+.registrar-class-offering .registrar-class-offering__overview-card::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 7px;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 999px;
+  background: #0C9555;
+  pointer-events: none;
+}
+
+.registrar-class-offering .registrar-class-offering__overview-card:nth-child(2)::after {
+  background: #E3A309;
+}
+
+.registrar-class-offering .registrar-class-offering__overview-card:nth-child(3)::after {
+  background: #2869ED;
+}
+
+.registrar-class-offering .registrar-class-offering__overview-card:nth-child(4)::after {
+  background: #8336DC;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview-card {
+  border-left-color: #35464B;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview-card::after {
+  background: #2FA26A;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview-card:nth-child(2)::after {
+  background: #DAB04B;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview-card:nth-child(3)::after {
+  background: #75AAFF;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-class-offering .registrar-class-offering__overview-card:nth-child(4)::after {
+  background: #C69AFF;
 }

@@ -9,7 +9,6 @@ import {
   Loader2,
   PlayCircle,
   RefreshCcw,
-  RefreshCw,
   Search,
   UserRound,
   WalletCards,
@@ -493,7 +492,7 @@ export default function DocumentRequest() {
                 <span className="registrar-doc-request__eyebrow-icon">
                   <FileCheck2 size={16} aria-hidden="true" />
                 </span>
-                <span>Registrar Office</span>
+                <span>REGISTRAR OFFICE</span>
               </div>
               <h1>Document Requests</h1>
               <p>
@@ -501,19 +500,6 @@ export default function DocumentRequest() {
                 Office.
               </p>
             </div>
-            <button
-              type="button"
-              className="registrar-doc-request__hero-refresh"
-              onClick={() => void loadRequests(true)}
-              disabled={loading || refreshing}
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "is-spinning" : ""}
-                aria-hidden="true"
-              />
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
           </div>
         </section>
         <section className="registrar-doc-request__summary-grid">
