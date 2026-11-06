@@ -1,11 +1,4 @@
-/* ============================================================================
-   PTC PORTAL — REGISTRAR / DOCUMENTS / OTHER PAYMENT VERIFICATION
-   Visual refresh for the existing read-only Finance Payment History page.
-   CSS only: no artificial verification actions, invented statistics, or new markup.
-   Keep these selectors scoped to ManualPaymentVerifications.tsx.
-   ============================================================================ */
-
-/* Remove the generic white layout gutter on THIS Registrar page only. */
+/* Page Layout */
 .dashboard-main:has(> .dashboard-content .registrar-manual-payment)
   > .dashboard-content {
   padding: 0;
@@ -626,5 +619,282 @@
   .registrar-manual-payment__header button,
   .registrar-manual-payment__pagination button {
     transition: none;
+  }
+}
+
+
+/* Header */
+.registrar-manual-payment__header {
+  min-height: 0;
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  box-shadow: none;
+}
+
+.registrar-manual-payment__header::before,
+.registrar-manual-payment__header::after {
+  content: none;
+  display: none;
+}
+
+.registrar-manual-payment__header span {
+  color: #f6fff9;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+
+.registrar-manual-payment__header h1 {
+  color: #f6fff9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), 3vw, calc(40px * var(--ptc-font-scale, 1)));
+  font-weight: 760;
+}
+
+.registrar-manual-payment__header p {
+  color: #e5f4eb;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+
+.registrar-manual-payment__header button {
+  padding: calc(10px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
+  border: 1px solid #b7e4c8;
+  border-radius: 11px;
+  background: #e5f7ec;
+  color: #0a4b2e;
+  box-shadow: none;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 600;
+}
+
+.registrar-manual-payment__header button:hover:not(:disabled) {
+  border-color: #b7e4c8;
+  background: #d4f0df;
+}
+
+/* Search and Filters */
+.registrar-manual-payment__toolbar {
+  min-height: 62px;
+  gap: calc(12px * var(--ptc-compact-scale, 1));
+  padding: calc(12px * var(--ptc-compact-scale, 1)) calc(16px * var(--ptc-compact-scale, 1));
+  border: 1px solid #dfe8e2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.registrar-manual-payment__toolbar input {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+
+/* Payment Records */
+.registrar-manual-payment__panel {
+  border: 1px solid #dfe8e2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.registrar-manual-payment__panel h2 {
+  padding: calc(41px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)) calc(17px * var(--ptc-compact-scale, 1));
+  background: #f9fcfa;
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 740;
+}
+
+.registrar-manual-payment__panel h2::before {
+  left: calc(20px * var(--ptc-compact-scale, 1));
+}
+
+.registrar-manual-payment th {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 700;
+}
+
+.registrar-manual-payment td {
+  padding: calc(16px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  overflow-wrap: anywhere;
+}
+
+.registrar-manual-payment td small {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+  overflow-wrap: anywhere;
+}
+
+.registrar-manual-payment td strong {
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+}
+
+/* Pagination */
+.registrar-manual-payment__pagination {
+  padding: calc(14px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1));
+}
+
+.registrar-manual-payment__pagination button {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 600;
+}
+
+.registrar-manual-payment__pagination span {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
+
+/* Dark Mode */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-manual-payment) {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+}
+
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-manual-payment),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-manual-payment) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .registrar-manual-payment {
+  background-color: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment {
+  --rmp-ink: #f3f5f5;
+  --rmp-subtle: #b5c1c4;
+  --rmp-line: #35464b;
+  --rmp-white: #192226;
+  color: #f3f5f5;
+  background: #111719;
+  background-image: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__header {
+  border-color: #245642;
+  background: linear-gradient(105deg, #093522, #0b5133);
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__toolbar,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__panel {
+  border-color: #35464b;
+  background: #192226;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__toolbar > svg {
+  border-color: #35464b;
+  background: #20292e;
+  color: #8cd8ae;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__toolbar input {
+  color: #f3f5f5;
+  color-scheme: dark;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__toolbar input::placeholder {
+  color: #a8b5bb;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__panel h2,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__pagination {
+  border-color: #35464b;
+  color: #f3f5f5;
+  background: #192226;
+  background-image: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__panel h2::before {
+  color: #c3f0d6;
+  background: #234033;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__panel > p {
+  border-color: #35464b;
+  color: #c1ced2;
+  background: #20292e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment th {
+  border-color: #35464b;
+  color: #c1ced2;
+  background: #20292e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment td {
+  border-color: #35464b;
+  color: #eef3f4;
+  background: #192226;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment tbody tr:hover td {
+  background: #20292e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment td:first-child {
+  color: #9ee9bd;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment td small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__pagination span {
+  color: #b4c1c5;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment td strong {
+  border-color: #327653;
+  color: #c4f2d6;
+  background: #214434;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__pagination button:disabled {
+  border-color: #35464b;
+  color: #aeb9bd;
+  background: #28343a;
+  opacity: 1;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__error {
+  border-color: #7a4742;
+  color: #ffe1db;
+  background: #472825;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .registrar-manual-payment__header {
+    padding: calc(25px * var(--ptc-compact-scale, 1)) calc(21px * var(--ptc-compact-scale, 1));
+    border-radius: 14px;
+  }
+  .registrar-manual-payment__header p { font-size: calc(14px * var(--ptc-font-scale, 1)); }
+  .registrar-manual-payment__panel h2 { padding-left: 17px; padding-right: 17px; }
+  .registrar-manual-payment__panel h2::before { left: 17px; }
+}
+
+/* Light Mode Header Frame */
+.registrar-manual-payment__header-frame {
+  width: 100%;
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  padding: calc(8px * var(--ptc-compact-scale, 1));
+  border: 1px solid #dce7df;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.registrar-manual-payment__header-frame .registrar-manual-payment__header {
+  width: 100%;
+  margin: 0;
+  border-radius: 14px;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-manual-payment__header-frame {
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .registrar-manual-payment__header-frame {
+    padding: calc(6px * var(--ptc-compact-scale, 1));
+    border-radius: 18px;
   }
 }

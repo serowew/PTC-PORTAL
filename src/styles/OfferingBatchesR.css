@@ -1,3 +1,4 @@
+/* Page Layout */
 .offering-batches-page {
   --ob-green: #147d55;
   --ob-green-dark: #0e6242;
@@ -472,7 +473,7 @@
   }
 }
 
-/* Batch detail lives above the scrollable dashboard canvas. */
+/* Modal */
 .offering-batches-modal-backdrop {
   --ob-green: #0c7b47;
   --ob-green-dark: #075b36;
@@ -715,15 +716,7 @@
   }
 }
 
-/* ========================================================================
-   REGISTRAR / CLASS OFFERINGS — DASHBOARD-ALIGNED VISUAL UPDATE
-   One-file, CSS-only enhancement of OfferingBatchesR.css.
-   Keeps the existing batch creation, review, publishing, and modal behavior.
-   Does not change shared Sidebar, Header, Footer, or other Registrar pages.
-   ======================================================================== */
-
-/* The DashboardLayout adds a 20px white gutter around its child page.
-   Remove it ONLY while the Class Offerings view is mounted. */
+/* Page Layout */
 .dashboard-main:has(.offering-batches-page) > .dashboard-content {
   padding: 0;
   overflow-x: clip;
@@ -743,7 +736,7 @@
   min-height: 58px;
 }
 
-/* Patterned canvas fills the full workspace, starting beside the sidebar. */
+/* Canvas */
 .offering-batches-page {
   --ob-green: #0c7b47;
   --ob-green-dark: #075b36;
@@ -805,7 +798,7 @@
   box-sizing: border-box;
 }
 
-/* Light Mode frame */
+/* Light Mode */
 .offering-batches-page {
   position: relative;
   isolation: isolate;
@@ -840,57 +833,29 @@
   display: none;
 }
 
-/* Full-width green hero matches the Registrar Dashboard. */
+/* Header */
 .offering-batches-hero {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
   max-width: none;
-  min-height: 185px;
-  margin: 0 0 16px;
-  padding: 30px;
-  align-items: center;
-  gap: 24px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    radial-gradient(
-      circle at 83% 10%,
-      rgba(255, 255, 255, 0.13) 0 9%,
-      transparent 9.5%
-    ),
-    radial-gradient(
-      circle at 91% 58%,
-      rgba(255, 255, 255, 0.085) 0 13%,
-      transparent 13.5%
-    ),
-    linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  box-shadow: 0 18px 40px rgba(6, 78, 47, 0.22);
+  min-height: 0;
+  margin: 0 0 18px;
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  gap: calc(24px * var(--ptc-compact-scale, 1));
+  overflow: visible;
+  border: 1px solid #0C633B;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512F, #0D7444);
+  box-shadow: none;
 }
 
-.offering-batches-hero::before {
-  content: "";
-  position: absolute;
-  right: -60px;
-  bottom: -115px;
-  width: 295px;
-  height: 295px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
+.offering-batches-hero::before,
 .offering-batches-hero::after {
-  content: "";
-  position: absolute;
-  top: -115px;
-  right: 99px;
-  width: 270px;
-  height: 270px;
-  border: 45px solid rgba(255, 255, 255, 0.058);
-  border-radius: 50%;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 .offering-batches-hero > * {
@@ -899,41 +864,38 @@
 }
 .offering-batches-hero > div {
   min-width: 0;
-  max-width: 810px;
+  max-width: 850px;
 }
 .offering-batches-hero h1 {
   margin: 0 0 8px;
-  color: #fff;
-  font-size: clamp(
-    calc(30px * var(--ptc-font-scale, 1)),
-    calc(3vw * var(--ptc-font-scale, 1)),
-    calc(40px * var(--ptc-font-scale, 1))
-  );
+  color: #F6FFF9;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
   line-height: 1.15;
   font-weight: 760;
   letter-spacing: -0.025em;
 }
-
 .offering-batches-hero p {
   max-width: 800px;
-  color: #e2f6e9;
+  margin: 0;
+  color: #F6FFF9;
   font-size: calc(14px * var(--ptc-font-scale, 1));
-  line-height: 1.7;
+  font-weight: 400;
+  line-height: 1.65;
 }
-
 .offering-batches-hero .offering-batches-eyebrow {
-  color: #edfff3;
+  display: inline-flex;
+  color: #F6FFF9;
   gap: 9px;
-  font-size: calc(11px * var(--ptc-font-scale, 1));
-  letter-spacing: 0.015em;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  letter-spacing: 0.02em;
 }
-
 .offering-batches-hero .offering-batches-eyebrow > svg {
   width: 27px;
   height: 27px;
   padding: 6px;
-  color: #f0fff5;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #F6FFF9;
+  border: 1px solid rgba(255, 255, 255, .22);
   border-radius: 9px;
   background: rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
@@ -943,20 +905,20 @@
   flex-shrink: 0;
   min-height: 43px;
   padding-inline: 15px;
-  color: #09643d;
-  background: #fff;
-  border-color: rgba(255, 255, 255, 0.85);
+  color: #0A4B2E;
+  background: #E5F7EC;
+  border: 1px solid #B7E4C8;
   border-radius: 11px;
-  box-shadow: 0 6px 17px rgba(4, 39, 22, 0.11);
+  box-shadow: none;
 }
 
 .offering-batches-hero
   .offering-batches-button--secondary:hover:not(:disabled) {
-  background: #eaf9f0;
-  border-color: #eaf9f0;
+  background: #D4F0DF;
+  border-color: #B7E4C8;
 }
 
-/* Three real batch-status metrics. Icons are CSS artwork, no TSX change. */
+/* Summary Cards */
 .offering-batches-stats {
   width: 100%;
   max-width: none;
@@ -965,9 +927,9 @@
   gap: 13px;
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.56);
-  box-shadow: 0 11px 24px rgba(6, 78, 47, 0.09);
-  backdrop-filter: blur(8px);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .offering-batches-stats article {
@@ -986,18 +948,18 @@
   border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 17px;
   border-left: 4px solid #0c9555;
-  background: #effaf3;
-  box-shadow: 0 9px 22px rgba(20, 65, 37, 0.055);
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(20, 65, 37, .04);
 }
 
 .offering-batches-stats article:nth-child(2) {
   border-left-color: #e3a309;
-  background: #fff9e9;
+  background: #ffffff;
 }
 
 .offering-batches-stats article:nth-child(3) {
   border-left-color: #2869ed;
-  background: #f0f6ff;
+  background: #ffffff;
 }
 
 .offering-batches-stats article::after {
@@ -1073,7 +1035,7 @@
   line-height: 1.1;
 }
 
-/* Workflow panels: dashboard white cards and clear section hierarchy. */
+/* Panels */
 .offering-batches-panel {
   width: 100%;
   max-width: none;
@@ -1125,21 +1087,20 @@
   box-shadow: 0 7px 17px rgba(35, 107, 213, 0.17);
 }
 
-/* Form controls, selected sections and their clear success states. */
-.offering-batches-form-grid {
-  gap: 16px;
-}
+/* Forms */
+.offering-batches-form-grid { gap: 16px; }
 .offering-batches-form-grid label > span,
 .offering-batches-filter > span {
   color: #4f6357;
-  font-size: calc(11px * var(--ptc-font-scale, 1));
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: .01em;
 }
 
 .offering-batches-form-grid select,
 .offering-batches-filter select {
-  min-height: 45px;
+  min-height: 44px;
   padding-inline: 13px 32px;
   border: 1px solid #d2e4d7;
   border-radius: 12px;
@@ -1229,41 +1190,38 @@
   line-height: 1.55;
 }
 
-/* Buttons get the same visual hierarchy as Registrar Dashboard actions. */
+/* Buttons */
 .offering-batches-button {
   min-height: 42px;
-  border-radius: 11px;
-  font-size: calc(12.5px * var(--ptc-font-scale, 1));
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+  border-radius: 8px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 650;
+  box-shadow: none;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
 }
-
 .offering-batches-button--primary {
-  color: #fff;
-  background: linear-gradient(135deg, #0b824b, #08643c);
-  border-color: #0b7243;
-  box-shadow: 0 7px 17px rgba(10, 114, 67, 0.16);
+  color: #ffffff;
+  background: linear-gradient(105deg, #117846, #0B6338);
+  border-color: #0B6338;
+  box-shadow: none;
 }
-
 .offering-batches-button--primary:hover:not(:disabled) {
-  color: #fff;
-  background: linear-gradient(135deg, #0b7042, #064d2f);
+  color: #ffffff;
+  background: linear-gradient(105deg, #0F6A3E, #084B2D);
+  box-shadow: none;
 }
-
 .offering-batches-button--secondary {
-  color: #0b7042;
-  background: #fff;
-  border-color: #cfe5d5;
+  color: #0A4B2E;
+  background: #E5F7EC;
+  border-color: #B7E4C8;
+  border-radius: 11px;
+  box-shadow: none;
 }
-
 .offering-batches-button--secondary:hover:not(:disabled) {
-  color: #075a37;
-  background: #eef9f2;
-  border-color: #a5d0b3;
+  color: #0A4B2E;
+  background: #D4F0DF;
+  border-color: #B7E4C8;
+  box-shadow: none;
 }
 
 .offering-batches-button:focus-visible,
@@ -1363,7 +1321,7 @@
   border-color: #f1c7c0;
 }
 
-/* Detail / publish modal. No page-entry overlay or white flash. */
+/* Modal */
 .offering-batches-modal-backdrop {
   z-index: 1200;
   background: rgba(4, 35, 19, 0.68);
@@ -1376,14 +1334,14 @@
   border: 1px solid #deece2;
   border-radius: 18px;
   background: #fff;
-  box-shadow: 0 32px 85px rgba(4, 32, 18, 0.35);
+  box-shadow: 0 20px 60px rgba(4, 32, 18, .26);
 }
 
 .offering-batches-modal-header {
   flex-shrink: 0;
   padding: 21px 24px;
   border-bottom: 0;
-  background: linear-gradient(112deg, #075432, #0a7545 62%, #168e53);
+  background: linear-gradient(105deg, #07512F, #0D7444);
 }
 
 .offering-batches-modal-header .offering-batches-eyebrow {
@@ -1449,7 +1407,7 @@
   font-weight: 700;
 }
 
-/* Preserve 3-column cards at desktop; tablet/mobile forms remain usable. */
+/* Responsive */
 
 @media (max-width: 1050px) {
   .offering-batches-page {
@@ -1565,8 +1523,7 @@
   }
 }
 
-/* Dark palette: initial page, cards, select inputs and modal are charcoal.
-   No white navigation/loading overlay or page-entry flash animation. */
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   .dashboard-main:has(.offering-batches-page)
   > .dashboard-content {
@@ -1788,7 +1745,7 @@
   }
 }
 
-/* Appearance preferences */
+/* Appearance Preferences */
 .offering-batches-page {
   --ob-space: var(--ptc-compact-scale, 1);
   padding: calc(27px * var(--ob-space)) calc(28px * var(--ob-space))
@@ -1796,7 +1753,8 @@
 }
 
 .offering-batches-hero {
-  padding: calc(30px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1))
+    calc(32px * var(--ptc-compact-scale, 1));
   gap: calc(24px * var(--ptc-compact-scale, 1));
 }
 .offering-batches-stats {
@@ -1862,120 +1820,190 @@
 }
 
 /* Dark Mode */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-content:has(.offering-batches-page),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .offering-batches-page),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .offering-batches-page) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .offering-batches-page,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content:has(.offering-batches-page),
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-page {
-  background: #111719 !important;
+  background-color: #111719 !important;
   background-image: none !important;
 }
-
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-page {
-  --ob-ink: #edf3f1;
-  --ob-muted: #b9c7c5;
-  --ob-border: #39494c;
-  --ob-surface: #171e22;
-  --ob-green-soft: #23392e;
+  --ob-ink: #EDF3F1;
+  --ob-muted: #B9C7C5;
+  --ob-border: #35464B;
+  --ob-surface: #192226;
+  --ob-green-soft: #253C31;
+  color: #EDF3F1;
   color-scheme: dark;
 }
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-panel,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal {
-  background: #171e22;
-  border-color: #39494c;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-hero {
+  background: linear-gradient(105deg, #093522, #0B5133);
+  border: 1px solid #245642;
+  border-radius: 14px;
+  box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-section-picker,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-section-option,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-hero h1,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-hero p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-hero .offering-batches-eyebrow {
+  color: #F6FFF9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-panel,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal {
+  background: #192226;
+  border-color: #35464B;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats {
+  background: transparent;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats article,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-card,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-picker,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-option,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-empty,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-detail-meta,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table th {
-  background: #20292e;
-  border-color: #39494c;
-}
-
-/* Summary card accents */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-stats
-  article {
-  background: #20292e;
-  border: 1px solid #39494c;
-  border-left: 4px solid #0c9555;
+  background: #20292E;
+  background-image: none;
+  border-color: #35464B;
   box-shadow: none;
 }
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-stats
-  article:nth-child(2) {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats article {
+  border-left: 4px solid #0c9555;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats article:nth-child(2) {
   border-left-color: #e3a309;
 }
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-stats
-  article:nth-child(3) {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats article:nth-child(3) {
   border-left-color: #2869ed;
 }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats article > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-panel-heading p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-heading p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-card p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-card small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-form-footer > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal-footer > span {
+  color: #B9C7C5;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-stats article > strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-panel-heading h2,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-heading h3,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-copy strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-card-title strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table td,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal-header h2 {
+  color: #EDF3F1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-form-grid label > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-filter > span {
+  color: #D3E2DB;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-form-grid select,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-filter select {
+  color: #EDF3F1;
+  background: #20292E;
+  border-color: #35464B;
+  color-scheme: dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-form-grid select:disabled {
+  color: #9AADA8;
+  background: #1B2529;
+  border-color: #35464B;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-option.is-selected,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-section-option:hover {
+  background: #253C31;
+  border-color: #418B66;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-selection-summary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-panel-heading,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-form-footer,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table td,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal-footer,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal-header {
+  border-color: #35464B;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table-wrap,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal-footer {
+  background: #192226;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table tr:hover td {
+  background: #28353A;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-modal-header {
+  background: linear-gradient(105deg, #093522, #0B5133);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-icon-button {
+  color: #F6FFF9;
+  background: rgba(255,255,255,.13);
+  border-color: rgba(255,255,255,.22);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-button--secondary {
+  color: #D9F6E4;
+  background: #253C31;
+  border-color: #418B66;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-button--secondary:hover:not(:disabled) {
+  background: #2D4D3D;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-alert--success {
+  color: #BFEFD2;
+  background: #1F3B2D;
+  border-color: #37644C;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-alert--error {
+  color: #FFCCC7;
+  background: #3D2629;
+  border-color: #694044;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-empty {
+  color: #B9C7C5;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-detail-meta > span:not(.offering-batches-status) {
+  border-color: #35464B;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-status--pending-program-head {
+  color: #F5D59B;
+  background: #483A25;
+  border-color: #796035;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-status--ready-for-registrar {
+  color: #BBD7FF;
+  background: #253A54;
+  border-color: #45607D;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-status--published {
+  color: #BAF0D2;
+  background: #244737;
+  border-color: #3C7458;
+}
 
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-form-grid
-  select,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-filter
-  select,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-section-check,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-icon-button {
-  background: #20292e;
-  color: #edf3f1;
-  border-color: #4b5d61;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-modal-footer,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table-wrap {
-  background: #171e22;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-stats
-  article
-  > strong,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-panel-heading
-  h2,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-section-heading
-  h3,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-section-copy
-  strong,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-card-title
-  strong {
-  color: #edf3f1;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-table td {
-  color: #e0e9e7;
-  border-color: #39494c;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-button--secondary {
-  background: #20292e;
-  color: #edf3f1;
-  border-color: #4b5d61;
-}
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .offering-batches-modal-header {
-  background: linear-gradient(112deg, #075432, #0a7545 62%, #168e53);
+/* Responsive */
+@media (max-width: 560px) {
+  .offering-batches-hero {
+    padding: calc(23px * var(--ptc-compact-scale, 1)) calc(19px * var(--ptc-compact-scale, 1));
+    border-radius: 14px;
+  }
+  .offering-batches-hero h1 {
+    font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(7vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
+  }
 }
 
-/* Class Offerings: identical header typography and dark-green banner in both themes. */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .offering-batches-hero {
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  border: 0;
+/* Modal Backdrop */
+.dashboard-wrapper:has(> .offering-batches-modal-backdrop) > .dashboard-main {
+  filter: blur(4px) brightness(.62);
 }
-* Section Generator */ .offering-batches-section-actions {
+
+.dashboard-wrapper > .offering-batches-modal-backdrop {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Section Generator */
+.offering-batches-section-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;

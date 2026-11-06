@@ -432,31 +432,17 @@ export default function CurriculumManagementR() {
               <span className="registrar-curriculum-management__eyebrow-icon">
                 <Layers3 size={16} aria-hidden="true" />
               </span>
-              Academic Structure
+              REGISTRAR · ACADEMIC STRUCTURE
             </span>
 
             <h1>Curriculum Management</h1>
             <p>
-              Organize program curricula, review their effective years, and open
-              each curriculum to manage its subject mappings.
+              Manage academic curricula, organize program requirements, and maintain
+              curriculum structures in one organized workspace.
             </p>
           </div>
 
           <div className="registrar-curriculum-management__hero-actions">
-            <button
-              type="button"
-              className="registrar-curriculum-management__button registrar-curriculum-management__button--secondary"
-              onClick={handleRefresh}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? "is-spinning" : undefined}
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
-
             <button
               type="button"
               className="registrar-curriculum-management__button registrar-curriculum-management__button--primary"

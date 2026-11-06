@@ -8,7 +8,6 @@ import {
   Filter,
   GraduationCap,
   Search,
-  ShieldCheck,
   UserRound,
   UsersRound,
   X,
@@ -353,25 +352,15 @@ export default function StudentListR() {
               <span className="registrar-student-list__eyebrow-icon">
                 <UsersRound size={16} strokeWidth={2.2} />
               </span>
-              Registrar · Student Records
+              REGISTRAR · STUDENT LIST
             </div>
 
             <h1>Student List</h1>
             <p>
-              View registered students, review their profiles, and access
-              academic records and documents from one organized workspace.
+              View, search, and manage student records from one organized Registrar workspace.
             </p>
           </div>
 
-          <div className="registrar-student-list__hero-badge">
-            <span className="registrar-student-list__hero-badge-icon">
-              <ShieldCheck size={18} />
-            </span>
-            <span>
-              <small>Access</small>
-              <strong>Registrar Records</strong>
-            </span>
-          </div>
         </section>
 
         <section

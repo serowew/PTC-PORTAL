@@ -285,7 +285,6 @@ export default function ClassOfferingManagementR() {
   const [formError, setFormError] = useState("");
   const [queueError, setQueueError] = useState("");
   const [notice, setNotice] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleUnauthorized = useCallback(() => {
     authService.logout();
@@ -358,7 +357,7 @@ export default function ClassOfferingManagementR() {
       active = false;
       controller.abort();
     };
-  }, [userRole, requestJson, refreshKey]);
+  }, [userRole, requestJson]);
 
   const academicYears = useMemo(() => {
     const unique = new Map<number, AcademicYearOption>();
@@ -613,7 +612,7 @@ export default function ClassOfferingManagementR() {
 
   useEffect(() => {
     if (userRole === "Registrar") void loadBatches();
-  }, [userRole, loadBatches, refreshKey]);
+  }, [userRole, loadBatches]);
 
   const visibleBatches = useMemo(
     () =>
@@ -943,7 +942,7 @@ export default function ClassOfferingManagementR() {
         <header className="offering-batches-hero">
           <div>
             <span className="offering-batches-eyebrow">
-              <BookOpenCheck size={16} /> Registrar · Enrollment
+              <BookOpenCheck size={16} /> REGISTRAR · ENROLLMENT
             </span>
             <h1>Class Offerings</h1>
             <p>
@@ -951,14 +950,6 @@ export default function ClassOfferingManagementR() {
               unassigned offerings to a Program Head for scheduling.
             </p>
           </div>
-          <button
-            type="button"
-            className="offering-batches-button offering-batches-button--secondary"
-            onClick={() => setRefreshKey((value) => value + 1)}
-            disabled={initialLoading || queueLoading}
-          >
-            <RefreshCw size={16} /> Refresh
-          </button>
         </header>
 
         <section

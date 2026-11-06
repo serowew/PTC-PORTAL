@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-
 import type { CSSProperties } from "react";
 
 import {
@@ -11,7 +10,6 @@ import {
   GraduationCap,
   Loader2,
   Printer,
-  RefreshCcw,
 } from "lucide-react";
 
 import { useNavigate, useParams } from "react-router-dom";
@@ -610,16 +608,6 @@ export default function StudentCORR() {
             >
               <ArrowLeft size={17} />
               Back
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void loadCOR(selectedEnrollmentId ?? undefined)}
-              disabled={loading}
-              className="registrar-cor__button registrar-cor__button--secondary"
-            >
-              {loading ? <Loader2 size={17} /> : <RefreshCcw size={17} />}
-              Refresh
             </button>
 
             <button type="button" onClick={printCOR} className="registrar-cor__button registrar-cor__button--primary">

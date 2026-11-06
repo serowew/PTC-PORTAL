@@ -283,12 +283,12 @@ export default function AnnouncementDetailR() {
               <span className="registrar-announcement-detail__eyebrow-icon">
                 <Megaphone size={16} strokeWidth={2.2} />
               </span>
-              Registrar · Announcements
+              REGISTRAR · ANNOUNCEMENTS
             </div>
             <h1>Announcement Details</h1>
             <p>
-              Review the announcement content, audience, publication status, and
-              attached files before making changes.
+              View the complete announcement information, publication details,
+              and audience visibility in one organized workspace.
             </p>
           </div>
 

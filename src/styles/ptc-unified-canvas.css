@@ -1,38 +1,14 @@
-/* ============================================================================
-   PTC PORTAL — UNIFIED PAGE CANVAS  |  2026-10-28
-
-   One shared page background for the ALREADY-REDESIGNED Admin, Registrar,
-   and Program Head screens. Reference: Registrar Dashboard V4 geometric canvas.
-
-   Installation: import this file LAST from src/main.tsx, after admin-theme.css.
-   Scope: dashboard content and its immediate page root only.
-   It DOES NOT style navigation, footer, forms, stats, tables, or modals.
-   Do not independently change these background settings in page CSS files.
-   ============================================================================ */
+/* Page Background */
 
 :root {
-  --ptc-canvas-color: #e6f1e9;
-  --ptc-canvas-pattern:
-    linear-gradient(135deg, rgba(15, 122, 69, 0.08) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(15, 122, 69, 0.055) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(212, 167, 44, 0.045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(37, 99, 235, 0.035) 25%, transparent 25%),
-    radial-gradient(circle at 12% 10%, rgba(21, 148, 82, 0.22), transparent 25%),
-    radial-gradient(circle at 88% 6%, rgba(212, 167, 44, 0.18), transparent 23%),
-    radial-gradient(circle at 92% 72%, rgba(37, 99, 235, 0.10), transparent 24%),
-    linear-gradient(180deg, #edf6f0 0%, #e5f0e9 48%, #dce9e0 100%);
-  --ptc-canvas-tiles:
-    96px 96px, 96px 96px, 128px 128px, 128px 128px,
-    auto, auto, auto, auto;
-  --ptc-canvas-offsets:
-    0 0, 48px 48px, 0 0, 64px 64px,
-    center, center, center, center;
+  --ptc-canvas-color: #ffffff;
+  --ptc-canvas-pattern: none;
+  --ptc-canvas-tiles: auto;
+  --ptc-canvas-offsets: initial;
 }
 
-/* Match the same pattern in the parent workspace, eliminating white strips.
-   All matches require a redesigned root: other roles are unaffected. */
+/* Main Content */
 html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > :is(
-    .registrar-dashboard,
     .registrar-announcements,
     .registrar-announcement-detail,
     .registrar-announcement-create,
@@ -95,11 +71,8 @@ html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty
   overflow-x: clip;
 }
 
-/* Override competing per-page backgrounds and Admin theme gradients.
-   Keep the same sizes/positions on the root and workspace, so the pattern
-   does not unexpectedly get larger on Create/Edit/Announcement pages. */
+/* Page Containers */
 html body .dashboard-wrapper .dashboard-main .dashboard-content > :is(
-    .registrar-dashboard,
     .registrar-announcements,
     .registrar-announcement-detail,
     .registrar-announcement-create,
@@ -162,20 +135,16 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > :is(
   max-width: 100%;
 }
 
-/* The Admin Dashboard previously drew giant decorative rings *behind*
-   its KPI cards. Remove only those page-root rings. Header decorations and
-   colored KPI card artwork remain unchanged. */
+/* Admin Dashboard */
 html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboard::before,
 html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboard::after {
   content: none !important;
 }
 
-/* Keep Dark Mode charcoal, with dark geometric tiles and no light canvas.
-   No animations or transitions are introduced by this file. */
+/* Dark Mode */
 :is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
     .dark-mode, .theme-dark, [data-theme="dark"])
   .dashboard-wrapper .dashboard-main:has(> .dashboard-content > :is(
-    .registrar-dashboard,
     .registrar-announcements,
     .registrar-announcement-detail,
     .registrar-announcement-create,
@@ -233,7 +202,6 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
 :is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
     .dark-mode, .theme-dark, [data-theme="dark"])
   .dashboard-wrapper .dashboard-main .dashboard-content > :is(
-    .registrar-dashboard,
     .registrar-announcements,
     .registrar-announcement-detail,
     .registrar-announcement-create,
@@ -300,12 +268,43 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .admin-dashboa
   background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat !important;
 }
 
-/* Registrar page Dark Mode canvas */
+/* Registrar Dark Mode */
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(> .dashboard-content > :is(.registrar-course-management, .registrar-curriculum-details, .registrar-department-management, .registrar-subject-management, .registrar-enrollment-period, .offering-batches-page, .registrar-class-offering, .registrar-teaching-schedule)) > .dashboard-content,
+  .dashboard-main:has(> .dashboard-content > :is(.registrar-course-management, .registrar-curriculum-details, .registrar-department-management, .registrar-subject-management, .registrar-enrollment-details, .registrar-enrollment-period, .offering-batches-page, .registrar-class-offering, .registrar-teaching-schedule)) > .dashboard-content,
 html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main .dashboard-content > :is(.registrar-course-management, .registrar-curriculum-details, .registrar-department-management, .registrar-subject-management, .registrar-enrollment-period, .offering-batches-page, .registrar-class-offering, .registrar-teaching-schedule) {
+  .dashboard-main .dashboard-content > :is(.registrar-course-management, .registrar-curriculum-details, .registrar-department-management, .registrar-subject-management, .registrar-enrollment-details, .registrar-enrollment-period, .offering-batches-page, .registrar-class-offering, .registrar-teaching-schedule) {
   background-color: #111719 !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-position: initial !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Registrar Dashboard */
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .registrar-dashboard) > .dashboard-content,
+html body .dashboard-wrapper .dashboard-main .dashboard-content > .registrar-dashboard {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-position: initial !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Dashboard Dark Mode */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .registrar-dashboard) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main .dashboard-content > .registrar-dashboard {
+  background-color: #111719 !important;
+  background-image: none !important;
+}
+
+/* Announcement Background */
+html body .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .dashboard-main:has(> .dashboard-content > .registrar-announcements) > .dashboard-content,
+html body .dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .dashboard-main .dashboard-content > .registrar-announcements {
+  background-color: #ffffff !important;
   background-image: none !important;
   background-size: auto !important;
   background-position: initial !important;

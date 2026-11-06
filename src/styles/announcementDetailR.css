@@ -1,8 +1,4 @@
-/* =========================================================
-   REGISTRAR — ANNOUNCEMENT DETAILS
-   Light PTC-green design matching Announcement Management
-   and the rest of the Registrar module.
-========================================================= */
+/* Announcement Details */
 
 .registrar-announcement-detail {
   --rad-green-950: #073b24;
@@ -167,14 +163,14 @@
 
 .registrar-announcement-detail__button--primary {
   color: #ffffff;
-  background: var(--rad-green-800);
-  border-color: var(--rad-green-800);
-  box-shadow: 0 5px 13px rgba(13, 101, 59, 0.18);
+  background: #078545;
+  border-color: #06773e;
+  box-shadow: none;
 }
 
 .registrar-announcement-detail__button--primary:hover:not(:disabled) {
-  background: var(--rad-green-900);
-  border-color: var(--rad-green-900);
+  background: #066d3a;
+  border-color: #055e32;
 }
 
 .registrar-announcement-detail__button--secondary {
@@ -784,11 +780,7 @@
   --rad-green-700: #6ddb9d;
   --rad-green-800: #84e4ad;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero {
-  background: linear-gradient(115deg, #073d29, #0a6039 68%, #126b42) !important;
-  border-color: #286d4d;
-  box-shadow: 0 12px 24px rgba(0,0,0,.18);
-}
+
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero :is(h1,p,strong,small),
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__eyebrow {color: #f2fff6;}
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__eyebrow-icon {
@@ -799,7 +791,14 @@
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary:hover {background:#2b5340;}
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__button--primary {
-  background:#15824c; border-color:#2aaa69; color:white;
+  background: #078545;
+  border-color: #06773e;
+  color: #ffffff;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__button--primary:hover:not(:disabled) {
+  background: #066d3a;
+  border-color: #055e32;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__summary-card,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__content-panel,
@@ -913,10 +912,7 @@
   background-image: none !important;
 }
 
-/* The header remains green and cards retain the approved charcoal palette. */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero {
-  background: linear-gradient(115deg, #073d29, #0a6039 68%, #126b42) !important;
-}
+
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail :is(
   .registrar-announcement-detail__summary-card,
   .registrar-announcement-detail__content-panel,
@@ -1048,44 +1044,76 @@
   }
 }
 
-/* ==========================================================
-   APPROVED REGISTRAR HERO — IDENTICAL IN BOTH THEMES
-   Other Light/Dark styles and appearance preferences remain.
-   ========================================================== */
+/* Header */
 .dashboard-wrapper .registrar-announcement-detail__hero {
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
-  border-color: rgba(20, 115, 70, 0.38) !important;
-  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b !important;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f 0%, #0d7444 100%) !important;
+  box-shadow: none;
 }
+
+.dashboard-wrapper .registrar-announcement-detail__hero::before,
 .dashboard-wrapper .registrar-announcement-detail__hero::after {
-  border-color: rgba(255, 255, 255, 0.075) !important;
+  content: none !important;
+  display: none !important;
 }
-.dashboard-wrapper .registrar-announcement-detail__hero :is(h1, h2, p, small, strong),
-.dashboard-wrapper .registrar-announcement-detail__eyebrow {
+
+.dashboard-wrapper .dashboard-content .registrar-announcement-detail__eyebrow {
   color: #f6fff9 !important;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  letter-spacing: 0.055em;
 }
-.dashboard-wrapper .registrar-announcement-detail__eyebrow-icon {
-  color: #effff5 !important;
+
+.dashboard-wrapper .dashboard-content .registrar-announcement-detail__hero h1 {
+  color: #f6fff9 !important;
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    calc(3.1vw * var(--ptc-font-scale, 1)),
+    calc(40px * var(--ptc-font-scale, 1))
+  );
+  font-weight: 760;
+  letter-spacing: -0.025em;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-announcement-detail__hero p {
+  color: #f6fff9 !important;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+  letter-spacing: normal;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-announcement-detail__eyebrow-icon {
+  width: 31px;
+  height: 31px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: #ffffff !important;
   background: rgba(255, 255, 255, 0.14) !important;
-}
-.dashboard-wrapper .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary {
-  background: rgba(13, 34, 26, 0.72) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  color: #ffffff !important;
-}
-.dashboard-wrapper .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary:hover:not(:disabled) {
-  background: rgba(21, 67, 46, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero {
+  border-color: #245642 !important;
+  background: linear-gradient(105deg, #093522 0%, #0b5133 100%) !important;
+  box-shadow: none;
+}
 
-/* ==========================================================
-   SUMMARY CARD ACCENTS — LIGHT AND DARK MODE
-   Match Registrar Dashboard: green, gold, blue and violet.
-   Only adds the missing vertical lines; existing surfaces,
-   typography, compact spacing and hero remain unchanged.
-   ========================================================== */
+/* Compact Mode */
+.dashboard-wrapper[data-ptc-compact="true"] .registrar-announcement-detail__hero {
+  padding: calc(30px * var(--ptc-compact-scale, 0.8)) calc(32px * var(--ptc-compact-scale, 0.8));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 0.8));
+}
+
+@media (max-width: 640px) {
+  .dashboard-wrapper .registrar-announcement-detail__hero {
+    padding: calc(21px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
+  }
+}
+
+/* Summary Cards */
 .registrar-announcement-detail__summary-card {
   position: relative;
   overflow: hidden;
@@ -1113,4 +1141,36 @@
 
 .registrar-announcement-detail__summary-card:nth-child(4)::before {
   background-color: #7c3aed;
+}
+
+/* Dark Mode Background */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .registrar-announcement-detail),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .registrar-announcement-detail) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main > .dashboard-content > .registrar-announcement-detail {
+  background-color: #111719 !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-position: initial !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Back Button */
+.dashboard-wrapper .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary {
+  background: #e5f7ec;
+  color: #0a4b2e;
+  border: 1px solid #b7e4c8;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary:hover:not(:disabled),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-detail__hero .registrar-announcement-detail__button--secondary:hover:not(:disabled) {
+  background: #d4f0df;
+  color: #0a4b2e;
+  border-color: #a5d9b8;
+  box-shadow: none;
 }

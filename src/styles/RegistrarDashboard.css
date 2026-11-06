@@ -1,9 +1,4 @@
-/* =========================================================
-   REGISTRAR — OPERATIONS DASHBOARD
-   Light PTC-green design system matching Student List,
-   Student Enrollment, Class Offerings, and Enrollment Period.
-========================================================= */
-
+/* Page Layout */
 .registrar-dashboard {
   --rd-green-950: #073b24;
   --rd-green-900: #0a4b2d;
@@ -546,6 +541,16 @@
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+
+/* Queue avatars */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__student-avatar {
+  border-color: #5b786f;
+  background: #dff1e6;
+  color: #0b6338;
+  font-size: 11px;
+  box-shadow: none;
 }
 
 .registrar-dashboard__queue-student,
@@ -2183,18 +2188,11 @@
   }
 }
 
-
 /* =========================================================
    ROLE-SCOPED APPEARANCE THEMES
    This dashboard only. Sidebar typography and Footer untouched.
    Default PTC Green remains exactly as defined above.
 ========================================================= */
-
-
-
-
-
-
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard {
   --rd-green-950:#c4f4d7; --rd-green-900:#a7ecc4;
@@ -2270,7 +2268,6 @@
   color:#aabbaf;
 }
 
-
 /* =========================================================
    APPEARANCE FIX: readable hero / panel surfaces and font size
    The selectors below are scoped to the Registrar dashboard.
@@ -2278,13 +2275,6 @@
 ========================================================= */
 
 /* Keep a dark branded hero on both light alternative themes. */
-
-
-
-
-
-
-
 
 /* Dark headers and cards must share the same readable text palette. */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__panel-header,
@@ -2344,7 +2334,6 @@
   font-size:calc(12px * var(--ptc-font-scale,1));
 }
 
-
 /* ==========================================================
    APPROVED THEME REFERENCE — Registrar Dashboard
    These corrections are intentionally scoped to dashboard
@@ -2356,7 +2345,6 @@
   background:linear-gradient(112deg,#06452c 0%,#096238 54%,#168b4c 100%) !important;
   color:#fff !important;
 }
-
 
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero {
   background:linear-gradient(115deg,#083b27 0%,#0c5432 62%,#08703a 100%) !important;
@@ -2375,9 +2363,6 @@
 }
 
 /* Light themes retain bright readable cards, not washed-out headings. */
-
-
-
 
 /* Dark mode must not leave pale panel headers or white empty-state blocks. */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
@@ -2421,7 +2406,6 @@
 .dashboard-wrapper .registrar-dashboard__review-button {
   font-size:calc(12px * var(--ptc-font-scale,1));
 }
-
 
 /* ==========================================================
    LIGHT / DARK ONLY — OCT 2026
@@ -2500,7 +2484,6 @@
 }
 /* Typography still uses --ptc-font-scale supplied by DashboardLayout.
    The sidebar and footer stay excluded by the .registrar-dashboard scope. */
-
 
 /* ================================================================
    REGISTRAR DASHBOARD — FIVE KPI CARDS + DARK MODE LEGIBILITY
@@ -2805,7 +2788,6 @@
   opacity: 1 !important;
 }
 
-
 /* ============================================================
    FINAL DARK CANVAS OVERRIDE — remove remaining light workspace
    ============================================================ */
@@ -2829,7 +2811,6 @@
   box-shadow: none !important;
   border: 0 !important;
 }
-
 
 /* ============================================================
    CHARCOAL DARK MODE — SECOND REFERENCE SCREENSHOT
@@ -3261,7 +3242,6 @@
   }
 }
 
-
 /* ============================================================
    REGISTRAR DASHBOARD — PROTECTED FIVE-CARD ACCENTS
    Preserve approved green hero in both appearance themes.
@@ -3293,124 +3273,480 @@
   opacity: 1 !important;
 }
 
-
-/* =========================================================
-   FINAL HERO MATCH — align Registrar Dashboard header with
-   the richer Announcement header in both Light and Dark Mode.
-   Keeps the existing layout/functionality and only deepens the
-   hero surface so it no longer looks pale beside Announcement.
-========================================================= */
-
-.dashboard-wrapper .registrar-dashboard__hero {
-  min-height: 188px;
-  padding: 30px 32px;
-  border-radius: 24px;
+/* Header */
+.registrar-dashboard .registrar-dashboard__hero {
+  border-radius: 18px;
+  box-shadow: 0 6px 16px rgba(4, 56, 32, 0.12);
+}
+.registrar-dashboard .registrar-dashboard__hero::before,
+.registrar-dashboard .registrar-dashboard__hero::after {
+  opacity: 0.22;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero::before {
-  content: "";
-  position: absolute;
-  inset: auto -60px -95px auto;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 50%;
-  pointer-events: none;
+/* Summary Cards */
+.registrar-dashboard .registrar-dashboard__stat-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(13, 50, 29, 0.05);
+}
+.registrar-dashboard .registrar-dashboard__stat-card:hover {
+  box-shadow: 0 3px 10px rgba(13, 50, 29, 0.08);
 }
 
-.dashboard-wrapper .registrar-dashboard__hero::after {
-  top: -115px;
-  right: 105px;
-  width: 250px;
-  height: 250px;
-  border-radius: 50%;
-  border: 44px solid rgba(255,255,255,.055);
+/* Content Panels */
+.registrar-dashboard :is(
+  .registrar-dashboard__panel,
+  .registrar-dashboard__quick-panel,
+  .registrar-dashboard__announcement-panel,
+  .registrar-dashboard__period-card
+) {
+  border-radius: 14px;
+  box-shadow: 0 2px 9px rgba(13, 50, 29, 0.05);
+}
+.registrar-dashboard :is(
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card
+) {
+  border-radius: 10px;
+  box-shadow: none;
 }
 
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-dashboard__hero {
-  border: 0 !important;
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255,255,255,.18) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255,255,255,.08) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #064e2f 0%, #0d6b3e 46%, #15803d 72%, #1d8d4d 100%) !important;
-  box-shadow: 0 18px 42px rgba(6,78,47,.24) !important;
+/* Buttons */
+.registrar-dashboard :is(
+  .registrar-dashboard__button,
+  .registrar-dashboard__period-button
+) {
+  border-radius: 9px;
+  box-shadow: none;
 }
 
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard__hero {
-  border: 0 !important;
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255,255,255,.12) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 91% 52%, rgba(255,255,255,.05) 0 13%, transparent 13.5%),
-    linear-gradient(120deg, #053622 0%, #0a472d 38%, #0f6a3b 70%, #128246 100%) !important;
-  box-shadow: 0 18px 42px rgba(0,0,0,.34) !important;
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard :is(
+  .registrar-dashboard__stat-card,
+  .registrar-dashboard__panel,
+  .registrar-dashboard__quick-panel,
+  .registrar-dashboard__announcement-panel,
+  .registrar-dashboard__period-card,
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card
+) {
+  box-shadow: none;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__eyebrow {
-  color: #dff8e8 !important;
+/* Header */
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f 0%, #0d7444 100%);
+  box-shadow: 0 3px 10px rgba(5, 56, 32, 0.12);
 }
 
-.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__eyebrow-icon {
-  color: #ffffff !important;
-  background: rgba(255,255,255,.14) !important;
-  border: 1px solid rgba(255,255,255,.18) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.15) !important;
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero::before,
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero::after {
+  content: none;
+  display: none;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero h1 {
-  color: #ffffff !important;
-  font-size: clamp(30px, 3.4vw, 40px);
-  font-weight: 790;
-  letter-spacing: -.035em;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+  background: linear-gradient(105deg, #093522 0%, #0b5133 100%) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18) !important;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero p {
-  max-width: 790px;
-  color: rgba(239,255,245,.84) !important;
-  font-size: 14.5px;
+/* Buttons */
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__button--primary,
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__review-button,
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__period-button {
+  color: #ffffff;
+  background: linear-gradient(180deg, #16844d 0%, #0b663a 100%);
+  border: 1px solid #0b663a;
+  border-radius: 8px;
+  box-shadow: none;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge {
-  border-color: rgba(255,255,255,.22) !important;
-  background: rgba(255,255,255,.14) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__button--primary:hover:not(:disabled),
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__review-button:hover,
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__period-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #137343 0%, #08542f 100%);
+  border-color: #08542f;
+  box-shadow: none;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge-icon {
-  background: rgba(255,255,255,.92) !important;
-  color: #0f6d3f !important;
-  border-color: rgba(255,255,255,.28) !important;
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero .registrar-dashboard__button--secondary {
+  color: #0b5e37;
+  background: linear-gradient(180deg, #ffffff 0%, #eaf5ee 100%);
+  border: 1px solid #d5e7db;
+  border-radius: 8px;
+  box-shadow: none;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge small {
-  color: rgba(255,255,255,.72) !important;
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero .registrar-dashboard__button--secondary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f6fcf8 0%, #dff0e5 100%);
+  border-color: #c5dfce;
+  box-shadow: none;
 }
 
-.dashboard-wrapper .registrar-dashboard__hero .registrar-dashboard__user-badge strong {
-  color: #ffffff !important;
-}
-
-
-/* FINAL: EXACT ANNOUNCEMENT MANAGEMENT HERO COLOR MATCH.
-   The prior dashboard-specific translucent radial backgrounds made
-   the right side appear washed out. Use the SAME opaque linear gradient
-   and pseudo-element ring transparency as Announcement Management. */
-.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero,
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-dashboard .registrar-dashboard__hero,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-dashboard .registrar-dashboard__hero {
-  background-color: #073b28 !important;
-  background-image: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
-  border-color: rgba(20, 115, 70, 0.38) !important;
-  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15) !important;
-}
-.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero::before {
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  background: none !important;
+/* Dark Mode Buttons */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard .registrar-dashboard__hero .registrar-dashboard__button--secondary {
+  background: linear-gradient(180deg, #f5fbf7 0%, #e0eee5 100%) !important;
+  background-image: linear-gradient(180deg, #f5fbf7 0%, #e0eee5 100%) !important;
   box-shadow: none !important;
-  opacity: 1 !important;
 }
-.dashboard-wrapper .registrar-dashboard .registrar-dashboard__hero::after {
-  border-color: rgba(255, 255, 255, 0.075) !important;
-  background: none !important;
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard .registrar-dashboard__hero .registrar-dashboard__button--secondary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #eaf7ed 0%, #d2e8da 100%) !important;
+  background-image: linear-gradient(180deg, #eaf7ed 0%, #d2e8da 100%) !important;
   box-shadow: none !important;
-  opacity: 1 !important;
+}
+
+/* Page Background */
+.dashboard-wrapper .dashboard-content .registrar-dashboard {
+  background-color: #ffffff;
+  background-image: none;
+}
+
+/* Header */
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  border: 1px solid #0c633b;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero::before,
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero::after {
+  content: none;
+  display: none;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard {
+  background-color: #111719 !important;
+  background-image: none !important;
+}
+
+/* Page Layout */
+.dashboard-wrapper .dashboard-content .registrar-dashboard {
+  --rd-bg: #ffffff;
+  --rd-surface: #ffffff;
+  --rd-border: #dfe8e2;
+  --rd-text-950: #17201b;
+  --rd-text-800: #28352d;
+  --rd-text-700: #425047;
+  --rd-text-600: #5e6b63;
+  --rd-text-500: #76827b;
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+/* Header */
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b !important;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f 0%, #0d7444 100%) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero::before,
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero::after {
+  content: none !important;
+  display: none !important;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__eyebrow {
+  color: #f6fff9 !important;
+  gap: 10px;
+  font-size: calc(13.5px * var(--ptc-font-scale, 1));
+  font-weight: 760;
+  letter-spacing: 0.06em;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero h1 {
+  color: #f6fff9 !important;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3.1vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
+  font-weight: 760;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero p {
+  color: #f6fff9 !important;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__eyebrow-icon {
+  width: 31px;
+  height: 31px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__user-badge {
+  gap: 12px;
+  padding: 11px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__user-badge-icon {
+  color: #0a5a34;
+  background: linear-gradient(145deg, #ffffff, #dff7e8);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__user-badge small {
+  color: rgba(246, 255, 249, 0.78) !important;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__user-badge strong {
+  color: #f6fff9 !important;
+  font-size: calc(12.75px * var(--ptc-font-scale, 1));
+}
+
+/* Summary Cards */
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: calc(14px * var(--ptc-compact-scale, 1));
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-card {
+  padding: calc(17px * var(--ptc-compact-scale, 1)) calc(18px * var(--ptc-compact-scale, 1));
+  border: 1px solid #dfe8e2;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-card:hover {
+  border-color: #b7d5c2;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-icon {
+  width: 43px;
+  height: 43px;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-copy > span {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-copy strong {
+  font-size: calc(24px * var(--ptc-font-scale, 1));
+  font-weight: 780;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stat-copy small {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+}
+
+/* Content Panels */
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__panel,
+  .registrar-dashboard__quick-panel,
+  .registrar-dashboard__announcement-panel,
+  .registrar-dashboard__period-card
+) {
+  border: 1px solid #dfe8e2;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__queue-item,
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card,
+  .registrar-dashboard__period-focus,
+  .registrar-dashboard__period-details,
+  .registrar-dashboard__inline-state
+) {
+  border-color: #dfe8e2;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__panel-header h2 {
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 740;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__panel-header p {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__section-kicker {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+  font-weight: 760;
+}
+
+/* Buttons */
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__button--primary,
+  .registrar-dashboard__review-button,
+  .registrar-dashboard__period-button
+) {
+  border: 1px solid #0b6338;
+  border-radius: 8px;
+  color: #ffffff;
+  background: linear-gradient(180deg, #117846, #0b6338);
+  box-shadow: none;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 720;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__button--primary,
+  .registrar-dashboard__review-button,
+  .registrar-dashboard__period-button
+):hover:not(:disabled) {
+  background: linear-gradient(180deg, #0f6a3e, #084b2d);
+  border-color: #084b2d;
+  box-shadow: none;
+}
+
+.dashboard-wrapper .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__button--secondary,
+  .registrar-dashboard__text-action
+) {
+  border-radius: 11px;
+  box-shadow: none;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 720;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard {
+  --rd-bg: #111719;
+  --rd-surface: #192226;
+  --rd-border: #35464b;
+  --rd-text-950: #f3f4f6;
+  --rd-text-800: #e2e8eb;
+  --rd-text-700: #c9d2d6;
+  --rd-text-600: #b5c0c5;
+  --rd-text-500: #aeb5c0;
+  background: #111719 !important;
+  background-image: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+  border-color: #245642 !important;
+  background: linear-gradient(105deg, #093522 0%, #0b5133 100%) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__panel,
+  .registrar-dashboard__quick-panel,
+  .registrar-dashboard__announcement-panel,
+  .registrar-dashboard__period-card,
+  .registrar-dashboard__panel-header,
+  .registrar-dashboard__quick-grid,
+  .registrar-dashboard__announcement-grid,
+  .registrar-dashboard__stats,
+  .registrar-dashboard__priority-grid
+) {
+  background: #192226 !important;
+  border-color: #35464b !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__stat-card,
+  .registrar-dashboard__queue-item,
+  .registrar-dashboard__quick-card,
+  .registrar-dashboard__announcement-card,
+  .registrar-dashboard__period-focus,
+  .registrar-dashboard__period-details,
+  .registrar-dashboard__inline-state,
+  .registrar-dashboard__user-badge
+) {
+  background: #20292e !important;
+  border-color: #35464b !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__stat-copy > span,
+  .registrar-dashboard__panel-header p,
+  .registrar-dashboard__quick-copy small,
+  .registrar-dashboard__announcement-text,
+  .registrar-dashboard__period-details span,
+  .registrar-dashboard__footer-meta
+) {
+  color: #b5c0c5 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__stat-copy strong,
+  .registrar-dashboard__panel-header h2,
+  .registrar-dashboard__quick-copy strong,
+  .registrar-dashboard__announcement-card > strong,
+  .registrar-dashboard__period-details strong,
+  .registrar-dashboard__queue-student strong
+) {
+  color: #f3f4f6 !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__section-kicker,
+  .registrar-dashboard__period-note,
+  .registrar-dashboard__announcement-status
+) {
+  border-color: #35464b !important;
+  box-shadow: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__queue-skeleton,
+  .registrar-dashboard__period-skeleton,
+  .registrar-dashboard__announcement-skeleton
+) {
+  background: #20292e !important;
+  border-color: #35464b !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__review-button,
+  .registrar-dashboard__period-button,
+  .registrar-dashboard__button--primary
+) {
+  color: #ffffff !important;
+  border-color: #0b6338 !important;
+  background: linear-gradient(180deg, #117846, #0b6338) !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .registrar-dashboard :is(
+  .registrar-dashboard__review-button,
+  .registrar-dashboard__period-button,
+  .registrar-dashboard__button--primary
+):hover:not(:disabled) {
+  background: linear-gradient(180deg, #0f6a3e, #084b2d) !important;
+}
+
+/* Responsive */
+@media (max-width: 1220px) {
+  .dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-wrapper .dashboard-content .registrar-dashboard .registrar-dashboard__hero {
+    padding: calc(22px * var(--ptc-compact-scale, 1));
+  }
 }

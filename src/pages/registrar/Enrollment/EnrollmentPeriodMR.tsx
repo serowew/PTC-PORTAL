@@ -13,7 +13,6 @@ import {
   Info,
   Loader2,
   LockKeyhole,
-  RefreshCw,
   RotateCcw,
   ShieldCheck,
   UnlockKeyhole,
@@ -83,7 +82,6 @@ export default function EnrollmentPeriodMR() {
   const [selectedSemesterId, setSelectedSemesterId] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -167,7 +165,6 @@ export default function EnrollmentPeriodMR() {
 
     try {
       if (mode === "initial") setLoading(true);
-      if (mode === "refresh") setRefreshing(true);
       setError("");
 
       const response = await authService.authFetch(API_BASE_URL, {
@@ -248,7 +245,6 @@ export default function EnrollmentPeriodMR() {
       }
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -435,39 +431,16 @@ export default function EnrollmentPeriodMR() {
 
   if (!authenticated || !user || userRole !== "Registrar") return null;
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="registrar-enrollment-period">
-          <div className="registrar-enrollment-period__skeleton-hero">
-            <div className="registrar-enrollment-period__skeleton-line registrar-enrollment-period__skeleton-line--short" />
-            <div className="registrar-enrollment-period__skeleton-line registrar-enrollment-period__skeleton-line--title" />
-            <div className="registrar-enrollment-period__skeleton-line" />
-          </div>
-          <div className="registrar-enrollment-period__skeleton-grid">
-            {[1, 2, 3, 4].map((item) => (
-              <div
-                className="registrar-enrollment-period__skeleton-card"
-                key={item}
-              />
-            ))}
-          </div>
-          <div className="registrar-enrollment-period__skeleton-panel" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
-      <div className="registrar-enrollment-period">
+      <div className="registrar-enrollment-period" aria-busy={loading}>
         <header className="registrar-enrollment-period__hero">
           <div className="registrar-enrollment-period__hero-copy">
             <span className="registrar-enrollment-period__eyebrow">
               <span className="registrar-enrollment-period__eyebrow-icon">
                 <CalendarClock size={16} strokeWidth={2.2} />
               </span>
-              Registrar · Enrollment
+              REGISTRAR · ENROLLMENT
             </span>
             <h1>Enrollment Period</h1>
             <p>
@@ -485,20 +458,10 @@ export default function EnrollmentPeriodMR() {
               <ArrowRight size={17} />
               Student Enrollment
             </button>
-            <button
-              type="button"
-              className="registrar-enrollment-period__button registrar-enrollment-period__button--secondary"
-              onClick={() => void loadPeriodData("refresh")}
-              disabled={refreshing || actionLoading}
-            >
-              <RefreshCw
-                size={17}
-                className={refreshing ? "is-spinning" : undefined}
-              />
-              Refresh
-            </button>
           </div>
         </header>
+
+        {loading && <span className="registrar-enrollment-period__sr-only" role="status">Loading enrollment period information</span>}
 
         {error && (
           <div
@@ -541,6 +504,24 @@ export default function EnrollmentPeriodMR() {
         )}
 
         <section className="registrar-enrollment-period__summary-grid">
+          {loading ? (
+            [1, 2, 3, 4].map((item) => (
+              <article
+                key={item}
+                className="registrar-enrollment-period__summary-card registrar-enrollment-period__loading-card"
+                aria-label="Loading enrollment period summary"
+              >
+                <div className="registrar-enrollment-period__loading-icon" aria-hidden="true" />
+                <div className="registrar-enrollment-period__loading-copy" aria-hidden="true">
+                  <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--label" />
+                  <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--value" />
+                  <div className="registrar-enrollment-period__loading-line" />
+                </div>
+              </article>
+            ))
+          ) : (
+            <>
+
           <article
             className={`registrar-enrollment-period__summary-card ${
               periodIsOpen
@@ -612,9 +593,44 @@ export default function EnrollmentPeriodMR() {
               </small>
             </div>
           </article>
+
+            </>
+          )}
         </section>
 
         <div className="registrar-enrollment-period__workspace-grid">
+          {loading ? (
+            <>
+              <section className="registrar-enrollment-period__panel registrar-enrollment-period__loading-panel" aria-label="Loading latest period record">
+                <div className="registrar-enrollment-period__section-label">Latest Period Record</div>
+                <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--heading" aria-hidden="true" />
+                <div className="registrar-enrollment-period__loading-line" aria-hidden="true" />
+                <div className="registrar-enrollment-period__loading-grid" aria-hidden="true">
+                  {[1, 2, 3, 4].map((item) => (
+                    <div key={item} className="registrar-enrollment-period__loading-field">
+                      <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--label" />
+                      <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--value" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section className="registrar-enrollment-period__panel registrar-enrollment-period__loading-panel" aria-label="Loading period configuration">
+                <div className="registrar-enrollment-period__section-label">Period Configuration</div>
+                <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--heading" aria-hidden="true" />
+                <div className="registrar-enrollment-period__loading-line" aria-hidden="true" />
+                <div className="registrar-enrollment-period__loading-grid" aria-hidden="true">
+                  {[1, 2].map((item) => (
+                    <div key={item} className="registrar-enrollment-period__loading-field">
+                      <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--label" />
+                      <div className="registrar-enrollment-period__loading-line registrar-enrollment-period__loading-line--input" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          ) : (
+            <>
+
           <section className="registrar-enrollment-period__panel registrar-enrollment-period__panel--status">
             <div className="registrar-enrollment-period__panel-header">
               <div>
@@ -890,6 +906,8 @@ export default function EnrollmentPeriodMR() {
               )}
             </div>
           </section>
+            </>
+          )}
         </div>
 
         <section className="registrar-enrollment-period__rules">

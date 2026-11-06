@@ -1,8 +1,4 @@
-/* =========================================================
-   REGISTRAR — EDIT ANNOUNCEMENT
-   Scoped light PTC-green design matching Announcement
-   Management and the Registrar UI system.
-========================================================= */
+/* Edit Announcement */
 
 .registrar-announcement-edit {
   --rae-green-950: #073b24;
@@ -317,8 +313,8 @@
 .registrar-announcement-edit__panel-header h2 {
   margin: 0;
   color: var(--rae-text-950);
-  font-size: calc(17px * var(--ptc-font-scale, 1));
-  font-weight: 760;
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 740;
   line-height: 1.3;
   letter-spacing: -0.012em;
 }
@@ -349,8 +345,8 @@
   align-items: center;
   gap: 5px;
   color: var(--rae-text-700);
-  font-size: calc(11.5px * var(--ptc-font-scale, 1));
-  font-weight: 720;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
 }
 
 .registrar-announcement-edit__field em {
@@ -488,8 +484,8 @@
 
 .registrar-announcement-edit__recipient-option strong {
   color: var(--rae-text-800);
-  font-size: calc(11.5px * var(--ptc-font-scale, 1));
-  font-weight: 720;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
 }
 
 .registrar-announcement-edit__recipient-option small {
@@ -907,11 +903,7 @@
   }
 }
 
-/* ============================================================
-   REGISTRAR EDIT ANNOUNCEMENT — DARK MODE
-   Scope limited to the edit page. All Light Mode rules above
-   remain intact. Shared footer/sidebar are deliberately excluded.
-   ============================================================ */
+/* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-edit),
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-edit) > .dashboard-content,
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit {
@@ -933,9 +925,9 @@
   --rae-text-700: #ced8d2;
   --rae-text-600: #bbc9c1;
   --rae-text-500: #aebdb4;
-  --rae-border: #38464b;
-  --rae-border-strong: #4a5b62;
-  --rae-surface: #1e262a;
+  --rae-border: #35464b;
+  --rae-border-strong: #35464b;
+  --rae-surface: #192226;
   --rae-bg: #111719;
   --rae-danger: #ffaaaa;
   --rae-danger-soft: #39282d;
@@ -958,8 +950,8 @@
   .registrar-announcement-edit__save-panel,
   .registrar-announcement-edit__notice
 ) {
-  background: #1e262a;
-  border-color: #394a51;
+  background: #192226;
+  border-color: #35464b;
   color: #eaf2ed;
   box-shadow: 0 8px 22px rgba(0,0,0,.15);
 }
@@ -981,7 +973,7 @@
   .registrar-announcement-edit__status-preview
 ) {
   background: #20292e;
-  border-color: #405057;
+  border-color: #35464b;
   color: #e6eee9;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__recipient-option--selected,
@@ -1050,64 +1042,6 @@
   background: #111719;
 }
 
-/* ============================================================
-   DARK MODE — EDIT WORKSPACE CANVAS (FINAL TARGETED FIX)
-   Keep the geometric Light Mode canvas out of the Edit screen.
-   Only runs for Dark Mode AND when this exact page is mounted.
-   Does not style the sidebar, footer, hero or form controls.
-   ============================================================ */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit) {
-  background: #111719 !important;
-  background-image: none !important;
-}
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit)
-  > .dashboard-content {
-  position: relative;
-  isolation: isolate;
-  background: #111719 !important;
-  background-image: none !important;
-}
-
-/* Some shared decorative canvas styles paint on pseudo-elements,
-   so setting the container's background alone cannot remove them. */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit)
-  > .dashboard-content::before,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit)
-  > .dashboard-content::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  background-image: none !important;
-}
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit)
-  > .dashboard-content > .registrar-announcement-edit {
-  position: relative;
-  isolation: isolate;
-  min-height: 100%;
-  background: #111719 !important;
-  background-image: none !important;
-  box-shadow: none;
-}
-
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit)
-  > .dashboard-content > .registrar-announcement-edit::before,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(.registrar-announcement-edit)
-  > .dashboard-content > .registrar-announcement-edit::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  background-image: none !important;
-}
-
 /* EDIT ANNOUNCEMENT — APPEARANCE PREFERENCES & DATE PICKERS */
 .registrar-announcement-edit__date-control {
   position: relative;
@@ -1151,12 +1085,12 @@
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__calendar-button:hover:not(:disabled) {
   background: #304c3c;
 }
-/* Compact mode uses a layout variable; default = 1 (original spacing). */
+/* Compact Mode */
 .registrar-announcement-edit {
   padding: calc(28px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1)) calc(38px * var(--ptc-compact-scale, 1));
 }
 .registrar-announcement-edit__hero {
-  padding: calc(25px * var(--ptc-compact-scale, 1)) calc(28px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
   margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
 }
 .registrar-announcement-edit__fields {gap: calc(16px * var(--ptc-compact-scale, 1));}
@@ -1184,9 +1118,7 @@
  .registrar-announcement-edit__panel {padding: calc(18px * var(--ptc-compact-scale, 1)) calc(16px * var(--ptc-compact-scale, 1));}
 }
 
-/* =========================================================
-   DARK MODE RECIPIENT ICON FIX
-   ========================================================= */
+/* Recipient Icons */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__recipient-check {
   color: #c3d0c8;
   background: #182024;
@@ -1214,73 +1146,7 @@
   border-color: #67d39a;
 }
 
-/* LIGHT MODE — RESTORE APPROVED PTC GREEN HERO
-   Scoped to this page; Dark Mode, page panels, sidebar, footer and
-   appearance preference rules are unchanged. */
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero {
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%);
-  border-color: rgba(20, 115, 70, .38);
-  box-shadow: 0 10px 26px rgba(5, 61, 38, .15);
-}
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero::after {
-  border-color: rgba(255, 255, 255, .075);
-}
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero h1,
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero p,
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__eyebrow {
-  color: #f6fff9;
-}
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__eyebrow-icon {
-  color: #effff5;
-  background: rgba(255,255,255,.14);
-}
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary {
-  background: rgba(13, 34, 26, .72);
-  border-color: rgba(255,255,255,.4);
-  color: #fff;
-}
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
-  background: rgba(25, 68, 47, .92);
-  border-color: rgba(255,255,255,.65);
-  color: #fff;
-}
-
-/* ==========================================================
-   APPROVED GREEN HERO — BOTH LIGHT MODE AND DARK MODE
-   Scoped to this page only. Keep existing panels and layout.
-   ========================================================== */
-.dashboard-wrapper .registrar-announcement-edit__hero {
-  background: linear-gradient(110deg, #073b28 0%, #075234 56%, #0d7d48 100%) !important;
-  border-color: rgba(20, 115, 70, 0.38) !important;
-  box-shadow: 0 10px 26px rgba(5, 61, 38, 0.15);
-}
-.dashboard-wrapper .registrar-announcement-edit__hero::after {
-  border-color: rgba(255, 255, 255, 0.075) !important;
-}
-.dashboard-wrapper .registrar-announcement-edit__hero :is(h1, h2, p, small, strong),
-.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__eyebrow {
-  color: #f6fff9 !important;
-}
-.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__eyebrow-icon {
-  color: #effff5 !important;
-  background: rgba(255, 255, 255, 0.14) !important;
-}
-.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary {
-  background: rgba(13, 34, 26, 0.72) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  color: #ffffff !important;
-}
-.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
-  background: rgba(21, 67, 46, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  color: #ffffff !important;
-}
-
-
-/* ============================================================
-   EDIT ANNOUNCEMENT — FINAL SURFACE CONSISTENCY
-   Applies ONLY in Dark Mode. Light Mode and hero remain intact.
-   ============================================================ */
+/* Dark Mode Controls */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   .registrar-announcement-edit__recipient-option:not(.registrar-announcement-edit__recipient-option--selected)
   .registrar-announcement-edit__recipient-check {
@@ -1307,4 +1173,170 @@
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   .registrar-announcement-edit__calendar-button:hover:not(:disabled) {
   background: #2c4045;
+}
+
+/* Header */
+.dashboard-wrapper .registrar-announcement-edit__hero {
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f 0%, #0d7444 100%);
+  box-shadow: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero::before,
+.dashboard-wrapper .registrar-announcement-edit__hero::after {
+  content: none;
+  display: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero :is(h1, p),
+.dashboard-wrapper .registrar-announcement-edit__eyebrow {
+  color: #f6fff9;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero h1 {
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    calc(3.1vw * var(--ptc-font-scale, 1)),
+    calc(40px * var(--ptc-font-scale, 1))
+  );
+  font-weight: 760;
+  letter-spacing: -0.025em;
+}
+.dashboard-wrapper .registrar-announcement-edit__eyebrow {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  letter-spacing: 0.055em;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero p {
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__eyebrow-icon,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__hero .registrar-announcement-edit__eyebrow-icon {
+  color: #effff5;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Buttons */
+.dashboard-wrapper .registrar-announcement-edit__button {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 720;
+  box-shadow: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__button--primary {
+  color: #fff;
+  border: 1px solid #0b6338;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #117846, #0b6338);
+  box-shadow: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__button--primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #0f6a3e, #084b2d);
+  border-color: #084b2d;
+  box-shadow: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__button--secondary {
+  color: #0a4b2e;
+  background: #e5f7ec;
+  border: 1px solid #b7e4c8;
+  border-radius: 11px;
+  box-shadow: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
+  color: #0a4b2e;
+  background: #d4f0df;
+  border-color: #91d2a9;
+  box-shadow: none;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary {
+  color: #0a4b2e;
+  background: #e5f7ec;
+  border-color: #b7e4c8;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.dashboard-wrapper .registrar-announcement-edit__hero .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
+  color: #0a4b2e;
+  background: #d4f0df;
+  border-color: #91d2a9;
+}
+
+/* Dark Mode */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-announcement-edit),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-announcement-edit) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .registrar-announcement-edit {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+  --ptc-canvas-tiles: auto;
+  --ptc-canvas-offsets: initial;
+  background: #111719 !important;
+  background-color: #111719 !important;
+  background-image: none !important;
+  background-size: auto !important;
+  background-position: initial !important;
+  background-repeat: no-repeat !important;
+}
+
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-announcement-edit) > .dashboard-content::before,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-announcement-edit) > .dashboard-content::after {
+  content: none !important;
+  display: none !important;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-edit) > .dashboard-content::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.registrar-announcement-edit) > .dashboard-content::after,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit::before,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit::after {
+  content: none !important;
+  display: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__panel,
+  .registrar-announcement-edit__save-panel
+) {
+  background: #192226;
+  border-color: #35464b;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit :is(
+  .registrar-announcement-edit__recipient-option,
+  .registrar-announcement-edit__attachment-item,
+  .registrar-announcement-edit__empty-files,
+  .registrar-announcement-edit__upload-box,
+  .registrar-announcement-edit__selected-file,
+  .registrar-announcement-edit__status-preview
+) {
+  background: #20292e;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__recipient-option--selected,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__status-preview--active {
+  background: #193629;
+  border-color: #367b54;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__hero {
+  background: linear-gradient(105deg, #093522, #0b5133) !important;
+  border-color: #245642;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__button--primary {
+  color: #fff;
+  background: linear-gradient(180deg, #117846, #0b6338);
+  border-color: #0b6338;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__button--primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #0f6a3e, #084b2d);
+  border-color: #084b2d;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__button--secondary {
+  color: #0a4b2e;
+  background: #e5f7ec;
+  border-color: #b7e4c8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-announcement-edit__button--secondary:hover:not(:disabled) {
+  color: #0a4b2e;
+  background: #d4f0df;
+  border-color: #91d2a9;
 }

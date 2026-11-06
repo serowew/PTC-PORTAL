@@ -477,7 +477,7 @@ export default function CurriculumDetailR() {
 
             <div className="registrar-curriculum-details__eyebrow">
               <GraduationCap size={15} />
-              Registrar · Curriculum Details
+              REGISTRAR · ACADEMIC STRUCTURE
             </div>
 
             <div className="registrar-curriculum-details__title-row">
@@ -504,19 +504,6 @@ export default function CurriculumDetailR() {
           </div>
 
           <div className="registrar-curriculum-details__hero-actions">
-            <button
-              type="button"
-              className="registrar-curriculum-details__button registrar-curriculum-details__button--secondary"
-              onClick={() => void loadCurriculum(false)}
-              disabled={refreshing}
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "is-spinning" : undefined}
-              />
-              {refreshing ? "Refreshing" : "Refresh"}
-            </button>
-
             <button
               type="button"
               className="registrar-curriculum-details__button registrar-curriculum-details__button--primary"

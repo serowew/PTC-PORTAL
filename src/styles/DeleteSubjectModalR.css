@@ -1,3 +1,4 @@
+/* Delete Modal */
 .registrar-delete-subject__overlay,
 .registrar-delete-subject__overlay * {
   box-sizing: border-box;
@@ -9,9 +10,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 22px;
-  background: rgba(15, 23, 42, 0.48);
-  backdrop-filter: blur(3px);
+  padding: calc(22px * var(--ptc-compact-scale, 1));
+  overflow-y: auto;
+  background: rgba(8, 20, 13, 0.46);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   animation: registrar-delete-subject-fade 0.16s ease;
 }
 .registrar-delete-subject {
@@ -29,7 +32,8 @@
   --rds-danger-dark: #8f1d14;
   --rds-danger-soft: #fff2f0;
   width: min(500px, 100%);
-  overflow: hidden;
+  max-height: calc(100dvh - 44px);
+  overflow: auto;
   border: 1px solid #e2e9e4;
   border-radius: 16px;
   color: var(--rds-text-950);
@@ -347,14 +351,14 @@
   --rds-border: #394b44;
   --rds-danger-soft: #432422;
   color: var(--rds-text-950);
-  background: #171e22;
-  border-color: #42534b;
+  background: #192226;
+  border-color: #35464B;
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-delete-subject__header {
-  background: #20292e;
-  border-bottom-color: #3b4d47;
+  background: #20292E;
+  border-bottom-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-delete-subject__header-icon {
   color: #ff9d98;
@@ -375,8 +379,8 @@
   border-color: #768880;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-delete-subject__subject-card {
-  background: #20292e;
-  border-color: #40534b;
+  background: #20292E;
+  border-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-delete-subject__subject-icon {
   color: #a7e3bd;
@@ -406,8 +410,8 @@
   border-color: #784c49;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-delete-subject__footer {
-  background: #20292e;
-  border-top-color: #3b4d47;
+  background: #20292E;
+  border-top-color: #35464B;
 }
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-delete-subject__button--secondary {
   color: #f0f5f2;
@@ -429,7 +433,7 @@
   background: #982017;
   border-color: #c43b30;
 }
-/* Appearance Preferences */
+/* Preferences */
 .registrar-delete-subject {
   --rds-font-scale: var(--ptc-font-scale, 1);
   --rds-spacing-scale: var(--ptc-compact-scale, 1);
@@ -451,3 +455,16 @@
 .registrar-delete-subject__subject-card { gap: calc(11px * var(--rds-spacing-scale)); padding: calc(12px * var(--rds-spacing-scale)) calc(13px * var(--rds-spacing-scale)); }
 .registrar-delete-subject__protection, .registrar-delete-subject__warning, .registrar-delete-subject__error { gap: calc(9px * var(--rds-spacing-scale)); padding: calc(10px * var(--rds-spacing-scale)) calc(11px * var(--rds-spacing-scale)); }
 .registrar-delete-subject__footer { gap: calc(8px * var(--rds-spacing-scale)); padding: calc(13px * var(--rds-spacing-scale)) calc(18px * var(--rds-spacing-scale)) calc(15px * var(--rds-spacing-scale)); }
+
+
+/* Modal Backdrop */
+.dashboard-wrapper:has(.registrar-delete-subject__overlay) .dashboard-content > .registrar-subject-management,
+.dashboard-wrapper:has(.registrar-delete-subject__overlay) .ptc-footer {
+  filter: blur(5px) brightness(0.7);
+}
+
+.dashboard-wrapper .registrar-delete-subject__overlay {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
