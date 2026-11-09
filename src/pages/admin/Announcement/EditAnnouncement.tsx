@@ -614,18 +614,6 @@ export default function AnnouncementEdit() {
   return (
     <DashboardLayout>
       <main className="admin-announcement-editor">
-        <div className="admin-announcement-editor__toolbar">
-          <button
-            type="button"
-            className="admin-announcement-editor__back"
-            onClick={() => navigate("/admin/announcement/list")}
-            disabled={saving}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to Announcements
-          </button>
-        </div>
-
         <section className="admin-announcement-editor__hero">
           <div className="admin-announcement-editor__hero-copy">
             <div className="admin-announcement-editor__eyebrow">
@@ -643,9 +631,20 @@ export default function AnnouncementEdit() {
             </p>
           </div>
 
-          <div className="admin-announcement-editor__record">
-            <small>Announcement ID</small>
-            <strong>{id || "Invalid"}</strong>
+          <div className="admin-announcement-editor__hero-actions">
+            <div className="admin-announcement-editor__record">
+              <small>Announcement ID</small>
+              <strong>{id || "Invalid"}</strong>
+            </div>
+            <button
+              type="button"
+              className="admin-announcement-editor__back"
+              onClick={() => navigate("/admin/announcement/list")}
+              disabled={saving}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Announcements
+            </button>
           </div>
         </section>
 

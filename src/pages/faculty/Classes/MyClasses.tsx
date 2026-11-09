@@ -9,7 +9,6 @@ import {
   Clock3,
   Filter,
   GraduationCap,
-  RefreshCw,
   RotateCcw,
   Search,
   UsersRound,
@@ -395,15 +394,6 @@ export default function MyClasses() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="faculty-classes-refresh"
-            onClick={refreshClasses}
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={loading ? "is-spinning" : ""} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {faculty && (

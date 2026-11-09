@@ -6,7 +6,6 @@ import {
   Clock3,
   Filter,
   LoaderCircle,
-  RefreshCw,
   Search,
   ShieldCheck,
   UsersRound,
@@ -80,7 +79,6 @@ export default function UserActivity() {
 
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [activityFilter, setActivityFilter] = useState("All");
@@ -103,17 +101,13 @@ export default function UserActivity() {
   }, [authenticated, userRole, navigate]);
 
   const loadLogs = useCallback(
-    async (isRefresh = false, signal?: AbortSignal) => {
+    async (signal?: AbortSignal) => {
       if (!authenticated || userRole !== "Admin") {
         return;
       }
 
       try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+        setLoading(true);
 
         setError("");
 
@@ -199,7 +193,6 @@ export default function UserActivity() {
       } finally {
         if (!signal?.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     },
@@ -212,7 +205,7 @@ export default function UserActivity() {
     }
 
     const controller = new AbortController();
-    void loadLogs(false, controller.signal);
+    void loadLogs(controller.signal);
 
     return () => controller.abort();
   }, [authenticated, userRole, loadLogs]);
@@ -330,19 +323,6 @@ export default function UserActivity() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="admin-user-activity__refresh"
-            onClick={() => void loadLogs(true)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "admin-user-activity__spinner" : ""}
-              aria-hidden="true"
-            />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         <section

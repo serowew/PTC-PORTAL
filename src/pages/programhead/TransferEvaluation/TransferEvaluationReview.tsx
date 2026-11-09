@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   BookCheck,
   BookOpenCheck,
   Building2,
@@ -382,7 +381,6 @@ export default function TransferEvaluationReview() {
   const [queueSummary, setQueueSummary] =
     useState<TransferQueueResponse["summary"]>();
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [queueError, setQueueError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -443,8 +441,6 @@ export default function TransferEvaluationReview() {
       try {
         if (refreshKey === 0) {
           setLoading(true);
-        } else {
-          setRefreshing(true);
         }
 
         setQueueError("");
@@ -509,7 +505,6 @@ export default function TransferEvaluationReview() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -1049,31 +1044,7 @@ export default function TransferEvaluationReview() {
             )}
           </div>
 
-          <div className="program-head-transfer-review__hero-actions">
-            <button
-              type="button"
-              className="program-head-transfer-review__back"
-              onClick={() => navigate("/programhead/dashboard")}
-            >
-              <ArrowLeft size={15} />
-              Dashboard
-            </button>
 
-            <button
-              type="button"
-              className="program-head-transfer-review__refresh"
-              onClick={refreshQueue}
-              disabled={loading || refreshing || busyAction !== null}
-            >
-              <RefreshCw
-                size={15}
-                className={
-                  refreshing ? "program-head-transfer-review__spin" : ""
-                }
-              />
-              {refreshing ? "Refreshing..." : "Refresh Queue"}
-            </button>
-          </div>
         </section>
 
         {actionNotice && (

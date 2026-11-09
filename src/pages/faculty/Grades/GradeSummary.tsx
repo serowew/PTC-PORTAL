@@ -6,7 +6,6 @@ import {
   CircleDashed,
   FilePenLine,
   GraduationCap,
-  RefreshCw,
   Search,
   UsersRound,
 } from "lucide-react";
@@ -136,7 +135,6 @@ export default function GradeSummary() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("All");
@@ -313,7 +311,7 @@ export default function GradeSummary() {
     void loadPendingGrades(controller.signal);
 
     return () => controller.abort();
-  }, [loadPendingGrades, refreshKey]);
+  }, [loadPendingGrades]);
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -377,19 +375,6 @@ export default function GradeSummary() {
               Approved grades are not included.
             </p>
           </div>
-          <button
-            type="button"
-            className="faculty-pending-grades-refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading}
-          >
-            <RefreshCw
-              size={16}
-              className={loading ? "is-spinning" : undefined}
-              aria-hidden="true"
-            />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
         <section className="faculty-pending-grades-faculty">
           <span className="faculty-pending-grades-faculty__icon">

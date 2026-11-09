@@ -1568,15 +1568,6 @@ export default function EnterGrades() {
       <main className="faculty-enter-grades-page">
         <section className="faculty-grade-header">
           <div className="faculty-grade-header__copy">
-            <button
-              type="button"
-              className="faculty-grade-back"
-              onClick={backToClasses}
-            >
-              <ArrowLeft size={15} strokeWidth={2.1} />
-              My Classes
-            </button>
-
             <div className="faculty-grade-eyebrow">
               <span className="faculty-grade-eyebrow__icon">
                 <FilePenLine size={16} strokeWidth={2.2} />
@@ -1600,20 +1591,16 @@ export default function EnterGrades() {
               disabled={!selectedOfferingId}
             >
               <UsersRound size={16} />
-              View Roster
+              View Student List
             </button>
 
             <button
               type="button"
-              className="faculty-grade-header-button faculty-grade-header-button--primary"
-              onClick={refreshGradebook}
-              disabled={gradebookLoading || !selectedOfferingId}
+              className="faculty-grade-header-button faculty-grade-header-button--back"
+              onClick={backToClasses}
             >
-              <RefreshCw
-                size={16}
-                className={gradebookLoading ? "is-spinning" : ""}
-              />
-              {gradebookLoading ? "Refreshing..." : "Refresh"}
+              <ArrowLeft size={16} strokeWidth={2.1} />
+              My Classes
             </button>
           </div>
         </section>

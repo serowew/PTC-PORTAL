@@ -9,7 +9,6 @@ import {
   ListFilter,
   Loader2,
   ReceiptText,
-  RefreshCw,
   Search,
   UserRound,
   WalletCards,
@@ -598,19 +597,6 @@ export default function FinanceTicketProcessing() {
                 paid and historical Finance tickets.
               </p>
             </div>
-            <button
-              type="button"
-              className="finance-requests__button finance-requests__button--secondary"
-              onClick={() => void loadQueue(activeSearch)}
-              disabled={loadingQueue || paying}
-            >
-              <RefreshCw
-                size={16}
-                className={loadingQueue ? "finance-requests__spinner" : ""}
-                aria-hidden="true"
-              />
-              Refresh
-            </button>
           </div>
           <form onSubmit={handleSearch} className="finance-requests__filters">
             <div className="finance-requests__search">
@@ -709,7 +695,7 @@ export default function FinanceTicketProcessing() {
                 aria-hidden="true"
               />
               <strong>Loading Finance requests...</strong>
-              <span>Please wait while the request queue is refreshed.</span>
+              <span>Please wait while Finance requests are loaded.</span>
             </div>
           ) : filteredTickets.length === 0 ? (
             <div className="finance-requests__state finance-requests__state--empty">

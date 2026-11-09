@@ -344,18 +344,6 @@ export default function CreateUser() {
   return (
     <DashboardLayout>
       <main className="admin-create-user">
-        <div className="admin-create-user__toolbar">
-          <button
-            type="button"
-            className="admin-create-user__back"
-            onClick={() => navigate("/admin/user/list")}
-            disabled={loading}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to User List
-          </button>
-        </div>
-
         <section className="admin-create-user__hero">
           <div className="admin-create-user__hero-copy">
             <div className="admin-create-user__eyebrow">
@@ -373,16 +361,15 @@ export default function CreateUser() {
             </p>
           </div>
 
-          <div className="admin-create-user__hero-note">
-            <span className="admin-create-user__hero-note-icon">
-              <ShieldCheck size={18} aria-hidden="true" />
-            </span>
-
-            <div>
-              <small>Account Setup</small>
-              <strong>Admin-authorized creation</strong>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="admin-create-user__back"
+            onClick={() => navigate("/admin/user/list")}
+            disabled={loading}
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to User List
+          </button>
         </section>
 
         {error && (

@@ -8,8 +8,6 @@ import {
   FileText,
   Loader2,
   ReceiptText,
-  RefreshCcw,
-  RefreshCw,
   Search,
   UserRound,
   WalletCards,
@@ -139,7 +137,6 @@ interface LoadHistoryOptions {
   query: string;
   paymentMethod: PaymentMethod;
   transactionCode: string;
-  showRefresh?: boolean;
 }
 // ============================================================
 // HELPERS
@@ -211,7 +208,6 @@ export default function FinancePaymentHistory() {
   // UI STATE
   // ==========================================================
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   // ==========================================================
   // AUTH GUARD
@@ -232,16 +228,11 @@ export default function FinancePaymentHistory() {
       query,
       paymentMethod: requestedPaymentMethod,
       transactionCode,
-      showRefresh = false,
     }: LoadHistoryOptions) => {
       if (!isFinance) {
         return;
       }
-      if (showRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
       setErrorMessage("");
       try {
         const params = new URLSearchParams();
@@ -299,7 +290,6 @@ export default function FinancePaymentHistory() {
         );
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [isFinance, navigate],
@@ -397,23 +387,10 @@ export default function FinancePaymentHistory() {
     });
   };
   // ==========================================================
-  // REFRESH
-  // ==========================================================
-  const refreshHistory = () => {
-    void loadPaymentHistory({
-      requestedPage: page,
-      query: search,
-      paymentMethod,
-      transactionCode: transactionFilter,
-      showRefresh: true,
-    });
-    void loadSupportingData();
-  };
-  // ==========================================================
   // PREVIOUS PAGE
   // ==========================================================
   const goToPreviousPage = () => {
-    if (loading || refreshing || page <= 1) {
+    if (loading || page <= 1) {
       return;
     }
     const nextPage = page - 1;
@@ -428,7 +405,7 @@ export default function FinancePaymentHistory() {
   // NEXT PAGE
   // ==========================================================
   const goToNextPage = () => {
-    if (loading || refreshing || page >= totalPages) {
+    if (loading || page >= totalPages) {
       return;
     }
     const nextPage = page + 1;
@@ -465,15 +442,6 @@ export default function FinancePaymentHistory() {
               Finance transaction records.
             </p>
           </div>
-          <button
-            type="button"
-            className="finance-payment-history__refresh"
-            onClick={refreshHistory}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
         {/* =================================================
             SUMMARY
@@ -548,7 +516,7 @@ export default function FinancePaymentHistory() {
                     }
                   }}
                   placeholder="Ticket, student, request, receipt..."
-                  disabled={loading || refreshing}
+                  disabled={loading}
                 />
               </div>
             </label>
@@ -559,7 +527,7 @@ export default function FinancePaymentHistory() {
                 onChange={(event) =>
                   setPaymentMethod(event.target.value as PaymentMethod)
                 }
-                disabled={loading || refreshing}
+                disabled={loading}
               >
                 <option value="All">All Methods</option>
                 <option value="Cash">Cash</option>
@@ -573,7 +541,7 @@ export default function FinancePaymentHistory() {
               <select
                 value={transactionFilter}
                 onChange={(event) => setTransactionFilter(event.target.value)}
-                disabled={loading || refreshing}
+                disabled={loading}
               >
                 <option value="All">All Transactions</option>
                 {transactionTypes.map((item) => (
@@ -591,27 +559,10 @@ export default function FinancePaymentHistory() {
                 type="button"
                 className="finance-payment-history__button finance-payment-history__button--primary"
                 onClick={applyFilters}
-                disabled={loading || refreshing}
+                disabled={loading}
               >
                 <Search size={16} aria-hidden="true" />
                 Apply
-              </button>
-              <button
-                type="button"
-                className="finance-payment-history__button finance-payment-history__button--secondary"
-                onClick={refreshHistory}
-                disabled={refreshing}
-              >
-                {refreshing ? (
-                  <Loader2
-                    size={16}
-                    className="finance-payment-history__spinner"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <RefreshCcw size={16} aria-hidden="true" />
-                )}
-                {refreshing ? "Refreshing..." : "Refresh"}
               </button>
             </div>
           </div>
@@ -674,7 +625,7 @@ export default function FinancePaymentHistory() {
                 <button
                   type="button"
                   className="finance-payment-history__pagination-button"
-                  disabled={page <= 1 || loading || refreshing}
+                  disabled={page <= 1 || loading}
                   onClick={goToPreviousPage}
                 >
                   Previous
@@ -682,7 +633,7 @@ export default function FinancePaymentHistory() {
                 <button
                   type="button"
                   className="finance-payment-history__pagination-button"
-                  disabled={page >= totalPages || loading || refreshing}
+                  disabled={page >= totalPages || loading}
                   onClick={goToNextPage}
                 >
                   Next

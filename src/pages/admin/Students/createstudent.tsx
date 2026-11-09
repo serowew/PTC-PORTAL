@@ -10,6 +10,7 @@ import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { apiUrl } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft, UserRoundPlus } from "lucide-react";
 
 import "../../../styles/addeditdrop.css";
 
@@ -823,7 +824,25 @@ export default function CreateStudent() {
   return (
     <DashboardLayout>
       <div className="admin-createstudents-students">
-        <h1>Create Student</h1>
+        <header className="admin-create-student__hero">
+          <div className="admin-create-student__hero-copy">
+            <div className="admin-create-student__eyebrow">
+              <span><UserRoundPlus size={16} aria-hidden="true" /></span>
+              Admin · Student Management
+            </div>
+            <h1>Create Student</h1>
+            <p>Add a new student record and assign the appropriate academic information.</p>
+          </div>
+          <button
+            type="button"
+            className="admin-create-student__back"
+            onClick={() => navigate(-1)}
+            disabled={isSaving}
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back
+          </button>
+        </header>
 
         {/* =================================================
             ERROR

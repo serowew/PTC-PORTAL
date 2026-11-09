@@ -309,28 +309,6 @@ export default function Sprofile() {
   return (
     <DashboardLayout>
       <main className="admin-student-profile">
-        <div className="admin-student-profile__toolbar">
-          <button
-            type="button"
-            className="admin-student-profile__back"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to Student List
-          </button>
-
-          <button
-            type="button"
-            className="admin-student-profile__edit"
-            onClick={() =>
-              navigate(`/admin/students/editstudents/${student.id}`)
-            }
-          >
-            <Pencil size={15} aria-hidden="true" />
-            Edit Student
-          </button>
-        </div>
-
         <section className="admin-student-profile__hero">
           <div className="admin-student-profile__identity">
             <div className="admin-student-profile__avatar" aria-hidden="true">
@@ -349,21 +327,26 @@ export default function Sprofile() {
             </div>
           </div>
 
-          <div className="admin-student-profile__hero-meta">
-            <div>
-              <span>Course</span>
-              <strong>{student.course || "Not provided"}</strong>
-            </div>
+          <div className="admin-student-profile__toolbar">
+            <button
+              type="button"
+              className="admin-student-profile__back"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Student List
+            </button>
 
-            <div>
-              <span>Year Level</span>
-              <strong>{student.yearLevel || "Not provided"}</strong>
-            </div>
-
-            <div>
-              <span>Section</span>
-              <strong>{student.section || "Not provided"}</strong>
-            </div>
+            <button
+              type="button"
+              className="admin-student-profile__edit"
+              onClick={() =>
+                navigate(`/admin/students/editstudents/${student.id}`)
+              }
+            >
+              <Pencil size={15} aria-hidden="true" />
+              Edit Student
+            </button>
           </div>
         </section>
 
@@ -395,6 +378,36 @@ export default function Sprofile() {
             <div>
               <small>Semester</small>
               <strong>{student.semester || "Not provided"}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span>
+              <BookOpen size={17} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Course</small>
+              <strong>{student.course || "Not provided"}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span>
+              <GraduationCap size={17} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Year Level</small>
+              <strong>{student.yearLevel || "Not provided"}</strong>
+            </div>
+          </article>
+
+          <article>
+            <span>
+              <UsersRound size={17} aria-hidden="true" />
+            </span>
+            <div>
+              <small>Section</small>
+              <strong>{student.section || "Not provided"}</strong>
             </div>
           </article>
         </section>

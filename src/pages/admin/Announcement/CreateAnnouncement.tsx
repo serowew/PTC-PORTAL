@@ -10,9 +10,7 @@ import {
   ArrowLeft,
   CalendarClock,
   CalendarDays,
-  CheckCircle2,
   CircleAlert,
-  CircleOff,
   FileUp,
   LoaderCircle,
   Megaphone,
@@ -419,18 +417,6 @@ export default function CreateAnnouncement() {
   return (
     <DashboardLayout>
       <main className="admin-create-announcement">
-        <div className="admin-create-announcement__toolbar">
-          <button
-            type="button"
-            className="admin-create-announcement__back"
-            onClick={handleCancel}
-            disabled={loading}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to Announcements
-          </button>
-        </div>
-
         <section className="admin-create-announcement__hero">
           <div className="admin-create-announcement__hero-copy">
             <div className="admin-create-announcement__eyebrow">
@@ -449,20 +435,15 @@ export default function CreateAnnouncement() {
           </div>
 
           <div className="admin-create-announcement__hero-status">
-            <span
-              className={
-                isActive
-                  ? "admin-create-announcement__status admin-create-announcement__status--active"
-                  : "admin-create-announcement__status admin-create-announcement__status--inactive"
-              }
+            <button
+              type="button"
+              className="admin-create-announcement__back"
+              onClick={handleCancel}
+              disabled={loading}
             >
-              {isActive ? (
-                <CheckCircle2 size={15} aria-hidden="true" />
-              ) : (
-                <CircleOff size={15} aria-hidden="true" />
-              )}
-              {isActive ? "Active" : "Inactive"}
-            </span>
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Announcements
+            </button>
           </div>
         </section>
 

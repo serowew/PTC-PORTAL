@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, CalendarDays } from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { api } from "../../../services/api";
 import { authService } from "../../../services/auth.service";
@@ -73,7 +73,6 @@ export default function FacultyScheduleSummaryPH() {
   const [classes, setClasses] = useState<FacultyScheduleClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (session?.role !== "Program Head") return;
@@ -126,7 +125,7 @@ export default function FacultyScheduleSummaryPH() {
       active = false;
       controller.abort();
     };
-  }, [navigate, refreshKey, session?.role]);
+  }, [navigate, session?.role]);
 
   const sortedClasses = useMemo(
     () =>
@@ -158,18 +157,15 @@ export default function FacultyScheduleSummaryPH() {
       <main className="faculty-summary-page">
         <header className="faculty-summary-page__header">
           <div>
+            <div className="faculty-summary-page__eyebrow">
+              <span className="faculty-summary-page__eyebrow-icon" aria-hidden="true">
+                <CalendarDays size={16} strokeWidth={2} />
+              </span>
+              <span>PROGRAM HEAD · CLASS MANAGEMENT</span>
+            </div>
             <h1>Faculty Schedule Summary</h1>
             <p>View teaching assignments across the department.</p>
           </div>
-          <button
-            type="button"
-            className="faculty-summary-page__refresh"
-            onClick={() => setRefreshKey((key) => key + 1)}
-            disabled={loading}
-          >
-            <RefreshCw size={15} className={loading ? "is-spinning" : ""} />
-            Refresh
-          </button>
         </header>
 
         {error && (

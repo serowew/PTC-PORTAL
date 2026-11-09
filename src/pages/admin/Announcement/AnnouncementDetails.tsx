@@ -329,30 +329,6 @@ export default function AnnouncementDetails() {
   return (
     <DashboardLayout>
       <main className="admin-announcement-details-view">
-        <div className="admin-announcement-details-view__toolbar">
-          <button
-            type="button"
-            className="admin-announcement-details-view__back"
-            onClick={() => navigate("/admin/announcement/list")}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to Announcements
-          </button>
-
-          <button
-            type="button"
-            className="admin-announcement-details-view__edit"
-            onClick={() =>
-              navigate(
-                `/admin/announcement/edit/${announcement.announcement_id}`,
-              )
-            }
-          >
-            <Pencil size={15} aria-hidden="true" />
-            Edit Announcement
-          </button>
-        </div>
-
         <section className="admin-announcement-details-view__hero">
           <div className="admin-announcement-details-view__hero-copy">
             <div className="admin-announcement-details-view__eyebrow">
@@ -370,15 +346,29 @@ export default function AnnouncementDetails() {
             </p>
           </div>
 
-          <span
-            className={
-              isActive
-                ? "admin-announcement-details-view__status admin-announcement-details-view__status--active"
-                : "admin-announcement-details-view__status admin-announcement-details-view__status--inactive"
-            }
-          >
-            {isActive ? "Active" : "Inactive"}
-          </span>
+          <div className="admin-announcement-details-view__toolbar">
+            <button
+              type="button"
+              className="admin-announcement-details-view__back"
+              onClick={() => navigate("/admin/announcement/list")}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Announcements
+            </button>
+
+            <button
+              type="button"
+              className="admin-announcement-details-view__edit"
+              onClick={() =>
+                navigate(
+                  `/admin/announcement/edit/${announcement.announcement_id}`,
+                )
+              }
+            >
+              <Pencil size={15} aria-hidden="true" />
+              Edit Announcement
+            </button>
+          </div>
         </section>
 
         <section className="admin-announcement-details-view__summary">

@@ -1782,12 +1782,6 @@
   }
 }
 
-/* =========================================================
-   VISUAL REFRESH V3 — DESIGNED PAGE BACKGROUND
-   Adds visible depth behind the dashboard cards while
-   preserving the V2 PTC academic theme.
-========================================================= */
-
 .registrar-dashboard {
   --rd-canvas: #edf5f0;
   --rd-canvas-deep: #e5f0e9;

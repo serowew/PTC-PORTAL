@@ -6,7 +6,6 @@ import {
   BookOpenCheck,
   GraduationCap,
   NotebookPen,
-  RefreshCw,
   Search,
   UsersRound,
 } from "lucide-react";
@@ -325,14 +324,6 @@ export default function FacultyStudentList() {
         ============================================= */}
         <section className="faculty-student-list-header">
           <div className="faculty-student-list-heading">
-            <button
-              type="button"
-              className="faculty-roster-back"
-              onClick={goBack}
-            >
-              <ArrowLeft size={15} strokeWidth={2.1} />
-              My Classes
-            </button>
             <div className="faculty-roster-eyebrow">
               <span className="faculty-roster-eyebrow__icon">
                 <UsersRound size={16} strokeWidth={2.2} />
@@ -357,12 +348,11 @@ export default function FacultyStudentList() {
             </button>
             <button
               type="button"
-              className="faculty-roster-refresh"
-              onClick={refreshRoster}
-              disabled={loading || !validOfferingId}
+              className="faculty-roster-back"
+              onClick={goBack}
             >
-              <RefreshCw size={16} className={loading ? "is-spinning" : ""} />
-              {loading ? "Refreshing..." : "Refresh"}
+              <ArrowLeft size={16} strokeWidth={2.1} aria-hidden="true" />
+              My Classes
             </button>
           </div>
         </section>

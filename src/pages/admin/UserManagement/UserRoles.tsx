@@ -5,7 +5,6 @@ import {
   CircleAlert,
   GraduationCap,
   LoaderCircle,
-  RefreshCw,
   School,
   ShieldCheck,
   UserCog,
@@ -112,7 +111,6 @@ export default function UserRoles() {
 
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -132,18 +130,13 @@ export default function UserRoles() {
   }, [authenticated, userRole, navigate]);
 
   const loadUsers = useCallback(
-    async (isRefresh = false, signal?: AbortSignal) => {
+    async (signal?: AbortSignal) => {
       if (!authenticated || userRole !== "Admin") {
         return;
       }
 
       try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
-
+        setLoading(true);
         setError("");
 
         const response = await authService.authFetch(USERS_API_URL, {
@@ -233,7 +226,6 @@ export default function UserRoles() {
       } finally {
         if (!signal?.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     },
@@ -246,7 +238,7 @@ export default function UserRoles() {
     }
 
     const controller = new AbortController();
-    void loadUsers(false, controller.signal);
+    void loadUsers(controller.signal);
 
     return () => controller.abort();
   }, [authenticated, userRole, loadUsers]);
@@ -297,20 +289,6 @@ export default function UserRoles() {
               the access responsibilities associated with each user type.
             </p>
           </div>
-
-          <button
-            type="button"
-            className="admin-user-roles__refresh"
-            onClick={() => void loadUsers(true)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "admin-user-roles__spinner" : ""}
-              aria-hidden="true"
-            />
-            {refreshing ? "Refreshing..." : "Refresh Counts"}
-          </button>
         </section>
 
         <section

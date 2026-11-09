@@ -669,18 +669,6 @@ export default function EditStudent() {
   return (
     <DashboardLayout>
       <main className="admin-edit-student">
-        <div className="admin-edit-student__toolbar">
-          <button
-            type="button"
-            className="admin-edit-student__back"
-            onClick={() => navigate(-1)}
-            disabled={isSaving}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back
-          </button>
-        </div>
-
         <section className="admin-edit-student__hero">
           <div className="admin-edit-student__hero-copy">
             <div className="admin-edit-student__eyebrow">
@@ -698,9 +686,22 @@ export default function EditStudent() {
             </p>
           </div>
 
-          <div className="admin-edit-student__student-number">
-            <small>Student ID</small>
-            <strong>{studentNumber}</strong>
+          <div className="admin-edit-student__header-actions">
+            <div className="admin-edit-student__toolbar">
+              <button
+                type="button"
+                className="admin-edit-student__back"
+                onClick={() => navigate(-1)}
+                disabled={isSaving}
+              >
+                <ArrowLeft size={16} aria-hidden="true" />
+                Back
+              </button>
+            </div>
+            <div className="admin-edit-student__student-number">
+              <small>Student ID</small>
+              <strong>{studentNumber}</strong>
+            </div>
           </div>
         </section>
 

@@ -516,18 +516,6 @@ export default function EditUser() {
   return (
     <DashboardLayout>
       <main className="admin-edit-user">
-        <div className="admin-edit-user__toolbar">
-          <button
-            type="button"
-            className="admin-edit-user__back"
-            onClick={() => navigate("/admin/user/list")}
-            disabled={saving}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to User List
-          </button>
-        </div>
-
         <section className="admin-edit-user__hero">
           <div className="admin-edit-user__hero-copy">
             <div className="admin-edit-user__eyebrow">
@@ -545,15 +533,27 @@ export default function EditUser() {
             </p>
           </div>
 
-          <div className="admin-edit-user__identity">
-            <span className="admin-edit-user__identity-icon">
-              <UserRound size={18} aria-hidden="true" />
-            </span>
+          <div className="admin-edit-user__hero-actions">
+            <div className="admin-edit-user__identity">
+              <span className="admin-edit-user__identity-icon">
+                <UserRound size={18} aria-hidden="true" />
+              </span>
 
-            <div>
-              <small>User ID</small>
-              <strong>{displayUserId}</strong>
+              <div>
+                <small>User ID</small>
+                <strong>{displayUserId}</strong>
+              </div>
             </div>
+
+            <button
+              type="button"
+              className="admin-edit-user__back"
+              onClick={() => navigate("/admin/user/list")}
+              disabled={saving}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to User List
+            </button>
           </div>
         </section>
 

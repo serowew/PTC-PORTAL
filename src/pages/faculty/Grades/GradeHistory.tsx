@@ -6,7 +6,6 @@ import {
   BookOpenCheck,
   CheckCircle2,
   History,
-  RefreshCw,
   RotateCcw,
   Search,
   Send,
@@ -188,7 +187,6 @@ export default function GradeHistory() {
   const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
   const [rows, setRows] = useState<HistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [partialError, setPartialError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -210,11 +208,10 @@ export default function GradeHistory() {
   }, [authenticated, userRole, session, navigate]);
 
   const loadHistory = useCallback(
-    async (signal: AbortSignal, isRefresh: boolean) => {
+    async (signal: AbortSignal) => {
       if (!authenticated || userRole !== "Faculty") return;
       try {
-        if (isRefresh) setRefreshing(true);
-        else setLoading(true);
+        setLoading(true);
         setError("");
         setPartialError("");
         const classesResponse = await authService.authFetch(API_BASE_URL, {
@@ -323,7 +320,6 @@ export default function GradeHistory() {
       } finally {
         if (!signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     },
@@ -332,7 +328,7 @@ export default function GradeHistory() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadHistory(controller.signal, refreshKey > 0);
+    void loadHistory(controller.signal);
     return () => controller.abort();
   }, [loadHistory, refreshKey]);
 
@@ -460,19 +456,6 @@ export default function GradeHistory() {
               </div>
             )}
           </div>
-          <button
-            type="button"
-            className="faculty-grade-history__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "is-spinning" : undefined}
-              aria-hidden="true"
-            />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {error && (

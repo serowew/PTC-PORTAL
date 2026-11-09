@@ -1,1328 +1,172 @@
+/* Page layout */
 .faculty-pending-grades-page {
-  --fpg-green-950: #073b24;
-  --fpg-green-900: #0a4b2d;
-  --fpg-green-800: #0d653b;
-  --fpg-green-700: #0f7a45;
-  --fpg-green-600: #159452;
-  --fpg-green-100: #dcf5e6;
-  --fpg-green-50: #f1fbf5;
-  --fpg-text-950: #17201b;
-  --fpg-text-800: #28352d;
-  --fpg-text-700: #425047;
-  --fpg-text-600: #5e6b63;
-  --fpg-text-500: #76827b;
-  --fpg-border: #dfe8e2;
-  --fpg-border-soft: #edf2ee;
-  --fpg-border-strong: #cfdcd3;
-  --fpg-surface: #ffffff;
-  --fpg-surface-soft: #f8fbf9;
-  --fpg-bg: #f5f8f6;
-  display: grid;
-  gap: 16px;
+  --fpg-text: #182720;
+  --fpg-muted: #607168;
+  --fpg-line: #dce7e0;
+  --fpg-panel: #fff;
+  --fpg-card: #fff;
+  --fpg-field: #fff;
+  --fpg-accent: #0d7444;
+  --fpg-canvas: #fff;
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 100%;
-  padding: 28px 30px 38px;
-  box-sizing: border-box;
-  color: var(--fpg-text-950);
-  background:
-    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
-    var(--fpg-bg);
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  padding: 0 0 calc(48px * var(--ptc-compact-scale, 1));
+  color: var(--fpg-text);
+  background: var(--fpg-canvas);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
 }
-.faculty-pending-grades-page *,
-.faculty-pending-grades-page *::before,
-.faculty-pending-grades-page *::after {
-  box-sizing: border-box;
-}
-.faculty-pending-grades-page button,
-.faculty-pending-grades-page input,
-.faculty-pending-grades-page select {
-  font: inherit;
-}
+.faculty-pending-grades-page *, .faculty-pending-grades-page *::before, .faculty-pending-grades-page *::after { box-sizing: border-box; }
+.faculty-pending-grades-page :is(input, select, button) { font: inherit; }
+.faculty-pending-grades-page :is(button, input, select):focus-visible { outline: 3px solid rgba(36, 162, 96, .27); outline-offset: 2px; }
+
+/* Header */
 .faculty-pending-grades-hero {
-  position: relative;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 25px 28px;
-  border: 1px solid rgba(15, 122, 69, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0.99) 0%,
-    rgba(247, 253, 249, 0.99) 66%,
-    rgba(230, 247, 237, 0.99) 100%
-  );
-  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
-}
-.faculty-pending-grades-hero::after {
-  content: "";
-  position: absolute;
-  top: -92px;
-  right: -70px;
-  width: 230px;
-  height: 230px;
-  border: 38px solid rgba(15, 122, 69, 0.055);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.faculty-pending-grades-hero__copy,
-.faculty-pending-grades-refresh {
-  position: relative;
-  z-index: 1;
-}
-.faculty-pending-grades-hero__copy {
   min-width: 0;
-  max-width: 790px;
-}
-.faculty-pending-grades-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 9px;
-  color: var(--fpg-green-800);
-  font-size: 11px;
-  font-weight: 780;
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
-}
-.faculty-pending-grades-eyebrow > span {
-  display: inline-flex;
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  color: var(--fpg-green-700);
-  background: var(--fpg-green-100);
-}
-.faculty-pending-grades-hero h1 {
-  margin: 0;
-  color: var(--fpg-text-950);
-  font-size: clamp(27px, 3vw, 35px);
-  font-weight: 780;
-  line-height: 1.14;
-  letter-spacing: -0.025em;
-}
-.faculty-pending-grades-hero p {
-  max-width: 750px;
-  margin: 9px 0 0;
-  color: var(--fpg-text-600);
-  font-size: 13.5px;
-  line-height: 1.6;
-}
-.faculty-pending-grades-refresh {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 39px;
-  padding: 8px 12px;
-  border: 1px solid var(--fpg-green-800);
-  border-radius: 9px;
-  color: #ffffff;
-  background: linear-gradient(145deg, var(--fpg-green-700), var(--fpg-green-900));
-  box-shadow: 0 5px 14px rgba(13, 101, 59, 0.13);
-  font-size: 10.5px;
-  font-weight: 730;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.faculty-pending-grades-refresh:disabled {
-  opacity: 0.58;
-  cursor: not-allowed;
-}
-.faculty-pending-grades-refresh .is-spinning {
-  animation: faculty-pending-grades-spin 0.8s linear infinite;
-}
-.faculty-pending-grades-faculty {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 11px;
-  min-height: 76px;
-  padding: 13px 15px;
-  border: 1px solid var(--fpg-border);
+  margin-bottom: calc(18px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b;
   border-radius: 14px;
-  background: var(--fpg-surface);
-  box-shadow: 0 4px 16px rgba(20, 55, 34, 0.035);
-}
-.faculty-pending-grades-faculty__icon,
-.faculty-pending-grades-summary__icon,
-.faculty-pending-grades-empty > span {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d8eade;
-  color: var(--fpg-green-700);
-  background: var(--fpg-green-50);
-}
-.faculty-pending-grades-faculty__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-}
-.faculty-pending-grades-faculty > div {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-.faculty-pending-grades-faculty small {
-  color: var(--fpg-text-500);
-  font-size: 10px;
-  font-weight: 680;
-}
-.faculty-pending-grades-faculty strong {
-  color: var(--fpg-text-950);
-  font-size: 12.5px;
-  font-weight: 760;
-  line-height: 1.35;
-}
-.faculty-pending-grades-faculty > div > span {
-  color: var(--fpg-text-600);
-  font-size: 10px;
-  line-height: 1.35;
-}
-.faculty-pending-grades-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-.faculty-pending-grades-summary article {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 11px;
-  min-width: 0;
-  min-height: 86px;
-  padding: 13px 14px;
-  border: 1px solid var(--fpg-border);
-  border-radius: 14px;
-  background: var(--fpg-surface);
-  box-shadow: 0 4px 16px rgba(20, 55, 34, 0.035);
-}
-.faculty-pending-grades-summary__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-}
-.faculty-pending-grades-summary article > div {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-.faculty-pending-grades-summary small {
-  color: var(--fpg-text-500);
-  font-size: 10px;
-  font-weight: 680;
-}
-.faculty-pending-grades-summary strong {
-  color: var(--fpg-text-950);
-  font-size: 21px;
-  font-weight: 780;
-  line-height: 1.1;
-}
-.faculty-pending-grades-summary article > div > span {
-  color: var(--fpg-text-600);
-  font-size: 9.5px;
-  line-height: 1.4;
-}
-.faculty-pending-grades-filters,
-.faculty-pending-grades-list {
-  overflow: hidden;
-  border: 1px solid var(--fpg-border);
-  border-radius: 15px;
-  background: var(--fpg-surface);
-  box-shadow: 0 5px 18px rgba(20, 55, 34, 0.04);
-}
-.faculty-pending-grades-filters__heading,
-.faculty-pending-grades-list > header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 15px 18px;
-  border-bottom: 1px solid var(--fpg-border-soft);
-}
-.faculty-pending-grades-filters__heading > div,
-.faculty-pending-grades-list > header > div {
-  min-width: 0;
-}
-.faculty-pending-grades-filters__heading > div {
-  display: grid;
-  gap: 2px;
-}
-.faculty-pending-grades-filters__heading > div > span,
-.faculty-pending-grades-list > header > div > span {
-  color: var(--fpg-green-800);
-  font-size: 10px;
-  font-weight: 760;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.faculty-pending-grades-filters__heading strong {
-  color: var(--fpg-text-950);
-  font-size: 12.5px;
-  font-weight: 760;
-}
-.faculty-pending-grades-filters__heading p {
-  margin: 3px 0 0;
-  color: var(--fpg-text-500);
-  font-size: 10px;
-  line-height: 1.45;
-}
-.faculty-pending-grades-filters__heading button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  min-height: 34px;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-  border: 1px solid #ccd8d0;
-  border-radius: 8px;
-  color: var(--fpg-text-700);
-  background: #ffffff;
-  font-size: 9.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.faculty-pending-grades-filters__grid {
-  display: grid;
-  grid-template-columns: minmax(250px, 1.5fr) minmax(220px, 1fr);
-  gap: 11px;
-  padding: 14px 16px 16px;
-}
-.faculty-pending-grades-filters__grid > label {
-  display: grid;
-  min-width: 0;
-  gap: 6px;
-}
-.faculty-pending-grades-filters__grid > label > span {
-  color: var(--fpg-text-700);
-  font-size: 10px;
-  font-weight: 700;
-}
-.faculty-pending-grades-search {
-  position: relative;
-}
-.faculty-pending-grades-search > svg {
-  position: absolute;
-  top: 50%;
-  left: 11px;
-  color: var(--fpg-text-500);
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-.faculty-pending-grades-filters input,
-.faculty-pending-grades-filters select {
-  width: 100%;
-  min-width: 0;
-  min-height: 40px;
-  padding: 9px 11px;
-  border: 1.5px solid var(--fpg-border-strong);
-  border-radius: 9px;
-  outline: none;
-  color: var(--fpg-text-800);
-  background: #ffffff;
-  font-size: 11.5px;
-}
-.faculty-pending-grades-search input {
-  padding-left: 35px;
-}
-.faculty-pending-grades-filters input:focus,
-.faculty-pending-grades-filters select:focus {
-  border-color: var(--fpg-green-600);
-  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.1);
-}
-.faculty-pending-grades-filters select option {
-  color: var(--fpg-text-800);
-  background: #ffffff;
-}
-.faculty-pending-grades-error {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: flex-start;
-  gap: 10px;
-  padding: 13px 14px;
-  border: 1px solid #efc8c4;
-  border-radius: 12px;
-  color: #993c36;
-  background: #fff7f6;
-}
-.faculty-pending-grades-error__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: #fff0ee;
-}
-.faculty-pending-grades-error strong {
-  display: block;
-  color: #8f332d;
-  font-size: 11px;
-  font-weight: 760;
-}
-.faculty-pending-grades-error p {
-  margin: 3px 0 0;
-  color: #9d4a43;
-  font-size: 10px;
-  line-height: 1.45;
-}
-.faculty-pending-grades-list > header h2 {
-  margin: 3px 0 0;
-  color: var(--fpg-text-950);
-  font-size: 17px;
-  font-weight: 760;
-  letter-spacing: -0.015em;
-}
-.faculty-pending-grades-list > header p {
-  max-width: 710px;
-  margin: 5px 0 0;
-  color: var(--fpg-text-500);
-  font-size: 10.5px;
-  line-height: 1.5;
-}
-.faculty-pending-grades-list > header > strong {
-  display: inline-flex;
-  flex: 0 0 auto;
-  min-height: 26px;
-  align-items: center;
-  padding: 4px 9px;
-  border: 1px solid #cdebd7;
-  border-radius: 999px;
-  color: var(--fpg-green-800);
-  background: var(--fpg-green-50);
-  font-size: 9.5px;
-  font-weight: 760;
-  white-space: nowrap;
-}
-.faculty-pending-grades-loading,
-.faculty-pending-grades-empty {
-  display: flex;
-  min-height: 180px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 24px;
-  text-align: center;
-}
-.faculty-pending-grades-loading > div:last-child {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-}
-.faculty-pending-grades-loading strong,
-.faculty-pending-grades-empty strong {
-  color: var(--fpg-text-700);
-  font-size: 11.5px;
-  font-weight: 740;
-}
-.faculty-pending-grades-loading span,
-.faculty-pending-grades-empty p {
-  color: var(--fpg-text-500);
-  font-size: 10px;
-  line-height: 1.45;
-}
-.faculty-pending-grades-spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid #dce9e1;
-  border-top-color: var(--fpg-green-700);
-  border-radius: 50%;
-  animation: faculty-pending-grades-spin 0.75s linear infinite;
-}
-.faculty-pending-grades-empty {
-  flex-direction: column;
-}
-.faculty-pending-grades-empty > span {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-}
-.faculty-pending-grades-empty p {
-  max-width: 520px;
-  margin: 0;
-}
-.faculty-pending-grades-table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  scrollbar-gutter: stable;
-}
-.faculty-pending-grades-table-wrap table {
-  width: 100%;
-  min-width: 1110px;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-.faculty-pending-grades-table-wrap th {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--fpg-border);
-  color: var(--fpg-text-600);
-  background: var(--fpg-surface-soft);
-  font-size: 9px;
-  font-weight: 780;
-  letter-spacing: 0.045em;
-  text-align: left;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.faculty-pending-grades-table-wrap td {
-  padding: 12px;
-  border-bottom: 1px solid var(--fpg-border-soft);
-  color: var(--fpg-text-700);
-  font-size: 10.5px;
-  line-height: 1.42;
-  vertical-align: middle;
-}
-.faculty-pending-grades-table-wrap th:nth-child(1),
-.faculty-pending-grades-table-wrap td:nth-child(1) {
-  width: 225px;
-}
-.faculty-pending-grades-table-wrap th:nth-child(2),
-.faculty-pending-grades-table-wrap td:nth-child(2) {
-  width: 185px;
-}
-.faculty-pending-grades-table-wrap th:nth-child(3),
-.faculty-pending-grades-table-wrap td:nth-child(3) {
-  width: 145px;
-}
-.faculty-pending-grades-table-wrap th:nth-child(4),
-.faculty-pending-grades-table-wrap td:nth-child(4) {
-  width: 145px;
-}
-.faculty-pending-grades-table-wrap th:nth-child(5),
-.faculty-pending-grades-table-wrap td:nth-child(5) {
-  width: 165px;
-}
-.faculty-pending-grades-table-wrap th:nth-child(6),
-.faculty-pending-grades-table-wrap td:nth-child(6) {
-  width: 115px;
-}
-.faculty-pending-grades-table-wrap th:nth-child(7),
-.faculty-pending-grades-table-wrap td:nth-child(7) {
-  width: 130px;
-}
-.faculty-pending-grades-table-wrap tbody tr:last-child td {
-  border-bottom: 0;
-}
-.faculty-pending-grades-table-wrap tbody tr:hover {
-  background: #fbfefc;
-}
-.faculty-pending-grades-table-wrap td > strong,
-.faculty-pending-grades-student > strong {
-  display: block;
-  color: var(--fpg-text-950);
-  font-size: 11.5px;
-  font-weight: 750;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-.faculty-pending-grades-table-wrap td > small,
-.faculty-pending-grades-student > span,
-.faculty-pending-grades-student > small {
-  display: block;
-  margin-top: 2px;
-  color: var(--fpg-text-500);
-  font-size: 9.4px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-.faculty-pending-grades-student {
-  min-width: 0;
-}
-.faculty-pending-grades-status {
-  display: inline-flex;
-  min-height: 25px;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  border: 1px solid #ead9a4;
-  border-radius: 999px;
-  color: #8a6413;
-  background: #fff9e8;
-  font-size: 9px;
-  font-weight: 760;
-  white-space: nowrap;
-}
-.faculty-pending-grades-action {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 6px 10px;
-  border: 1px solid var(--fpg-green-700);
-  border-radius: 8px;
-  color: #ffffff;
-  background: var(--fpg-green-700);
-  font-size: 9.5px;
-  font-weight: 730;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.faculty-pending-grades-action:hover {
-  border-color: var(--fpg-green-800);
-  background: var(--fpg-green-800);
-}
-@keyframes faculty-pending-grades-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@media (max-width: 1050px) {
-  .faculty-pending-grades-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  color: #f6fff9;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+}
+.faculty-pending-grades-hero__copy { flex: 1 1 auto; min-width: 0; max-width: 900px; }
+.faculty-pending-grades-eyebrow { display: inline-flex; gap: 9px; align-items: center; color: #f6fff9; font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 750; letter-spacing: .02em; text-transform: uppercase; }
+.faculty-pending-grades-eyebrow > span { display: inline-grid; width: 29px; height: 29px; place-items: center; border: 1px solid rgba(246,255,249,.35); border-radius: 9px; background: rgba(255,255,255,.1); }
+.faculty-pending-grades-hero h1 { margin: 10px 0 0; color: #f6fff9; font-size: calc(clamp(27px, 2.8vw, 40px) * var(--ptc-font-scale, 1)); font-weight: 760; line-height: 1.18; letter-spacing: -.025em; }
+.faculty-pending-grades-hero p { max-width: 850px; margin: 10px 0 0; color: #e2f3e9; font-size: calc(14px * var(--ptc-font-scale, 1)); line-height: 1.6; }
+
+/* Faculty information */
+.faculty-pending-grades-faculty { display: flex; align-items: center; gap: 13px; min-width: 0; min-height: 86px; margin-bottom: calc(18px * var(--ptc-compact-scale, 1)); padding: calc(17px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)); border: 1px solid var(--fpg-line); border-radius: 14px; background: var(--fpg-panel); }
+.faculty-pending-grades-faculty__icon { display: inline-grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 11px; color: #0b7142; background: #e5f5eb; }
+.faculty-pending-grades-faculty > div { display: grid; min-width: 0; gap: 3px; }
+.faculty-pending-grades-faculty small { color: var(--fpg-muted); font-size: calc(11px * var(--ptc-font-scale, 1)); font-weight: 700; text-transform: uppercase; letter-spacing: .035em; }
+.faculty-pending-grades-faculty strong { overflow-wrap: anywhere; color: var(--fpg-text); font-size: calc(15px * var(--ptc-font-scale, 1)); font-weight: 750; }
+.faculty-pending-grades-faculty div > span { color: var(--fpg-muted); font-size: calc(12px * var(--ptc-font-scale, 1)); }
+
+/* Summary cards */
+.faculty-pending-grades-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(14px * var(--ptc-compact-scale, 1)); margin-bottom: calc(18px * var(--ptc-compact-scale, 1)); }
+.faculty-pending-grades-summary article { display: flex; align-items: center; gap: 13px; min-width: 0; min-height: 112px; padding: calc(17px * var(--ptc-compact-scale, 1)); border: 1px solid var(--fpg-line); border-left: 4px solid #14a363; border-radius: 13px; background: var(--fpg-card); }
+.faculty-pending-grades-summary article:nth-child(2) { border-left-color: #2474e8; }
+.faculty-pending-grades-summary article:nth-child(3) { border-left-color: #6b78cf; }
+.faculty-pending-grades-summary article:nth-child(4) { border-left-color: #d79620; }
+.faculty-pending-grades-summary__icon { display: inline-grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border: 1px solid #c8e9d6; border-radius: 11px; color: #087744; background: #e6f7ed; }
+.faculty-pending-grades-summary article:nth-child(2) .faculty-pending-grades-summary__icon { color: #215ec0; border-color: #c8dafa; background: #eaf2ff; }
+.faculty-pending-grades-summary article:nth-child(3) .faculty-pending-grades-summary__icon { color: #535bb5; border-color: #d7d9fa; background: #efefff; }
+.faculty-pending-grades-summary article:nth-child(4) .faculty-pending-grades-summary__icon { color: #9b610a; border-color: #f4dfba; background: #fff5de; }
+.faculty-pending-grades-summary article > div { display: grid; gap: 3px; min-width: 0; }
+.faculty-pending-grades-summary small { color: var(--fpg-text); font-size: calc(11px * var(--ptc-font-scale, 1)); font-weight: 750; text-transform: uppercase; }
+.faculty-pending-grades-summary strong { color: var(--fpg-text); font-size: calc(29px * var(--ptc-font-scale, 1)); font-weight: 760; line-height: 1.15; }
+.faculty-pending-grades-summary article > div > span { color: var(--fpg-muted); font-size: calc(11px * var(--ptc-font-scale, 1)); line-height: 1.4; }
+
+/* Search and filters */
+.faculty-pending-grades-filters { overflow: hidden; margin-bottom: calc(18px * var(--ptc-compact-scale, 1)); border: 1px solid var(--fpg-line); border-radius: 14px; background: var(--fpg-panel); }
+.faculty-pending-grades-filters__heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: calc(18px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)); border-bottom: 1px solid var(--fpg-line); }
+.faculty-pending-grades-filters__heading > div { display: grid; gap: 4px; min-width: 0; }
+.faculty-pending-grades-filters__heading span, .faculty-pending-grades-list > header > div > span { color: var(--fpg-accent); font-size: calc(11px * var(--ptc-font-scale, 1)); font-weight: 760; letter-spacing: .045em; text-transform: uppercase; }
+.faculty-pending-grades-filters__heading strong { color: var(--fpg-text); font-size: calc(17px * var(--ptc-font-scale, 1)); font-weight: 750; }
+.faculty-pending-grades-filters__heading p, .faculty-pending-grades-list > header p { margin: 0; color: var(--fpg-muted); font-size: calc(12px * var(--ptc-font-scale, 1)); line-height: 1.5; }
+.faculty-pending-grades-filters__heading button { min-height: 38px; flex: 0 0 auto; padding: 8px 13px; border: 1px solid var(--fpg-line); border-radius: 9px; color: var(--fpg-accent); background: var(--fpg-field); font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 700; cursor: pointer; }
+.faculty-pending-grades-filters__heading button:hover { border-color: #7cb99b; }
+.faculty-pending-grades-filters__grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(230px, 1fr); gap: calc(15px * var(--ptc-compact-scale, 1)); padding: calc(18px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1)); }
+.faculty-pending-grades-filters__grid > label { display: grid; min-width: 0; gap: 7px; color: var(--fpg-text); }
+.faculty-pending-grades-filters__grid > label > span { font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 700; }
+.faculty-pending-grades-search { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 43px; padding: 0 13px; border: 1px solid var(--fpg-line); border-radius: 9px; color: var(--fpg-muted); background: var(--fpg-field); }
+.faculty-pending-grades-search:focus-within { border-color: #49a677; box-shadow: 0 0 0 3px rgba(36,162,96,.12); }
+.faculty-pending-grades-search svg { flex: 0 0 auto; }
+.faculty-pending-grades-search input { flex: 1; min-width: 0; width: 100%; padding: 10px 0; border: 0; outline: 0; color: var(--fpg-text); background: transparent; font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.faculty-pending-grades-search input::placeholder { color: var(--fpg-muted); opacity: 1; }
+.faculty-pending-grades-filters__grid select { width: 100%; min-width: 0; min-height: 43px; padding: 9px 13px; border: 1px solid var(--fpg-line); border-radius: 9px; color: var(--fpg-text); background: var(--fpg-field); font-size: calc(13px * var(--ptc-font-scale, 1)); }
+
+/* Pending grades list */
+.faculty-pending-grades-list { overflow: hidden; min-width: 0; border: 1px solid var(--fpg-line); border-radius: 15px; background: var(--fpg-panel); }
+.faculty-pending-grades-list > header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: calc(19px * var(--ptc-compact-scale, 1)) calc(21px * var(--ptc-compact-scale, 1)); border-bottom: 1px solid var(--fpg-line); }
+.faculty-pending-grades-list > header > div { display: grid; gap: 5px; min-width: 0; }
+.faculty-pending-grades-list > header h2 { margin: 0; color: var(--fpg-text); font-size: calc(20px * var(--ptc-font-scale, 1)); font-weight: 760; line-height: 1.35; }
+.faculty-pending-grades-list > header > strong { flex: 0 0 auto; padding: 8px 12px; border: 1px solid #cce5d5; border-radius: 999px; color: #075e36; background: #eaf8ef; font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 730; }
+.faculty-pending-grades-table-wrap { width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
+.faculty-pending-grades-table-wrap table { width: 100%; min-width: 1120px; border-collapse: collapse; text-align: left; }
+.faculty-pending-grades-table-wrap thead { background: #f3f7f4; }
+.faculty-pending-grades-table-wrap th { padding: 14px 16px; border-bottom: 1px solid var(--fpg-line); color: #3c5245; font-size: calc(11px * var(--ptc-font-scale, 1)); font-weight: 760; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
+.faculty-pending-grades-table-wrap td { padding: 15px 16px; border-bottom: 1px solid var(--fpg-line); color: var(--fpg-text); font-size: calc(13px * var(--ptc-font-scale, 1)); vertical-align: middle; }
+.faculty-pending-grades-table-wrap tbody tr:last-child td { border-bottom: 0; }
+.faculty-pending-grades-table-wrap tbody tr:hover { background: rgba(36,162,96,.045); }
+.faculty-pending-grades-table-wrap td > strong, .faculty-pending-grades-student > strong { display: block; max-width: 300px; color: var(--fpg-text); font-size: calc(13px * var(--ptc-font-scale, 1)); font-weight: 730; line-height: 1.45; overflow-wrap: anywhere; }
+.faculty-pending-grades-table-wrap td > small, .faculty-pending-grades-student > small { display: block; margin-top: 4px; max-width: 300px; color: var(--fpg-muted); font-size: calc(11px * var(--ptc-font-scale, 1)); line-height: 1.45; overflow-wrap: anywhere; }
+.faculty-pending-grades-student > span { display: block; margin-top: 3px; color: #0e8150; font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 720; }
+.faculty-pending-grades-status { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border: 1px solid #f0d9b1; border-radius: 999px; color: #85550e; background: #fff5e4; font-size: calc(11px * var(--ptc-font-scale, 1)); font-weight: 750; white-space: nowrap; }
+.faculty-pending-grades-action { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 12px; border: 1px solid #0d7444; border-radius: 9px; color: #fff; background: #0d7444; font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 720; white-space: nowrap; cursor: pointer; }
+.faculty-pending-grades-action:hover { background: #075c36; }
+
+/* Loading and feedback */
+.faculty-pending-grades-loading, .faculty-pending-grades-empty { display: flex; align-items: center; justify-content: center; gap: 15px; min-height: 205px; padding: 28px 20px; color: var(--fpg-text); }
+.faculty-pending-grades-loading > div:last-child { display: grid; gap: 5px; }
+.faculty-pending-grades-loading strong, .faculty-pending-grades-empty strong { color: var(--fpg-text); font-size: calc(15px * var(--ptc-font-scale, 1)); font-weight: 750; }
+.faculty-pending-grades-loading span, .faculty-pending-grades-empty p { margin: 0; color: var(--fpg-muted); font-size: calc(12px * var(--ptc-font-scale, 1)); line-height: 1.5; }
+.faculty-pending-grades-empty { flex-direction: column; gap: 10px; text-align: center; }
+.faculty-pending-grades-empty > span { display: inline-grid; width: 48px; height: 48px; place-items: center; border-radius: 13px; color: #0d7444; background: #e7f5ec; }
+.faculty-pending-grades-spinner { flex: 0 0 32px; width: 32px; height: 32px; border: 3px solid #d5e5da; border-top-color: #0d7444; border-radius: 50%; animation: fpg-spin .8s linear infinite; }
+.faculty-pending-grades-error { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; padding: 16px 18px; border: 1px solid #e7ada7; border-radius: 12px; color: #8c3734; background: #fff5f3; }
+.faculty-pending-grades-error__icon { display: inline-grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; border-radius: 9px; color: #a0352e; background: #ffe4e0; }
+.faculty-pending-grades-error strong { font-size: calc(13px * var(--ptc-font-scale, 1)); }
+.faculty-pending-grades-error p { margin: 5px 0 0; font-size: calc(12px * var(--ptc-font-scale, 1)); line-height: 1.5; }
+@keyframes fpg-spin { to { transform: rotate(360deg); } }
+
+/* Dark mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-page {
+  --fpg-text: #f1f5f6;
+  --fpg-muted: #aab8bd;
+  --fpg-line: #35464b;
+  --fpg-panel: #192226;
+  --fpg-card: #20292e;
+  --fpg-field: #20292e;
+  --fpg-accent: #8fbaa9;
+  --fpg-canvas: #111719;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .faculty-pending-grades-page) { background-color: #111719; background-image: none; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .faculty-pending-grades-page) > .dashboard-content { background-color: #111719 !important; background-image: none !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-page { background: #111719 !important; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-hero { background: linear-gradient(105deg, #093522, #0b5133); border-color: #145438; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-summary__icon, .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-faculty__icon, .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-empty > span { background: #29463a; border-color: #365e4b; color: #a0e3c3; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-summary article:nth-child(2) .faculty-pending-grades-summary__icon { background: #243a55; border-color: #375575; color: #a7caff; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-summary article:nth-child(3) .faculty-pending-grades-summary__icon { background: #33344f; border-color: #525372; color: #c4c5fc; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-summary article:nth-child(4) .faculty-pending-grades-summary__icon { background: #4b3d26; border-color: #6d5635; color: #f6d294; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-table-wrap thead { background: #263237; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-table-wrap th { color: #dbe6e8; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-table-wrap tbody tr:hover { background: #243237; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-student > span { color: #90dcb5; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-status { border-color: #6a512c; color: #f4d6a0; background: #443722; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-list > header > strong { background: #264438; border-color: #406753; color: #c8efd8; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-search input, .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-filters__grid select { color: #f1f5f6; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-filters__grid select option { background: #20292e; color: #f1f5f6; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-error { color: #ffd0cb; background: #382a2d; border-color: #865052; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-error__icon { color: #ffb0a7; background: #583537; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-pending-grades-spinner { border-color: #35464b; border-top-color: #89d5ab; }
+
+/* Responsive */
+@media (max-width: 1150px) {
+  .faculty-pending-grades-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
-  .faculty-pending-grades-page {
-    gap: 14px;
-    padding: 18px 16px 28px;
-  }
-  .faculty-pending-grades-hero {
-    align-items: stretch;
-    flex-direction: column;
-    padding: 18px;
-  }
-  .faculty-pending-grades-hero h1 {
-    font-size: 1.5rem;
-  }
-  .faculty-pending-grades-refresh {
-    width: 100%;
-  }
-  .faculty-pending-grades-filters__grid {
-    grid-template-columns: 1fr;
-  }
-  .faculty-pending-grades-filters__heading,
-  .faculty-pending-grades-list > header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .faculty-pending-grades-filters__heading button {
-    width: 100%;
-  }
-}
-@media (max-width: 540px) {
-  .faculty-pending-grades-summary {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ========================================================================
-   PTC PORTAL | FACULTY / PENDING GRADES — UNIFIED DESIGN (OCT 2026)
-   Matches the approved Registrar Dashboard / Faculty My Classes appearance.
-   Uses EXACT shared canvas custom properties from ptc-unified-canvas.css.
-   Styles are scoped to this Faculty route; no shared sidebar/footer changes.
-   There is no custom modal on GradeSummary.tsx.
-   ======================================================================== */
-
-/* Give the active route the full width: no white strip at the sidebar. */
-html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-pending-grades-page) > .dashboard-content {
-  padding: 0 !important;
-  min-width: 0;
-  overflow-x: clip;
-  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
-  background-image: var(--ptc-canvas-pattern) !important;
-  background-size: var(--ptc-canvas-tiles) !important;
-  background-position: var(--ptc-canvas-offsets) !important;
-  background-repeat: repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
-}
-.dashboard-main:has(.faculty-pending-grades-page) > .header-container:has(.app-header.hide) {
-  height: 0;
-  min-height: 0;
-  border: 0;
-}
-html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-pending-grades-page {
-  --fpg-text-950: #17251e;
-  --fpg-text-800: #2c4033;
-  --fpg-text-700: #405b4b;
-  --fpg-text-600: #607469;
-  --fpg-text-500: #73867b;
-  --fpg-border: #d9e8df;
-  --fpg-border-strong: #c7ddcf;
-  --fpg-border-soft: #e5eee8;
-  --fpg-surface: #fff;
-  --fpg-surface-soft: #f4f9f6;
-  gap: 0;
-  min-width: 0;
-  max-width: 100%;
-  padding: 27px 28px 42px;
-  color: var(--fpg-text-950);
-  background-color: var(--ptc-canvas-color, #e6f1e9) !important;
-  background-image: var(--ptc-canvas-pattern) !important;
-  background-size: var(--ptc-canvas-tiles) !important;
-  background-position: var(--ptc-canvas-offsets) !important;
-  background-repeat: repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
-}
-
-/* Dark-green hero, deliberately WITHOUT large transparent circles. */
-.faculty-pending-grades-page .faculty-pending-grades-hero {
-  isolation: isolate;
-  min-height: 180px;
-  padding: 31px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(222,255,237,.17);
-  border-radius: 23px;
-  background: linear-gradient(108deg,#06482e 0%,#086b3c 55%,#138848 100%);
-  box-shadow: 0 16px 34px rgba(4,71,36,.15);
-}
-.faculty-pending-grades-page .faculty-pending-grades-hero::before,
-.faculty-pending-grades-page .faculty-pending-grades-hero::after {
-  content: none !important;
-  display: none !important;
-}
-.faculty-pending-grades-page .faculty-pending-grades-eyebrow {
-  margin-bottom: 13px;
-  color: #e8fff0;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .06em;
-}
-.faculty-pending-grades-page .faculty-pending-grades-eyebrow > span {
-  width: 30px;
-  height: 30px;
-  color: #fff;
-  background: rgba(255,255,255,.15);
-  border: 1px solid rgba(255,255,255,.24);
-}
-.faculty-pending-grades-page .faculty-pending-grades-hero h1 {
-  color: #fff !important;
-  font-size: clamp(29px,2.5vw,38px);
-  font-weight: 820;
-  letter-spacing: -.045em;
-}
-.faculty-pending-grades-page .faculty-pending-grades-hero p {
-  color: #e1f7e9 !important;
-  max-width: 800px;
-  font-size: 13px;
-  line-height: 1.68;
-}
-.faculty-pending-grades-page .faculty-pending-grades-refresh {
-  min-height: 44px;
-  padding: 10px 16px;
-  color: #08653c;
-  border: 1px solid #fff;
-  border-radius: 11px;
-  background: #fff;
-  box-shadow: 0 7px 16px rgba(3,51,27,.1);
-  font-size: 12px;
-  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
-}
-.faculty-pending-grades-page .faculty-pending-grades-refresh:hover:not(:disabled) {
-  color: #064f2d;
-  background: #e8f8ed;
-  border-color: #e8f8ed;
-}
-
-/* Faculty identity card — same 80px and dark-green icon as My Classes. */
-.faculty-pending-grades-page .faculty-pending-grades-faculty {
-  min-height: 80px;
-  margin-bottom: 16px;
-  padding: 14px 17px;
-  border: 1px solid #d9e9df;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 6px 18px rgba(8,66,36,.06);
-}
-.faculty-pending-grades-page .faculty-pending-grades-faculty__icon {
-  width: 43px;
-  height: 43px;
-  color: #fff;
-  border: 0;
-  border-radius: 11px;
-  background: linear-gradient(145deg,#0b9955,#065c34);
-  box-shadow: 0 5px 11px rgba(4,100,57,.15);
-}
-.faculty-pending-grades-page .faculty-pending-grades-faculty small {
-  color: #66786d;
-  font-size: 10px;
-  font-weight: 750;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-.faculty-pending-grades-page .faculty-pending-grades-faculty strong {
-  color: #253a2c;
-  font-size: 13px;
-  font-weight: 780;
-}
-.faculty-pending-grades-page .faculty-pending-grades-faculty > div > span {
-  color: #718278;
-  font-size: 10px;
-}
-
-/* Four real metrics: green / gold / blue / violet. No fake numbers. */
-.faculty-pending-grades-page .faculty-pending-grades-summary {
-  gap: 12px;
-  padding: 11px;
-  margin-bottom: 19px;
-  border: 1px solid rgba(255,255,255,.8);
-  border-radius: 23px;
-  background: rgba(255,255,255,.55);
-  box-shadow: 0 10px 24px rgba(10,66,36,.08);
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  min-height: 110px;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid #deebdf;
-  border-left: 4px solid #0b9953;
-  border-radius: 17px;
-  background: linear-gradient(110deg,#f4fcf7,#e9f8ef);
-  box-shadow: 0 6px 16px rgba(13,69,37,.055);
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(2) {
-  border-color: #f1e5c4;
-  border-left-color: #dc9b0c;
-  background: linear-gradient(110deg,#fffaf0,#fff4d9);
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(3) {
-  border-color: #d5e5ff;
-  border-left-color: #2563eb;
-  background: linear-gradient(110deg,#f5f9ff,#e9f1ff);
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(4) {
-  border-color: #e7ddff;
-  border-left-color: #873cec;
-  background: linear-gradient(110deg,#fbf7ff,#f1e9ff);
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article::before,
-.faculty-pending-grades-page .faculty-pending-grades-summary article::after {
-  content: none !important;
-  display: none !important;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary__icon {
-  width: 45px;
-  height: 45px;
-  color: #fff;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(145deg,#0b9955,#065c34);
-  box-shadow: 0 6px 12px rgba(4,100,57,.16);
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(2) .faculty-pending-grades-summary__icon {
-  color: #a36a00;
-  border: 1px solid #f3d994;
-  background: #fff4d3;
-  box-shadow: none;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(3) .faculty-pending-grades-summary__icon {
-  color: #2563eb;
-  border: 1px solid #cfdeff;
-  background: #e9f1ff;
-  box-shadow: none;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(4) .faculty-pending-grades-summary__icon {
-  color: #7b35e9;
-  border: 1px solid #e0d2ff;
-  background: #f2ebff;
-  box-shadow: none;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary small {
-  color: #5f7165;
-  font-size: 10px;
-  font-weight: 780;
-  text-transform: uppercase;
-  letter-spacing: .025em;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary strong {
-  color: #18271d;
-  font-size: 27px;
-  font-weight: 820;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary article > div > span {
-  color: #718278;
-  font-size: 10px;
-}
-
-/* Keep the icon artwork at the same size as the Faculty schedule cards. */
-.faculty-pending-grades-page .faculty-pending-grades-summary__icon > svg,
-.faculty-pending-grades-page .faculty-pending-grades-faculty__icon > svg {
-  width: 22px;
-  height: 22px;
-}
-
-/* Rounded content panels, aligned with other Faculty pages. */
-.faculty-pending-grades-page .faculty-pending-grades-filters,
-.faculty-pending-grades-page .faculty-pending-grades-list {
-  min-width: 0;
-  margin-bottom: 18px;
-  border: 1px solid #d9e9df;
-  border-radius: 21px;
-  background: #fff;
-  box-shadow: 0 10px 25px rgba(8,66,36,.07);
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__heading,
-.faculty-pending-grades-page .faculty-pending-grades-list > header {
-  padding: 21px 23px 18px;
-  border-color: #e5eee8;
-  background: linear-gradient(100deg,#fff 60%,#f3fbf6);
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__heading > div > span,
-.faculty-pending-grades-page .faculty-pending-grades-list > header > div > span {
-  display: inline-block;
-  width: fit-content;
-  margin-bottom: 8px;
-  padding: 5px 10px;
-  color: #087b45;
-  border-radius: 999px;
-  background: #e6f7ed;
-  font-size: 9px;
-  font-weight: 800;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__heading strong,
-.faculty-pending-grades-page .faculty-pending-grades-list > header h2 {
-  color: #17251e;
-  font-size: 18px;
-  font-weight: 790;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__heading p,
-.faculty-pending-grades-page .faculty-pending-grades-list > header p {
-  color: #718278;
-  font-size: 11px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-list > header > strong {
-  min-height: 34px;
-  padding: 8px 12px;
-  color: #0a7645;
-  background: #eef9f2;
-  border: 1px solid #cae5d4;
-  font-size: 10px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__heading button {
-  min-height: 35px;
-  padding: 8px 12px;
-  color: #087143;
-  border: 1px solid #b9d9c4;
-  border-radius: 10px;
-  background: #f6fcf8;
-  font-size: 11px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__heading button:hover {
-  color: #fff;
-  background: #0c824a;
-  border-color: #0c824a;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__grid {
-  gap: 14px;
-  padding: 20px 22px 22px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters__grid > label > span {
-  color: #395245;
-  font-size: 10px;
-  font-weight: 740;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters input,
-.faculty-pending-grades-page .faculty-pending-grades-filters select {
-  min-height: 44px;
-  color: #273d2f;
-  border: 1px solid #ccdcd1;
-  border-radius: 10px;
-  background: #fbfdfb;
-}
-.faculty-pending-grades-page .faculty-pending-grades-filters input:focus-visible,
-.faculty-pending-grades-page .faculty-pending-grades-filters select:focus-visible {
-  border-color: #0c824a;
-  outline: 2px solid #68b788;
-  outline-offset: 1px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-table-wrap {
-  max-width: 100%;
-  overflow-x: auto;
-  background: #fff;
-}
-.faculty-pending-grades-page .faculty-pending-grades-table-wrap th {
-  padding: 13px 12px;
-  color: #50695a;
-  background: #f4f9f6;
-  border-color: #dce9df;
-  font-size: 9.5px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-table-wrap td {
-  padding: 14px 12px;
-  color: #4c6153;
-  border-color: #e5eee7;
-  font-size: 10.5px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-table-wrap tbody tr:hover td {
-  background: #f2faf5;
-}
-.faculty-pending-grades-page .faculty-pending-grades-table-wrap td > strong,
-.faculty-pending-grades-page .faculty-pending-grades-student > strong {
-  color: #17251e;
-  font-size: 11.5px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-status {
-  color: #93631b;
-  border: 1px solid #ecd49a;
-  background: #fff6df;
-  font-size: 10px;
-  font-weight: 780;
-}
-.faculty-pending-grades-page .faculty-pending-grades-action {
-  min-height: 37px;
-  color: #fff;
-  border-color: #0b7b46;
-  border-radius: 10px;
-  background: #0a7a45;
-  font-size: 10px;
-}
-.faculty-pending-grades-page .faculty-pending-grades-action:hover {
-  color: #fff;
-  background: #075e37;
-  border-color: #075e37;
-}
-.faculty-pending-grades-page .faculty-pending-grades-loading,
-.faculty-pending-grades-page .faculty-pending-grades-empty {
-  min-height: 220px;
-  background: #fff;
-}
-.faculty-pending-grades-page .faculty-pending-grades-empty > span {
-  width: 50px;
-  height: 50px;
-  color: #fff;
-  border: none;
-  background: linear-gradient(145deg,#0b9955,#065c34);
-}
-.faculty-pending-grades-page .faculty-pending-grades-error {
-  margin-bottom: 18px;
-  border-radius: 15px;
-}
-.faculty-pending-grades-page :is(button, input, select):focus-visible {
-  outline: 2px solid #68b788;
-  outline-offset: 2px;
-}
-
-/* SAME shared dark canvas. Avoid white loading flashes and light tables. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark)
-  .dashboard-main:has(> .dashboard-content > .faculty-pending-grades-page) > .dashboard-content,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark)
-  .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-pending-grades-page {
-  background-color: #111c16 !important;
-  background-image:
-    radial-gradient(circle at 12% 9%,rgba(20,108,61,.17),transparent 30%),
-    radial-gradient(circle at 88% 8%,rgba(42,100,65,.09),transparent 28%),
-    linear-gradient(135deg,rgba(117,163,126,.025) 25%,transparent 25%),
-    linear-gradient(225deg,rgba(117,163,126,.025) 25%,transparent 25%),
-    linear-gradient(45deg,rgba(117,163,126,.02) 25%,transparent 25%),
-    linear-gradient(315deg,rgba(117,163,126,.02) 25%,transparent 25%),
-    linear-gradient(180deg,#101a15,#17231b) !important;
-  background-size: auto,auto,96px 96px,96px 96px,128px 128px,128px 128px,auto !important;
-  background-position: center,center,0 0,48px 48px,0 0,64px 64px,center !important;
-  background-repeat: no-repeat,no-repeat,repeat,repeat,repeat,repeat,no-repeat !important;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page {
-  --fpg-text-950: #edf6ef;
-  --fpg-text-800: #dceae0;
-  --fpg-text-700: #c0d4c6;
-  --fpg-text-600: #b7cbbd;
-  --fpg-text-500: #a1b5a6;
-  --fpg-border: #354b3c;
-  --fpg-border-soft: #354b3c;
-  --fpg-border-strong: #47614e;
-  --fpg-surface: #1d2922;
-  --fpg-surface-soft: #23332a;
-  color: #edf6ef;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page :is(
-    .faculty-pending-grades-faculty, .faculty-pending-grades-filters,
-    .faculty-pending-grades-list, .faculty-pending-grades-table-wrap,
-    .faculty-pending-grades-loading, .faculty-pending-grades-empty
-  ) {
-  color: #edf6ef;
-  background: #1d2922;
-  border-color: #354b3c;
-  box-shadow: 0 8px 24px rgba(0,0,0,.16);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-summary {
-  background: rgba(21,32,25,.72);
-  border-color: #3b5442;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-summary article {
-  background: #21392b;
-  border-color: #3b5944;
-  border-left-color: #1db366;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(2) {
-  background: #372f20;
-  border-color: #665338;
-  border-left-color: #dfab36;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(3) {
-  background: #202d41;
-  border-color: #354964;
-  border-left-color: #598cf0;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-summary article:nth-child(4) {
-  background: #30263c;
-  border-color: #534265;
-  border-left-color: #a57ff1;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page :is(
-    .faculty-pending-grades-filters__heading,
-    .faculty-pending-grades-list > header
-  ) {
-  color: #edf6ef;
-  background: linear-gradient(110deg,#1e2e24,#22352a);
-  border-color: #354b3c;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page :is(
-    .faculty-pending-grades-faculty strong, .faculty-pending-grades-summary strong,
-    .faculty-pending-grades-filters__heading strong,
-    .faculty-pending-grades-list > header h2,
-    .faculty-pending-grades-table-wrap td > strong,
-    .faculty-pending-grades-student > strong,
-    .faculty-pending-grades-loading strong, .faculty-pending-grades-empty strong
-  ) { color: #edf6ef; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page :is(
-    .faculty-pending-grades-faculty small, .faculty-pending-grades-faculty > div > span,
-    .faculty-pending-grades-summary small, .faculty-pending-grades-summary article > div > span,
-    .faculty-pending-grades-filters__heading p,
-    .faculty-pending-grades-list > header p,
-    .faculty-pending-grades-filters__grid > label > span,
-    .faculty-pending-grades-table-wrap td,
-    .faculty-pending-grades-table-wrap td > small,
-    .faculty-pending-grades-student > span, .faculty-pending-grades-student > small,
-    .faculty-pending-grades-empty p, .faculty-pending-grades-loading span
-  ) { color: #b7cbbd; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-table-wrap th {
-  color: #d3e4d8;
-  background: #23332a;
-  border-color: #354b3c;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-table-wrap td {
-  border-color: #334839;
-  background: #1d2922;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-table-wrap tbody tr:hover td {
-  background: #2a4031;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-filters :is(input, select) {
-  color: #edf6ef;
-  background: #18251d;
-  border-color: #47614e;
-  color-scheme: dark;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-filters input::placeholder {
-  color: #a5b7aa;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-filters select option {
-  color: #edf6ef;
-  background: #18251d;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-status {
-  color: #f1d797;
-  background: #40341e;
-  border-color: #745b2e;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page :is(
-    .faculty-pending-grades-filters__heading button,
-    .faculty-pending-grades-list > header > strong
-  ) {
-  color: #c6f1d5;
-  background: #20392b;
-  border-color: #386148;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-error {
-  color: #ffcdca;
-  background: #3c2727;
-  border-color: #795050;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-  .dark-mode, .theme-dark, .dark) .faculty-pending-grades-page .faculty-pending-grades-error :is(strong, p) {
-  color: #ffcdca;
-}
-
-/* Responsive rules preserve table scrolling, not page-wide overflow. */
-@media (max-width: 1100px) {
-  .faculty-pending-grades-page .faculty-pending-grades-summary {
-    grid-template-columns: repeat(2,minmax(0,1fr));
-  }
-}
-@media (max-width: 850px) {
-  html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-pending-grades-page {
-    padding: 20px 17px 32px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-hero {
-    padding: 25px 23px;
-  }
-}
-@media (max-width: 620px) {
-  html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-pending-grades-page {
-    padding: 16px 12px 29px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-hero {
-    flex-direction: column;
-    align-items: stretch;
-    min-height: 0;
-    padding: 24px 19px;
-    border-radius: 17px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-summary {
-    grid-template-columns: 1fr;
-    padding: 8px;
-    border-radius: 17px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-filters,
-  .faculty-pending-grades-page .faculty-pending-grades-list {
-    border-radius: 17px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-filters__heading,
-  .faculty-pending-grades-page .faculty-pending-grades-list > header {
-    padding: 18px 16px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-filters__grid {
-    padding: 16px;
-  }
-  .faculty-pending-grades-page .faculty-pending-grades-hero h1 {
-    font-size: clamp(26px, 6vw, 34px);
-  }
+  .faculty-pending-grades-page { padding: 0 0 calc(40px * var(--ptc-compact-scale, 1)); }
+  .faculty-pending-grades-hero { align-items: flex-start; flex-direction: column; padding: 24px 22px; }
+  .faculty-pending-grades-filters__grid { grid-template-columns: 1fr; }
+  .faculty-pending-grades-list > header { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 480px) {
+  .faculty-pending-grades-page { padding: 0 0 calc(36px * var(--ptc-compact-scale, 1)); }
+  .faculty-pending-grades-hero { padding: 22px 18px; }
+  .faculty-pending-grades-summary { grid-template-columns: 1fr; }
+  .faculty-pending-grades-filters__heading { align-items: stretch; flex-direction: column; }
+  .faculty-pending-grades-filters__heading button { align-self: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .faculty-pending-grades-page :is(.faculty-pending-grades-spinner, .is-spinning) {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-/* Faculty Pending Grades — STATUS-MEANING COLOR PATCH
- * Add ONCE to the END of src/styles/FacultyPendingGrades.css.
- * Do not replace the existing stylesheet.
- * Card order/labels verified against the actual Faculty TSX.
- * No layout, shared canvas, sidebar, or component changes.
- */
-
-/* 1. Not Encoded — Warm amber (pending / needs action) */
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) {
-  background: #fff8e9;
-  border-color: #f1dcb2;
-  border-left: 4px solid #d79b23;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) .faculty-pending-grades-summary__icon {
-  background: #fff0cf;
-  color: #a56a12;
-  border: 1px solid #edcf93;
-  box-shadow: none;
-}
-
-/* 2. Classes with Pending — Warm amber (pending / needs action) */
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) {
-  background: #fff8e9;
-  border-color: #f1dcb2;
-  border-left: 4px solid #d79b23;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) .faculty-pending-grades-summary__icon {
-  background: #fff0cf;
-  color: #a56a12;
-  border: 1px solid #edcf93;
-  box-shadow: none;
-}
-
-/* 3. Assigned Classes — Muted slate (neutral) */
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) {
-  background: #f5f8fa;
-  border-color: #d7e0e7;
-  border-left: 4px solid #788b9a;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) .faculty-pending-grades-summary__icon {
-  background: #eaf0f4;
-  color: #4d6477;
-  border: 1px solid #cedae3;
-  box-shadow: none;
-}
-
-/* 4. No Pending — Green (active / completed) */
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) {
-  background: #edf9f2;
-  border-color: #cde9d9;
-  border-left: 4px solid #10a05e;
-}
-.faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) .faculty-pending-grades-summary__icon {
-  background: #ddf5e8;
-  color: #087e47;
-  border: 1px solid #b9e4ca;
-  box-shadow: none;
-}
-
-/* Dark Mode — preserve semantic meaning and readable icon contrast. */
-/* 1. Not Encoded */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) {
-  background: #403322;
-  border-color: #6c5636;
-  border-left: 4px solid #e3ab44;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(1) .faculty-pending-grades-summary__icon {
-  background: #554328;
-  color: #ffe0a3;
-  border: 1px solid #806540;
-  box-shadow: none;
-}
-
-/* 2. Classes with Pending */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) {
-  background: #403322;
-  border-color: #6c5636;
-  border-left: 4px solid #e3ab44;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(2) .faculty-pending-grades-summary__icon {
-  background: #554328;
-  color: #ffe0a3;
-  border: 1px solid #806540;
-  box-shadow: none;
-}
-
-/* 3. Assigned Classes */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) {
-  background: #28343e;
-  border-color: #445765;
-  border-left: 4px solid #8ea5b5;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(3) .faculty-pending-grades-summary__icon {
-  background: #354754;
-  color: #d4e3ec;
-  border: 1px solid #526c7d;
-  box-shadow: none;
-}
-
-/* 4. No Pending */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) {
-  background: #1f392b;
-  border-color: #365c46;
-  border-left: 4px solid #41b97e;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, .dark, [data-theme="dark"]) .faculty-pending-grades-page .faculty-pending-grades-summary > article:nth-child(4) .faculty-pending-grades-summary__icon {
-  background: #285640;
-  color: #aff2c7;
-  border: 1px solid #467d5a;
-  box-shadow: none;
+  .faculty-pending-grades-page *, .faculty-pending-grades-page *::before, .faculty-pending-grades-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
