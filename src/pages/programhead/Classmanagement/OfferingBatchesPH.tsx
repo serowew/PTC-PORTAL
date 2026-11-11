@@ -752,19 +752,6 @@ export default function OfferingBatchesPH() {
           </>
         ) : (
           <>
-            <button
-              type="button"
-              className="ph-offering-batches__back"
-              onClick={() => {
-                setSelectedBatch(null);
-                setActionMessage("");
-                setActionError("");
-              }}
-            >
-              <ArrowLeft size={15} />
-              Back to batches
-            </button>
-
             <header className="ph-offering-batches__detail-header">
               <div className="ph-offering-batches__detail-title">
                 <div>
@@ -772,7 +759,7 @@ export default function OfferingBatchesPH() {
                     <span className="ph-offering-batches__eyebrow-icon" aria-hidden="true">
                       <Layers3 size={16} />
                     </span>
-                    PROGRAM HEAD · CLASS MANAGEMENT
+                    PROGRAM HEAD · BATCH DETAILS
                   </div>
                   <h1>
                     {selectedBatch.course_code} · Year{" "}
@@ -781,11 +768,20 @@ export default function OfferingBatchesPH() {
                   <p>{selectedBatch.course_name}</p>
                 </div>
 
-                <span
-                  className={`ph-offering-batches__status ph-offering-batches__status--${statusClass(selectedBatch.batch_status)}`}
-                >
-                  {selectedBatch.batch_status}
-                </span>
+                <div className="ph-offering-batches__detail-actions">
+                  <button
+                    type="button"
+                    className="ph-offering-batches__back"
+                    onClick={() => {
+                      setSelectedBatch(null);
+                      setActionMessage("");
+                      setActionError("");
+                    }}
+                  >
+                    <ArrowLeft size={15} />
+                    Back to batches
+                  </button>
+                </div>
               </div>
 
               <div className="ph-offering-batches__detail-meta">
@@ -797,6 +793,11 @@ export default function OfferingBatchesPH() {
                 <span>
                   {scheduledCount} of {selectedBatch.offerings.length} scheduled
                 </span>
+                  <span
+                    className={`ph-offering-batches__status ph-offering-batches__status--${statusClass(selectedBatch.batch_status)}`}
+                  >
+                    {selectedBatch.batch_status}
+                  </span>
               </div>
             </header>
 
