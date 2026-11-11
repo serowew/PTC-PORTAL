@@ -9,7 +9,6 @@ import {
   GraduationCap,
   Loader2,
   ReceiptText,
-  RefreshCw,
   Send,
   WalletCards,
   X,
@@ -371,9 +370,6 @@ export default function RequestDocument() {
       setSubmitting(false);
     }
   };
-  const handleRefresh = () => {
-    void loadRequests();
-  };
   if (!isStudent) {
     return null;
   }
@@ -394,14 +390,6 @@ export default function RequestDocument() {
               then track payment and Registrar processing from one place.
             </p>
           </div>
-          <button
-            type="button"
-            className="request-document-refresh"
-            onClick={handleRefresh}
-          >
-            <RefreshCw size={16} />
-            <span>Refresh</span>
-          </button>
         </section>
         <section className="request-document-panel request-document-panel--form">
           <header className="request-document-section-header">

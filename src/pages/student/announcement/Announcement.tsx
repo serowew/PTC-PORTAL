@@ -4,7 +4,6 @@ import {
   CalendarDays,
   CircleAlert,
   Megaphone,
-  RefreshCw,
   Search,
   UserRound,
 } from "lucide-react";
@@ -122,7 +121,6 @@ export default function AnnouncementS() {
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -152,11 +150,7 @@ export default function AnnouncementS() {
 
     const loadAnnouncements = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setError("");
 
@@ -254,7 +248,6 @@ export default function AnnouncementS() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -317,16 +310,6 @@ export default function AnnouncementS() {
               portal updates intended for students.
             </p>
           </div>
-
-          <button
-            type="button"
-            className="student-announcements__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         <section

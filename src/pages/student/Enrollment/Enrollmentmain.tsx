@@ -337,6 +337,7 @@ export default function Enrollmentmain() {
   // UI STATES
   // ============================================================
   const [loading, setLoading] = useState(true);
+  const [officialLoading, setOfficialLoading] = useState(true);
   const [preparing, setPreparing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -499,168 +500,110 @@ export default function Enrollmentmain() {
   // ============================================================
   const loadEnrollment = useCallback(
     async (showLoadingState = false) => {
-      if (!authenticated || userRole !== "Student") {
-        return;
-      }
+      if (!authenticated || userRole !== "Student") return;
 
       activeEnrollmentRequestRef.current?.abort();
-
       const controller = new AbortController();
-      const requestId = enrollmentRequestIdRef.current + 1;
-
+      const requestId = ++enrollmentRequestIdRef.current;
       activeEnrollmentRequestRef.current = controller;
-      enrollmentRequestIdRef.current = requestId;
+      const isCurrent = () =>
+        !controller.signal.aborted &&
+        requestId === enrollmentRequestIdRef.current;
+
+      if (showLoadingState) {
+        setLoading(true);
+        setData(null);
+        setOfficialData(null);
+        setSelectedRetakeSubjectIds([]);
+      }
+      setOfficialLoading(true);
+      setError("");
+
+      // Start both requests together. Do not hold eligibility behind the
+      // potentially slower official/current request.
+      const currentTask = (async () => {
+        try {
+          const response = await authService.authFetch(`${API_BASE_URL}/current`, {
+            method: "GET",
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          });
+          const body = await readJsonResponse<
+            CurrentEnrollmentResponse | ApiErrorResponse
+          >(response);
+          return { response, body, error: null as unknown };
+        } catch (error) {
+          // Capture the error now so a rejection can't become unhandled
+          // while the eligibility request is still in progress.
+          return { response: null, body: null, error };
+        }
+      })();
 
       try {
-        if (showLoadingState) {
-          setLoading(true);
-          setData(null);
-          setOfficialData(null);
-          setSelectedRetakeSubjectIds([]);
-        }
-
-        setError("");
-
-        const [response, currentResponse] = await Promise.all([
-          authService.authFetch(`${API_BASE_URL}/subjects`, {
-            method: "GET",
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-            },
-          }),
-          authService.authFetch(`${API_BASE_URL}/current`, {
-            method: "GET",
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-            },
-          }),
-        ]);
-
-        const [responseData, currentData] = await Promise.all([
-          readJsonResponse<EnrollmentEligibilityResponse | ApiErrorResponse>(
-            response,
-          ),
-          readJsonResponse<CurrentEnrollmentResponse | ApiErrorResponse>(
-            currentResponse,
-          ),
-        ]);
-
-        const canContinue = handleAuthenticationResponse(
-          response,
-          responseData as ApiErrorResponse,
-        );
-
-        if (!canContinue) {
-          return;
-        }
-
+        const response = await authService.authFetch(`${API_BASE_URL}/subjects`, {
+          method: "GET",
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+        const responseData = await readJsonResponse<
+          EnrollmentEligibilityResponse | ApiErrorResponse
+        >(response);
+        if (!isCurrent()) return;
+        if (!handleAuthenticationResponse(response, responseData as ApiErrorResponse)) return;
         if (!response.ok) {
           const apiError = responseData as ApiErrorResponse;
-
-          throw new Error(
-            apiError.message ||
-              apiError.error ||
-              `Enrollment request failed (${response.status}).`,
-          );
+          throw new Error(apiError.message || apiError.error || `Enrollment request failed (${response.status}).`);
         }
-
         if (!("student" in responseData)) {
-          throw new Error(
-            responseData.message || "Invalid Student enrollment response.",
-          );
+          throw new Error(responseData.message || "Invalid Student enrollment response.");
         }
-
         if (!responseData.success) {
-          throw new Error(
-            responseData.message || "Failed to load Student enrollment.",
-          );
+          throw new Error(responseData.message || "Failed to load Student enrollment.");
         }
 
-        const canContinueCurrent = handleAuthenticationResponse(
-          currentResponse,
-          currentData as ApiErrorResponse,
-        );
+        // Eligibility sections can render immediately. Official subject
+        // counts and units remain pending until their own request returns.
+        applyEnrollmentData(responseData);
+        setLoading(false);
 
-        if (!canContinueCurrent) {
-          return;
+        const currentResult = await currentTask;
+        if (!isCurrent()) return;
+        if (currentResult.error) throw currentResult.error;
+        const currentResponse = currentResult.response;
+        const currentData = currentResult.body;
+        if (!currentResponse || !currentData) {
+          throw new Error("Unable to load current enrollment.");
         }
-
+        if (!handleAuthenticationResponse(currentResponse, currentData as ApiErrorResponse)) return;
         if (!currentResponse.ok) {
           const apiError = currentData as ApiErrorResponse;
-
-          throw new Error(
-            apiError.message ||
-              apiError.error ||
-              `Current enrollment request failed (${currentResponse.status}).`,
-          );
+          throw new Error(apiError.message || apiError.error || `Current enrollment request failed (${currentResponse.status}).`);
         }
-
         if (!("subjects" in currentData)) {
-          throw new Error(
-            currentData.message || "Invalid current enrollment response.",
-          );
+          throw new Error(currentData.message || "Invalid current enrollment response.");
         }
-
         if (!currentData.success) {
-          throw new Error(
-            currentData.message || "Failed to load current enrollment.",
-          );
+          throw new Error(currentData.message || "Failed to load current enrollment.");
         }
-
-        if (
-          controller.signal.aborted ||
-          requestId !== enrollmentRequestIdRef.current
-        ) {
-          return;
-        }
-
-        applyEnrollmentData(responseData);
         setOfficialData(currentData);
       } catch (err) {
-        if (
-          controller.signal.aborted ||
-          requestId !== enrollmentRequestIdRef.current
-        ) {
-          return;
-        }
-
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
-        }
-
+        if (!isCurrent()) return;
+        if (err instanceof DOMException && err.name === "AbortError") return;
         console.error("LOAD STUDENT ENROLLMENT ERROR:", err);
-
         if (err instanceof TypeError) {
-          setError(
-            "Unable to connect to the enrollment server. Make sure the backend is running on http://localhost:3000.",
-          );
-          return;
+          setError("Unable to connect to the enrollment server. Make sure the backend is running on http://localhost:3000.");
+        } else {
+          setError(err instanceof Error ? err.message : "Unable to load enrollment.");
         }
-
-        setError(
-          err instanceof Error ? err.message : "Unable to load enrollment.",
-        );
       } finally {
-        if (
-          requestId === enrollmentRequestIdRef.current &&
-          !controller.signal.aborted
-        ) {
-          if (showLoadingState) {
-            setLoading(false);
-          }
-
+        if (isCurrent()) {
+          setLoading(false);
+          setOfficialLoading(false);
           activeEnrollmentRequestRef.current = null;
         }
       }
     },
-    [
-      authenticated,
-      userRole,
-      handleAuthenticationResponse,
-      applyEnrollmentData,
-    ],
+    [authenticated, userRole, handleAuthenticationResponse, applyEnrollmentData],
   );
 
   // ============================================================
@@ -1003,20 +946,38 @@ export default function Enrollmentmain() {
                   placement and approval.
                 </p>
               </div>
-              <div className="enrollment-header-actions enrollment-header-actions--loading">
-                <div className="enrollment-period-badge closed">
-                  <span
-                    className="enrollment-period-dot"
-                    aria-hidden="true"
-                  ></span>
-                  <span>Closed</span>
+
+            </div>
+            <div className="enrollment-loading-layout" role="status" aria-live="polite">
+              <div className="enrollment-loading-heading">
+                <span className="enrollment-loading-spinner" aria-hidden="true" />
+                <div>
+                  <strong>Loading your enrollment details</strong>
+                  <p>Retrieving your current enrollment and eligible subjects...</p>
                 </div>
               </div>
+              <div className="enrollment-loading-card-grid" aria-hidden="true">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div className="enrollment-loading-card" key={index}>
+                    <span className="enrollment-loading-skeleton enrollment-loading-skeleton--label" />
+                    <span className="enrollment-loading-skeleton enrollment-loading-skeleton--value" />
+                  </div>
+                ))}
+              </div>
+              <div className="enrollment-loading-card-grid enrollment-loading-card-grid--summary" aria-hidden="true">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <div className="enrollment-loading-card" key={index}>
+                    <span className="enrollment-loading-skeleton enrollment-loading-skeleton--label" />
+                    <span className="enrollment-loading-skeleton enrollment-loading-skeleton--value" />
+                  </div>
+                ))}
+              </div>
+              <div className="enrollment-loading-detail" aria-hidden="true">
+                <span className="enrollment-loading-skeleton enrollment-loading-skeleton--heading" />
+                <span className="enrollment-loading-skeleton enrollment-loading-skeleton--line" />
+                <span className="enrollment-loading-skeleton enrollment-loading-skeleton--line-short" />
+              </div>
             </div>
-            <div
-              className="enrollment-initial-placeholder"
-              aria-hidden="true"
-            ></div>
           </div>
         </div>
       </DashboardLayout>
@@ -1159,10 +1120,11 @@ export default function Enrollmentmain() {
   const officialSubjects = officialData?.subjects || [];
   const officialSummary = officialData?.summary;
   const officialUnits = officialSummary?.total_units ?? 0;
-  const displayedUnits =
-    enrollmentIsDraft || enrollmentIsPending || enrollmentIsApproved
-      ? officialUnits
-      : plannedUnits;
+  const needsOfficialUnits =
+    enrollmentIsDraft || enrollmentIsPending || enrollmentIsApproved;
+  const displayedUnits = needsOfficialUnits
+    ? officialLoading || !officialData ? "…" : officialUnits
+    : plannedUnits;
   const displayedUnitsLabel = enrollmentIsApproved
     ? "Official Units"
     : enrollmentIsPending
@@ -2033,6 +1995,13 @@ export default function Enrollmentmain() {
           {/* ====================================================
             OFFICIAL / SUBMITTED ENROLLMENT
         ==================================================== */}
+          {enrollment &&
+            (enrollmentIsPending || enrollmentIsApproved) &&
+            officialLoading && !officialData && (
+              <div className="enrollment-official-pending" role="status" aria-live="polite">
+                Loading official subject placement and units…
+              </div>
+            )}
           {enrollment &&
             (enrollmentIsPending || enrollmentIsApproved) &&
             officialData && (

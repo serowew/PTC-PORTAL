@@ -17,6 +17,7 @@ import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { api } from "../../../services/api";
 import "../../../styles/ClassSchedule.css";
+import "../../../styles/ProgramHeadTeachingSchedule.css";
 
 const API_URL = api.url("/api/program-head/classes");
 
@@ -232,6 +233,7 @@ export default function ScheduleList() {
   const [programHead, setProgramHead] = useState<ProgramHeadInfo | null>(null);
   const [classes, setClasses] = useState<ProgramHeadClass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -264,6 +266,7 @@ export default function ScheduleList() {
     const loadClasses = async () => {
       try {
         setLoading(true);
+        setShowLoading(false);
         setError("");
 
         const response = await authService.authFetch(API_URL, {
@@ -333,6 +336,7 @@ export default function ScheduleList() {
         );
       } finally {
         if (!controller.signal.aborted) {
+          setShowLoading(false);
           setLoading(false);
         }
       }
@@ -342,6 +346,13 @@ export default function ScheduleList() {
 
     return () => controller.abort();
   }, [authenticated, userRole, navigate, refreshKey]);
+
+  // Skip the loading panel for fast responses; show it only for slower requests.
+  useEffect(() => {
+    if (!loading || !authenticated || userRole !== "Program Head") return;
+    const timer = window.setTimeout(() => setShowLoading(true), 350);
+    return () => window.clearTimeout(timer);
+  }, [loading, authenticated, userRole]);
 
   const academicYears = useMemo(() => {
     const values = new Map<number, string>();
@@ -489,7 +500,7 @@ export default function ScheduleList() {
 
   return (
     <DashboardLayout>
-      <main className="faculty-schedule-page">
+      <main className="faculty-schedule-page program-head-teaching-schedule">
         <section className="faculty-schedule-page__hero">
           <div className="faculty-schedule-page__hero-copy">
             <div className="faculty-schedule-page__eyebrow">
@@ -621,7 +632,7 @@ export default function ScheduleList() {
           </section>
         )}
 
-        {loading && (
+        {loading && showLoading && (
           <section className="faculty-schedule-page__loading">
             <div className="faculty-schedule-page__spinner" />
             <div>

@@ -2,19 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   AtSign,
-  BadgeCheck,
   Building2,
-  CalendarDays,
   ContactRound,
-  Hash,
   IdCard,
   Mail,
   Phone,
-  RefreshCw,
-  ShieldCheck,
   UserRound,
+  Users,
+  CalendarDays,
+  Clock3,
+  BriefcaseBusiness,
+  BadgeCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
@@ -158,7 +158,6 @@ export default function ProgramHeadProfile() {
 
   const [profile, setProfile] = useState<ProgramHeadProfileInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -185,11 +184,7 @@ export default function ProgramHeadProfile() {
 
     const loadProfile = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setError("");
 
@@ -254,7 +249,6 @@ export default function ProgramHeadProfile() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -295,61 +289,47 @@ export default function ProgramHeadProfile() {
       <main className="program-head-profile-page">
         <section className="program-head-profile-page__hero">
           <div className="program-head-profile-page__hero-main">
-            <button
-              type="button"
-              className="program-head-profile-page__back"
-              onClick={() => navigate("/programhead/dashboard")}
-            >
-              <ArrowLeft size={16} strokeWidth={2.1} />
-              Dashboard
-            </button>
+            <div className="program-head-profile-page__eyebrow">
+              <span>
+                <UserRound size={15} strokeWidth={2.2} />
+              </span>
+              Program Head · Profile
+            </div>
+            <h1>My Profile</h1>
+            <p className="program-head-profile-page__description">
+              View your personal and institutional profile information recorded in the PTC Portal.
+            </p>
+          </div>
+        </section>
 
-            <div className="program-head-profile-page__identity">
-              <div
-                className="program-head-profile-page__avatar"
-                aria-label={`${fullName} initials`}
-              >
-                {initials}
-              </div>
-
-              <div className="program-head-profile-page__identity-copy">
-                <div className="program-head-profile-page__eyebrow">
-                  <span>
-                    <UserRound size={15} strokeWidth={2.2} />
-                  </span>
-                  Program Head · Profile
-                </div>
-
-                <h1>{loading ? "Loading profile..." : fullName}</h1>
-
-                <div className="program-head-profile-page__identity-meta">
-                  <span>
-                    <IdCard size={14} />
-                    {loading
-                      ? "Loading employee number..."
-                      : displayValue(profile?.employee_number)}
-                  </span>
-
-                  {!loading && profile && (
-                    <span className="program-head-profile-page__status program-head-profile-page__status--active">
-                      <BadgeCheck size={14} />
-                      {assignmentStatus} Assignment
-                    </span>
-                  )}
-                </div>
+        <section className="program-head-profile-page__identity" aria-label="Program Head identity">
+          <div className="program-head-profile-page__identity-main">
+            <div className="program-head-profile-page__avatar" aria-label={`${fullName} initials`}>
+              {initials}
+            </div>
+            <div className="program-head-profile-page__identity-copy">
+              <span className="program-head-profile-page__identity-label">Program Head</span>
+              <h2>{loading ? "Loading profile..." : fullName}</h2>
+              <div className="program-head-profile-page__identity-meta">
+                <span>
+                  <IdCard size={14} />
+                  {loading ? "Loading employee number..." : displayValue(profile?.employee_number)}
+                </span>
               </div>
             </div>
           </div>
-
-          <button
-            type="button"
-            className="program-head-profile-page__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
+          <div className="program-head-profile-page__identity-details">
+            <div>
+              <small>Department</small>
+              <strong>{loading ? "Loading..." : departmentLabel}</strong>
+            </div>
+            <div>
+              <small>Assignment Status</small>
+              <strong className={`program-head-profile-page__status ${profile?.assignment_is_active ? "program-head-profile-page__status--active" : ""}`}>
+                {loading ? "Loading..." : assignmentStatus}
+              </strong>
+            </div>
+          </div>
         </section>
 
         {error && (
@@ -395,48 +375,6 @@ export default function ProgramHeadProfile() {
 
         {!error && !loading && profile && (
           <>
-            <section className="program-head-profile-page__summary">
-              <article>
-                <span className="program-head-profile-page__summary-icon">
-                  <Hash size={18} />
-                </span>
-                <div>
-                  <small>Employee Number</small>
-                  <strong>{displayValue(profile.employee_number)}</strong>
-                </div>
-              </article>
-
-              <article>
-                <span className="program-head-profile-page__summary-icon">
-                  <Building2 size={18} />
-                </span>
-                <div>
-                  <small>Department</small>
-                  <strong>{departmentLabel}</strong>
-                </div>
-              </article>
-
-              <article>
-                <span className="program-head-profile-page__summary-icon">
-                  <ShieldCheck size={18} />
-                </span>
-                <div>
-                  <small>Assignment</small>
-                  <strong>{assignmentStatus}</strong>
-                </div>
-              </article>
-
-              <article>
-                <span className="program-head-profile-page__summary-icon">
-                  <CalendarDays size={18} />
-                </span>
-                <div>
-                  <small>Program Head Since</small>
-                  <strong>{formatDate(profile.start_date)}</strong>
-                </div>
-              </article>
-            </section>
-
             <div className="program-head-profile-page__content-grid">
               <section className="program-head-profile-page__card">
                 <header className="program-head-profile-page__card-header">
@@ -456,44 +394,63 @@ export default function ProgramHeadProfile() {
 
                 <div className="program-head-profile-page__field-grid">
                   <div className="program-head-profile-page__field">
-                    <span>First Name</span>
-                    <strong>{displayValue(profile.first_name)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><UserRound size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>First Name</span>
+                                        <strong>{displayValue(profile.first_name)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Middle Name</span>
-                    <strong>{displayValue(profile.middle_name)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><UserRound size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Middle Name</span>
+                                        <strong>{displayValue(profile.middle_name)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Last Name</span>
-                    <strong>{displayValue(profile.last_name)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><UserRound size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Last Name</span>
+                                        <strong>{displayValue(profile.last_name)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Gender</span>
-                    <strong>{displayValue(profile.gender)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><Users size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Gender</span>
+                                        <strong>{displayValue(profile.gender)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Birth Date</span>
-                    <strong>{formatDate(profile.birth_date)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><CalendarDays size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Birth Date</span>
+                                        <strong>{formatDate(profile.birth_date)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Contact Number</span>
-                    <strong>
-                      <Phone size={14} />
-                      {displayValue(profile.contact_number)}
-                    </strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><Phone size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Contact Number</span>
+                                        <strong>
+                                          {displayValue(profile.contact_number)}
+                                        </strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field program-head-profile-page__field--wide">
-                    <span>Email Address</span>
-                    <strong>
-                      <Mail size={14} />
-                      {displayValue(profile.email)}
-                    </strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><Mail size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Email Address</span>
+                                        <strong>
+                                          {displayValue(profile.email)}
+                                        </strong>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -516,64 +473,95 @@ export default function ProgramHeadProfile() {
 
                 <div className="program-head-profile-page__field-grid">
                   <div className="program-head-profile-page__field program-head-profile-page__field--wide">
-                    <span>Username</span>
-                    <strong>
-                      <AtSign size={14} />
-                      {displayValue(profile.username || session.username)}
-                    </strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><AtSign size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Username</span>
+                                        <strong>
+                                          {displayValue(profile.username || session.username)}
+                                        </strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Role</span>
-                    <strong>{displayValue(profile.role)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><ShieldCheck size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Role</span>
+                                        <strong>{displayValue(profile.role)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Employee Number</span>
-                    <strong>{displayValue(profile.employee_number)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><IdCard size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Employee Number</span>
+                                        <strong>{displayValue(profile.employee_number)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field program-head-profile-page__field--wide">
-                    <span>Department</span>
-                    <strong>
-                      <Building2 size={14} />
-                      {departmentLabel}
-                    </strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><Building2 size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Department</span>
+                                        <strong>
+                                          {departmentLabel}
+                                        </strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Employment Status</span>
-                    <strong>{displayValue(profile.employment_status)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><BriefcaseBusiness size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Employment Status</span>
+                                        <strong>{displayValue(profile.employment_status)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Hire Date</span>
-                    <strong>{formatDate(profile.hire_date)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><CalendarDays size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Hire Date</span>
+                                        <strong>{formatDate(profile.hire_date)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Program Head Since</span>
-                    <strong>{formatDate(profile.start_date)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><CalendarDays size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Program Head Since</span>
+                                        <strong>{formatDate(profile.start_date)}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Assignment Status</span>
-                    <strong>{assignmentStatus}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><BadgeCheck size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Assignment Status</span>
+                                        <strong>{assignmentStatus}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Account Status</span>
-                    <strong>{accountStatus}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><ShieldCheck size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Account Status</span>
+                                        <strong>{accountStatus}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field">
-                    <span>Verification</span>
-                    <strong>{verificationStatus}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><BadgeCheck size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Verification</span>
+                                        <strong>{verificationStatus}</strong>
+                    </div>
                   </div>
 
                   <div className="program-head-profile-page__field program-head-profile-page__field--wide">
-                    <span>Last Login</span>
-                    <strong>{formatDateTime(profile.last_login)}</strong>
+                    <span className="program-head-profile-page__field-icon" aria-hidden="true"><Clock3 size={17} /></span>
+                    <div className="program-head-profile-page__field-copy">
+                      <span>Last Login</span>
+                                        <strong>{formatDateTime(profile.last_login)}</strong>
+                    </div>
                   </div>
                 </div>
               </section>

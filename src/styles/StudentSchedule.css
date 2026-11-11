@@ -200,39 +200,6 @@
   font-weight: 650;
 }
 
-.student-schedule__refresh {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 11px;
-  border: 1px solid #b9d6c3;
-  border-radius: 9px;
-  color: var(--ss-green-800);
-  background: #ffffff;
-  font-size: 10.5px;
-  font-weight: 720;
-  cursor: pointer;
-  transition:
-    transform 150ms ease,
-    color 150ms ease,
-    background 150ms ease,
-    border-color 150ms ease;
-}
-
-.student-schedule__refresh:hover:not(:disabled) {
-  transform: translateY(-1px);
-  color: #ffffff;
-  border-color: var(--ss-green-700);
-  background: var(--ss-green-700);
-}
-
-.student-schedule__refresh:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .student-schedule__error,
 .student-schedule__warning {
   display: flex;
@@ -614,79 +581,25 @@
   padding: 16px;
 }
 
-.student-schedule__calendar-wrap .fc {
-  min-width: 840px;
-  color: var(--ss-text-700);
-  font-size: 10px;
-}
 
-.student-schedule__calendar-wrap .fc-theme-standard td,
-.student-schedule__calendar-wrap .fc-theme-standard th {
-  border-color: #e4ebe6;
-}
 
-.student-schedule__calendar-wrap .fc-theme-standard .fc-scrollgrid {
-  overflow: hidden;
-  border: 1px solid var(--ss-border);
-  border-radius: 10px;
-}
 
-.student-schedule__calendar-wrap .fc-col-header-cell {
-  background: #f6faf7;
-}
 
-.student-schedule__calendar-wrap .fc-col-header-cell-cushion {
-  padding: 9px 6px;
-  color: var(--ss-text-700);
-  font-size: 9px;
-  font-weight: 740;
-  text-decoration: none;
-}
 
-.student-schedule__calendar-wrap .fc-daygrid-day-number {
-  padding: 6px 7px;
-  color: var(--ss-text-600);
-  font-size: 9.5px;
-  font-weight: 650;
-  text-decoration: none;
-}
 
-.student-schedule__calendar-wrap .fc-day-today {
-  /* Keep the full calendar cell identical to the other dates. */
-  background: transparent !important;
-}
 
-.student-schedule__calendar-wrap .fc-day-today .fc-daygrid-day-number {
-  /* Filled green circle around today's number only. */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 27px;
-  min-width: 27px;
-  min-height: 27px;
-  padding: 0;
-  border-radius: 50%;
-  color: #ffffff !important;
-  background: #3b9b46 !important;
-  font-weight: 800;
-  line-height: 1;
-  text-decoration: none;
-}
 
-.student-schedule__calendar-wrap .fc-event {
-  margin: 1px 3px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 8.5px;
-  font-weight: 680;
-}
 
-.student-schedule__calendar-wrap
-  .student-schedule__calendar-class
-  .fc-event-main {
-  padding: 2px 4px;
-}
+
+
+
+
+
+
+
+
+
+
 
 .student-schedule__calendar-wrap .student-schedule__holiday-event {
   border-color: #dc2626 !important;
@@ -1058,17 +971,6 @@
   animation: student-schedule-spin 0.8s linear infinite;
 }
 
-.student-schedule__refresh:focus-visible,
-.student-schedule__month-nav button:focus-visible,
-.student-schedule__view-switch button:focus-visible,
-.student-schedule__class-card:focus-visible,
-.student-schedule__legend-item:focus-visible,
-.student-schedule__modal-close:focus-visible,
-.student-schedule__modal-footer button:focus-visible {
-  outline: 3px solid rgba(21, 148, 82, 0.15);
-  outline-offset: 2px;
-}
-
 body.student-schedule-modal-open {
   overflow: hidden;
 }
@@ -1139,10 +1041,6 @@ body.student-schedule-modal-open {
   }
 
   .student-schedule__term-card {
-    width: 100%;
-  }
-
-  .student-schedule__refresh {
     width: 100%;
   }
 
@@ -1227,7 +1125,7 @@ body.student-schedule-modal-open {
   max-width: 100%;
   min-width: 0;
   min-height: 100%;
-  padding: 27px 27px 42px;
+  padding: 0;
   overflow-x: clip;
   background-color: var(--ptc-canvas-color, #e6f1e9) !important;
   background-image: var(--ptc-canvas-pattern, linear-gradient(#edf6f0, #dce9e0)) !important;
@@ -1312,20 +1210,6 @@ body.student-schedule-modal-open {
 .student-schedule .student-schedule__term-card span {
   color: #e8f9ed;
   font-size: 11px;
-}
-.student-schedule .student-schedule__refresh {
-  min-height: 40px;
-  padding: 9px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.60);
-  border-radius: 10px;
-  color: #075331;
-  background: #f2fff6;
-  font-size: 11px;
-}
-.student-schedule .student-schedule__refresh:hover:not(:disabled) {
-  border-color: #fff;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.19);
 }
 
 /* Compact, informative KPIs with the same colored left accent treatment. */
@@ -1418,10 +1302,9 @@ body.student-schedule-modal-open {
 .student-schedule .student-schedule__class-meta,
 .student-schedule .student-schedule__class-faculty { font-size: 10px; }
 .student-schedule .student-schedule__class-name { font-size: 11px; }
-.student-schedule .student-schedule__calendar-wrap .fc { font-size: 11px; }
-.student-schedule .student-schedule__calendar-wrap .fc-event { font-size: 10px; }
-.student-schedule .student-schedule__calendar-wrap .fc-daygrid-day-number,
-.student-schedule .student-schedule__calendar-wrap .fc-col-header-cell-cushion { font-size: 11px; }
+
+
+
 .student-schedule .student-schedule__count { font-size: 10.5px; }
 .student-schedule .student-schedule__legend { gap: 9px; padding: 15px; }
 .student-schedule .student-schedule__legend-item,
@@ -1541,8 +1424,7 @@ body.student-schedule-modal-open {
     .student-schedule__day-header,
     .student-schedule__month-nav,
     .student-schedule__view-switch,
-    .student-schedule__modal-close,
-    .student-schedule__calendar-wrap .fc-col-header-cell) {
+    .student-schedule__modal-close) {
   border-color: #3c5847;
   color: #e7f2e9;
   background: #294030;
@@ -1583,33 +1465,11 @@ body.student-schedule-modal-open {
   border-color: #40644c;
   background: #284531;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-    .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__calendar-wrap :is(
-    .fc-theme-standard td,
-    .fc-theme-standard th,
-    .fc-theme-standard .fc-scrollgrid) {
-  border-color: #3b5443;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-    .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__calendar-wrap .fc-daygrid-day {
-  background: #1e2c23;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-    .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__calendar-wrap .fc-day-today {
-  /* Same dark background as every other calendar day. */
-  background: #1e2c23 !important;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-    .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__calendar-wrap .fc-day-today .fc-daygrid-day-number {
-  color: #ffffff !important;
-  font-weight: 800;
-  background: #3b9b46 !important;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-    .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__calendar-wrap :is(
-    .fc-daygrid-day-number, .fc-col-header-cell-cushion) {
-  color: #d6e8da;
-}
+
+
+
+
+
 :is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
     .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__holiday {
   border-color: #6c4641;
@@ -1655,12 +1515,7 @@ body.student-schedule-modal-open {
   background: #0c7444;
 }
 
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
-    .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__calendar-wrap .fc {
-  --fc-page-bg-color: #1e2c23;
-  --fc-neutral-bg-color: #23362a;
-  --fc-border-color: #3b5443;
-}
+
 :is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark,
     .dark-mode, .theme-dark, .dark) .student-schedule .student-schedule__summary article:nth-child(2) .student-schedule__summary-icon {
   color: #9dbfff;
@@ -1681,10 +1536,10 @@ body.student-schedule-modal-open {
 }
 
 @media (max-width: 820px) {
-  .dashboard-content > .student-schedule { padding: 22px 18px 32px; }
+  .dashboard-content > .student-schedule { padding: 0; }
 }
 @media (max-width: 580px) {
-  .dashboard-content > .student-schedule { padding: 17px 13px 28px; }
+  .dashboard-content > .student-schedule { padding: 0; }
   .student-schedule .student-schedule__hero {
     min-height: 0;
     padding: 21px 19px;
@@ -1696,4 +1551,556 @@ body.student-schedule-modal-open {
   .student-schedule .student-schedule__panel-header { padding: 15px; }
   .student-schedule .student-schedule__weekly-wrap,
   .student-schedule .student-schedule__calendar-wrap { padding: 11px; }
+}
+/* Approved page canvas */
+.student-schedule {
+  --ss-font: var(--ptc-font-scale, 1);
+  --ss-space: var(--ptc-compact-scale, 1);
+  --ss-bg: #ffffff;
+  --ss-surface: #ffffff;
+  --ss-border: #dae5de;
+  --ss-text-950: #203129;
+  --ss-text-800: #283a30;
+  --ss-text-600: #617369;
+  --ss-text-500: #6c7d73;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  background: #ffffff;
+  background-image: none;
+}
+html body .dashboard-wrapper:has(.student-schedule) {
+  --ptc-canvas-color: #ffffff;
+  --ptc-canvas-pattern: none;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content {
+  padding: 20px 20px 135px !important;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  scrollbar-width: auto;
+  scrollbar-color: #899b91 #edf2ee;
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* Visible page scrollbar */
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar {
+  width: 12px;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar-track {
+  background: #edf2ee;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar-thumb {
+  background: #899b91;
+  border: 2px solid #edf2ee;
+  border-radius: 999px;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar-thumb:hover {
+  background: #677e71;
+}
+
+/* Header */
+.student-schedule .student-schedule__hero {
+  min-height: 0;
+  gap: calc(24px * var(--ss-space));
+  margin-bottom: calc(18px * var(--ss-space));
+  padding: calc(30px * var(--ss-space)) calc(32px * var(--ss-space));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  box-shadow: none;
+}
+.student-schedule .student-schedule__hero::before,
+.student-schedule .student-schedule__hero::after { content: none; }
+.student-schedule .student-schedule__eyebrow {
+  margin-bottom: calc(11px * var(--ss-space));
+  color: #f6fff9;
+  font-size: calc(12px * var(--ss-font));
+  font-weight: 750;
+  letter-spacing: .045em;
+}
+.student-schedule .student-schedule__hero h1 {
+  color: #f6fff9;
+  font-size: clamp(calc(27px * var(--ss-font)), 3vw, calc(40px * var(--ss-font)));
+  font-weight: 760;
+  line-height: 1.17;
+  letter-spacing: -.025em;
+}
+.student-schedule .student-schedule__hero p {
+  color: #e0f2e7;
+  font-size: calc(14px * var(--ss-font));
+  line-height: 1.6;
+}
+.student-schedule .student-schedule__student-line,
+.student-schedule .student-schedule__student-line strong,
+.student-schedule .student-schedule__student-line span {
+  color: #f0fff4;
+  font-size: calc(12px * var(--ss-font));
+}
+.student-schedule .student-schedule__term-card {
+  min-width: min(220px, 100%);
+  padding: calc(13px * var(--ss-space));
+  border-color: rgba(255,255,255,.3);
+  border-radius: 10px;
+  background: rgba(255,255,255,.13);
+}
+.student-schedule .student-schedule__term-card small {
+  color: #e1f5e8;
+  font-size: calc(10px * var(--ss-font));
+}
+.student-schedule .student-schedule__term-card strong {
+  color: #ffffff;
+  font-size: calc(15px * var(--ss-font));
+  overflow-wrap: anywhere;
+}
+.student-schedule .student-schedule__term-card span {
+  color: #e0f2e7;
+  font-size: calc(12px * var(--ss-font));
+}
+
+/* Overview cards */
+.student-schedule .student-schedule__summary {
+  gap: calc(14px * var(--ss-space));
+  margin-bottom: calc(18px * var(--ss-space));
+}
+.student-schedule .student-schedule__summary article,
+.student-schedule .student-schedule__summary article:nth-child(n) {
+  min-width: 0;
+  min-height: 112px;
+  padding: calc(17px * var(--ss-space));
+  border: 1px solid var(--ss-border);
+  border-left: 3px solid #0d7444;
+  border-radius: 13px;
+  background: var(--ss-surface);
+  box-shadow: 0 3px 14px rgba(18,48,30,.045);
+}
+.student-schedule .student-schedule__summary article:nth-child(2) { border-left-color: #386a9b; }
+.student-schedule .student-schedule__summary article:nth-child(3) { border-left-color: #c18a31; }
+.student-schedule .student-schedule__summary article:nth-child(4) { border-left-color: #73559e; }
+.student-schedule .student-schedule__summary small { font-size: calc(12px * var(--ss-font)); }
+.student-schedule .student-schedule__summary strong {
+  font-size: calc(23px * var(--ss-font));
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+/* Calendar and schedule panels */
+.student-schedule .student-schedule__workspace,
+.student-schedule .student-schedule__panel,
+.student-schedule .student-schedule__unscheduled {
+  border-color: var(--ss-border);
+  border-radius: 14px;
+  background: var(--ss-surface);
+  box-shadow: 0 3px 14px rgba(18,48,30,.045);
+}
+.student-schedule .student-schedule__workspace-header,
+.student-schedule .student-schedule__panel-header {
+  padding: calc(20px * var(--ss-space));
+  background: var(--ss-surface);
+  border-color: var(--ss-border);
+}
+.student-schedule .student-schedule__section-kicker {
+  color: #0d7444;
+  font-size: calc(11px * var(--ss-font));
+}
+.student-schedule .student-schedule__workspace-header h2,
+.student-schedule .student-schedule__panel-header h2 {
+  font-size: calc(20px * var(--ss-font));
+  font-weight: 760;
+}
+.student-schedule .student-schedule__workspace-header p,
+.student-schedule .student-schedule__state span,
+.student-schedule .student-schedule__panel-empty,
+.student-schedule .student-schedule__panel-loading {
+  font-size: calc(12px * var(--ss-font));
+}
+.student-schedule .student-schedule__month-nav button,
+.student-schedule .student-schedule__view-switch button {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: calc(12px * var(--ss-font));
+}
+.student-schedule .student-schedule__class-card > strong,
+.student-schedule .student-schedule__day-header strong,
+.student-schedule .student-schedule__legend-item strong { font-size: calc(13px * var(--ss-font)); }
+.student-schedule .student-schedule__class-name,
+.student-schedule .student-schedule__class-time,
+.student-schedule .student-schedule__class-meta,
+.student-schedule .student-schedule__class-faculty,
+.student-schedule .student-schedule__legend-item small,
+.student-schedule .student-schedule__unscheduled-item small,
+.student-schedule .student-schedule__holiday small { font-size: calc(12px * var(--ss-font)); }
+
+
+
+
+/* Dark mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule {
+  --ss-bg: #111719;
+  --ss-surface: #192226;
+  --ss-border: #35464b;
+  --ss-text-950: #f1f5f6;
+  --ss-text-800: #e3ecee;
+  --ss-text-600: #aab8bd;
+  --ss-text-500: #aab8bd;
+  background: #111719;
+  background-image: none;
+  color: #f1f5f6;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.student-schedule) {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content {
+  scrollbar-color: #72878b #192226;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar-track {
+  background: #192226;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar-thumb {
+  background: #72878b;
+  border-color: #192226;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content::-webkit-scrollbar-thumb:hover {
+  background: #9bafb3;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content,
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .student-schedule {
+  background-color: #111719 !important;
+  background-image: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__hero {
+  background: linear-gradient(105deg, #093522, #0b5133);
+  border-color: #245642;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__summary article:nth-child(n),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule :is(.student-schedule__workspace, .student-schedule__panel, .student-schedule__unscheduled) {
+  background: #192226;
+  border-color: #35464b;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__summary article:nth-child(1) { border-left-color: #65d49b; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__summary article:nth-child(2) { border-left-color: #8fcaff; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__summary article:nth-child(3) { border-left-color: #ebc08b; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__summary article:nth-child(4) { border-left-color: #cfb9f2; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule :is(.student-schedule__workspace-header, .student-schedule__panel-header) {
+  background: #192226;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__section-kicker { color: #8bd8ad; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule :is(.student-schedule__month-nav, .student-schedule__view-switch, .student-schedule__day, .student-schedule__day-header, .student-schedule__legend-item, .student-schedule__unscheduled-item, .student-schedule__detail) {
+  background: #20292e;
+  border-color: #35464b;
+  color: #f1f5f6;
+}
+
+
+
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__class-card {
+  background: #20292e;
+  border-top-color: #35464b;
+  border-right-color: #35464b;
+  border-bottom-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__class-card :is(strong, span) { color: #e3ecee; }
+
+/* Responsive */
+@media (max-width: 860px) {
+  html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content { padding: 18px 18px 135px !important; }
+  .student-schedule .student-schedule__hero { padding: calc(25px * var(--ss-space)); }
+}
+@media (max-width: 580px) {
+  html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content { padding: 13px 13px 135px !important; }
+  .student-schedule .student-schedule__hero { padding: calc(21px * var(--ss-space)); }
+  .student-schedule .student-schedule__term-card { min-width: 0; width: 100%; }
+  .student-schedule .student-schedule__summary article { min-height: 90px; }
+}
+
+/* Lightweight monthly calendar */
+.student-schedule .student-schedule__calendar-wrap {
+  padding: calc(16px * var(--ss-space, 1));
+  overflow-x: auto;
+}
+.student-schedule .student-schedule__month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 760px;
+  overflow: hidden;
+  border: 1px solid #dce6df;
+  border-radius: 12px;
+  background: #ffffff;
+}
+.student-schedule .student-schedule__month-weekday {
+  padding: calc(12px * var(--ss-space, 1)) 8px;
+  border-bottom: 1px solid #dce6df;
+  border-right: 1px solid #dce6df;
+  background: #f3f8f5;
+  color: #2c5340;
+  font-size: calc(12px * var(--ss-font, 1));
+  font-weight: 740;
+  text-align: center;
+}
+.student-schedule .student-schedule__month-weekday:nth-child(7) { border-right: 0; }
+.student-schedule .student-schedule__month-cell {
+  min-height: calc(118px * var(--ss-space, 1));
+  min-width: 0;
+  padding: 8px;
+  border-right: 1px solid #e1eae4;
+  border-bottom: 1px solid #e1eae4;
+  background: #ffffff;
+  color: #203129;
+}
+.student-schedule .student-schedule__month-cell:nth-child(7n) { border-right: 0; }
+.student-schedule .student-schedule__month-cell.is-empty { background: #f7faf8; }
+.student-schedule .student-schedule__month-date {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 3px;
+  border-radius: 8px;
+  color: #344a3e;
+  font-size: calc(12px * var(--ss-font, 1));
+  font-weight: 730;
+}
+.student-schedule .student-schedule__month-cell.is-today .student-schedule__month-date {
+  background: #0d7444;
+  color: #ffffff;
+}
+.student-schedule .student-schedule__month-holiday {
+  display: block;
+  margin: 4px 0;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: #fff0ef;
+  color: #9d3b30;
+  font-size: calc(10px * var(--ss-font, 1));
+  font-weight: 730;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.student-schedule .student-schedule__month-events { display: grid; gap: 4px; margin-top: 4px; }
+.student-schedule .student-schedule__month-event {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 29px;
+  padding: 5px 6px;
+  border: 1px solid #dce6df;
+  border-left: 3px solid #0d7444;
+  border-radius: 6px;
+  background: #f7faf8;
+  color: #203129;
+  cursor: pointer;
+  text-align: left;
+  font-size: calc(10.5px * var(--ss-font, 1));
+}
+.student-schedule .student-schedule__month-event:hover,
+.student-schedule .student-schedule__month-event:focus-visible {
+  background: #eaf6ef;
+  border-top-color: #a2cbb2;
+  border-right-color: #a2cbb2;
+  border-bottom-color: #a2cbb2;
+}
+.student-schedule .student-schedule__month-event strong { color: inherit; font-weight: 760; overflow-wrap: anywhere; }
+.student-schedule .student-schedule__month-event small { color: #5e7167; font-size: calc(9px * var(--ss-font, 1)); }
+/* Month day expansion */
+.student-schedule .student-schedule__month-more {
+  width: 100%;
+  padding: 6px 7px;
+  border: 1px solid #c9dfd1;
+  border-radius: 6px;
+  background: #edf6f0;
+  color: #17613d;
+  font-size: calc(10px * var(--ss-font, 1));
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.student-schedule .student-schedule__month-more:hover,
+.student-schedule .student-schedule__month-more:focus-visible {
+  background: #dceee2;
+  border-color: #8fbea2;
+}
+.student-schedule .student-schedule__month-more:focus-visible {
+  outline: 2px solid #0d7444;
+  outline-offset: 2px;
+}
+
+/* Holiday notice */
+.student-schedule .student-schedule__holiday {
+  background: #fff8f6;
+  border-color: #eccbc6;
+}
+.student-schedule .student-schedule__holiday strong { color: #71332e; }
+.student-schedule .student-schedule__holiday small { color: #875e59; }
+.student-schedule .student-schedule__holiday > span { color: #a53e34; }
+
+/* Dark mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-grid {
+  background: #192226;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-weekday {
+  background: #26343a;
+  border-color: #35464b;
+  color: #dce9e5;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-cell {
+  background: #192226;
+  border-color: #35464b;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-cell.is-empty { background: #151e21; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-date { color: #f1f5f6; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-cell.is-today .student-schedule__month-date {
+  background: #17774b;
+  color: #ffffff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-holiday {
+  background: #4a302f;
+  color: #ffd0c7;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-event {
+  background: #243137;
+  border-top-color: #42545a;
+  border-right-color: #42545a;
+  border-bottom-color: #42545a;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-event:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-event:focus-visible {
+  background: #2e4147;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-event small { color: #b5c6ca; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-more {
+  background: #2a4036;
+  border-color: #466858;
+  color: #c7f1d8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-more:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__month-more:focus-visible {
+  background: #355745;
+  border-color: #77ad8b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__holiday {
+  background: #382b2b;
+  border-color: #70504c;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__holiday strong { color: #ffe1da; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__holiday small { color: #e3bcb5; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__holiday > span { color: #ffaaa1; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__day-header strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__day-header > span { color: #e0ece8; }
+
+/* Scroll and page width */
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) {
+  min-width: 0;
+  max-width: 100%;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) > .dashboard-content {
+  max-width: 100%;
+}
+html body .dashboard-wrapper .dashboard-content > .student-schedule,
+.student-schedule .student-schedule__workspace,
+.student-schedule .student-schedule__weekly-wrap,
+.student-schedule .student-schedule__calendar-wrap {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.student-schedule .student-schedule__weekly-wrap,
+.student-schedule .student-schedule__calendar-wrap {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+/* The dashboard shell may own scrolling instead of .dashboard-content. */
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule) {
+  scrollbar-width: auto;
+  scrollbar-color: #899b91 #edf2ee;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule)::-webkit-scrollbar {
+  width: 12px;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule)::-webkit-scrollbar-track {
+  background: #edf2ee;
+}
+html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .student-schedule)::-webkit-scrollbar-thumb {
+  background: #899b91;
+  border: 2px solid #edf2ee;
+  border-radius: 999px;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule) {
+  scrollbar-color: #85999f #192226;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule)::-webkit-scrollbar-track {
+  background: #192226;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .student-schedule)::-webkit-scrollbar-thumb {
+  background: #85999f;
+  border-color: #192226;
+}
+
+/* Class details modal - dark mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal {
+  color: #f1f5f6;
+  background: #192226;
+  border: 1px solid #405258;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .55);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-footer {
+  background: #192226;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-body {
+  background: #192226;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__detail {
+  background: #20292e;
+  border-color: #405258;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__detail-icon {
+  color: #a9d9be;
+  background: #2b443a;
+  border-color: #456858;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-header h2,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__detail strong {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-header p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__detail small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__detail span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-footer > span {
+  color: #b5c4c8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-close {
+  color: #dce7e9;
+  background: #263238;
+  border-color: #4b5f65;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-close:hover {
+  background: #34464b;
+  color: #ffffff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-footer button {
+  color: #ffffff;
+  background: #0b7446;
+  border-color: #138858;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .student-schedule .student-schedule__modal-footer button:hover {
+  background: #0e8953;
 }

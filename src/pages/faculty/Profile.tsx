@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   AtSign,
   BadgeCheck,
   Building2,
@@ -12,7 +11,6 @@ import {
   IdCard,
   Mail,
   Phone,
-  RefreshCw,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
@@ -125,7 +123,6 @@ export default function FacultyProfile() {
 
   const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -152,11 +149,7 @@ export default function FacultyProfile() {
 
     const loadProfile = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setError("");
 
@@ -219,7 +212,6 @@ export default function FacultyProfile() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -254,67 +246,13 @@ export default function FacultyProfile() {
       <main className="faculty-profile-page">
         <section className="faculty-profile-page__hero">
           <div className="faculty-profile-page__hero-main">
-            <button
-              type="button"
-              className="faculty-profile-page__back"
-              onClick={() => navigate("/faculty/dashboard")}
-            >
-              <ArrowLeft size={16} strokeWidth={2.1} />
-              Dashboard
-            </button>
-
-            <div className="faculty-profile-page__identity">
-              <div
-                className="faculty-profile-page__avatar"
-                aria-label={`${fullName} initials`}
-              >
-                {initials}
-              </div>
-
-              <div className="faculty-profile-page__identity-copy">
-                <div className="faculty-profile-page__eyebrow">
-                  <span>
-                    <UserRound size={15} strokeWidth={2.2} />
-                  </span>
-                  Faculty · Profile
-                </div>
-
-                <h1>{loading ? "Loading profile..." : fullName}</h1>
-
-                <div className="faculty-profile-page__identity-meta">
-                  <span>
-                    <IdCard size={14} />
-                    {loading
-                      ? "Loading employee number..."
-                      : displayValue(faculty?.employee_number)}
-                  </span>
-
-                  {!loading && faculty && (
-                    <span
-                      className={`faculty-profile-page__status ${
-                        isActiveStatus
-                          ? "faculty-profile-page__status--active"
-                          : ""
-                      }`}
-                    >
-                      <BadgeCheck size={14} />
-                      {employmentStatus}
-                    </span>
-                  )}
-                </div>
-              </div>
+            <div className="faculty-profile-page__eyebrow">
+              <span><UserRound size={16} strokeWidth={2.1} /></span>
+              Faculty · Profile
             </div>
+            <h1>My Profile</h1>
+            <p>View your personal and employment profile information recorded in the PTC Portal.</p>
           </div>
-
-          <button
-            type="button"
-            className="faculty-profile-page__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {error && (
@@ -360,50 +298,32 @@ export default function FacultyProfile() {
 
         {!error && !loading && faculty && (
           <>
-            <section className="faculty-profile-page__summary">
-              <article>
-                <span className="faculty-profile-page__summary-icon">
-                  <Hash size={18} />
-                </span>
-                <div>
-                  <small>Employee Number</small>
-                  <strong>{displayValue(faculty.employee_number)}</strong>
+            <section className="faculty-profile-page__identity" aria-label="Faculty identity">
+              <div className="faculty-profile-page__identity-main">
+                <div className="faculty-profile-page__avatar" aria-label={`${fullName} initials`}>
+                  {initials}
                 </div>
-              </article>
-
-              <article>
-                <span className="faculty-profile-page__summary-icon">
-                  <Building2 size={18} />
-                </span>
+                <div className="faculty-profile-page__identity-copy">
+                  <span className="faculty-profile-page__identity-label">Faculty</span>
+                  <h2>{fullName}</h2>
+                  <div className="faculty-profile-page__identity-meta">
+                    <IdCard size={14} aria-hidden="true" />
+                    {displayValue(faculty.employee_number)}
+                  </div>
+                </div>
+              </div>
+              <div className="faculty-profile-page__identity-details">
                 <div>
-                  <small>Department</small>
-                  <strong>
-                    {faculty.department_id
-                      ? `Department ${faculty.department_id}`
-                      : "Not recorded"}
+                  <span>Department</span>
+                  <strong>{faculty.department_id ? `Department ${faculty.department_id}` : "Not recorded"}</strong>
+                </div>
+                <div>
+                  <span>Employment</span>
+                  <strong className={`faculty-profile-page__status ${isActiveStatus ? "faculty-profile-page__status--active" : ""}`}>
+                    <BadgeCheck size={14} aria-hidden="true" /> {employmentStatus}
                   </strong>
                 </div>
-              </article>
-
-              <article>
-                <span className="faculty-profile-page__summary-icon">
-                  <ShieldCheck size={18} />
-                </span>
-                <div>
-                  <small>Employment</small>
-                  <strong>{employmentStatus}</strong>
-                </div>
-              </article>
-
-              <article>
-                <span className="faculty-profile-page__summary-icon">
-                  <CalendarDays size={18} />
-                </span>
-                <div>
-                  <small>Hire Date</small>
-                  <strong>{formatDate(faculty.hire_date)}</strong>
-                </div>
-              </article>
+              </div>
             </section>
 
             <div className="faculty-profile-page__content-grid">
@@ -425,39 +345,51 @@ export default function FacultyProfile() {
 
                 <div className="faculty-profile-page__field-grid">
                   <div className="faculty-profile-page__field">
-                    <span>First Name</span>
-                    <strong>{displayValue(faculty.first_name)}</strong>
+                    <span className="faculty-profile-page__field-icon"><UserRound size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>First Name</span>
+                      <strong>{displayValue(faculty.first_name)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Middle Name</span>
-                    <strong>{displayValue(faculty.middle_name)}</strong>
+                    <span className="faculty-profile-page__field-icon"><UserRound size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Middle Name</span>
+                      <strong>{displayValue(faculty.middle_name)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Last Name</span>
-                    <strong>{displayValue(faculty.last_name)}</strong>
+                    <span className="faculty-profile-page__field-icon"><UserRound size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Last Name</span>
+                      <strong>{displayValue(faculty.last_name)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Employee Number</span>
-                    <strong>{displayValue(faculty.employee_number)}</strong>
+                    <span className="faculty-profile-page__field-icon"><IdCard size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Employee Number</span>
+                      <strong>{displayValue(faculty.employee_number)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field faculty-profile-page__field--wide">
-                    <span>Email Address</span>
-                    <strong>
-                      <Mail size={14} />
-                      {displayValue(faculty.email)}
-                    </strong>
+                    <span className="faculty-profile-page__field-icon"><Mail size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Email Address</span>
+                      <strong>{displayValue(faculty.email)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field faculty-profile-page__field--wide">
-                    <span>Contact Number</span>
-                    <strong>
-                      <Phone size={14} />
-                      {displayValue(faculty.contact_number)}
-                    </strong>
+                    <span className="faculty-profile-page__field-icon"><Phone size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Contact Number</span>
+                      <strong>{displayValue(faculty.contact_number)}</strong>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -480,31 +412,43 @@ export default function FacultyProfile() {
 
                 <div className="faculty-profile-page__field-grid">
                   <div className="faculty-profile-page__field faculty-profile-page__field--wide">
-                    <span>Username</span>
-                    <strong>
-                      <AtSign size={14} />
-                      {displayValue(faculty.username || session.username)}
-                    </strong>
+                    <span className="faculty-profile-page__field-icon"><AtSign size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Username</span>
+                      <strong>{displayValue(faculty.username || session.username)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Faculty ID</span>
-                    <strong>{displayValue(faculty.faculty_id)}</strong>
+                    <span className="faculty-profile-page__field-icon"><Hash size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Faculty ID</span>
+                      <strong>{displayValue(faculty.faculty_id)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Department ID</span>
-                    <strong>{displayValue(faculty.department_id)}</strong>
+                    <span className="faculty-profile-page__field-icon"><Building2 size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Department ID</span>
+                      <strong>{displayValue(faculty.department_id)}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Employment Status</span>
-                    <strong>{employmentStatus}</strong>
+                    <span className="faculty-profile-page__field-icon"><ShieldCheck size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Employment Status</span>
+                      <strong>{employmentStatus}</strong>
+                    </div>
                   </div>
 
                   <div className="faculty-profile-page__field">
-                    <span>Hire Date</span>
-                    <strong>{formatDate(faculty.hire_date)}</strong>
+                    <span className="faculty-profile-page__field-icon"><CalendarDays size={17} aria-hidden="true" /></span>
+                    <div className="faculty-profile-page__field-copy">
+                      <span>Hire Date</span>
+                      <strong>{formatDate(faculty.hire_date)}</strong>
+                    </div>
                   </div>
                 </div>
               </section>

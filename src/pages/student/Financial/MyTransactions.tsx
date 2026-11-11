@@ -279,7 +279,6 @@ export default function MyTransactions() {
     StudentManualPaymentVerification[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
@@ -293,14 +292,10 @@ export default function MyTransactions() {
   }, [isStudent, navigate]);
 
   const loadTransactions = useCallback(
-    async (showMainLoading = true) => {
+    async () => {
       if (!isStudent) return;
 
-      if (showMainLoading) {
-        setLoading(true);
-      } else {
-        setRefreshing(true);
-      }
+      setLoading(true);
 
       setErrorMessage("");
 
@@ -369,7 +364,6 @@ export default function MyTransactions() {
         );
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [isStudent, navigate],
@@ -482,9 +476,6 @@ export default function MyTransactions() {
               )}
             </div>
 
-            <div className="my-transactions__hero-icon" aria-hidden="true">
-              <ReceiptText size={31} />
-            </div>
           </div>
         </section>
 
@@ -535,19 +526,6 @@ export default function MyTransactions() {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="my-transactions__refresh-button"
-              onClick={() => void loadTransactions(false)}
-              disabled={refreshing}
-            >
-              <RefreshCcw
-                size={16}
-                className={refreshing ? "is-spinning" : ""}
-                aria-hidden="true"
-              />
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
           </div>
 
           <div className="my-transactions__filters">
@@ -686,7 +664,7 @@ export default function MyTransactions() {
         {!loading && (
           <section className="my-transactions__guide">
             <div className="my-transactions__guide-icon" aria-hidden="true">
-              <WalletCards size={20} />
+              <WalletCards size={16} />
             </div>
             <div>
               <strong>Transaction Status Guide</strong>

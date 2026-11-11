@@ -9,10 +9,8 @@ import {
   Clock3,
   FileText,
   GraduationCap,
-  History,
   IdCard,
   Megaphone,
-  RefreshCw,
   UserRound,
 } from "lucide-react";
 
@@ -202,11 +200,6 @@ const secondaryActions = [
     title: "My Profile",
     path: "/student/profile",
     icon: UserRound,
-  },
-  {
-    title: "Academic History",
-    path: "/student/course-history",
-    icon: History,
   },
   {
     title: "Request Document",
@@ -488,7 +481,6 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [scheduleError, setScheduleError] = useState("");
   const [announcementError, setAnnouncementError] = useState("");
@@ -649,11 +641,7 @@ export default function StudentDashboard() {
 
     const loadDashboard = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setProfileError("");
         setScheduleError("");
@@ -663,7 +651,6 @@ export default function StudentDashboard() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -765,24 +752,17 @@ export default function StudentDashboard() {
               Student announcements from one organized workspace.
             </p>
 
-            <div className="student-dashboard__identity-line">
-              <span>{studentNumber}</span>
-              {academicIdentity.length > 0 && <i />}
+          </div>
+          <div className="student-dashboard__identity-line" aria-label="Student academic information">
+            <GraduationCap size={22} aria-hidden="true" />
+            <div>
+              <small>Current Student</small>
+              <strong>{studentNumber}</strong>
               {academicIdentity.length > 0 && (
                 <span>{academicIdentity.join(" · ")}</span>
               )}
             </div>
           </div>
-
-          <button
-            type="button"
-            className="student-dashboard__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {hasPartialError && !loading && (
@@ -791,9 +771,16 @@ export default function StudentDashboard() {
             <div>
               <strong>Some dashboard information is unavailable</strong>
               <p>
-                The rest of your Student dashboard is still available. Use the
-                Refresh button to try loading the missing information again.
+                The rest of your Student dashboard is still available. You can
+                retry loading the missing information below.
               </p>
+              <button
+                type="button"
+                className="student-dashboard__try-again"
+                onClick={() => setRefreshKey((current) => current + 1)}
+              >
+                Try Again
+              </button>
             </div>
           </section>
         )}

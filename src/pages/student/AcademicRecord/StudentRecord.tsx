@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Clock3,
   FileText,
-  RefreshCw,
   RotateCcw,
   ShieldCheck,
   XCircle,
@@ -896,19 +895,6 @@ export default function StudentRecord() {
               remarks, and academic status from approved academic records.
             </p>
           </div>
-          <button
-            type="button"
-            className="student-record-refresh"
-            onClick={refresh}
-            disabled={loading}
-          >
-            <RefreshCw
-              size={16}
-              className={loading ? "is-spinning" : ""}
-              aria-hidden="true"
-            />
-            {loading ? "Refreshing..." : "Refresh Records"}
-          </button>
         </section>
         <section className="student-record-official-notice">
           <div className="student-record-official-icon">
