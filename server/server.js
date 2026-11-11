@@ -31,6 +31,13 @@ import requireRole from "./middleware/requireRole.js";
 import financeRouter from "./routes/finance/index.js";
 import manualPaymentVerificationsRouter from "./routes/manualPaymentVerifications.routes.js";
 
+import gradebookInitializationRouter from "./routes/gradebookInitialization.routes.js";
+import gradebookAssessmentsRouter from "./routes/gradebookAssessments.routes.js";
+import gradebookRosterRouter from "./routes/gradebookRoster.routes.js";
+import gradebookScoresRouter from "./routes/gradebookScores.routes.js";
+import gradebookAttendanceMeetingsRouter from "./routes/gradebookAttendanceMeetings.routes.js";
+import gradebookAttendanceEntriesRouter from "./routes/gradebookAttendanceEntries.routes.js";
+
 const app = express();
 
 // Global middleware
@@ -133,6 +140,49 @@ app.get("/", (req, res) => {
     message: "PTC Student Portal API is running.",
   });
 });
+
+// Gradebook initialization testing
+app.use(
+  "/api/gradebook",
+  authenticate,
+  requireRole("Faculty", "Program Head"),
+  gradebookInitializationRouter,
+);
+
+// Gradebook assessment management
+app.use(
+  "/api/gradebook",
+  authenticate,
+  requireRole("Faculty", "Program Head"),
+  gradebookAssessmentsRouter,
+);
+
+app.use(
+  "/api/gradebook",
+  authenticate,
+  requireRole("Faculty", "Program Head"),
+  gradebookRosterRouter,
+);
+app.use(
+  "/api/gradebook",
+  authenticate,
+  requireRole("Faculty", "Program Head"),
+  gradebookScoresRouter,
+);
+
+app.use(
+  "/api/gradebook",
+  authenticate,
+  requireRole("Faculty", "Program Head"),
+  gradebookAttendanceMeetingsRouter,
+);
+
+app.use(
+  "/api/gradebook",
+  authenticate,
+  requireRole("Faculty", "Program Head"),
+  gradebookAttendanceEntriesRouter,
+);
 
 // 404 handler
 app.use((req, res) => {
