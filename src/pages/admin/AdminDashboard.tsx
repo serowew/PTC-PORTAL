@@ -10,7 +10,6 @@ import {
   Database,
   GraduationCap,
   Megaphone,
-  RefreshCw,
   ShieldCheck,
   UserCheck,
   UserCog,
@@ -233,7 +232,6 @@ export default function AdminDashboard() {
 
   const [sourceErrors, setSourceErrors] = useState<SourceErrors>({});
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const dashboardRequest = useRef<AbortController | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -264,8 +262,6 @@ export default function AdminDashboard() {
 
       if (initialLoad) {
         setLoading(true);
-      } else {
-        setRefreshing(true);
       }
 
       const requests = [
@@ -366,7 +362,6 @@ export default function AdminDashboard() {
           dashboardRequest.current = null;
           if (!controller.signal.aborted) {
             setLoading(false);
-            setRefreshing(false);
           }
         }
       }
@@ -545,20 +540,6 @@ export default function AdminDashboard() {
                 <strong>{user.username}</strong>
               </span>
             </div>
-
-            <button
-              type="button"
-              className="admin-dashboard__refresh"
-              onClick={() => void loadDashboard(false)}
-              disabled={loading || refreshing}
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "is-spinning" : ""}
-                aria-hidden="true"
-              />
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
           </div>
         </section>
 

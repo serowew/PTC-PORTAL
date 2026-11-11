@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   Loader2,
   ReceiptText,
-  RefreshCcw,
   Search,
   UserRound,
   WalletCards,
@@ -743,20 +742,6 @@ export default function FinanceDashboard() {
               <h2>Cashier Ticket Lookup</h2>
               <p>Enter the Finance ticket number presented by the student.</p>
             </div>
-            <button
-              type="button"
-              className="finance-dashboard__refresh"
-              onClick={() => void loadDashboard()}
-              disabled={dashboardLoading}
-            >
-              <RefreshCcw
-                size={16}
-                className={
-                  dashboardLoading ? "finance-dashboard__spin" : undefined
-                }
-              />
-              {dashboardLoading ? "Refreshing..." : "Refresh"}
-            </button>
           </div>
           <form
             className="finance-dashboard__lookup-form"

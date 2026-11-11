@@ -9,7 +9,6 @@ import {
   FileText,
   Loader2,
   ReceiptText,
-  RefreshCw,
   Search,
   UserRound,
   WalletCards,
@@ -508,19 +507,6 @@ export default function CreateStudentTransaction() {
               transaction.
             </p>
           </div>
-          <button
-            type="button"
-            className="finance-create-transaction__refresh"
-            onClick={() => void loadTransactionTypes()}
-            disabled={loadingTypes || submitting}
-          >
-            <RefreshCw
-              size={16}
-              className={loadingTypes ? "is-spinning" : ""}
-              aria-hidden="true"
-            />
-            {loadingTypes ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
         {/* =================================================
             ERROR

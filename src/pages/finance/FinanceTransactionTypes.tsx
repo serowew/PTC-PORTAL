@@ -9,8 +9,6 @@ import {
   Loader2,
   Plus,
   ReceiptText,
-  RefreshCcw,
-  RefreshCw,
   Save,
   Settings2,
   ShieldCheck,
@@ -103,7 +101,6 @@ export default function FinanceTransactionTypes() {
     FinanceTransactionType[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [transactionCode, setTransactionCode] = useState("");
   const [transactionName, setTransactionName] = useState("");
   const [description, setDescription] = useState("");
@@ -129,8 +126,6 @@ export default function FinanceTransactionTypes() {
       }
       if (showLoading) {
         setLoading(true);
-      } else {
-        setRefreshing(true);
       }
       setErrorMessage("");
       try {
@@ -171,7 +166,6 @@ export default function FinanceTransactionTypes() {
         );
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [isFinance, navigate],
@@ -355,15 +349,6 @@ export default function FinanceTransactionTypes() {
               used when creating student Finance tickets.
             </p>
           </div>
-          <button
-            type="button"
-            className="finance-transaction-types__refresh"
-            onClick={() => void loadTransactionTypes(false)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
         <section
           className="finance-transaction-types__summary-grid"
@@ -521,23 +506,6 @@ export default function FinanceTransactionTypes() {
                 in the portal.
               </p>
             </div>
-            <button
-              type="button"
-              className="finance-transaction-types__button finance-transaction-types__button--secondary"
-              onClick={() => void loadTransactionTypes(false)}
-              disabled={refreshing}
-            >
-              {refreshing ? (
-                <Loader2
-                  size={15}
-                  className="finance-transaction-types__spinner"
-                  aria-hidden="true"
-                />
-              ) : (
-                <RefreshCcw size={15} aria-hidden="true" />
-              )}
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
           </div>
           {loading ? (
             <div className="finance-transaction-types__state">

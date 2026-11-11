@@ -1,3 +1,4 @@
+/* Page Layout */
 .programhead-class-management {
   min-height: 100%;
   padding: 28px;
@@ -3725,4 +3726,577 @@
   .programhead-class-management *,
   .programhead-class-management *::before,
   .programhead-class-management *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+
+/* Program Head: My Classes */
+.programhead-class-management {
+  --pcm-bg: #f5f8f6;
+  --pcm-surface: #ffffff;
+  --pcm-border: #dce6e0;
+  --pcm-border-strong: #cddbd2;
+  --pcm-text-950: #1c3025;
+  --pcm-text-800: #294035;
+  --pcm-text-700: #44594e;
+  --pcm-text-600: #64776c;
+  --pcm-text-500: #6b7e73;
+  width: 100%;
+  min-width: 0;
+  padding: calc(28px * var(--ptc-compact-scale, 1));
+  overflow-x: clip;
+  background: var(--pcm-bg);
+  background-image: none;
+  color: var(--pcm-text-950);
+}
+
+/* Keep the old background ornaments out of the content area. */
+.programhead-class-management::before,
+.programhead-class-management::after {
+  content: none;
+  display: none;
+}
+
+/* Header */
+.programhead-class-management .programhead-class-header {
+  min-height: 0;
+  margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  box-shadow: none;
+  color: #f6fff9;
+}
+.programhead-class-management .programhead-class-header::before,
+.programhead-class-management .programhead-class-header::after,
+.programhead-class-management .programhead-class-eyebrow::before {
+  content: none;
+  display: none;
+}
+.programhead-class-management .programhead-class-eyebrow {
+  margin-bottom: 6px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  color: #dcf6e5;
+  letter-spacing: .075em;
+}
+.programhead-class-management .programhead-class-header h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), 3vw, calc(40px * var(--ptc-font-scale, 1)));
+  font-weight: 760;
+  color: #f6fff9;
+  letter-spacing: -.025em;
+}
+.programhead-class-management .programhead-class-header p {
+  max-width: 800px;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+  line-height: 1.55;
+  color: #e4f3e9;
+}
+.programhead-class-management .programhead-classes-owner {
+  margin-top: calc(12px * var(--ptc-compact-scale, 1));
+  padding: 6px 10px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* Assigned classes */
+.programhead-class-management .programhead-classes-list {
+  border: 1px solid var(--pcm-border);
+  border-radius: 14px;
+  background: var(--pcm-surface);
+  box-shadow: 0 3px 14px rgba(15, 49, 31, .04);
+}
+.programhead-class-management .programhead-classes-list__heading {
+  min-height: 0;
+  padding: calc(21px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1));
+  background: var(--pcm-surface);
+  border-color: var(--pcm-border);
+}
+.programhead-class-management .programhead-classes-list__heading::before {
+  content: none;
+  display: none;
+}
+.programhead-class-management .programhead-classes-list__heading h2 {
+  font-size: calc(21px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  color: var(--pcm-text-950);
+}
+.programhead-class-management .programhead-classes-list__heading > span {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  border-radius: 8px;
+}
+
+/* Class table */
+.programhead-class-management .programhead-classes-list__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.programhead-class-management .programhead-classes-list__table { min-width: 960px; }
+.programhead-class-management .programhead-classes-list__table th {
+  padding: calc(13px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 730;
+  line-height: 1.4;
+  background: #f3f7f4;
+  color: #455e50;
+  border-color: var(--pcm-border);
+}
+.programhead-class-management .programhead-classes-list__table td {
+  padding: calc(15px * var(--ptc-compact-scale, 1));
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  line-height: 1.55;
+  color: var(--pcm-text-800);
+  border-color: var(--pcm-border);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.programhead-class-management .programhead-classes-list__table td strong {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  line-height: 1.45;
+  color: var(--pcm-text-950);
+  overflow-wrap: anywhere;
+}
+.programhead-class-management .programhead-classes-list__table td :is(span, small),
+.programhead-class-management .programhead-classes-list__grading {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  line-height: 1.5;
+  color: var(--pcm-text-600);
+  overflow-wrap: anywhere;
+}
+.programhead-class-management .programhead-classes-list__table td .programhead-class-status {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 6px 9px;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.programhead-class-management .programhead-class-manage {
+  min-height: 39px;
+  padding: 9px 13px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* Gradebook modal */
+.programhead-class-management .programhead-gradebook-modal,
+.programhead-class-management .programhead-direct-grade-modal {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  border: 1px solid var(--pcm-border);
+  border-radius: 14px;
+  background: var(--pcm-surface);
+}
+.programhead-class-management .programhead-gradebook-header,
+.programhead-class-management .programhead-direct-grade-header {
+  padding: calc(20px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1));
+  background: linear-gradient(105deg, #07512f, #0d7444);
+}
+.programhead-class-management .programhead-gradebook-header h2,
+.programhead-class-management .programhead-direct-grade-header h2 {
+  font-size: calc(22px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+.programhead-class-management .programhead-gradebook-header p,
+.programhead-class-management .programhead-direct-grade-header p,
+.programhead-class-management .programhead-gradebook-meta,
+.programhead-class-management .programhead-gradebook-meta span {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+/* Gradebook summary */
+.programhead-class-management .programhead-gradebook-summary {
+  gap: calc(10px * var(--ptc-compact-scale, 1));
+}
+.programhead-class-management .programhead-gradebook-summary > div {
+  padding: calc(14px * var(--ptc-compact-scale, 1));
+  border-radius: 10px;
+  border-color: var(--pcm-border);
+  background: #f7faf8;
+}
+.programhead-class-management .programhead-gradebook-summary strong {
+  font-size: calc(21px * var(--ptc-font-scale, 1));
+}
+.programhead-class-management .programhead-gradebook-summary span {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+/* Student grades */
+.programhead-class-management .programhead-gradebook-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  border-color: var(--pcm-border);
+}
+.programhead-class-management .programhead-gradebook-table :is(th, td) {
+  padding: calc(12px * var(--ptc-compact-scale, 1)) calc(13px * var(--ptc-compact-scale, 1));
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.programhead-class-management .programhead-gradebook-student strong {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+.programhead-class-management .programhead-direct-grade-button,
+.programhead-class-management .programhead-gradebook-error button {
+  min-height: 38px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+/* Grade entry and confirmation */
+.programhead-class-management .programhead-direct-grade-modal {
+  overflow-y: auto;
+}
+.programhead-class-management .programhead-direct-grade-form {
+  gap: calc(14px * var(--ptc-compact-scale, 1));
+}
+.programhead-class-management .programhead-direct-grade-form :is(label, select),
+.programhead-class-management .programhead-confirm-grade-review,
+.programhead-class-management .programhead-confirm-grade-record {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+.programhead-class-management .programhead-direct-grade-form select {
+  min-height: 42px;
+  background: var(--pcm-surface);
+  border-color: var(--pcm-border-strong);
+  color: var(--pcm-text-950);
+}
+.programhead-class-management .programhead-direct-grade-form select:disabled {
+  background: #edf2ef;
+  color: #64766a;
+}
+.programhead-class-management .programhead-direct-grade-student,
+.programhead-class-management .programhead-confirm-grade-student,
+.programhead-class-management .programhead-direct-grade-result,
+.programhead-class-management .programhead-confirm-grade-result,
+.programhead-class-management .programhead-confirm-grade-review > div,
+.programhead-class-management .programhead-confirm-grade-record > div {
+  padding: calc(13px * var(--ptc-compact-scale, 1));
+  border-color: var(--pcm-border);
+  border-radius: 10px;
+}
+.programhead-class-management .programhead-direct-grade-actions {
+  gap: calc(12px * var(--ptc-compact-scale, 1));
+  padding: calc(14px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1));
+}
+.programhead-class-management .programhead-direct-grade-actions > button {
+  min-height: 42px;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+
+/* Loading and errors */
+.programhead-class-management .programhead-class-state,
+.programhead-class-management .programhead-gradebook-loading,
+.programhead-class-management .programhead-gradebook-error,
+.programhead-class-management .programhead-gradebook-empty {
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+.programhead-class-management .programhead-class-error {
+  border-radius: 12px;
+}
+
+/* Dark mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content:has(> .programhead-class-management) {
+  background: #111719;
+}
+/* The shared canvas uses !important, so this page needs a scoped override. */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .programhead-class-management {
+  --pcm-bg: #111719;
+  --pcm-surface: #192226;
+  --pcm-border: #35464b;
+  --pcm-border-strong: #455b62;
+  --pcm-text-950: #f3f6f7;
+  --pcm-text-800: #e0e7ea;
+  --pcm-text-700: #c4d0d4;
+  --pcm-text-600: #aab9c0;
+  --pcm-text-500: #9aabb2;
+  background: #111719 !important;
+  background-image: none !important;
+  color: var(--pcm-text-950);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management::before {
+  content: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-class-state,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-modal,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-modal {
+  background: #192226;
+  border-color: #35464b;
+  color: #e0e7ea;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__heading,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-meta,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-actions {
+  background: #192226;
+  border-color: #35464b;
+  color: #e0e7ea;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__heading h2,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-class-state strong {
+  color: #f3f6f7;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__heading > span {
+  background: #243a32;
+  border-color: #38644e;
+  color: #bbebd1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table th,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-table th {
+  background: #20292e;
+  color: #d3e0e5;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table tbody tr,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-table td {
+  background: #192226;
+  border-color: #35464b;
+  color: #dce5e8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table tbody tr:hover td,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-table tbody tr:hover td {
+  background: #26343a;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-student strong {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td :is(span, small),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__grading {
+  color: #aab9c0;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-summary > div,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-table-scroll,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-student,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-confirm-grade-student,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-confirm-grade-result,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-confirm-grade-review > div,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-confirm-grade-record > div,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-loading,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-error,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-gradebook-empty {
+  background: #20292e;
+  border-color: #35464b;
+  color: #dce5e8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management :is(.programhead-gradebook-meta strong, .programhead-gradebook-summary strong, .programhead-direct-grade-student strong, .programhead-confirm-grade-student strong, .programhead-confirm-grade-review strong, .programhead-confirm-grade-record strong, .programhead-direct-grade-result strong, .programhead-gradebook-loading strong, .programhead-gradebook-empty strong) {
+  color: #f3f6f7;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management :is(.programhead-gradebook-meta span, .programhead-gradebook-meta small, .programhead-gradebook-summary span, .programhead-direct-grade-student span, .programhead-direct-grade-student small, .programhead-confirm-grade-student span, .programhead-confirm-grade-student small, .programhead-direct-grade-result span, .programhead-direct-grade-result small) {
+  color: #b2c0c6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-form select {
+  background: #20292e;
+  color: #f3f6f7;
+  border-color: #455b62;
+  color-scheme: dark;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-form select:disabled {
+  background: #2b373d;
+  color: #adbcc3;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-cancel {
+  background: #20292e;
+  color: #e0e7ea;
+  border-color: #455b62;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-warning,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-confirm-grade-warning {
+  background: #393023;
+  color: #f4dfb8;
+  border-color: #78613b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-warning p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-confirm-grade-warning p {
+  color: #f1d6a5;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-class-error {
+  background: #35282a;
+  border-color: #754349;
+  color: #ffd8da;
+}
+
+/* Responsive layout */
+@media (max-width: 1050px) {
+  .programhead-class-management {
+    padding: calc(22px * var(--ptc-compact-scale, 1));
+  }
+  .programhead-class-management .programhead-gradebook-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .programhead-class-management {
+    padding: calc(16px * var(--ptc-compact-scale, 1));
+  }
+  .programhead-class-management .programhead-class-header {
+    padding: calc(23px * var(--ptc-compact-scale, 1));
+  }
+  .programhead-class-management .programhead-classes-list__heading {
+    padding: calc(17px * var(--ptc-compact-scale, 1));
+  }
+  .programhead-class-management .programhead-gradebook-modal,
+  .programhead-class-management .programhead-direct-grade-modal {
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+  .programhead-class-management .programhead-gradebook-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .programhead-class-management .programhead-gradebook-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .programhead-class-management {
+    padding: calc(12px * var(--ptc-compact-scale, 1));
+  }
+  .programhead-class-management .programhead-class-header {
+    padding: calc(20px * var(--ptc-compact-scale, 1));
+  }
+  .programhead-class-management .programhead-gradebook-meta,
+  .programhead-class-management .programhead-gradebook-summary,
+  .programhead-class-management .programhead-direct-grade-form,
+  .programhead-class-management .programhead-confirm-grade-student,
+  .programhead-class-management .programhead-confirm-grade-review,
+  .programhead-class-management .programhead-confirm-grade-record {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .programhead-class-management .programhead-direct-grade-actions {
+    flex-direction: column-reverse;
+  }
+  .programhead-class-management .programhead-direct-grade-actions > button {
+    width: 100%;
+  }
+}
+
+/* Match the shared canvas specificity without editing it. */
+html body .dashboard-wrapper .dashboard-main .dashboard-content > .programhead-class-management {
+  background-color: #f5f8f6 !important;
+  background-image: none !important;
+}
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .dashboard-content > .programhead-class-management {
+  background-color: #111719 !important;
+  background-image: none !important;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .programhead-class-management) > .dashboard-content {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+}
+
+/* Header icon */
+.programhead-class-management .programhead-class-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.programhead-class-management .programhead-class-eyebrow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .10);
+  color: #f6fff9;
+}
+.programhead-class-management .programhead-class-eyebrow-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Keep the status labels readable over their badge backgrounds. */
+.programhead-class-management .programhead-classes-list__table td .programhead-class-status.open {
+  background: #def5e6;
+  border: 1px solid #a5dcc0;
+  color: #125b38;
+}
+.programhead-class-management .programhead-classes-list__table td .programhead-class-status.closed {
+  background: #e8edf0;
+  border: 1px solid #c5d0d5;
+  color: #374a55;
+}
+.programhead-class-management .programhead-classes-list__table td .programhead-class-status.cancelled {
+  background: #fbe5e5;
+  border: 1px solid #e7b8b8;
+  color: #902d2d;
+}
+.programhead-class-management .programhead-classes-list__table td .programhead-classes-list__grading {
+  color: #435e53;
+}
+
+/* Dark mode status colors */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td .programhead-class-status.open {
+  background: #173f30;
+  border-color: #367c59;
+  color: #a8edc6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td .programhead-class-status.closed {
+  background: #2c3941;
+  border-color: #546671;
+  color: #d2dce0;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td .programhead-class-status.cancelled {
+  background: #4a292d;
+  border-color: #895055;
+  color: #ffc7c9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-classes-list__table td .programhead-classes-list__grading {
+  color: #c6d8d2;
+}
+
+/* Dark mode classes and gradebook */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main > .dashboard-content:has(> .programhead-class-management) {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+  background-color: #111719;
+  background-image: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+  --pcm-bg: #111719;
+  --pcm-surface: #192226;
+  --pcm-border: #35464b;
+  --pcm-text-950: #f6fff9;
+  --pcm-text-800: #e5ecef;
+  --pcm-text-700: #c2cdd2;
+  --pcm-text-600: #aab8be;
+  --pcm-text-500: #8c9aa1;
+  background-color: #111719;
+  background-image: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-class-header {
+  border-color: #245642;
+  color: #f6fff9;
+  background: linear-gradient(105deg, #093522, #0b5133);
+  background-image: linear-gradient(105deg, #093522, #0b5133);
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-class-header :is(h1, p, .programhead-class-eyebrow) {
+  color: #f6fff9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management :is(.programhead-classes-list, .programhead-gradebook-modal, .programhead-direct-grade-modal, .programhead-class-state) {
+  border-color: #35464b;
+  background-color: #192226;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management :is(.programhead-gradebook-summary > div, .programhead-gradebook-table-scroll, .programhead-direct-grade-student, .programhead-confirm-grade-student, .programhead-direct-grade-result, .programhead-confirm-grade-result, .programhead-confirm-grade-review > div, .programhead-confirm-grade-record > div) {
+  border-color: #35464b;
+  background-color: #20292e;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management :is(.programhead-classes-list__table th, .programhead-gradebook-table th) {
+  border-color: #35464b;
+  background-color: #20292e;
+  color: #e5ecef;
 }

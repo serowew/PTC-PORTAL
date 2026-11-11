@@ -12,7 +12,6 @@ import {
   GraduationCap,
   LayoutDashboard,
   Megaphone,
-  RefreshCw,
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
@@ -195,10 +194,8 @@ export default function ProgramHeadDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [classError, setClassError] = useState("");
   const [gradeError, setGradeError] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!authenticated) {
@@ -334,11 +331,7 @@ export default function ProgramHeadDashboard() {
 
     const loadDashboard = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setClassError("");
         setGradeError("");
@@ -347,7 +340,6 @@ export default function ProgramHeadDashboard() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -355,7 +347,7 @@ export default function ProgramHeadDashboard() {
     void loadDashboard();
 
     return () => controller.abort();
-  }, [authenticated, userRole, navigate, refreshKey]);
+  }, [authenticated, userRole, navigate]);
 
   const currentAcademicPeriod = useMemo(() => {
     const currentClass = classes.find(
@@ -470,19 +462,6 @@ export default function ProgramHeadDashboard() {
                 </strong>
               </span>
             </div>
-
-            <button
-              type="button"
-              className="programhead-dashboard__refresh"
-              onClick={() => setRefreshKey((current) => current + 1)}
-              disabled={loading || refreshing}
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "is-spinning" : ""}
-              />
-              {refreshing ? "Refreshing" : "Refresh"}
-            </button>
           </div>
         </section>
 

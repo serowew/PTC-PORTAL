@@ -1,41 +1,25 @@
+/* Page shell */
 .admin-user-roles {
-  --aur-green-950: #073b24;
-  --aur-green-900: #0a4b2d;
-  --aur-green-800: #0d653b;
-  --aur-green-700: #0f7a45;
-  --aur-green-600: #159452;
-  --aur-green-100: #dcf5e6;
-  --aur-green-50: #f1fbf5;
-  --aur-text-950: #17201b;
-  --aur-text-800: #28352d;
-  --aur-text-700: #425047;
-  --aur-text-600: #5e6b63;
-  --aur-text-500: #76827b;
-  --aur-border: #dfe8e2;
-  --aur-border-strong: #cfdcd3;
-  --aur-surface: #ffffff;
-  --aur-bg: #f5f8f6;
-  --aur-warning: #8a6414;
-  --aur-warning-soft: #fff9e8;
-
+  --aur-font: var(--ptc-font-scale, 1);
+  --aur-compact: var(--ptc-compact-scale, 1);
+  --aur-canvas: #f7f9f8;
+  --aur-panel: #ffffff;
+  --aur-card: #ffffff;
+  --aur-border: #dbe6df;
+  --aur-text: #1f2f28;
+  --aur-muted: #627368;
+  --aur-accent: #0d7444;
+  --aur-shadow: 0 8px 22px rgba(16, 46, 30, 0.05);
+  --aur-gap: calc(16px * var(--aur-compact));
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   min-height: 100%;
-  padding: 28px 30px 38px;
-  color: var(--aur-text-950);
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(21, 148, 82, 0.055),
-      transparent 30%
-    ),
-    var(--aur-bg);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  margin: 0;
+  padding: calc(24px * var(--aur-compact)) calc(24px * var(--aur-compact)) calc(36px * var(--aur-compact));
+  background: var(--aur-canvas);
+  color: var(--aur-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .admin-user-roles *,
@@ -48,224 +32,225 @@
   font: inherit;
 }
 
+/* Shared canvas fix for this page only */
+html body .dashboard-wrapper:has(.admin-user-roles) {
+  --ptc-canvas-color: #f7f9f8;
+  --ptc-canvas-pattern: none;
+  --ptc-canvas-tiles: auto;
+  --ptc-canvas-offsets: initial;
+}
+
+html body .dashboard-wrapper .dashboard-main:has(.admin-user-roles),
+html body .dashboard-wrapper .dashboard-content:has(.admin-user-roles),
+html body .dashboard-wrapper .dashboard-content .admin-user-roles {
+  background-color: #f7f9f8 !important;
+  background-image: none !important;
+}
+
+/* Header */
 .admin-user-roles__hero {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 16px;
-  padding: 25px 28px;
-  border: 1px solid rgba(15, 122, 69, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0.99) 0%,
-    rgba(247, 253, 249, 0.99) 66%,
-    rgba(230, 247, 237, 0.99) 100%
-  );
-  box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
+  display: block;
+  min-width: 0;
+  margin: 0 0 calc(18px * var(--aur-compact));
+  padding: calc(30px * var(--aur-compact)) calc(32px * var(--aur-compact));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  color: #f6fff9;
 }
 
+.admin-user-roles__hero::before,
 .admin-user-roles__hero::after {
-  content: "";
-  position: absolute;
-  top: -92px;
-  right: -70px;
-  width: 230px;
-  height: 230px;
-  border: 38px solid rgba(15, 122, 69, 0.055);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.admin-user-roles__hero-copy,
-.admin-user-roles__refresh {
-  position: relative;
-  z-index: 1;
+  content: none;
 }
 
 .admin-user-roles__hero-copy {
   min-width: 0;
-  max-width: 760px;
+  max-width: 820px;
 }
 
 .admin-user-roles__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  color: var(--aur-green-800);
-  font-size: 11px;
-  font-weight: 780;
-  letter-spacing: 0.07em;
+  gap: 9px;
+  margin: 0 0 calc(10px * var(--aur-compact));
+  color: #ecfff2;
+  font-size: calc(12px * var(--aur-font));
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  line-height: 1.35;
   text-transform: uppercase;
 }
 
 .admin-user-roles__eyebrow > span {
-  display: inline-flex;
+  display: inline-grid;
+  place-items: center;
   width: 30px;
   height: 30px;
-  align-items: center;
-  justify-content: center;
+  flex: 0 0 30px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 9px;
-  color: var(--aur-green-700);
-  background: var(--aur-green-100);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .admin-user-roles__hero h1 {
   margin: 0;
-  color: var(--aur-text-950);
-  font-size: clamp(28px, 3vw, 36px);
-  font-weight: 780;
-  line-height: 1.14;
+  color: #f6fff9;
+  font-size: clamp(calc(27px * var(--aur-font)), 3vw, calc(40px * var(--aur-font)));
+  font-weight: 760;
+  line-height: 1.15;
   letter-spacing: -0.025em;
 }
 
 .admin-user-roles__hero p {
-  max-width: 720px;
-  margin: 8px 0 0;
-  color: var(--aur-text-600);
-  font-size: 14px;
+  max-width: 760px;
+  margin: calc(10px * var(--aur-compact)) 0 0;
+  color: #e3f5e9;
+  font-size: calc(14px * var(--aur-font));
   line-height: 1.6;
 }
 
-.admin-user-roles__refresh {
-  display: inline-flex;
-  flex: 0 0 auto;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 9px 13px;
-  border: 1px solid #bad8c5;
-  border-radius: 10px;
-  color: var(--aur-green-800);
-  background: #ffffff;
-  font-size: 11px;
-  font-weight: 720;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(20, 55, 34, 0.04);
-  transition:
-    transform 150ms ease,
-    color 150ms ease,
-    background 150ms ease,
-    border-color 150ms ease;
-}
-
-.admin-user-roles__refresh:hover:not(:disabled) {
-  transform: translateY(-1px);
-  color: #ffffff;
-  border-color: var(--aur-green-700);
-  background: var(--aur-green-700);
-}
-
-.admin-user-roles__refresh:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
+/* Summary cards */
 .admin-user-roles__summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--aur-gap);
+  margin: 0 0 calc(18px * var(--aur-compact));
 }
 
 .admin-user-roles__summary article {
   display: flex;
-  min-width: 0;
-  min-height: 84px;
   align-items: center;
-  gap: 11px;
-  padding: 13px 14px;
+  gap: calc(13px * var(--aur-compact));
+  min-width: 0;
+  min-height: calc(102px * var(--aur-compact));
+  padding: calc(18px * var(--aur-compact));
   border: 1px solid var(--aur-border);
+  border-left: 4px solid #3e9878;
   border-radius: 13px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(20, 55, 34, 0.035);
+  background: var(--aur-card);
+  box-shadow: var(--aur-shadow);
 }
 
-.admin-user-roles__summary-icon {
-  display: inline-flex;
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d8eade;
-  border-radius: 11px;
-  color: var(--aur-green-700);
-  background: var(--aur-green-50);
+.admin-user-roles__summary article:nth-child(2) {
+  border-left-color: #6f95b2;
+}
+
+.admin-user-roles__summary article:nth-child(3) {
+  border-left-color: #2fa777;
+}
+
+.admin-user-roles__summary article:nth-child(4) {
+  border-left-color: #8c79bb;
 }
 
 .admin-user-roles__summary article > div {
-  display: grid;
   min-width: 0;
-  gap: 2px;
+  display: grid;
+  gap: 5px;
+}
+
+.admin-user-roles__summary-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid #bcddd0;
+  border-radius: 11px;
+  background: #e7f4ed;
+  color: #116945;
+}
+
+.admin-user-roles__summary article:nth-child(2) .admin-user-roles__summary-icon {
+  background: #e8f1fa;
+  border-color: #d0dfeb;
+  color: #396c92;
+}
+
+.admin-user-roles__summary article:nth-child(3) .admin-user-roles__summary-icon {
+  background: #e6f6ef;
+  border-color: #c6e8d5;
+  color: #16794d;
+}
+
+.admin-user-roles__summary article:nth-child(4) .admin-user-roles__summary-icon {
+  background: #f0ecfa;
+  border-color: #ddd4ef;
+  color: #6d59a5;
 }
 
 .admin-user-roles__summary small {
-  color: var(--aur-text-500);
-  font-size: 10px;
-  font-weight: 680;
+  color: var(--aur-muted);
+  font-size: calc(12px * var(--aur-font));
+  font-weight: 650;
+  line-height: 1.35;
 }
 
 .admin-user-roles__summary strong {
-  color: var(--aur-text-950);
-  font-size: 21px;
+  color: var(--aur-text);
+  font-size: calc(28px * var(--aur-font));
   font-weight: 780;
-  line-height: 1.1;
+  line-height: 1.14;
+  overflow-wrap: anywhere;
 }
 
+/* Warning */
 .admin-user-roles__warning {
   display: flex;
   align-items: flex-start;
-  gap: 9px;
-  margin-bottom: 14px;
-  padding: 11px 13px;
-  border: 1px solid #ecd9a8;
-  border-radius: 10px;
-  color: var(--aur-warning);
-  background: var(--aur-warning-soft);
+  gap: 11px;
+  margin: 0 0 calc(18px * var(--aur-compact));
+  padding: calc(14px * var(--aur-compact)) calc(16px * var(--aur-compact));
+  border: 1px solid #e9c994;
+  border-radius: 11px;
+  background: #fff8e9;
+  color: #885b1a;
 }
 
 .admin-user-roles__warning > svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
+  flex: 0 0 18px;
+  margin-top: 2px;
 }
 
 .admin-user-roles__warning > div {
+  min-width: 0;
   display: grid;
-  gap: 2px;
+  gap: 4px;
 }
 
 .admin-user-roles__warning strong {
-  font-size: 11px;
-  font-weight: 740;
+  font-size: calc(13px * var(--aur-font));
+  font-weight: 720;
 }
 
 .admin-user-roles__warning span {
-  font-size: 10px;
-  line-height: 1.45;
+  font-size: calc(13px * var(--aur-font));
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
+/* Directory section */
 .admin-user-roles__workspace {
-  overflow: hidden;
+  min-width: 0;
+  padding: 0;
   border: 1px solid var(--aur-border);
-  border-radius: 16px;
-  background: var(--aur-surface);
-  box-shadow: 0 7px 24px rgba(20, 55, 34, 0.045);
+  border-radius: 14px;
+  background: var(--aur-panel);
+  overflow: hidden;
+  box-shadow: var(--aur-shadow);
 }
 
 .admin-user-roles__workspace-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
-  padding: 18px 20px;
+  flex-wrap: wrap;
+  gap: calc(16px * var(--aur-compact));
+  margin: 0;
+  padding: calc(24px * var(--aur-compact));
   border-bottom: 1px solid var(--aur-border);
-  background: linear-gradient(180deg, #ffffff, #fbfdfb);
 }
 
 .admin-user-roles__workspace-header > div:first-child {
@@ -274,207 +259,367 @@
 
 .admin-user-roles__section-kicker {
   display: block;
-  margin-bottom: 3px;
-  color: var(--aur-green-700);
-  font-size: 9.5px;
+  margin: 0 0 7px;
+  color: #0d7444;
+  font-size: calc(11px * var(--aur-font));
   font-weight: 760;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.075em;
   text-transform: uppercase;
 }
 
 .admin-user-roles__workspace-header h2 {
   margin: 0;
-  color: var(--aur-text-950);
-  font-size: 18px;
+  color: var(--aur-text);
+  font-size: calc(22px * var(--aur-font));
   font-weight: 760;
-  line-height: 1.3;
+  line-height: 1.24;
+  letter-spacing: -0.015em;
 }
 
 .admin-user-roles__workspace-header p {
-  margin: 4px 0 0;
-  color: var(--aur-text-500);
-  font-size: 10.5px;
-  line-height: 1.45;
+  margin: 6px 0 0;
+  color: var(--aur-muted);
+  font-size: calc(13px * var(--aur-font));
+  line-height: 1.55;
 }
 
 .admin-user-roles__loading {
   display: inline-flex;
-  flex: 0 0 auto;
   align-items: center;
-  gap: 7px;
-  color: var(--aur-text-500);
-  font-size: 10px;
+  gap: 8px;
+  flex: 0 0 auto;
+  color: var(--aur-muted);
+  font-size: calc(12px * var(--aur-font));
   font-weight: 650;
+}
+
+.admin-user-roles__spinner {
+  animation: aur-spin 0.9s linear infinite;
+  flex: 0 0 auto;
+}
+
+@keyframes aur-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .admin-user-roles__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  padding: 16px;
+  align-items: stretch;
+  gap: var(--aur-gap);
+  padding: calc(22px * var(--aur-compact));
 }
 
+/* Role cards */
 .admin-user-roles__card {
-  position: relative;
+  --aur-role-accent: #247b56;
+  --aur-role-icon-bg: #e7f4ed;
+  --aur-role-icon-border: #c8e3d3;
   display: flex;
-  min-width: 0;
   flex-direction: column;
-  padding: 17px;
+  min-width: 0;
+  padding: calc(20px * var(--aur-compact));
   border: 1px solid var(--aur-border);
-  border-radius: 13px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(20, 55, 34, 0.03);
-  transition:
-    transform 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  border-top: 3px solid var(--aur-role-accent);
+  border-radius: 12px;
+  background: var(--aur-card);
 }
 
-.admin-user-roles__card:hover {
-  transform: translateY(-2px);
-  border-color: #c5d9cb;
-  box-shadow: 0 8px 20px rgba(20, 55, 34, 0.06);
+.admin-user-roles__card:nth-child(2) {
+  --aur-role-accent: #547ba6;
+  --aur-role-icon-bg: #eaf1f9;
+  --aur-role-icon-border: #cbdbea;
+}
+
+.admin-user-roles__card:nth-child(3) {
+  --aur-role-accent: #8a72b7;
+  --aur-role-icon-bg: #f0ecf8;
+  --aur-role-icon-border: #ded3ef;
+}
+
+.admin-user-roles__card:nth-child(4) {
+  --aur-role-accent: #a87837;
+  --aur-role-icon-bg: #faf0e3;
+  --aur-role-icon-border: #edd6ba;
+}
+
+.admin-user-roles__card:nth-child(5) {
+  --aur-role-accent: #288f89;
+  --aur-role-icon-bg: #e4f5f3;
+  --aur-role-icon-border: #c4e2de;
 }
 
 .admin-user-roles__card-header {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: calc(12px * var(--aur-compact));
+  min-width: 0;
 }
 
 .admin-user-roles__role-icon {
-  display: inline-flex;
-  width: 42px;
-  height: 42px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d8eade;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid var(--aur-role-icon-border);
   border-radius: 11px;
-  color: var(--aur-green-700);
-  background: var(--aur-green-50);
+  background: var(--aur-role-icon-bg);
+  color: var(--aur-role-accent);
 }
 
 .admin-user-roles__role-title {
   min-width: 0;
+  flex: 1 1 110px;
 }
 
 .admin-user-roles__role-title small {
   display: block;
-  margin-bottom: 2px;
-  color: var(--aur-text-500);
-  font-size: 8.8px;
-  font-weight: 700;
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
+  margin-bottom: 3px;
+  color: var(--aur-muted);
+  font-size: calc(11px * var(--aur-font));
+  font-weight: 650;
 }
 
 .admin-user-roles__role-title h3 {
   margin: 0;
-  color: var(--aur-text-950);
-  font-size: 16px;
-  font-weight: 760;
-  line-height: 1.25;
+  color: var(--aur-text);
+  font-size: calc(19px * var(--aur-font));
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .admin-user-roles__count {
   display: inline-flex;
-  min-height: 27px;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
-  border: 1px solid #d8e9de;
-  border-radius: 999px;
-  color: var(--aur-green-800);
-  background: var(--aur-green-50);
-  font-size: 9px;
-  font-weight: 720;
-  white-space: nowrap;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 6px 11px;
+  border: 1px solid var(--aur-role-icon-border);
+  border-radius: 8px;
+  background: var(--aur-role-icon-bg);
+  color: var(--aur-role-accent);
+  font-size: calc(12px * var(--aur-font));
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .admin-user-roles__description {
-  min-height: 42px;
-  margin: 13px 0 14px;
-  color: var(--aur-text-600);
-  font-size: 10.8px;
-  line-height: 1.55;
+  margin: calc(17px * var(--aur-compact)) 0;
+  color: var(--aur-muted);
+  font-size: calc(13px * var(--aur-font));
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .admin-user-roles__permissions {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #e3ebe5;
-  border-radius: 10px;
-  background: #fafcfb;
+  min-width: 0;
+  margin-top: auto;
+  padding-top: calc(15px * var(--aur-compact));
+  border-top: 1px solid var(--aur-border);
 }
 
 .admin-user-roles__permissions-heading {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 9px;
-  color: var(--aur-green-700);
+  gap: 8px;
+  margin-bottom: calc(12px * var(--aur-compact));
+  color: var(--aur-text);
+  font-size: calc(12px * var(--aur-font));
+  font-weight: 750;
 }
 
-.admin-user-roles__permissions-heading span {
-  font-size: 9px;
-  font-weight: 760;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.admin-user-roles__permissions-heading svg {
+  flex: 0 0 15px;
+  color: var(--aur-role-accent);
 }
 
 .admin-user-roles__permissions ul {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: calc(8px * var(--aur-compact));
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .admin-user-roles__permissions li {
-  display: flex;
+  display: inline-flex;
   align-items: flex-start;
   gap: 8px;
-  min-height: 31px;
-  padding: 7px 9px;
-  border: 1px solid #e8eeea;
-  border-radius: 8px;
-  color: var(--aur-text-700);
-  background: #ffffff;
-  font-size: 10.3px;
-  font-weight: 610;
-  line-height: 1.4;
+  min-width: 0;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--aur-border);
+  border-radius: 7px;
+  background: #f7f9f8;
+  color: var(--aur-text);
+  font-size: calc(12px * var(--aur-font));
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .admin-user-roles__permissions li > span {
   flex: 0 0 6px;
   width: 6px;
   height: 6px;
-  margin-top: 4px;
-  border-radius: 50%;
-  background: var(--aur-green-600);
+  margin-top: 0.5em;
+  border-radius: 999px;
+  background: var(--aur-role-accent);
 }
 
-.admin-user-roles__refresh:focus-visible {
-  outline: 3px solid rgba(21, 148, 82, 0.15);
-  outline-offset: 2px;
+/* Dark mode */
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.admin-user-roles) {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+  --ptc-canvas-tiles: auto;
+  --ptc-canvas-offsets: initial;
 }
 
-.admin-user-roles__spinner {
-  animation: admin-user-roles-spin 0.8s linear infinite;
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(.admin-user-roles),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content:has(.admin-user-roles),
+html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content .admin-user-roles {
+  background-color: #111719 !important;
+  background-image: none !important;
 }
 
-@keyframes admin-user-roles-spin {
-  to {
-    transform: rotate(360deg);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles {
+  --aur-canvas: #111719;
+  --aur-panel: #192226;
+  --aur-card: #20292e;
+  --aur-border: #35464b;
+  --aur-text: #f1f5f6;
+  --aur-muted: #aab8bd;
+  background: #111719;
+  color: #f1f5f6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__hero {
+  border-color: #245642;
+  background: linear-gradient(105deg, #093522, #0b5133);
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__card {
+  background: #20292e;
+  border-right-color: #35464b;
+  border-bottom-color: #35464b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article {
+  border-top-color: #35464b;
+  border-left-color: #3e9878;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article:nth-child(2) {
+  border-left-color: #7096b3;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article:nth-child(3) {
+  border-left-color: #2fa777;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article:nth-child(4) {
+  border-left-color: #9180bd;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary-icon {
+  background: #203d34;
+  border-color: #3b6454;
+  color: #90d4b3;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article:nth-child(2) .admin-user-roles__summary-icon {
+  background: #26394a;
+  border-color: #445e74;
+  color: #a6c7e4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article:nth-child(3) .admin-user-roles__summary-icon {
+  background: #203e32;
+  border-color: #396551;
+  color: #91dbb4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__summary article:nth-child(4) .admin-user-roles__summary-icon {
+  background: #342e47;
+  border-color: #605377;
+  color: #c4b6e9;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__workspace {
+  background: #192226;
+  border-color: #35464b;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__workspace-header {
+  border-color: #35464b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__section-kicker {
+  color: #68c89b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__card:nth-child(1) {
+  --aur-role-accent: #80cda5;
+  --aur-role-icon-bg: #25463a;
+  --aur-role-icon-border: #3b6b53;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__card:nth-child(2) {
+  --aur-role-accent: #a5c3e9;
+  --aur-role-icon-bg: #2a3b4c;
+  --aur-role-icon-border: #49617c;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__card:nth-child(3) {
+  --aur-role-accent: #c6b0eb;
+  --aur-role-icon-bg: #373048;
+  --aur-role-icon-border: #65547d;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__card:nth-child(4) {
+  --aur-role-accent: #e4bd82;
+  --aur-role-icon-bg: #40382c;
+  --aur-role-icon-border: #726044;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__card:nth-child(5) {
+  --aur-role-accent: #91d8d0;
+  --aur-role-icon-bg: #24433f;
+  --aur-role-icon-border: #426c66;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__permissions li {
+  background: #253035;
+  border-color: #35464b;
+  color: #e7eff0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .admin-user-roles__warning {
+  background: #352d20;
+  border-color: #6e5636;
+  color: #f2d4a5;
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .admin-user-roles__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1050px) {
-  .admin-user-roles__summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .admin-user-roles__grid {
     grid-template-columns: 1fr;
   }
@@ -482,66 +627,54 @@
 
 @media (max-width: 760px) {
   .admin-user-roles {
-    padding: 22px 18px 32px;
+    padding: calc(18px * var(--aur-compact));
   }
 
   .admin-user-roles__hero {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .admin-user-roles__refresh {
-    align-self: flex-start;
+    padding: calc(24px * var(--aur-compact));
   }
 
   .admin-user-roles__workspace-header {
-    align-items: flex-start;
-    flex-direction: column;
+    padding: calc(20px * var(--aur-compact));
+  }
+
+  .admin-user-roles__grid {
+    padding: calc(16px * var(--aur-compact));
   }
 }
 
 @media (max-width: 540px) {
   .admin-user-roles {
-    padding: 18px 12px 28px;
+    padding: calc(14px * var(--aur-compact));
   }
 
   .admin-user-roles__hero {
-    padding: 20px 17px;
-    border-radius: 15px;
-  }
-
-  .admin-user-roles__hero h1 {
-    font-size: 26px;
+    padding: calc(22px * var(--aur-compact)) calc(19px * var(--aur-compact));
   }
 
   .admin-user-roles__summary {
     grid-template-columns: 1fr;
   }
 
-  .admin-user-roles__refresh {
-    width: 100%;
+  .admin-user-roles__summary article {
+    min-height: 84px;
   }
 
-  .admin-user-roles__grid {
-    padding: 12px;
+  .admin-user-roles__card {
+    padding: calc(16px * var(--aur-compact));
   }
 
   .admin-user-roles__card-header {
-    grid-template-columns: 38px minmax(0, 1fr);
-  }
-
-  .admin-user-roles__role-icon {
-    width: 38px;
-    height: 38px;
+    align-items: flex-start;
   }
 
   .admin-user-roles__count {
-    grid-column: 1 / -1;
-    justify-self: flex-start;
+    flex: 0 1 auto;
   }
 
-  .admin-user-roles__description {
-    min-height: 0;
+  .admin-user-roles__permissions ul {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -549,537 +682,7 @@
   .admin-user-roles *,
   .admin-user-roles *::before,
   .admin-user-roles *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
-}
-
-/* ========================================================================
-   PTC PORTAL • ADMIN / USER ROLES — GREEN DASHBOARD VISUAL REFRESH
-   CSS-only, scoped to the existing UserRoles.tsx class names.
-   No layout/sidebar/footer logic, role permissions, or API behavior is changed.
-   ======================================================================== */
-
-/* Match the edge-to-edge content canvas used on Registrar/Admin dashboards.
-   This targets ONLY the User Roles route, never the shared sidebar or footer. */
-.dashboard-main:has(> .dashboard-content > .admin-user-roles) > .dashboard-content {
-  padding: 0 !important;
-  background-color: #dbece1;
-}
-
-/* Suppress only the otherwise blank header strip when its actual header is
-   hidden by the existing layout. No other page's header is touched. */
-.dashboard-main:has(.admin-user-roles) > .header-container:has(.app-header.hide) {
-  display: none;
-}
-
-.dashboard-content > .admin-user-roles {
-  --aur-text-950: #19291f;
-  --aur-text-800: #334438;
-  --aur-text-700: #45574c;
-  --aur-text-600: #61746a;
-  --aur-text-500: #718478;
-  --aur-border: #d4e5d9;
-  --aur-border-strong: #c2dacb;
-  --aur-surface: #ffffff;
-  isolation: isolate;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  max-width: none;
-  min-height: 100%;
-  margin: 0;
-  padding: 25px 27px 42px;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  color: var(--aur-text-950);
-  background-color: #dfefe5;
-  background-image:
-    linear-gradient(129deg, transparent 0 20%, rgba(45,146,91,.055) 20% 26%, transparent 26% 46%, rgba(27,142,81,.04) 46% 52%, transparent 52%),
-    repeating-linear-gradient(45deg, transparent 0 66px, rgba(36,138,85,.025) 66px 97px, transparent 97px 160px),
-    radial-gradient(ellipse at 96% 12%, rgba(199,183,104,.14), transparent 30%),
-    linear-gradient(145deg, #d0e7da 0%, #e9f5ed 55%, #d9eadd 100%);
-  animation: none !important;
-}
-
-/* BRAND HEADER ---------------------------------------------------------- */
-.admin-user-roles .admin-user-roles__hero {
-  isolation: isolate;
-  min-height: 183px;
-  margin: 0 0 17px;
-  padding: 29px 31px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 23px;
-  background: linear-gradient(112deg, #044b2d 0%, #086238 53%, #147e48 83%, #2c9b61 100%);
-  box-shadow: 0 17px 31px rgba(7,69,40,.16);
-}
-.admin-user-roles .admin-user-roles__hero::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: min(37%, 400px);
-  background:
-    radial-gradient(circle at 36% 8%, rgba(211,255,230,.14) 0 19%, transparent 20%),
-    radial-gradient(circle at 53% 27%, rgba(188,245,211,.12) 0 29%, transparent 30%);
-  pointer-events: none;
-}
-.admin-user-roles .admin-user-roles__hero::after {
-  top: auto;
-  right: -78px;
-  bottom: -105px;
-  width: 270px;
-  height: 270px;
-  border: 1px solid rgba(255,255,255,.19);
-  box-shadow: 0 0 0 42px rgba(255,255,255,.052), 0 0 0 85px rgba(255,255,255,.035);
-}
-.admin-user-roles .admin-user-roles__hero-copy { position: relative; z-index: 1; }
-.admin-user-roles .admin-user-roles__eyebrow {
-  margin-bottom: 12px;
-  color: #edfff3;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .035em;
-}
-.admin-user-roles .admin-user-roles__eyebrow > span {
-  width: 29px;
-  height: 29px;
-  color: #ffffff;
-  background: rgba(255,255,255,.14);
-  border: 1px solid rgba(255,255,255,.29);
-  border-radius: 9px;
-}
-.admin-user-roles .admin-user-roles__hero h1 {
-  color: #ffffff !important;
-  font-size: clamp(29px, 2.75vw, 39px);
-  font-weight: 800;
-  line-height: 1.13;
-  text-shadow: 0 1px 2px rgba(0,0,0,.1);
-}
-.admin-user-roles .admin-user-roles__hero p {
-  max-width: 780px;
-  margin-top: 10px;
-  color: #e3f8eb !important;
-  font-size: 13px;
-  line-height: 1.7;
-}
-.admin-user-roles .admin-user-roles__refresh {
-  min-height: 45px;
-  padding: 10px 15px;
-  border: 1px solid rgba(255,255,255,.87);
-  border-radius: 12px;
-  color: #075433;
-  background: #f8fff9;
-  font-size: 12px;
-  font-weight: 760;
-  box-shadow: 0 7px 19px rgba(0,29,15,.13);
-}
-.admin-user-roles .admin-user-roles__refresh:hover:not(:disabled) {
-  color: #063e27;
-  border-color: #ffffff;
-  background: #e6f9ec;
-}
-.admin-user-roles .admin-user-roles__refresh:focus-visible {
-  outline: 3px solid rgba(212,255,225,.85);
-  outline-offset: 3px;
-}
-
-/* FOUR LIVE SUMMARY CARDS ----------------------------------------------- */
-.admin-user-roles .admin-user-roles__summary {
-  gap: 13px;
-  margin-bottom: 18px;
-}
-.admin-user-roles .admin-user-roles__summary article {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  min-height: 113px;
-  gap: 14px;
-  padding: 18px 17px 18px 21px;
-  border: 1px solid #dcece2;
-  border-radius: 18px;
-  background: #effaf3;
-  box-shadow: 0 9px 22px rgba(18,72,42,.085);
-}
-.admin-user-roles .admin-user-roles__summary article::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  background: #0b9c57;
-}
-.admin-user-roles .admin-user-roles__summary article::after {
-  content: "";
-  position: absolute;
-  top: -48px;
-  right: -42px;
-  width: 126px;
-  height: 126px;
-  border-radius: 50%;
-  background: rgba(10,138,71,.075);
-  pointer-events: none;
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(2) {
-  background: #fff9e9;
-  border-color: #f5ead0;
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(2)::before { background: #e2a000; }
-.admin-user-roles .admin-user-roles__summary article:nth-child(2)::after { background: rgba(218,160,12,.085); }
-.admin-user-roles .admin-user-roles__summary article:nth-child(3) {
-  background: #f0f6ff;
-  border-color: #dfebfd;
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(3)::before { background: #2864f2; }
-.admin-user-roles .admin-user-roles__summary article:nth-child(3)::after { background: rgba(51,113,233,.085); }
-.admin-user-roles .admin-user-roles__summary article:nth-child(4) {
-  background: #faf3ff;
-  border-color: #ecdefb;
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(4)::before { background: #7d37e7; }
-.admin-user-roles .admin-user-roles__summary article:nth-child(4)::after { background: rgba(120,65,214,.08); }
-.admin-user-roles .admin-user-roles__summary-icon {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 46px;
-  width: 46px;
-  height: 46px;
-  color: #ffffff;
-  background: #07623a;
-  border: 1px solid rgba(0,91,53,.15);
-  border-radius: 13px;
-  box-shadow: 0 7px 15px rgba(0,67,36,.12);
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(2) .admin-user-roles__summary-icon {
-  color: #a97200; background: #fff5d8; border-color: #f1d88e;
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(3) .admin-user-roles__summary-icon {
-  color: #2563eb; background: #e8f2ff; border-color: #bfd8ff;
-}
-.admin-user-roles .admin-user-roles__summary article:nth-child(4) .admin-user-roles__summary-icon {
-  color: #7734dc; background: #f3eaff; border-color: #e0caff;
-}
-.admin-user-roles .admin-user-roles__summary article > div { position: relative; z-index: 1; }
-.admin-user-roles .admin-user-roles__summary small {
-  color: #617267;
-  font-size: 10px;
-  font-weight: 780;
-  letter-spacing: .025em;
-  text-transform: uppercase;
-}
-.admin-user-roles .admin-user-roles__summary strong {
-  color: #18231d;
-  font-size: clamp(22px, 2.2vw, 29px);
-  font-weight: 800;
-}
-
-/* WORKSPACE / DIRECTORY ------------------------------------------------- */
-.admin-user-roles .admin-user-roles__warning {
-  align-items: center;
-  gap: 13px;
-  margin-bottom: 18px;
-  padding: 15px 17px;
-  border: 1px solid #eed8a4;
-  border-left: 4px solid #d9a02f;
-  border-radius: 13px;
-  color: #775015;
-  background: #fff7e5;
-  box-shadow: 0 6px 15px rgba(120,86,12,.04);
-}
-.admin-user-roles .admin-user-roles__warning strong { font-size: 12px; }
-.admin-user-roles .admin-user-roles__warning span { font-size: 11px; }
-.admin-user-roles .admin-user-roles__workspace {
-  border: 1px solid #d5e5da;
-  border-radius: 21px;
-  background: #ffffff;
-  box-shadow: 0 12px 30px rgba(24,71,45,.10);
-}
-.admin-user-roles .admin-user-roles__workspace-header {
-  gap: 18px;
-  padding: 23px 25px;
-  border-bottom: 1px solid #e3ede6;
-  background: linear-gradient(110deg, #fff 0%, #fff 66%, #f2faf5 100%);
-}
-.admin-user-roles .admin-user-roles__section-kicker {
-  display: inline-flex;
-  align-items: center;
-  width: max-content;
-  max-width: 100%;
-  min-height: 25px;
-  margin: 0 0 8px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  color: #0a7842;
-  background: #e7f6ec;
-  font-size: 10px;
-  font-weight: 800;
-}
-.admin-user-roles .admin-user-roles__workspace-header h2 {
-  color: #172820;
-  font-size: clamp(20px, 1.7vw, 25px);
-  font-weight: 790;
-}
-.admin-user-roles .admin-user-roles__workspace-header p {
-  max-width: 690px;
-  color: #65766a;
-  font-size: 11px;
-  line-height: 1.6;
-}
-.admin-user-roles .admin-user-roles__loading {
-  color: #0c7642;
-  background: #eff9f2;
-  border: 1px solid #d9eade;
-  border-radius: 10px;
-  padding: 9px 11px;
-}
-.admin-user-roles .admin-user-roles__grid {
-  gap: 17px;
-  padding: 21px;
-}
-.admin-user-roles .admin-user-roles__card {
-  gap: 0;
-  padding: 21px;
-  border: 1px solid #dce9df;
-  border-radius: 17px;
-  background: #ffffff;
-  box-shadow: 0 5px 18px rgba(16,70,40,.05);
-}
-.admin-user-roles .admin-user-roles__card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  border-radius: 16px 0 0 16px;
-  background: #158452;
-}
-.admin-user-roles .admin-user-roles__card:nth-child(2)::before { background: #daa01f; }
-.admin-user-roles .admin-user-roles__card:nth-child(3)::before { background: #2c70e8; }
-.admin-user-roles .admin-user-roles__card:nth-child(4)::before { background: #9253d7; }
-.admin-user-roles .admin-user-roles__card:nth-child(5)::before { background: #168e8a; }
-.admin-user-roles .admin-user-roles__card:hover {
-  border-color: #b9dbc6;
-  box-shadow: 0 10px 24px rgba(16,70,40,.09);
-}
-.admin-user-roles .admin-user-roles__card-header {
-  gap: 12px;
-  grid-template-columns: 48px minmax(0,1fr) auto;
-}
-.admin-user-roles .admin-user-roles__role-icon {
-  width: 48px;
-  height: 48px;
-  color: #ffffff;
-  border: 1px solid #0a7544;
-  border-radius: 13px;
-  background: #0a7443;
-  box-shadow: 0 6px 16px rgba(9,89,49,.14);
-}
-.admin-user-roles .admin-user-roles__card:nth-child(2) .admin-user-roles__role-icon { color: #ad7603; border-color: #f0d797; background: #fff4d6; box-shadow: none; }
-.admin-user-roles .admin-user-roles__card:nth-child(3) .admin-user-roles__role-icon { color: #2868de; border-color: #c4dafa; background: #ecf4ff; box-shadow: none; }
-.admin-user-roles .admin-user-roles__card:nth-child(4) .admin-user-roles__role-icon { color: #8745c9; border-color: #e2d0f6; background: #f7efff; box-shadow: none; }
-.admin-user-roles .admin-user-roles__card:nth-child(5) .admin-user-roles__role-icon { color: #0b7e7b; border-color: #bde3df; background: #e7f8f6; box-shadow: none; }
-.admin-user-roles .admin-user-roles__role-title small {
-  color: #77877b;
-  font-size: 10px;
-}
-.admin-user-roles .admin-user-roles__role-title h3 {
-  color: #172820;
-  font-size: 19px;
-  font-weight: 800;
-}
-.admin-user-roles .admin-user-roles__count {
-  padding: 6px 10px;
-  min-height: 31px;
-  border-radius: 10px;
-  color: #11613c;
-  border-color: #cde6d5;
-  background: #ebf8ef;
-  font-size: 10px;
-  font-weight: 760;
-}
-.admin-user-roles .admin-user-roles__description {
-  min-height: 0;
-  margin: 15px 0;
-  color: #5b6e62;
-  font-size: 12px;
-  line-height: 1.65;
-}
-.admin-user-roles .admin-user-roles__permissions {
-  padding: 15px;
-  border: 1px solid #dfece3;
-  border-radius: 12px;
-  background: #f6fbf8;
-}
-.admin-user-roles .admin-user-roles__permissions-heading {
-  gap: 8px;
-  margin-bottom: 11px;
-  color: #0a7d45;
-}
-.admin-user-roles .admin-user-roles__permissions-heading span {
-  font-size: 10px;
-  font-weight: 800;
-}
-.admin-user-roles .admin-user-roles__permissions ul { gap: 7px; }
-.admin-user-roles .admin-user-roles__permissions li {
-  min-height: 34px;
-  padding: 9px 11px;
-  border: 1px solid #e2ece5;
-  border-radius: 9px;
-  color: #3c5947;
-  background: #fff;
-  font-size: 11px;
-  font-weight: 650;
-}
-.admin-user-roles .admin-user-roles__permissions li > span { background: #189153; }
-
-/* Page-scoped responsive behavior. Do not change Sidebar or Footer. */
-@media (max-width: 1200px) {
-  .admin-user-roles .admin-user-roles__card-header {
-    grid-template-columns: 44px minmax(0,1fr);
-  }
-  .admin-user-roles .admin-user-roles__count {
-    grid-column: 2;
-    justify-self: start;
-  }
-}
-@media (max-width: 1050px) {
-  .admin-user-roles .admin-user-roles__summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .admin-user-roles .admin-user-roles__grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 760px) {
-  .dashboard-content > .admin-user-roles { padding: 20px 17px 32px; }
-  .admin-user-roles .admin-user-roles__hero { min-height: 0; padding: 26px 23px; flex-direction: column; align-items: stretch; }
-  .admin-user-roles .admin-user-roles__refresh { align-self: flex-start; }
-  .admin-user-roles .admin-user-roles__workspace-header { padding: 19px; flex-direction: column; align-items: flex-start; }
-  .admin-user-roles .admin-user-roles__grid { padding: 15px; }
-}
-@media (max-width: 540px) {
-  .dashboard-content > .admin-user-roles { padding: 16px 12px 28px; }
-  .admin-user-roles .admin-user-roles__hero { padding: 23px 18px; border-radius: 17px; }
-  .admin-user-roles .admin-user-roles__hero h1 { font-size: 28px; }
-  .admin-user-roles .admin-user-roles__hero p { font-size: 12px; }
-  .admin-user-roles .admin-user-roles__refresh { width: 100%; }
-  .admin-user-roles .admin-user-roles__summary { grid-template-columns: 1fr; }
-  .admin-user-roles .admin-user-roles__summary article { min-height: 100px; }
-  .admin-user-roles .admin-user-roles__workspace { border-radius: 17px; }
-  .admin-user-roles .admin-user-roles__grid { padding: 12px; gap: 12px; }
-  .admin-user-roles .admin-user-roles__card { padding: 16px; }
-  .admin-user-roles .admin-user-roles__card-header { grid-template-columns: 42px minmax(0,1fr); }
-  .admin-user-roles .admin-user-roles__role-icon { width: 42px; height: 42px; }
-  .admin-user-roles .admin-user-roles__count { grid-column: 1 / -1; }
-}
-
-/* Dark mode — applies only to this page and its content canvas. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .dashboard-main:has(> .dashboard-content > .admin-user-roles) > .dashboard-content {
-  background: #121d17;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .dashboard-content > .admin-user-roles {
-  --aur-text-950: #e8f4eb;
-  --aur-text-800: #d8e9dc;
-  --aur-text-700: #c1d7c6;
-  --aur-text-600: #afc5b5;
-  --aur-text-500: #9bb0a2;
-  --aur-border: #344d3c;
-  --aur-border-strong: #42604a;
-  --aur-surface: #1a2920;
-  color: #e8f4eb;
-  background-color: #121d17;
-  background-image:
-    radial-gradient(circle at 90% 7%, rgba(21,129,73,.13), transparent 28%),
-    repeating-linear-gradient(45deg, transparent 0 80px, rgba(56,130,83,.04) 80px 110px, transparent 110px 180px),
-    linear-gradient(145deg,#17271d 0%,#101a14 100%);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__hero {
-  border-color: #3d7955;
-  background: linear-gradient(112deg,#05361f 0%,#07502d 58%,#137242 100%);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__summary article {
-  border-color: #315d43;
-  background: #1b3427;
-  box-shadow: none;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__summary article:nth-child(2) { border-color: #706034; background: #3b3421; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__summary article:nth-child(3) { border-color: #375777; background: #1d3049; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__summary article:nth-child(4) { border-color: #634676; background: #322543; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__summary small { color: #c5d2c7; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__summary strong { color: #f0fbf2; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__warning {
-  color: #ffe6b2;
-  background: #3c3020;
-  border-color: #9e7438;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__workspace {
-  background: #1b2920;
-  border-color: #344b3b;
-  box-shadow: none;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__workspace-header {
-  background: #213327;
-  border-color: #364a3c;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__workspace-header h2,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__role-title h3 { color: #eef9f0; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__workspace-header p,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__description { color: #b5cdbb; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__section-kicker {
-  color: #b8f3cf;
-  background: #254b34;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__loading {
-  color: #b7ead0;
-  border-color: #3d6d51;
-  background: #203e2b;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__card {
-  background: #203328;
-  border-color: #375342;
-  box-shadow: none;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__card:hover { border-color: #4e8461; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__role-title small { color: #9fb9a7; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__count {
-  color: #c7f3d7;
-  border-color: #40644a;
-  background: #244d35;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__permissions {
-  background: #1b2d21;
-  border-color: #3b5945;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__permissions-heading { color: #a7efc4; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark, [data-theme="dark"])
-  .admin-user-roles .admin-user-roles__permissions li {
-  color: #cce4d1;
-  background: #25392b;
-  border-color: #3b5a45;
-}
-
-/* No page-entry animation; preserve only the existing spinner and gentle
-   hover/focus affordances. */
-@media (prefers-reduced-motion: reduce) {
-  .admin-user-roles .admin-user-roles__card,
-  .admin-user-roles .admin-user-roles__refresh { transition: none; }
 }

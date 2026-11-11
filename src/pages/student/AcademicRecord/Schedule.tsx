@@ -1,10 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import type { EventClickArg, EventInput } from "@fullcalendar/core";
 
 import {
   AlertTriangle,
@@ -17,7 +12,6 @@ import {
   GraduationCap,
   Info,
   LoaderCircle,
-  RefreshCw,
   UserRound,
   X,
 } from "lucide-react";
@@ -301,25 +295,24 @@ export default function StudentSchedule() {
   const isStudent = session?.role === "Student";
   const authenticated = Boolean(session && token);
 
-  const calendarRef = useRef<FullCalendar | null>(null);
-
   const [scheduleData, setScheduleData] = useState<ScheduleResponse | null>(
     null,
   );
   const [scheduleLoading, setScheduleLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [scheduleError, setScheduleError] = useState("");
 
   const [viewMode, setViewMode] = useState<ViewMode>("week");
+  const [expandedMonthDate, setExpandedMonthDate] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] =
     useState<ScheduleSubject | null>(null);
 
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(() =>
-    new Date().toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    }),
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+  const currentMonth = useMemo(
+    () => currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    [currentDate],
   );
 
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -345,17 +338,13 @@ export default function StudentSchedule() {
   }, [authenticated, isStudent, navigate, session?.role]);
 
   const loadSchedule = useCallback(
-    async (isRefresh = false, signal?: AbortSignal) => {
+    async (signal?: AbortSignal) => {
       if (!authenticated || !isStudent) {
         return;
       }
 
       try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setScheduleLoading(true);
-        }
+        setScheduleLoading(true);
 
         setScheduleError("");
 
@@ -417,7 +406,6 @@ export default function StudentSchedule() {
       } finally {
         if (!signal?.aborted) {
           setScheduleLoading(false);
-          setRefreshing(false);
         }
       }
     },
@@ -430,7 +418,7 @@ export default function StudentSchedule() {
     }
 
     const controller = new AbortController();
-    void loadSchedule(false, controller.signal);
+    void loadSchedule(controller.signal);
 
     return () => controller.abort();
   }, [authenticated, isStudent, loadSchedule]);
@@ -593,57 +581,35 @@ export default function StudentSchedule() {
     return orderedDays.filter((day) => usedDays.has(day));
   }, [weeklyMeetings]);
 
-  const scheduleEvents = useMemo<EventInput[]>(() => {
-    const events: EventInput[] = [];
-
-    scheduledSubjects.forEach((subject) => {
-      const daysOfWeek = parseScheduleDays(subject.offering.schedule_days);
-      const time = parseScheduleTimeRange(subject.offering.schedule_time);
-
-      if (daysOfWeek.length === 0 || !time) {
-        return;
-      }
-
-      const color =
-        subjectColorMap.get(subject.subject_id) || SUBJECT_COLORS[0];
-
-      events.push({
-        id: `subject-${subject.enrollment_subject_id}`,
-        title: `${subject.subject_code} · ${subject.subject_name}`,
-        daysOfWeek,
-        startTime: time.startTime,
-        endTime: time.endTime,
-        backgroundColor: color,
-        borderColor: color,
-        classNames: ["student-schedule__calendar-class"],
-        extendedProps: {
-          kind: "subject",
-          enrollment_subject_id: subject.enrollment_subject_id,
-        },
-      });
+  // Build only the visible month. No recurring-event calendar engine is needed.
+  const monthCells = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+    const today = new Date();
+    const holidayByDate = new Map(holidays.map((holiday) => [holiday.date, holiday]));
+    const byWeekday = new Map<number, WeeklyMeeting[]>();
+    for (const meeting of weeklyMeetings) {
+      const existing = byWeekday.get(meeting.dayNumber) || [];
+      existing.push(meeting);
+      byWeekday.set(meeting.dayNumber, existing);
+    }
+    return Array.from({ length: cellCount }, (_, index) => {
+      const day = index - firstWeekday + 1;
+      if (day < 1 || day > daysInMonth) return null;
+      const weekday = new Date(year, month, day).getDay();
+      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      return {
+        day,
+        dateKey,
+        holiday: holidayByDate.get(dateKey),
+        meetings: byWeekday.get(weekday) || [],
+        isToday: today.getFullYear() === year && today.getMonth() === month && today.getDate() === day,
+      };
     });
-
-    return events;
-  }, [scheduledSubjects, subjectColorMap]);
-
-  const holidayEvents = useMemo<EventInput[]>(
-    () =>
-      holidays.map((holiday) => ({
-        title: holiday.localName || holiday.name,
-        start: holiday.date,
-        allDay: true,
-        classNames: ["student-schedule__holiday-event"],
-        extendedProps: {
-          kind: "holiday",
-        },
-      })),
-    [holidays],
-  );
-
-  const calendarEvents = useMemo(
-    () => [...scheduleEvents, ...holidayEvents],
-    [scheduleEvents, holidayEvents],
-  );
+  }, [currentDate, holidays, weeklyMeetings]);
 
   const currentMonthHolidays = useMemo(
     () =>
@@ -679,66 +645,17 @@ export default function StudentSchedule() {
 
   const totalWeeklyMeetings = weeklyMeetings.length;
 
-  const handlePreviousMonth = () => {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-
-    api.prev();
-    setCurrentMonth(api.view.title);
-    setCurrentDate(api.getDate());
-  };
-
-  const handleToday = () => {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-
-    api.today();
-    setCurrentMonth(api.view.title);
-    setCurrentDate(api.getDate());
-  };
-
-  const handleNextMonth = () => {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-
-    api.next();
-    setCurrentMonth(api.view.title);
-    setCurrentDate(api.getDate());
-  };
-
-  const handleDatesSet = useCallback(
-    (info: {
-      view: {
-        title: string;
-        currentStart: Date;
-      };
-    }) => {
-      setCurrentMonth(info.view.title);
-      setCurrentDate(info.view.currentStart);
-    },
-    [],
-  );
-
-  const handleCalendarEventClick = useCallback(
-    (info: EventClickArg) => {
-      if (info.event.extendedProps.kind !== "subject") {
-        return;
-      }
-
-      const enrollmentSubjectId = Number(
-        info.event.extendedProps.enrollment_subject_id,
-      );
-
-      const subject = scheduledSubjects.find(
-        (item) => item.enrollment_subject_id === enrollmentSubjectId,
-      );
-
-      if (subject) {
-        setSelectedSubject(subject);
-      }
-    },
-    [scheduledSubjects],
-  );
+  // Month navigation updates one date state and never reinitializes the schedule.
+  const handlePreviousMonth = useCallback(() => {
+    setCurrentDate((previous) => new Date(previous.getFullYear(), previous.getMonth() - 1, 1));
+  }, []);
+  const handleToday = useCallback(() => {
+    const today = new Date();
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
+  }, []);
+  const handleNextMonth = useCallback(() => {
+    setCurrentDate((previous) => new Date(previous.getFullYear(), previous.getMonth() + 1, 1));
+  }, []);
 
   if (!authenticated || !session || !isStudent) {
     return null;
@@ -788,19 +705,6 @@ export default function StudentSchedule() {
               </div>
             )}
 
-            <button
-              type="button"
-              className="student-schedule__refresh"
-              onClick={() => void loadSchedule(true)}
-              disabled={scheduleLoading || refreshing}
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "student-schedule__spinner" : ""}
-                aria-hidden="true"
-              />
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
           </div>
         </section>
 
@@ -1062,29 +966,68 @@ export default function StudentSchedule() {
                 </div>
               ) : (
                 <div className="student-schedule__calendar-wrap">
-                  <FullCalendar
-                    ref={calendarRef}
-                    plugins={[dayGridPlugin, interactionPlugin]}
-                    initialView="dayGridMonth"
-                    headerToolbar={false}
-                    height="auto"
-                    events={calendarEvents}
-                    displayEventTime
-                    eventTimeFormat={{
-                      hour: "numeric",
-                      minute: "2-digit",
-                      meridiem: "short",
-                    }}
-                    dayMaxEvents={3}
-                    fixedWeekCount={false}
-                    eventClick={handleCalendarEventClick}
-                    eventDidMount={(info) => {
-                      if (info.event.extendedProps.kind === "subject") {
-                        info.el.title = "Click to view class details";
-                      }
-                    }}
-                    datesSet={handleDatesSet}
-                  />
+                  <div className="student-schedule__month-grid" role="grid" aria-label={`${currentMonth} class calendar`}>
+                    {(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const).map((day) => (
+                      <div className="student-schedule__month-weekday" key={day} role="columnheader">{day}</div>
+                    ))}
+                    {monthCells.map((cell, index) => (
+                      <div
+                        key={cell?.dateKey || `empty-${index}`}
+                        className={`student-schedule__month-cell${!cell ? " is-empty" : ""}${cell?.isToday ? " is-today" : ""}`}
+                        role="gridcell"
+                      >
+                        {cell && (
+                          <>
+                            <span className="student-schedule__month-date">{cell.day}</span>
+                            {cell.holiday && (
+                              <span className="student-schedule__month-holiday" title={cell.holiday.localName || cell.holiday.name}>
+                                {cell.holiday.localName || cell.holiday.name}
+                              </span>
+                            )}
+                            <div className="student-schedule__month-events">
+                              {(expandedMonthDate === cell.dateKey
+                                ? cell.meetings
+                                : cell.meetings.slice(0, 3)
+                              ).map((meeting) => (
+                                <button
+                                  type="button"
+                                  className="student-schedule__month-event"
+                                  key={meeting.key}
+                                  onClick={() => setSelectedSubject(meeting.subject)}
+                                  style={{ borderLeftColor: meeting.color }}
+                                  title={`${meeting.subject.subject_code} · ${meeting.subject.subject_name} — ${formatMinutesForDisplay(meeting.startMinutes)}`}
+                                >
+                                  <strong>{meeting.subject.subject_code}</strong>
+                                  <small>{formatMinutesForDisplay(meeting.startMinutes)}</small>
+                                </button>
+                              ))}
+                              {cell.meetings.length > 3 && (
+                                <button
+                                  type="button"
+                                  className="student-schedule__month-more"
+                                  aria-expanded={expandedMonthDate === cell.dateKey}
+                                  aria-label={
+                                    expandedMonthDate === cell.dateKey
+                                      ? `Show fewer classes on ${currentMonth} ${cell.day}`
+                                      : `Show ${cell.meetings.length - 3} more classes on ${currentMonth} ${cell.day}`
+                                  }
+                                  onClick={() =>
+                                    setExpandedMonthDate((previous) =>
+                                      previous === cell.dateKey ? null : cell.dateKey,
+                                    )
+                                  }
+                                >
+                                  {expandedMonthDate === cell.dateKey
+                                    ? "Show fewer classes"
+                                    : `+${cell.meetings.length - 3} more classes`}
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>

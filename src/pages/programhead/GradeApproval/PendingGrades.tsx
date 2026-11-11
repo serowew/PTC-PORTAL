@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   BookOpenCheck,
   Building2,
   CalendarDays,
@@ -12,7 +11,6 @@ import {
   ClipboardCheck,
   Filter,
   GraduationCap,
-  RefreshCw,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -218,7 +216,6 @@ export default function PendingGrades() {
   const [programHead, setProgramHead] = useState<ProgramHeadInfo | null>(null);
   const [grades, setGrades] = useState<SubmittedGrade[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -251,8 +248,7 @@ export default function PendingGrades() {
 
     const loadSubmittedGrades = async () => {
       try {
-        if (refreshKey === 0) setLoading(true);
-        else setRefreshing(true);
+        setLoading(true);
         setError("");
 
         const response = await authService.authFetch(
@@ -311,7 +307,6 @@ export default function PendingGrades() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -507,12 +502,12 @@ export default function PendingGrades() {
     setReturnError("");
   };
 
-  const closeReturnModal = () => {
+  const closeReturnModal = useCallback(() => {
     if (actionGradeId !== null) return;
     setReturnGrade(null);
     setReturnReason("");
     setReturnError("");
-  };
+  }, [actionGradeId]);
 
   const submitReturn = async () => {
     if (!returnGrade) return;
@@ -580,7 +575,7 @@ export default function PendingGrades() {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = originalOverflow;
     };
-  }, [returnGrade, actionGradeId]);
+  }, [returnGrade, actionGradeId, closeReturnModal]);
 
   if (!authenticated || !session || userRole !== "Program Head") return null;
 
@@ -615,27 +610,6 @@ export default function PendingGrades() {
             )}
           </div>
 
-          <div className="program-head-grades-header-actions">
-            <button
-              type="button"
-              className="program-head-grades-back"
-              onClick={() => navigate("/programhead/dashboard")}
-            >
-              <ArrowLeft size={15} /> Dashboard
-            </button>
-            <button
-              type="button"
-              className="program-head-grades-refresh"
-              onClick={refreshQueue}
-              disabled={loading || refreshing || actionGradeId !== null}
-            >
-              <RefreshCw
-                size={15}
-                className={refreshing ? "program-head-grades-spin" : ""}
-              />
-              {refreshing ? "Refreshing..." : "Refresh Queue"}
-            </button>
-          </div>
         </section>
 
         {programHead && (

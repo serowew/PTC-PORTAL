@@ -10,7 +10,6 @@ import {
   Filter,
   GraduationCap,
   MapPin,
-  RefreshCw,
   Save,
   RotateCcw,
   Search,
@@ -683,15 +682,6 @@ export default function ClassSchedule() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="faculty-schedule-page__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={loading ? "is-spinning" : ""} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {faculty && (

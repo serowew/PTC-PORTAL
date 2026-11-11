@@ -11,7 +11,6 @@ import {
   ClipboardCheck,
   GraduationCap,
   Megaphone,
-  RefreshCw,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -269,7 +268,6 @@ export default function AnnouncementProg() {
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
@@ -300,11 +298,7 @@ export default function AnnouncementProg() {
 
     const loadAnnouncements = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setError("");
 
@@ -400,7 +394,6 @@ export default function AnnouncementProg() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -493,18 +486,6 @@ export default function AnnouncementProg() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="programhead-announcements__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "programhead-announcements__spin" : ""}
-            />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         <section

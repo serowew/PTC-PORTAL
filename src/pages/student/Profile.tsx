@@ -10,7 +10,6 @@ import {
   Mail,
   MapPin,
   Phone,
-  RefreshCw,
   ShieldCheck,
   UserRound,
   UsersRound,
@@ -167,7 +166,6 @@ export default function StudentProfile() {
 
   const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [photoFailed, setPhotoFailed] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -197,11 +195,7 @@ export default function StudentProfile() {
 
     const loadProfile = async () => {
       try {
-        if (refreshKey === 0) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
+        setLoading(true);
 
         setError("");
 
@@ -286,7 +280,6 @@ export default function StudentProfile() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -325,22 +318,13 @@ export default function StudentProfile() {
               Student · Profile
             </div>
 
-            <h1>Student Profile</h1>
+            <h1>My Profile</h1>
             <p>
               View your personal, academic, and guardian information recorded in
               the PTC Portal.
             </p>
           </div>
 
-          <button
-            type="button"
-            className="student-self-profile__refresh"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            disabled={loading || refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {loading && (

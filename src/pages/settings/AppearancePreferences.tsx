@@ -1,3 +1,4 @@
+import "../../styles/AppearancePreferences.css";
 import { useState } from "react";
 import { Check, RotateCcw, Save, Settings2 } from "lucide-react";
 import { authService } from "../../services/auth.service";
@@ -89,52 +90,7 @@ export default function AppearancePreferences() {
 
   return (
     <main className="ptc-appearance-page">
-      <style>{`
-        .ptc-appearance-page { --ap-accent:#11633e; color:#182b21; width:100%; max-width:1020px; margin:0 auto; padding:24px 20px 40px; font-family:inherit; }
-        .ptc-appearance-page *, .ptc-appearance-page *::before, .ptc-appearance-page *::after { box-sizing:border-box; }
-        .ptc-appearance-page .ap-heading { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-        .ptc-appearance-page .ap-heading-icon { background:#e4f4e8; border:1px solid #cde7d4; color:#11633e; padding:11px; border-radius:13px; flex-shrink:0; }
-        .ptc-appearance-page h1 { font-size:clamp(23px, 3vw, 30px); line-height:1.2; margin:0 0 5px; color:#123b27; }
-        .ptc-appearance-page .ap-subtitle, .ptc-appearance-page .ap-muted { color:#60746a; font-size:14px; }
-        .ptc-appearance-page .ap-panel { background:#fff; border:1px solid #dfe8e1; border-radius:16px; padding:22px; margin-bottom:16px; box-shadow:0 6px 22px rgba(21,70,42,.045); }
-        .ptc-appearance-page h2 { font-size:17px; color:#173829; margin:0 0 6px; }
-        .ptc-appearance-page p { margin:0; }
-        .ptc-appearance-page .ap-theme-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:18px; }
-        .ptc-appearance-page .ap-theme-card { appearance:none; width:100%; min-width:0; background:#fff; color:#173829; border:2px solid #e3eae4; padding:11px; border-radius:13px; text-align:left; cursor:pointer; font:inherit; }
-        .ptc-appearance-page .ap-theme-card[aria-pressed='true'] { border-color:#137347; box-shadow:0 0 0 2px rgba(20,114,68,.09); }
-        .ptc-appearance-page .ap-theme-preview { height:100px; border-radius:9px; display:flex; overflow:hidden; border:1px solid rgba(70,90,75,.11); margin-bottom:10px; }
-        .ptc-appearance-page .ap-theme-sidebar { width:29%; padding:10px 7px; display:flex; flex-direction:column; gap:7px; }
-        .ptc-appearance-page .ap-theme-line { display:block; height:6px; border-radius:10px; background:currentColor; opacity:.3; }
-        .ptc-appearance-page .ap-theme-main { flex:1; padding:10px; display:flex; flex-direction:column; gap:9px; }
-        .ptc-appearance-page .ap-theme-hero { height:26px; border-radius:6px; }
-        .ptc-appearance-page .ap-theme-tiles { display:flex; gap:5px; }
-        .ptc-appearance-page .ap-theme-tile { background:rgba(128,142,135,.16); border-radius:5px; flex:1; height:26px; }
-        .ptc-appearance-page .ap-theme-label { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-        .ptc-appearance-page .ap-theme-name { font-weight:700; font-size:14px; }
-        .ptc-appearance-page .ap-theme-description { display:block; font-size:12px; color:#62766a; margin-top:3px; }
-        .ptc-appearance-page .ap-selected { display:inline-flex; align-items:center; gap:3px; background:#e4f5e9; color:#14673e; border-radius:99px; font-size:11px; padding:4px 7px; font-weight:700; }
-        .ptc-appearance-page .ap-font-options { display:flex; flex-wrap:wrap; gap:9px; margin:16px 0; }
-        .ptc-appearance-page .ap-choice { border:1px solid #d7e4db; background:#fff; color:#233b2c; border-radius:9px; padding:10px 14px; cursor:pointer; font:inherit; font-size:13px; font-weight:600; }
-        .ptc-appearance-page .ap-choice[aria-pressed='true'] { color:#075c36; background:#e5f4e9; border-color:#107549; }
-        .ptc-appearance-page .ap-font-preview { border:1px solid #e0e9e2; background:#f6faf7; border-radius:11px; padding:17px 19px; transition:padding .15s; }
-        .ptc-appearance-page .ap-font-preview.ap-compact { padding:9px 12px; }
-        .ptc-appearance-page .ap-preview-title { font-weight:750; margin-bottom:12px; }
-        .ptc-appearance-page .ap-preview-body { margin-bottom:5px; }
-        .ptc-appearance-page .ap-compact-label { display:flex; align-items:center; gap:11px; cursor:pointer; margin-top:15px; }
-        .ptc-appearance-page .ap-compact-label input { width:18px; height:18px; accent-color:#147449; flex-shrink:0; }
-        .ptc-appearance-page .ap-actions { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:14px; margin-top:20px; }
-        .ptc-appearance-page .ap-action-group { display:flex; flex-wrap:wrap; gap:9px; }
-        .ptc-appearance-page .ap-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:9px; padding:11px 15px; cursor:pointer; font:inherit; font-size:13px; font-weight:700; }
-        .ptc-appearance-page .ap-button-primary { background:#11633e; border:1px solid #11633e; color:white; }
-        .ptc-appearance-page .ap-button-primary:disabled { opacity:.5; cursor:not-allowed; }
-        .ptc-appearance-page .ap-button-secondary { background:#fff; border:1px solid #ccdcd0; color:#245337; }
-        .ptc-appearance-page .ap-message { color:#28633e; font-size:13px; }
-        .ptc-appearance-page button:focus-visible, .ptc-appearance-page input:focus-visible { outline:3px solid #e2ab35; outline-offset:3px; }
-        .ptc-appearance-page .ap-dialog-backdrop { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; padding:20px; }
-        .ptc-appearance-page .ap-dialog { background:#fff; border-radius:14px; padding:24px; width:min(100%,410px); box-shadow:0 18px 60px rgba(0,0,0,.24); }
-        .ptc-appearance-page .ap-dialog p { color:#5b6b60; margin:10px 0 20px; line-height:1.5; }
-        @media(max-width:640px) { .ptc-appearance-page { padding:16px 12px 28px; } .ptc-appearance-page .ap-panel { padding:15px; } .ptc-appearance-page .ap-theme-grid { gap:9px; } .ptc-appearance-page .ap-theme-preview { height:75px; } .ptc-appearance-page .ap-theme-main { padding:6px; } .ptc-appearance-page .ap-theme-sidebar { padding:7px 4px; } }
-      `}</style>
+
 
       <header className="ap-heading">
         <div className="ap-heading-icon"><Settings2 size={25} aria-hidden="true" /></div>

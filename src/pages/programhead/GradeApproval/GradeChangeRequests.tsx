@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   BadgeCheck,
   BookOpenCheck,
   Check,
@@ -11,7 +10,6 @@ import {
   Clock3,
   FilePenLine,
   GraduationCap,
-  RefreshCw,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -255,7 +253,6 @@ export default function GradeChangeRequests() {
 
   const [requests, setRequests] = useState<GradeChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -305,8 +302,6 @@ export default function GradeChangeRequests() {
       try {
         if (refreshKey === 0) {
           setLoading(true);
-        } else {
-          setRefreshing(true);
         }
 
         setError("");
@@ -373,7 +368,6 @@ export default function GradeChangeRequests() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     };
@@ -464,7 +458,7 @@ export default function GradeChangeRequests() {
     setActionNotice(null);
   };
 
-  const closeReviewDialog = () => {
+  const closeReviewDialog = useCallback(() => {
     if (processingRequestId !== null) {
       return;
     }
@@ -472,7 +466,7 @@ export default function GradeChangeRequests() {
     setReviewDialog(null);
     setReviewRemarks("");
     setReviewError("");
-  };
+  }, [processingRequestId]);
 
   const submitReviewAction = async () => {
     if (!reviewDialog) {
@@ -586,7 +580,7 @@ export default function GradeChangeRequests() {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [reviewDialog, processingRequestId]);
+  }, [reviewDialog, processingRequestId, closeReviewDialog]);
 
   if (!authenticated || userRole !== "Program Head") {
     return null;
@@ -597,15 +591,6 @@ export default function GradeChangeRequests() {
       <main className="ph-grade-change-page">
         <section className="ph-grade-change-header">
           <div>
-            <button
-              type="button"
-              className="ph-grade-change-back"
-              onClick={() => navigate("/programhead/dashboard")}
-            >
-              <ArrowLeft size={15} />
-              Dashboard
-            </button>
-
             <div className="ph-grade-change-eyebrow">
               <span>
                 <FilePenLine size={16} />
@@ -622,19 +607,6 @@ export default function GradeChangeRequests() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="ph-grade-change-refresh"
-            onClick={refreshQueue}
-            disabled={loading || refreshing || processingRequestId !== null}
-          >
-            <RefreshCw
-              size={16}
-              className={refreshing ? "ph-grade-change-spin" : ""}
-            />
-
-            {refreshing ? "Refreshing..." : "Refresh Queue"}
-          </button>
         </section>
 
         {actionNotice && (
@@ -784,8 +756,6 @@ export default function GradeChangeRequests() {
 
         {!loading && !error && filteredRequests.length === 0 && (
           <section className="ph-grade-change-empty">
-            <CheckCircle2 size={26} />
-
             <strong>No matching INC completion requests</strong>
 
             <p>

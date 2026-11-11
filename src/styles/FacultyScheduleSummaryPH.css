@@ -1,16 +1,15 @@
-/* ===========================================================================
-   PTC Portal | Program Head | Faculty Schedule Summary
-   Dashboard-matched visual design; CSS-only; keeps existing TSX and API logic.
-   Scoped selectors: no sidebar/footer changes.
-   =========================================================================== */
-
-/* Remove shared content inset only on this route. */
-.dashboard-main:has(> .dashboard-content > .faculty-summary-page) > .dashboard-content {
+/* Page canvas */
+.dashboard-wrapper .dashboard-main > .dashboard-content:has(> .faculty-summary-page) {
+  --ptc-canvas-color: #f5f8f6;
+  --ptc-canvas-pattern: none;
+  --ptc-canvas-tiles: auto;
+  --ptc-canvas-offsets: initial;
   min-width: 0;
   padding: 0;
-  background: #e5f1e9;
   overflow-x: clip;
+  background: #f5f8f6;
 }
+
 .dashboard-main:has(.faculty-summary-page) > .header-container:has(.app-header.hide) {
   height: 0;
   min-height: 0;
@@ -18,311 +17,333 @@
 }
 
 .faculty-summary-page {
-  --fsp-green: #087646;
-  --fsp-green-dark: #06482c;
-  --fsp-green-mid: #108952;
-  --fsp-text: #192a20;
-  --fsp-muted: #65766b;
-  --fsp-border: #d5e7dc;
+  --fsp-text: #1b2b22;
+  --fsp-muted: #607267;
+  --fsp-border: #dce8e0;
   --fsp-surface: #ffffff;
-  --fsp-surface-soft: #f6fbf8;
-  --fsp-canvas: #e6f2e9;
+  --fsp-card: #ffffff;
+  --fsp-canvas: #f5f8f6;
   position: relative;
-  isolation: isolate;
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  min-height: 100dvh;
+  min-height: 100%;
   margin: 0;
-  padding: 27px 28px 52px;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  padding: calc(28px * var(--ptc-compact-scale, 1))
+    calc(30px * var(--ptc-compact-scale, 1))
+    calc(40px * var(--ptc-compact-scale, 1));
   color: var(--fsp-text);
-  background-color: var(--fsp-canvas);
-  background-image:
-    radial-gradient(ellipse at 8% 8%, rgba(24, 138, 73, .17), transparent 34%),
-    radial-gradient(ellipse at 94% 6%, rgba(236, 193, 77, .13), transparent 29%),
-    linear-gradient(135deg, rgba(13, 105, 58, .055) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(13, 105, 58, .045) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(13, 105, 58, .04) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(13, 105, 58, .04) 25%, transparent 25%),
-    linear-gradient(180deg, #f0f8f2, #e4f0e8 64%, #dcece1);
-  background-position: center, center, 0 0, 0 45px, 45px -45px, -45px 0, center;
-  background-size: auto, auto, 90px 90px, 90px 90px, 90px 90px, 90px 90px, auto;
+  background: var(--fsp-canvas);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
 .faculty-summary-page *,
 .faculty-summary-page *::before,
-.faculty-summary-page *::after { box-sizing: border-box; }
-.faculty-summary-page::before {
-  content: "";
-  position: absolute;
-  inset: 13px 12px auto;
-  height: 260px;
-  border: 1px solid rgba(255, 255, 255, .77);
-  border-radius: 30px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, .39), rgba(218, 237, 225, .13));
-  box-shadow: 0 14px 32px rgba(9, 74, 39, .07);
-  pointer-events: none;
-  z-index: -1;
+.faculty-summary-page *::after {
+  box-sizing: border-box;
 }
-.faculty-summary-page > * { position: relative; }
-.faculty-summary-page button { font: inherit; }
 
-/* Header: matches the Registrar and Program Head dark-green hero. */
+.faculty-summary-page button { font-family: inherit; }
+
+/* Header */
 .faculty-summary-page .faculty-summary-page__header {
-  position: relative;
-  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  overflow: hidden;
-  min-height: 186px;
-  margin: 0 0 20px;
-  padding: 30px 32px;
-  border: 1px solid rgba(4, 66, 35, .15);
-  border-radius: 22px;
-  background: linear-gradient(108deg, #074c31 0%, #096d3f 54%, #149253 100%);
-  box-shadow: 0 16px 32px rgba(10, 68, 40, .19);
+  gap: calc(24px * var(--ptc-compact-scale, 1));
+  min-width: 0;
+  margin: 0 0 calc(18px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1))
+    calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #07512f, #0d7444);
+  box-shadow: none;
 }
+
 .faculty-summary-page .faculty-summary-page__header::before,
 .faculty-summary-page .faculty-summary-page__header::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  border-radius: 50%;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
-.faculty-summary-page .faculty-summary-page__header::before {
-  top: -135px;
-  right: -46px;
-  width: 370px;
-  height: 370px;
-  border: 46px solid rgba(211, 255, 218, .12);
-  background: radial-gradient(circle at 45% 40%, rgba(255,255,255,.10), transparent 67%);
-}
-.faculty-summary-page .faculty-summary-page__header::after {
-  top: -90px;
-  right: 126px;
-  width: 210px;
-  height: 210px;
-  border: 29px solid rgba(223, 249, 222, .07);
-}
+
 .faculty-summary-page .faculty-summary-page__header > div:first-child {
-  z-index: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: 770px;
+  max-width: 810px;
 }
-.faculty-summary-page .faculty-summary-page__header > div:first-child::before {
-  content: "PROGRAM HEAD  ·  CLASS MANAGEMENT";
-  display: inline-flex;
+
+/* Eyebrow icon and label */
+.faculty-summary-page .faculty-summary-page__eyebrow {
+  display: flex;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 6px 10px;
-  border: 1px solid rgba(235, 255, 241, .19);
-  border-radius: 99px;
-  background: rgba(255,255,255,.12);
-  color: #f2fff5;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .055em;
-  line-height: 1.3;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: calc(12px * var(--ptc-compact-scale, 1));
+  color: #f6fff9;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  text-transform: uppercase;
 }
+
+.faculty-summary-page .faculty-summary-page__eyebrow-icon {
+  display: inline-flex;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #f6fff9;
+}
+
+.faculty-summary-page .faculty-summary-page__eyebrow-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
 .faculty-summary-page .faculty-summary-page__header h1 {
   margin: 0;
-  color: #fff;
-  font-size: clamp(25px, 2.6vw, 36px);
-  font-weight: 790;
-  letter-spacing: -.042em;
-  line-height: 1.14;
-  text-wrap: balance;
-  text-shadow: 0 2px 7px rgba(0,0,0,.09);
+  color: #f6fff9;
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    calc(3vw * var(--ptc-font-scale, 1)),
+    calc(40px * var(--ptc-font-scale, 1))
+  );
+  font-weight: 760;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
 }
+
 .faculty-summary-page .faculty-summary-page__header p {
-  max-width: 730px;
-  margin: 12px 0 0;
-  color: #e3f8eb;
-  font-size: 13px;
-  font-weight: 440;
+  max-width: 770px;
+  margin: calc(9px * var(--ptc-compact-scale, 1)) 0 0;
+  color: #f6fff9;
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+  font-weight: 400;
   line-height: 1.65;
+  overflow-wrap: anywhere;
 }
+
+/* Refresh button */
 .faculty-summary-page .faculty-summary-page__refresh {
-  position: relative;
-  z-index: 1;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 11px 17px;
-  border: 1px solid rgba(255,255,255,.78);
-  border-radius: 11px;
-  background: #fff;
-  box-shadow: 0 7px 18px rgba(8, 55, 35, .16);
-  color: #08663e;
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1.25;
+  gap: 8px;
+  min-height: 42px;
+  padding: calc(9px * var(--ptc-compact-scale, 1))
+    calc(15px * var(--ptc-compact-scale, 1));
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 9px;
+  background: #ffffff;
+  color: #07512f;
+  box-shadow: none;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 720;
+  line-height: 1.35;
   white-space: nowrap;
   cursor: pointer;
-  transition: background .16s ease, box-shadow .16s ease;
+  transition: background-color 160ms ease, border-color 160ms ease;
 }
-.faculty-summary-page .faculty-summary-page__refresh svg { stroke-width: 2.2; }
+
 .faculty-summary-page .faculty-summary-page__refresh:hover:not(:disabled) {
-  background: #ecfff3;
-  box-shadow: 0 9px 24px rgba(8,55,35,.21);
+  border-color: #e5f7ec;
+  background: #e5f7ec;
 }
-.faculty-summary-page .faculty-summary-page__refresh:disabled { opacity: .65; cursor: not-allowed; }
+
+.faculty-summary-page .faculty-summary-page__refresh:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .faculty-summary-page .faculty-summary-page__refresh:focus-visible {
   outline: 3px solid #c5fad6;
   outline-offset: 3px;
 }
-.faculty-summary-page .is-spinning { animation: fsp-spin .85s linear infinite; }
+
+.faculty-summary-page .is-spinning { animation: fsp-spin 0.85s linear infinite; }
 @keyframes fsp-spin { to { transform: rotate(360deg); } }
 
-/* Error alert is kept within its own panel, not as a flash or full-page overlay. */
+/* Error message */
 .faculty-summary-page .faculty-summary-page__alert {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin: 0 0 18px;
-  padding: 15px 17px;
-  border: 1px solid #edbcb4;
-  border-left: 4px solid #c34d45;
-  border-radius: 13px;
-  background: #fff4f1;
-  box-shadow: 0 7px 20px rgba(94, 40, 22, .05);
-  color: #913b35;
-  font-size: 12px;
+  margin-bottom: calc(18px * var(--ptc-compact-scale, 1));
+  padding: calc(15px * var(--ptc-compact-scale, 1));
+  border: 1px solid #efc7c1;
+  border-left: 4px solid #be4841;
+  border-radius: 11px;
+  background: #fff5f3;
+  color: #963b35;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
-.faculty-summary-page .faculty-summary-page__alert svg { flex: 0 0 auto; margin-top: 1px; }
 
-/* Department schedule table; no UI controls/data added. */
+.faculty-summary-page .faculty-summary-page__alert svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+/* Schedule panel */
 .faculty-summary-page .faculty-summary-table-card {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgba(198, 226, 208, .98);
-  border-radius: 22px;
+  border: 1px solid var(--fsp-border);
+  border-radius: 14px;
   background: var(--fsp-surface);
-  box-shadow: 0 15px 36px rgba(17, 74, 39, .08);
+  box-shadow: 0 3px 12px rgba(23, 53, 37, 0.035);
 }
+
 .faculty-summary-page .faculty-summary-table-card__heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
-  min-height: 112px;
-  padding: 23px 25px;
-  border-bottom: 1px solid #e0ebe3;
-  background: linear-gradient(108deg, #fff 0%, #fbfefd 68%, #f0f9f3 100%);
+  flex-wrap: wrap;
+  gap: calc(14px * var(--ptc-compact-scale, 1));
+  padding: calc(22px * var(--ptc-compact-scale, 1))
+    calc(24px * var(--ptc-compact-scale, 1));
+  border-bottom: 1px solid var(--fsp-border);
+  background: var(--fsp-surface);
 }
-.faculty-summary-page .faculty-summary-table-card__heading::before { display: none; }
+
+.faculty-summary-page .faculty-summary-table-card__heading::before { content: none; display: none; }
+
 .faculty-summary-page .faculty-summary-table-card__heading h2 {
   margin: 0;
-  color: #18261c;
-  font-size: clamp(19px, 1.7vw, 24px);
-  font-weight: 780;
-  letter-spacing: -.025em;
-  line-height: 1.25;
+  color: var(--fsp-text);
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 740;
+  line-height: 1.35;
 }
+
 .faculty-summary-page .faculty-summary-table-card__heading h2::before {
   content: "FACULTY DIRECTORY";
   display: block;
   width: fit-content;
-  margin: 0 0 10px;
-  padding: 5px 10px;
-  border-radius: 99px;
-  background: #e3f5e9;
-  color: #0c6d40;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  line-height: 1.35;
+  margin-bottom: calc(8px * var(--ptc-compact-scale, 1));
+  color: #0b7142;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 760;
+  letter-spacing: 0.045em;
+  line-height: 1.4;
 }
+
 .faculty-summary-page .faculty-summary-table-card__heading > span {
   display: inline-block;
-  flex: 0 1 auto;
   max-width: 100%;
-  padding: 10px 13px;
-  border: 1px solid #cbe6d3;
-  border-radius: 10px;
-  background: #e9f8ee;
-  color: #145c36;
-  font-size: 11px;
+  padding: calc(8px * var(--ptc-compact-scale, 1))
+    calc(11px * var(--ptc-compact-scale, 1));
+  border: 1px solid #b7e4c8;
+  border-radius: 9px;
+  background: #e5f7ec;
+  color: #0a4b2e;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 700;
-  line-height: 1.5;
-  text-align: right;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
+
+/* The six columns scroll inside the table, not across the whole page. */
 .faculty-summary-page .faculty-summary-table-scroll {
-  display: block;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #b9d8c5 transparent;
-  -webkit-overflow-scrolling: touch;
 }
+
+/* Schedule table */
 .faculty-summary-page .faculty-summary-table {
   width: 100%;
   min-width: 930px;
-  border-spacing: 0;
   border-collapse: collapse;
+  border-spacing: 0;
   text-align: left;
 }
+
 .faculty-summary-page .faculty-summary-table th {
-  padding: 15px 17px;
-  border-bottom: 1px solid #dbe8de;
-  background: #f3f9f5;
-  color: #44604d;
-  font-size: 10px;
-  font-weight: 790;
-  letter-spacing: .035em;
-  line-height: 1.4;
+  padding: calc(13px * var(--ptc-compact-scale, 1))
+    calc(15px * var(--ptc-compact-scale, 1));
+  border-bottom: 1px solid var(--fsp-border);
+  background: #f4f8f5;
+  color: #425b4b;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
 }
+
 .faculty-summary-page .faculty-summary-table td {
-  padding: 16px 17px;
-  border-bottom: 1px solid #e8eee9;
-  background: #fff;
-  color: #1f3025;
-  font-size: 12px;
-  line-height: 1.45;
+  padding: calc(14px * var(--ptc-compact-scale, 1))
+    calc(15px * var(--ptc-compact-scale, 1));
+  border-bottom: 1px solid #e8efea;
+  background: var(--fsp-card);
+  color: var(--fsp-text);
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  line-height: 1.5;
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
+
 .faculty-summary-page .faculty-summary-table tbody tr:nth-child(even) td { background: #fbfdfb; }
-.faculty-summary-page .faculty-summary-table tbody tr:hover td { background: #f0f9f3; }
+.faculty-summary-page .faculty-summary-table tbody tr:hover td { background: #f1f8f3; }
 .faculty-summary-page .faculty-summary-table tbody tr:last-child td { border-bottom: 0; }
+
 .faculty-summary-page .faculty-summary-table td strong,
 .faculty-summary-page .faculty-summary-table td small { display: block; }
+
 .faculty-summary-page .faculty-summary-table td strong {
-  color: #1b2a20;
-  font-size: 12px;
+  color: var(--fsp-text);
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 740;
-  line-height: 1.45;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
+
 .faculty-summary-page .faculty-summary-table td small {
-  margin-top: 5px;
-  color: #64766c;
-  font-size: 11px;
-  line-height: 1.5;
+  margin-top: calc(4px * var(--ptc-compact-scale, 1));
+  color: var(--fsp-muted);
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
-.faculty-summary-page .faculty-summary-table__muted { color: #76877a; font-size: 11px; }
+
+.faculty-summary-page .faculty-summary-table__muted {
+  color: var(--fsp-muted);
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+/* Status badges */
 .faculty-summary-page .faculty-summary-page__status {
   display: inline-flex;
   width: fit-content;
   align-items: center;
-  gap: 6px;
-  padding: 7px 11px;
+  gap: 7px;
+  padding: calc(7px * var(--ptc-compact-scale, 1))
+    calc(10px * var(--ptc-compact-scale, 1));
   border: 1px solid transparent;
-  border-radius: 99px;
-  font-size: 10px;
-  font-weight: 780;
-  line-height: 1.3;
+  border-radius: 999px;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 720;
+  line-height: 1.35;
   white-space: nowrap;
 }
+
 .faculty-summary-page .faculty-summary-page__status::before {
   content: "";
   width: 6px;
@@ -331,177 +352,217 @@
   border-radius: 50%;
   background: currentColor;
 }
+
 .faculty-summary-page .faculty-summary-page__status.is-scheduled {
-  border-color: #c4ead0;
-  background: #e6f8ec;
-  color: #0d7947;
+  border-color: #bde3ca;
+  background: #e7f7ed;
+  color: #0b7041;
 }
+
 .faculty-summary-page .faculty-summary-page__status.is-unscheduled {
-  border-color: #f1dba4;
-  background: #fff6dc;
-  color: #8c6000;
+  border-color: #ead49c;
+  background: #fff6df;
+  color: #835900;
 }
+
+/* Loading and empty states */
 .faculty-summary-page .faculty-summary-page__empty {
-  min-height: 190px;
   display: grid;
+  min-height: 175px;
   align-content: center;
   justify-items: center;
-  padding: 34px 20px;
-  background: linear-gradient(140deg, #fff, #f4faf6);
-  color: #63766a;
-  font-size: 13px;
-  font-weight: 550;
+  padding: calc(30px * var(--ptc-compact-scale, 1));
+  background: var(--fsp-surface);
+  color: var(--fsp-muted);
+  font-size: calc(13px * var(--ptc-font-scale, 1));
   line-height: 1.6;
   text-align: center;
 }
+
 .faculty-summary-page .faculty-summary-page__empty::before {
   content: "";
-  display: block;
   width: 38px;
   height: 38px;
-  margin-bottom: 15px;
-  border: 2px solid #cae6d5;
-  border-radius: 12px;
-  background: linear-gradient(140deg, #e8f8ee, #d7f2e0);
-  box-shadow: 0 6px 15px rgba(17, 98, 56, .08);
+  margin-bottom: 13px;
+  border: 1px solid #cce6d6;
+  border-radius: 11px;
+  background: #eaf7ef;
 }
 
-/* Dark mode stays charcoal while the hero remains green. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .dashboard-main:has(.faculty-summary-page) > .dashboard-content { background: #121f19; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page {
-  --fsp-text: #eaf5ec;
-  --fsp-muted: #b2c4b8;
-  --fsp-border: #344e3e;
-  --fsp-surface: #1b2b22;
-  --fsp-surface-soft: #21372a;
-  --fsp-canvas: #121f19;
-  background-color: #121f19;
-  background-image:
-    radial-gradient(ellipse at 9% 10%, rgba(26, 115, 63, .19), transparent 37%),
-    linear-gradient(135deg, rgba(61, 105, 76, .075) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(61, 105, 76, .065) 25%, transparent 25%),
-    linear-gradient(180deg, #15251b, #101b15);
-  background-size: auto, 95px 95px, 95px 95px, auto;
-  color: var(--fsp-text);
+/* Dark mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main > .dashboard-content:has(> .faculty-summary-page) {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+  --ptc-canvas-tiles: auto;
+  --ptc-canvas-offsets: initial;
+  background: #111719;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page::before {
-  border-color: rgba(91, 143, 101, .23);
-  background: rgba(42, 76, 53, .20);
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-summary-page {
+  --ptc-canvas-color: #111719;
+  --ptc-canvas-pattern: none;
+  --fsp-text: #f1f5f6;
+  --fsp-muted: #aab8bc;
+  --fsp-border: #35464b;
+  --fsp-surface: #192226;
+  --fsp-card: #20292e;
+  --fsp-canvas: #111719;
+  color: #e5ecef;
+  background: #111719;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table-card {
-  border-color: #344e3e;
-  background: #1b2b22;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, .17);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table-card__heading {
-  border-color: #344a39;
-  background: linear-gradient(110deg, #1b2b22, #1e3728);
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table-card__heading h2 { color: #eff9f1; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table-card__heading h2::before {
-  background: #2a4c35;
-  color: #abefc3;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table-card__heading > span {
-  border-color: #3b6349;
-  background: #254232;
-  color: #b3ecc7;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table th {
-  border-color: #36503e;
-  background: #23382b;
-  color: #bad4c1;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table td,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table tbody tr:nth-child(even) td {
-  border-color: #334639;
-  background: #1b2b22;
-  color: #dfeee3;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table tbody tr:nth-child(even) td { background: #1e3025; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table tbody tr:hover td { background: #2a4635; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table td strong { color: #f0f9f2; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table td small,
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-table__muted { color: #b6c9bb; }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-page__status.is-scheduled {
-  border-color: #355d43;
-  background: #1d4832;
-  color: #aaf1c2;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-page__status.is-unscheduled {
-  border-color: #68552a;
-  background: #45391f;
-  color: #ffdc88;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-page__empty {
-  background: linear-gradient(140deg, #1b2b22, #20392a);
-  color: #b2c5b8;
-}
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-page__empty::before {
-  border-color: #3b5d47;
-  background: #274c34;
+
+/* The header keeps the same green in both themes. */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__header {
+  border-color: #245642;
+  background: linear-gradient(105deg, #093522, #0b5133);
   box-shadow: none;
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark)
-  .faculty-summary-page .faculty-summary-page__alert {
-  border-color: #85544c;
-  background: #3b2524;
-  color: #ffd6cb;
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__header h1,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__header p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__eyebrow {
+  color: #f6fff9;
 }
 
-/* Compact and mobile: keep table columns intact inside its own scroller. */
-@media (max-width: 900px) {
-  .faculty-summary-page { padding: 20px 17px 40px; }
-  .faculty-summary-page .faculty-summary-page__header { min-height: 160px; padding: 24px; }
-  .faculty-summary-page .faculty-summary-table-card__heading { padding: 19px; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table-card {
+  border-color: #35464b;
+  background: #192226;
+  box-shadow: none;
 }
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table-card__heading {
+  border-color: #35464b;
+  background: #192226;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table-card__heading h2 { color: #f1f5f6; }
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table-card__heading h2::before { color: #91dbad; }
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table-card__heading > span {
+  border-color: #3f6854;
+  background: #213d30;
+  color: #c6f3d4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table th {
+  border-color: #35464b;
+  background: #192226;
+  color: #aab8bc;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table td {
+  border-color: #35464b;
+  background: #20292e;
+  color: #e5ecef;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table tbody tr:nth-child(even) td {
+  background: #242f34;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table tbody tr:hover td {
+  background: #2b363b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table td strong { color: #f1f5f6; }
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table td small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-table__muted { color: #aab8bc; }
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__status.is-scheduled {
+  border-color: #34694c;
+  background: #1e4733;
+  color: #b3f2ca;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__status.is-unscheduled {
+  border-color: #74603a;
+  background: #443822;
+  color: #ffe0a1;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__empty {
+  background: #192226;
+  color: #aab8bc;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__empty::before {
+  border-color: #35464b;
+  background: #20292e;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-summary-page .faculty-summary-page__alert {
+  border-color: #89544e;
+  border-left-color: #d5766d;
+  background: #38282a;
+  color: #ffdad4;
+}
+
+/* Responsive layout */
+@media (max-width: 900px) {
+  .faculty-summary-page {
+    padding: calc(20px * var(--ptc-compact-scale, 1))
+      calc(17px * var(--ptc-compact-scale, 1))
+      calc(35px * var(--ptc-compact-scale, 1));
+  }
+  .faculty-summary-page .faculty-summary-page__header {
+    padding: calc(25px * var(--ptc-compact-scale, 1));
+  }
+  .faculty-summary-page .faculty-summary-table-card__heading {
+    padding: calc(19px * var(--ptc-compact-scale, 1));
+  }
+}
+
+/* Mobile layout */
 @media (max-width: 640px) {
-  .faculty-summary-page { padding: 16px 11px 30px; }
-  .faculty-summary-page::before { inset: 7px 6px auto; border-radius: 20px; }
+  .faculty-summary-page {
+    padding: calc(16px * var(--ptc-compact-scale, 1))
+      calc(12px * var(--ptc-compact-scale, 1))
+      calc(30px * var(--ptc-compact-scale, 1));
+  }
   .faculty-summary-page .faculty-summary-page__header {
     align-items: flex-start;
     flex-direction: column;
-    gap: 20px;
-    min-height: 0;
-    padding: 24px 20px;
-    border-radius: 18px;
+    gap: calc(18px * var(--ptc-compact-scale, 1));
+    padding: calc(23px * var(--ptc-compact-scale, 1))
+      calc(20px * var(--ptc-compact-scale, 1));
   }
-  .faculty-summary-page .faculty-summary-page__header h1 { font-size: clamp(24px, 7vw, 31px); }
-  .faculty-summary-page .faculty-summary-page__header p { font-size: 12px; }
-  .faculty-summary-page .faculty-summary-page__header > div:first-child::before { font-size: 9px; }
   .faculty-summary-page .faculty-summary-page__refresh { width: 100%; }
-  .faculty-summary-page .faculty-summary-table-card { border-radius: 17px; }
   .faculty-summary-page .faculty-summary-table-card__heading {
-    flex-direction: column;
     align-items: flex-start;
-    min-height: 0;
-    gap: 13px;
-    padding: 21px 18px;
+    flex-direction: column;
+    gap: calc(12px * var(--ptc-compact-scale, 1));
   }
   .faculty-summary-page .faculty-summary-table-card__heading > span { text-align: left; }
-  .faculty-summary-page .faculty-summary-table th { padding: 12px 13px; }
-  .faculty-summary-page .faculty-summary-table td { padding: 13px; }
+  .faculty-summary-page .faculty-summary-table th,
+  .faculty-summary-page .faculty-summary-table td {
+    padding: calc(12px * var(--ptc-compact-scale, 1));
+  }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .faculty-summary-page .faculty-summary-page__refresh { transition: none; }
   .faculty-summary-page .is-spinning { animation-duration: 1.8s; }

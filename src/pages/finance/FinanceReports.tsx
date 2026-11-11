@@ -14,7 +14,6 @@ import {
   FileText,
   Loader2,
   ReceiptText,
-  RefreshCw,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
@@ -179,8 +178,6 @@ export default function FinanceReports() {
 
   const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -192,16 +189,12 @@ export default function FinanceReports() {
   }, [isFinance, navigate]);
 
   const loadReport = useCallback(
-    async (initial = true) => {
+    async () => {
       if (!isFinance) {
         return;
       }
 
-      if (initial) {
-        setLoading(true);
-      } else {
-        setRefreshing(true);
-      }
+      setLoading(true);
 
       setErrorMessage("");
 
@@ -279,7 +272,6 @@ export default function FinanceReports() {
         );
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [isFinance, navigate],
@@ -290,7 +282,7 @@ export default function FinanceReports() {
       return;
     }
 
-    void loadReport(true);
+    void loadReport();
   }, [isFinance, loadReport]);
 
   const maxTransactionCollection = useMemo(() => {
@@ -340,15 +332,6 @@ export default function FinanceReports() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            className="finance-reports__refresh"
-            onClick={() => void loadReport(false)}
-            disabled={refreshing}
-          >
-            <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
         </section>
 
         {errorMessage && (
