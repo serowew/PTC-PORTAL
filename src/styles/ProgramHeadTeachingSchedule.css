@@ -397,3 +397,114 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main > .d
   background-position: initial !important;
   background-repeat: no-repeat !important;
 }
+
+/* Schedule color contrast */
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__filters-icon {
+  border: 1px solid #bddfcb;
+  background: #e5f4eb;
+  color: #0b7444;
+  box-shadow: none;
+}
+
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__section-header > div > span {
+  border: 1px solid #bde3ca;
+  background: #e8f7ed;
+  color: #08643a;
+  font-weight: 750;
+}
+
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__loading strong {
+  color: #193a28;
+}
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__loading span {
+  color: #526d5e;
+}
+
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-entry__side button {
+  border: 1px solid #b6d9c3;
+  background: #e6f4eb;
+  color: #075d36;
+  box-shadow: none;
+}
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-entry__side button:hover {
+  border-color: #83b79b;
+  background: #d7eddf;
+  color: #064d2d;
+}
+.faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-entry__side button:focus-visible {
+  outline: 2px solid #228a58;
+  outline-offset: 2px;
+}
+
+/* Dark Mode color contrast */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__filters-icon {
+  border: 1px solid #507665;
+  background: #233e34;
+  color: #b8f0cd;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__section-header > div > span {
+  border: 1px solid #416b54;
+  background: #254434;
+  color: #b6f3cf;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__loading {
+  border-color: #35464b;
+  background: #192226;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__loading strong {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__loading span {
+  color: #aab8bd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-page__spinner {
+  border-color: #426256;
+  border-top-color: #88e0ac;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-entry__side button {
+  border: 1px solid #477762;
+  background: #204936;
+  color: #c9f3dc;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-entry__side button:hover {
+  border-color: #65ac86;
+  background: #2b6046;
+  color: #f4fff8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule .faculty-schedule-entry__side button:focus-visible {
+  outline: 2px solid #83d9a4;
+  outline-offset: 2px;
+}
+
+/* Override the shared read-only schedule theme on this page only */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule:has(> .faculty-schedule-page__read-only-note) .faculty-schedule-page__filters-icon {
+  border-color: #507665;
+  background: #233e34;
+  color: #b8f0cd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule:has(> .faculty-schedule-page__read-only-note) .faculty-schedule-page__section-header > div > span {
+  border-color: #416b54;
+  background: #254434;
+  color: #b6f3cf;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule:has(> .faculty-schedule-page__read-only-note) .faculty-schedule-page__loading strong {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule:has(> .faculty-schedule-page__read-only-note) .faculty-schedule-page__loading span {
+  color: #aab8bd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule:has(> .faculty-schedule-page__read-only-note) .faculty-schedule-entry__side button {
+  border-color: #477762;
+  background: #204936;
+  color: #c9f3dc;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-schedule-page.program-head-teaching-schedule:has(> .faculty-schedule-page__read-only-note) .faculty-schedule-entry__side button:hover {
+  border-color: #65ac86;
+  background: #2b6046;
+  color: #f4fff8;
+}

@@ -3729,7 +3729,7 @@
 }
 
 
-/* Program Head: My Classes */
+/* Class Management */
 .programhead-class-management {
   --pcm-bg: #f5f8f6;
   --pcm-surface: #ffffff;
@@ -3742,7 +3742,7 @@
   --pcm-text-500: #6b7e73;
   width: 100%;
   min-width: 0;
-  padding: calc(28px * var(--ptc-compact-scale, 1));
+  padding: calc(24px * var(--ptc-compact-scale, 1)) calc(24px * var(--ptc-compact-scale, 1)) calc(40px * var(--ptc-compact-scale, 1));
   overflow-x: clip;
   background: var(--pcm-bg);
   background-image: none;
@@ -3766,6 +3766,10 @@
   background: linear-gradient(105deg, #07512f, #0d7444);
   box-shadow: none;
   color: #f6fff9;
+  min-width: 0;
+}
+.programhead-class-management .programhead-class-header > div {
+  min-width: 0;
 }
 .programhead-class-management .programhead-class-header::before,
 .programhead-class-management .programhead-class-header::after,
@@ -3786,12 +3790,14 @@
   font-weight: 760;
   color: #f6fff9;
   letter-spacing: -.025em;
+  overflow-wrap: anywhere;
 }
 .programhead-class-management .programhead-class-header p {
   max-width: 800px;
   font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.55;
   color: #e4f3e9;
+  overflow-wrap: anywhere;
 }
 .programhead-class-management .programhead-classes-owner {
   margin-top: calc(12px * var(--ptc-compact-scale, 1));
@@ -3807,6 +3813,7 @@
   border-radius: 14px;
   background: var(--pcm-surface);
   box-shadow: 0 3px 14px rgba(15, 49, 31, .04);
+  min-width: 0;
 }
 .programhead-class-management .programhead-classes-list__heading {
   min-height: 0;
@@ -3829,11 +3836,17 @@
 }
 
 /* Class table */
+.programhead-class-management :is(button, select, input):focus-visible {
+  outline: 3px solid #75be94;
+  outline-offset: 2px;
+}
 .programhead-class-management .programhead-classes-list__scroll {
   max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #a5b9ad transparent;
 }
 .programhead-class-management .programhead-classes-list__table { min-width: 960px; }
 .programhead-class-management .programhead-classes-list__table th {
@@ -4299,4 +4312,90 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main .das
   border-color: #35464b;
   background-color: #20292e;
   color: #e5ecef;
+}
+
+
+/* Direct grade modal status and controls */
+.programhead-class-management .programhead-direct-grade-result > strong.none {
+  background: #e6ece8;
+  border: 1px solid #bccdc2;
+  color: #345345;
+  font-weight: 750;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.programhead-class-management .programhead-direct-grade-result > strong.passed {
+  border: 1px solid #a5d7b7;
+  color: #125d38;
+}
+
+.programhead-class-management .programhead-direct-grade-result > strong.incomplete {
+  border: 1px solid #e9cd91;
+  color: #815412;
+}
+
+.programhead-class-management .programhead-direct-grade-result > strong.failed {
+  border: 1px solid #e3b3b3;
+  color: #9c3333;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result > strong.none {
+  background: #303f46;
+  border-color: #536a76;
+  color: #e1eaf0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result > strong.passed {
+  background: #214637;
+  border-color: #457e5d;
+  color: #b9f0d1;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result > strong.incomplete {
+  background: #493a27;
+  border-color: #896b41;
+  color: #ffe0a4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result > strong.failed {
+  background: #482c32;
+  border-color: #87505a;
+  color: #ffd0d0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result > span {
+  color: #cfdae0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-result > small {
+  color: #b5c5cc;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-grade-form select:disabled {
+  opacity: 1;
+  background: #303d43;
+  color: #cedce1;
+  border-color: #526770;
+  cursor: not-allowed;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-submit:disabled {
+  opacity: 1;
+  background: #314b3e;
+  border-color: #486858;
+  color: #abc7b6;
+  cursor: not-allowed;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-cancel {
+  background: #26343a;
+  border-color: #5b727c;
+  color: #f1f5f6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .programhead-class-management .programhead-direct-cancel:hover:not(:disabled) {
+  background: #32444c;
+  border-color: #78909a;
 }
