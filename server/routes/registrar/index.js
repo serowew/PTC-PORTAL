@@ -15,6 +15,8 @@ import documentRequestsRoutes from "./documentRequests.js";
 import gradeChangeRequestRoutes from "./gradeChangeRequests.js";
 import financeHistoryRoutes from "./financehistory.js";
 import academicYearsRoutes from "./academicYears.js";
+import incCompletionConversionReadinessRouter from "./incCompletionConversionReadiness.routes.js";
+import { assertQaGradingDatabase } from "../../services/gradebookQaWriteGuard.service.js";
 
 const router = express.Router();
 
@@ -32,6 +34,10 @@ router.use("/document-requests", documentRequestsRoutes);
 router.use("/grade-change-requests", gradeChangeRequestRoutes);
 router.use("/finance-history", financeHistoryRoutes);
 router.use("/academic-years", academicYearsRoutes);
+router.use(
+  "/gradebook/inc-completion-conversions",
+  incCompletionConversionReadinessRouter,
+);
 
 // Academic Calendar options
 router.get("/academic-calendar/options", async (_req, res) => {
@@ -1654,5 +1660,2449 @@ router.get("/academic-calendar/:calendarId/history", async (req, res) => {
     });
   }
 });
+
+// Step 2.8.11J1 — Official grading-sheet original submission date, QA pilot.
+// The Registrar records the evidence and original submission date only.
+// Program Head verifies the date and finalizes the sheet.
+// Later corrections belong to the formal gradebook_sheet_amendments workflow.
+
+const officialSheetPilotDb = "databaseforptc1_admission_test";
+
+function officialSheetFail(code, message, status = 409) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  throw error;
+}
+
+function officialSheetError(res, error) {
+  if (error?.code === "ER_DUP_ENTRY") {
+    return res.status(409).json({
+      success: false,
+      code: "OFFICIAL_SHEET_CONFLICT",
+      message:
+        "A grading-sheet record or its audit event already exists. Reload before retrying.",
+    });
+  }
+  const status =
+    Number.isInteger(error?.status) && error.status >= 400 && error.status < 500
+      ? error.status
+      : 500;
+  if (status === 500) console.error("REGISTRAR OFFICIAL SHEET ERROR:", error);
+  return res.status(status).json({
+    success: false,
+    code:
+      status === 500
+        ? "OFFICIAL_SHEET_INTERNAL_ERROR"
+        : (error.code ?? "OFFICIAL_SHEET_REQUEST_FAILED"),
+    message:
+      status === 500
+        ? "Could not process the official grading-sheet submission record."
+        : error.message,
+  });
+}
+
+function officialSheetBody(body, permitted) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_BODY_INVALID",
+      "A JSON object is required.",
+      400,
+    );
+  }
+  const extra = Object.keys(body).filter((key) => !permitted.includes(key));
+  if (extra.length) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_FIELDS_UNSUPPORTED",
+      `Unsupported field(s): ${extra.join(", ")}.`,
+      400,
+    );
+  }
+  if (typeof body.dry_run !== "boolean") {
+    officialSheetFail(
+      "OFFICIAL_SHEET_DRY_RUN_REQUIRED",
+      "Send dry_run as true or false.",
+      400,
+    );
+  }
+}
+
+function officialSheetDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_DATE_INVALID",
+      "original_official_submitted_on must use YYYY-MM-DD.",
+      400,
+    );
+  }
+  const [year, month, day] = value.split("-").map(Number);
+  if (year < 2000 || year > 2199) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_DATE_INVALID",
+      "The original submission date is outside the allowed year range.",
+      400,
+    );
+  }
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== value
+  ) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_DATE_INVALID",
+      "Provide a real calendar date.",
+      400,
+    );
+  }
+  return value;
+}
+
+async function officialSheetAssertDatabase(connection) {
+  const [[row]] = await connection.execute(
+    "SELECT DATABASE() AS database_name",
+  );
+  if (row?.database_name !== officialSheetPilotDb) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_TEST_DATABASE_ONLY",
+      "Official grading-sheet pilot is limited to databaseforptc1_admission_test.",
+      403,
+    );
+  }
+}
+
+async function officialSheetRegistrar(connection, req) {
+  const userId = readCalendarId(req.user?.user_id);
+  if (!userId)
+    officialSheetFail(
+      "OFFICIAL_SHEET_AUTH_REQUIRED",
+      "Registrar authentication is required.",
+      401,
+    );
+  const [rows] = await connection.execute(
+    `SELECT u.user_id, u.is_active, u.is_archived, r.role_name
+       FROM users u JOIN roles r ON r.role_id = u.role_id
+      WHERE u.user_id = ?`,
+    [userId],
+  );
+  if (
+    rows.length !== 1 ||
+    Number(rows[0].is_active) !== 1 ||
+    Number(rows[0].is_archived) !== 0 ||
+    rows[0].role_name !== "Registrar"
+  ) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_REGISTRAR_REQUIRED",
+      "Only an active Registrar may manage official sheet submission dates.",
+      403,
+    );
+  }
+  return userId;
+}
+
+async function officialSheetScope(connection, offeringId, lock = false) {
+  // Keep the same offering → config lock order as score and submission writers.
+  const [offeringRows] = await connection.execute(
+    `SELECT offering_id, academic_year_id, semester_id, status
+       FROM subject_offerings WHERE offering_id = ?
+       ${lock ? "FOR UPDATE" : ""}`,
+    [offeringId],
+  );
+  if (offeringRows.length !== 1) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_OFFERING_NOT_FOUND",
+      "The subject offering was not found.",
+      404,
+    );
+  }
+  const [configRows] = await connection.execute(
+    `SELECT config_id FROM gradebook_offering_config WHERE offering_id = ?
+     ${lock ? "FOR UPDATE" : ""}`,
+    [offeringId],
+  );
+  if (configRows.length !== 1) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_CONFIG_MISSING",
+      "The offering has no unique gradebook configuration.",
+      404,
+    );
+  }
+  return {
+    configId: Number(configRows[0].config_id),
+    academicYearId: Number(offeringRows[0].academic_year_id),
+    semesterId: Number(offeringRows[0].semester_id),
+    offeringStatus: offeringRows[0].status,
+  };
+}
+
+const officialSheetSelect = `
+  SELECT sheet_id, config_id, sheet_status,
+         DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS original_official_submitted_on,
+         official_submission_reference, official_date_verified_by_user_id,
+         DATE_FORMAT(official_date_verified_at, '%Y-%m-%d %H:%i:%s') AS official_date_verified_at,
+         finalized_roster_count, finalized_by_user_id,
+         DATE_FORMAT(finalized_at, '%Y-%m-%d %H:%i:%s') AS finalized_at,
+         finalization_remarks, record_version, created_by_user_id, updated_by_user_id,
+         CASE WHEN original_official_submitted_on IS NOT NULL
+                    AND official_date_verified_by_user_id IS NOT NULL
+                    AND official_date_verified_at IS NOT NULL
+              THEN DATE_FORMAT(DATE_ADD(original_official_submitted_on, INTERVAL 1 YEAR), '%Y-%m-%d')
+              ELSE NULL END AS inc_completion_deadline_on
+    FROM gradebook_official_sheets WHERE config_id = ?`;
+
+function officialSheetFormat(row) {
+  if (!row) return null;
+  return {
+    sheet_id: String(row.sheet_id),
+    config_id: Number(row.config_id),
+    sheet_status: row.sheet_status,
+    original_official_submitted_on: row.original_official_submitted_on,
+    official_submission_reference: row.official_submission_reference,
+    official_date_verified_by_user_id:
+      row.official_date_verified_by_user_id === null
+        ? null
+        : Number(row.official_date_verified_by_user_id),
+    official_date_verified_at: row.official_date_verified_at,
+    finalized_roster_count:
+      row.finalized_roster_count === null
+        ? null
+        : Number(row.finalized_roster_count),
+    finalized_by_user_id:
+      row.finalized_by_user_id === null
+        ? null
+        : Number(row.finalized_by_user_id),
+    finalized_at: row.finalized_at,
+    finalization_remarks: row.finalization_remarks,
+    record_version: Number(row.record_version),
+    created_by_user_id:
+      row.created_by_user_id === null ? null : Number(row.created_by_user_id),
+    updated_by_user_id:
+      row.updated_by_user_id === null ? null : Number(row.updated_by_user_id),
+    inc_completion_deadline_on: row.inc_completion_deadline_on,
+    deadline_established: row.inc_completion_deadline_on !== null,
+  };
+}
+
+async function officialSheetCountInc(connection, configId, offeringId) {
+  const [[row]] = await connection.execute(
+    `SELECT COUNT(*) AS official_inc_grade_count
+       FROM grades g
+       JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
+       JOIN gradebook_inc_outcome_requests ir
+         ON ir.enrollment_subject_id = es.enrollment_subject_id AND ir.config_id = ?
+      WHERE es.offering_id = ? AND ir.request_status = 'APPROVED'
+        AND g.grade_status = 'Approved' AND g.grading_policy = 'TWO_TERM_50_50'
+        AND g.grading_outcome = 'INCOMPLETE' AND g.final_rating = 4.00`,
+    [configId, offeringId],
+  );
+  return Number(row?.official_inc_grade_count ?? 0);
+}
+
+// GET /api/registrar/gradebook/official-sheets/:offeringId
+// No writes. Includes initial-date audit events, but never implies the sheet is finalized.
+router.get("/gradebook/official-sheets/:offeringId", async (req, res) => {
+  try {
+    if (Object.keys(req.query).length !== 0) {
+      officialSheetFail(
+        "OFFICIAL_SHEET_QUERY_UNSUPPORTED",
+        "This endpoint does not accept query parameters.",
+        400,
+      );
+    }
+    const offeringId = readCalendarId(req.params.offeringId);
+    if (!offeringId)
+      officialSheetFail(
+        "OFFICIAL_SHEET_OFFERING_INVALID",
+        "offeringId must be a positive integer.",
+        400,
+      );
+    await officialSheetAssertDatabase(db);
+    const registrarUserId = await officialSheetRegistrar(db, req);
+    const scope = await officialSheetScope(db, offeringId);
+    const [sheetRows] = await db.execute(officialSheetSelect, [scope.configId]);
+    if (sheetRows.length > 1)
+      officialSheetFail(
+        "OFFICIAL_SHEET_DUPLICATE",
+        "Multiple official sheets exist for this gradebook.",
+      );
+    const sheet = officialSheetFormat(sheetRows[0]);
+    const [events] = sheet
+      ? await db.execute(
+          `SELECT event_id, event_type, previous_record_version, record_version_after,
+                  DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS original_official_submitted_on,
+                  official_submission_reference, performed_by_user_id,
+                  DATE_FORMAT(event_at, '%Y-%m-%d %H:%i:%s.%f') AS event_at
+             FROM gradebook_official_sheet_submission_events
+            WHERE sheet_id = ? ORDER BY event_id`,
+          [sheet.sheet_id],
+        )
+      : [[]];
+    const incGradeCount = await officialSheetCountInc(
+      db,
+      scope.configId,
+      offeringId,
+    );
+    return res.json({
+      success: true,
+      read_only: true,
+      registrar_user_id: registrarUserId,
+      offering_id: offeringId,
+      config_id: scope.configId,
+      academic_year_id: scope.academicYearId,
+      semester_id: scope.semesterId,
+      official_inc_grade_count: incGradeCount,
+      official_sheet: sheet,
+      submission_events: events.map((event) => ({
+        ...event,
+        event_id: String(event.event_id),
+        sheet_id: sheet.sheet_id,
+        previous_record_version:
+          event.previous_record_version === null
+            ? null
+            : Number(event.previous_record_version),
+        record_version_after: Number(event.record_version_after),
+        performed_by_user_id: Number(event.performed_by_user_id),
+      })),
+      note: sheet
+        ? "The verified original date establishes the INC deadline; sheet finalization is separate."
+        : "No official grading-sheet record exists. An INC deadline cannot yet be established.",
+    });
+  } catch (error) {
+    return officialSheetError(res, error);
+  }
+});
+
+// POST /api/registrar/gradebook/official-sheets/:offeringId/record-submission
+// Record the submitted original date and its source reference, but DO NOT verify it yet.
+router.post(
+  "/gradebook/official-sheets/:offeringId/record-submission",
+  async (req, res) => {
+    let connection;
+    let inTransaction = false;
+    try {
+      if (Object.keys(req.query).length !== 0) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_QUERY_UNSUPPORTED",
+          "This endpoint does not accept query parameters.",
+          400,
+        );
+      }
+      const offeringId = readCalendarId(req.params.offeringId);
+      if (!offeringId)
+        officialSheetFail(
+          "OFFICIAL_SHEET_OFFERING_INVALID",
+          "offeringId must be a positive integer.",
+          400,
+        );
+      officialSheetBody(req.body, [
+        "original_official_submitted_on",
+        "official_submission_reference",
+        "confirm_original_submission_evidence",
+        "dry_run",
+      ]);
+      const originalDate = officialSheetDate(
+        req.body.original_official_submitted_on,
+      );
+      const reference =
+        typeof req.body.official_submission_reference === "string"
+          ? req.body.official_submission_reference.trim()
+          : "";
+      if (
+        reference.length < 8 ||
+        reference.length > 255 ||
+        /[\x00-\x1F\x7F]/.test(reference)
+      ) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_REFERENCE_INVALID",
+          "Provide an 8–255 character source reference without control characters.",
+          400,
+        );
+      }
+      if (req.body.confirm_original_submission_evidence !== true) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_EVIDENCE_CONFIRMATION_REQUIRED",
+          "The Registrar must confirm the original submission reference was checked.",
+          400,
+        );
+      }
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+      inTransaction = true;
+
+      // Official-sheet writes remain QA-only.
+      await assertQaGradingDatabase(connection);
+
+      await officialSheetAssertDatabase(connection);
+      const actor = await officialSheetRegistrar(connection, req);
+      const scope = await officialSheetScope(connection, offeringId, true);
+      if (scope.offeringStatus === "Cancelled") {
+        officialSheetFail(
+          "OFFICIAL_SHEET_OFFERING_CANCELLED",
+          "Cannot record an original submission date for a cancelled offering.",
+        );
+      }
+      const [[databaseDate]] = await connection.execute(
+        "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today",
+      );
+      if (originalDate > databaseDate.today) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_DATE_IN_FUTURE",
+          "The original sheet submission date cannot be in the future.",
+          422,
+        );
+      }
+
+      // Find the official sheet for this gradebook.
+      const [existing] = await connection.execute(
+        `SELECT sheet_id, sheet_status, record_version,
+                original_official_submitted_on,
+                official_submission_reference,
+                official_date_verified_by_user_id,
+                official_date_verified_at
+           FROM gradebook_official_sheets
+          WHERE config_id = ?
+          FOR UPDATE`,
+        [scope.configId],
+      );
+
+      if (existing.length > 1) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_DUPLICATE",
+          "Multiple official sheets exist for this gradebook.",
+        );
+      }
+
+      let sheetId;
+
+      if (existing.length === 0) {
+        // Older workflow: create a sheet when none exists.
+        const [insert] = await connection.execute(
+          `INSERT INTO gradebook_official_sheets
+           (
+             config_id,
+             sheet_status,
+             original_official_submitted_on,
+             official_submission_reference,
+             record_version,
+             created_by_user_id,
+             updated_by_user_id
+           )
+           VALUES (?, 'IN_PROGRESS', ?, ?, 1, ?, ?)`,
+          [scope.configId, originalDate, reference, actor, actor],
+        );
+
+        if (Number(insert.affectedRows) !== 1) {
+          throw new Error("Could not create the official sheet.");
+        }
+
+        sheetId = String(insert.insertId);
+      } else {
+        // Combined workflow: use the existing blank draft.
+        const sheet = existing[0];
+        sheetId = String(sheet.sheet_id);
+
+        if (
+          sheet.sheet_status !== "IN_PROGRESS" ||
+          Number(sheet.record_version) !== 1 ||
+          sheet.original_official_submitted_on != null ||
+          sheet.official_submission_reference != null ||
+          sheet.official_date_verified_by_user_id != null ||
+          sheet.official_date_verified_at != null
+        ) {
+          officialSheetFail(
+            "OFFICIAL_SHEET_ALREADY_RECORDED",
+            "The original submission evidence has already been recorded or verified.",
+          );
+        }
+
+        const [events] = await connection.execute(
+          `SELECT event_id
+             FROM gradebook_official_sheet_submission_events
+            WHERE sheet_id = ?
+            FOR UPDATE`,
+          [sheetId],
+        );
+
+        if (events.length !== 0) {
+          officialSheetFail(
+            "OFFICIAL_SHEET_AUDIT_ALREADY_EXISTS",
+            "This sheet already contains submission audit events.",
+          );
+        }
+
+        const [updated] = await connection.execute(
+          `UPDATE gradebook_official_sheets
+              SET original_official_submitted_on = ?,
+                  official_submission_reference = ?,
+                  updated_by_user_id = ?
+            WHERE sheet_id = ?
+              AND sheet_status = 'IN_PROGRESS'
+              AND record_version = 1
+              AND original_official_submitted_on IS NULL
+              AND official_submission_reference IS NULL
+              AND official_date_verified_by_user_id IS NULL
+              AND official_date_verified_at IS NULL`,
+          [originalDate, reference, actor, sheetId],
+        );
+
+        if (Number(updated.affectedRows) !== 1) {
+          officialSheetFail(
+            "OFFICIAL_SHEET_RECORD_CONFLICT",
+            "The sheet changed while recording its submission evidence.",
+          );
+        }
+      }
+
+      // Preserve the existing original-date audit format.
+      const [audit] = await connection.execute(
+        `INSERT INTO gradebook_official_sheet_submission_events
+         (
+           sheet_id,
+           event_type,
+           previous_record_version,
+           record_version_after,
+           original_official_submitted_on,
+           official_submission_reference,
+           performed_by_user_id
+         )
+         VALUES (?, 'RECORDED', NULL, 1, ?, ?, ?)`,
+        [sheetId, originalDate, reference, actor],
+      );
+
+      if (Number(audit.affectedRows) !== 1) {
+        throw new Error("Original submission audit was not saved.");
+      }
+
+      if (req.body.dry_run) await connection.rollback();
+      else await connection.commit();
+      inTransaction = false;
+      return res.status(req.body.dry_run ? 200 : 201).json({
+        success: true,
+        action: "RECORDED",
+        official_sheet: {
+          sheet_id: req.body.dry_run ? null : sheetId,
+          config_id: scope.configId,
+          sheet_status: "IN_PROGRESS",
+          record_version: 1,
+          original_official_submitted_on: originalDate,
+          official_submission_reference: reference,
+          official_date_verified_by_user_id: null,
+          official_date_verified_at: null,
+          inc_completion_deadline_on: null,
+          deadline_established: false,
+        },
+        audit_event: "RECORDED",
+        audit_event_id: req.body.dry_run ? null : String(audit.insertId),
+        dry_run: req.body.dry_run,
+        persisted: !req.body.dry_run,
+        note: "The original submission date is recorded but not verified. The one-year INC deadline remains unset.",
+      });
+    } catch (error) {
+      if (inTransaction && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("OFFICIAL SHEET RECORD ROLLBACK:", rollbackError);
+        }
+      }
+      return officialSheetError(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
+
+// The Program Head verifies the original submission date.
+// Keep this legacy Registrar endpoint read-only to prevent bypassing that approval.
+router.post(
+  "/gradebook/official-sheets/:offeringId/verify-submission",
+  (_req, res) => {
+    return res.status(403).json({
+      success: false,
+      code: "OFFICIAL_SHEET_PROGRAM_HEAD_VERIFICATION_REQUIRED",
+      message:
+        "Only the Program Head may verify the original grading-sheet submission date. " +
+        "Use the Program Head verification endpoint.",
+    });
+  },
+);
+
+const regCorrQAOffering = 131;
+const regCorrQADatabase = "databaseforptc1_admission_test";
+
+function regCorrFail(code, message, status = 409) {
+  const error = new Error(message);
+  error.status = status;
+  error.code = code;
+  throw error;
+}
+
+function regCorrId(value) {
+  if (!/^[1-9]\d*$/.test(String(value ?? ""))) return null;
+  const n = Number(value);
+  return Number.isSafeInteger(n) ? n : null;
+}
+
+function regCorrJson(value) {
+  try {
+    const object = typeof value === "string" ? JSON.parse(value) : value;
+    return object && typeof object === "object" && !Array.isArray(object)
+      ? object
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function regCorrGcd(a, b) {
+  while (b !== 0n) [a, b] = [b, a % b];
+  return a || 1n;
+}
+
+function regCorrFrac(n, d) {
+  if (d <= 0n || n < 0n)
+    regCorrFail(
+      "CORRECTION_FRACTION_INVALID",
+      "An official grade fraction is invalid.",
+    );
+  const g = regCorrGcd(n, d);
+  return { n: n / g, d: d / g };
+}
+
+function regCorrPlus(a, b) {
+  return regCorrFrac(a.n * b.d + b.n * a.d, a.d * b.d);
+}
+function regCorrHalf(a) {
+  return regCorrFrac(a.n, a.d * 2n);
+}
+function regCorrEqual(a, b) {
+  return a.n * b.d === b.n * a.d;
+}
+
+function regCorrStoredFrac(n, d, label) {
+  const nText = String(n ?? ""),
+    dText = String(d ?? "");
+  if (
+    !/^(0|[1-9]\d*)$/.test(nText) ||
+    !/^[1-9]\d*$/.test(dText) ||
+    nText.length > 255 ||
+    dText.length > 255
+  ) {
+    regCorrFail(
+      "CORRECTION_SOURCE_FRACTION_INVALID",
+      `${label} exact fraction is invalid.`,
+    );
+  }
+  return regCorrFrac(BigInt(nText), BigInt(dText));
+}
+
+function regCorrMoney(value, label) {
+  const text = String(value ?? "").trim();
+  if (!/^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/.test(text)) {
+    regCorrFail(
+      "CORRECTION_SOURCE_AMOUNT_INVALID",
+      `${label} is not a valid two-decimal value.`,
+    );
+  }
+  const [whole, decimal = ""] = text.split(".");
+  return BigInt(whole) * 100n + BigInt(decimal.padEnd(2, "0"));
+}
+
+function regCorrDecimal(value, places) {
+  const text = String(value ?? "").trim();
+  if (!/^(0|[1-9]\d{0,2})(?:\.\d{1,12})?$/.test(text)) return null;
+  const [whole, fractional = ""] = text.split(".");
+  if (fractional.length > places) return null;
+  return (
+    BigInt(whole) * 10n ** BigInt(places) +
+    BigInt(fractional.padEnd(places, "0"))
+  );
+}
+
+function regCorrFormat(ratio, places = 12) {
+  const factor = 10n ** BigInt(places);
+  const scaled = (2n * ratio.n * factor + ratio.d) / (2n * ratio.d);
+  return `${scaled / factor}.${String(scaled % factor).padStart(places, "0")}`;
+}
+
+function regCorrRating(ratio) {
+  const thresholds = [
+    [97, "1.00"],
+    [94, "1.25"],
+    [91, "1.50"],
+    [88, "1.75"],
+    [85, "2.00"],
+    [82, "2.25"],
+    [79, "2.50"],
+    [76, "2.75"],
+    [75, "3.00"],
+  ];
+  for (const [limit, rating] of thresholds) {
+    if (ratio.n >= BigInt(limit) * ratio.d) return rating;
+  }
+  return "5.00";
+}
+
+function regCorrSame(a, b) {
+  if (a == null || b == null) return a == null && b == null;
+  const x = regCorrDecimal(a, 12),
+    y = regCorrDecimal(b, 12);
+  return x !== null && y !== null ? x === y : String(a) === String(b);
+}
+
+// Compute from the immutable, Program Head-approved snapshot; do NOT replace it.
+// The original calculation must independently match its stored exact term ratio.
+function regCorrCalculateTerm(raw, term, ids, overlay = null) {
+  const data = regCorrJson(raw);
+  const result = data?.calculated_term;
+  if (
+    !data ||
+    !result ||
+    result.state !== "READY" ||
+    data.policy !== "TWO_TERM_50_50" ||
+    data.grading_term !== term ||
+    Number(data.config_id) !== ids.configId ||
+    Number(data.enrollment_subject_id) !== ids.enrollmentSubjectId ||
+    Number(data.offering_id) !== regCorrQAOffering ||
+    Number(data.term_weights?.MIDTERM) !== 50 ||
+    Number(data.term_weights?.FINAL_TERM) !== 50 ||
+    !Array.isArray(result.categories) ||
+    result.categories.length < 2 ||
+    (result.incomplete_category_codes ?? []).length !== 0
+  ) {
+    regCorrFail(
+      "CORRECTION_SNAPSHOT_UNVERIFIED",
+      "Approved term calculation snapshot is incomplete or inconsistent.",
+    );
+  }
+  let totalWeight = 0n;
+  let originalTerm = regCorrFrac(0n, 1n);
+  let correctedTerm = regCorrFrac(0n, 1n);
+  let matchCount = 0;
+  const codes = new Set();
+  const assessmentIds = new Set();
+  for (const category of result.categories) {
+    if (
+      !category ||
+      category.state !== "READY" ||
+      !category.category_code ||
+      codes.has(category.category_code)
+    ) {
+      regCorrFail(
+        "CORRECTION_CATEGORY_INVALID",
+        "Original category layout is invalid.",
+      );
+    }
+    codes.add(category.category_code);
+    const weight = regCorrMoney(
+      category.category_weight_percent,
+      "category weight",
+    );
+    if (weight === 0n || weight > 10000n)
+      regCorrFail(
+        "CORRECTION_WEIGHT_INVALID",
+        "Original category weight is invalid.",
+      );
+    totalWeight += weight;
+    let contribution;
+    let proposedContribution;
+    if (category.category_code === "ATTENDANCE") {
+      // Preserve the originally approved per-meeting attendance result.
+      const pct = regCorrStoredFrac(
+        category.category_percentage?.exact_numerator,
+        category.category_percentage?.exact_denominator,
+        "attendance percentage",
+      );
+      contribution = regCorrStoredFrac(
+        category.contribution_percent_points?.exact_numerator,
+        category.contribution_percent_points?.exact_denominator,
+        "attendance contribution",
+      );
+      if (
+        pct.n > pct.d * 100n ||
+        !regCorrEqual(contribution, regCorrFrac(pct.n * weight, pct.d * 10000n))
+      ) {
+        regCorrFail(
+          "CORRECTION_ATTENDANCE_SOURCE_INVALID",
+          "Approved attendance contribution is inconsistent.",
+        );
+      }
+      proposedContribution = contribution;
+    } else {
+      if (
+        !Array.isArray(category.assessments) ||
+        !category.assessments.length
+      ) {
+        regCorrFail(
+          "CORRECTION_CATEGORY_EMPTY",
+          "Approved category has no assessment basis.",
+        );
+      }
+      let earned = 0n,
+        maximum = 0n,
+        correctedEarned = 0n;
+      for (const item of category.assessments) {
+        const itemId = regCorrId(item.assessment_id);
+        if (!itemId || assessmentIds.has(itemId)) {
+          regCorrFail(
+            "CORRECTION_ASSESSMENT_INVALID",
+            "Duplicate or invalid assessment in approved snapshot.",
+          );
+        }
+        assessmentIds.add(itemId);
+        if (item.score_status === "NOT_APPLICABLE") continue;
+        if (item.score_status !== "SCORED") {
+          regCorrFail(
+            "CORRECTION_UNSAVED_ASSESSMENT",
+            "Approved category contains an unsaved assessment.",
+          );
+        }
+        const got = regCorrMoney(item.earned_score, "approved score");
+        const max = regCorrMoney(item.maximum_score, "assessment maximum");
+        if (max <= 0n || got > max)
+          regCorrFail(
+            "CORRECTION_ASSESSMENT_BOUNDS",
+            "Invalid published assessment bounds.",
+          );
+        earned += got;
+        maximum += max;
+        if (
+          overlay &&
+          itemId === overlay.assessmentId &&
+          term === overlay.term
+        ) {
+          if (got !== overlay.original || max !== overlay.maximum) {
+            regCorrFail(
+              "CORRECTION_SCORE_SNAPSHOT_STALE",
+              "Published assessment does not match authorized correction source.",
+            );
+          }
+          correctedEarned += overlay.proposed;
+          matchCount += 1;
+        } else correctedEarned += got;
+      }
+      if (
+        maximum === 0n ||
+        regCorrMoney(category.earned_points, "category earned points") !==
+          earned ||
+        regCorrMoney(category.possible_points, "category possible points") !==
+          maximum
+      ) {
+        regCorrFail(
+          "CORRECTION_CATEGORY_BASIS_INVALID",
+          "Original category points do not match its approved assessment rows.",
+        );
+      }
+      const categoryPct = regCorrStoredFrac(
+        category.category_percentage?.exact_numerator,
+        category.category_percentage?.exact_denominator,
+        "category percentage",
+      );
+      contribution = regCorrStoredFrac(
+        category.contribution_percent_points?.exact_numerator,
+        category.contribution_percent_points?.exact_denominator,
+        "category contribution",
+      );
+      if (
+        !regCorrEqual(categoryPct, regCorrFrac(earned * 100n, maximum)) ||
+        !regCorrEqual(
+          contribution,
+          regCorrFrac(weight * earned, maximum * 100n),
+        )
+      ) {
+        regCorrFail(
+          "CORRECTION_CATEGORY_MATH_INVALID",
+          "Original weighted category calculation does not match its snapshot.",
+        );
+      }
+      proposedContribution = regCorrFrac(
+        weight * correctedEarned,
+        maximum * 100n,
+      );
+    }
+    originalTerm = regCorrPlus(originalTerm, contribution);
+    correctedTerm = regCorrPlus(correctedTerm, proposedContribution);
+  }
+  if (totalWeight !== 10000n)
+    regCorrFail(
+      "CORRECTION_TOTAL_WEIGHT_INVALID",
+      "Official category weights must total 100%. ",
+    );
+  const sourcePct = regCorrStoredFrac(
+    result.term_percentage?.exact_numerator,
+    result.term_percentage?.exact_denominator,
+    "term percentage",
+  );
+  if (!regCorrEqual(sourcePct, originalTerm)) {
+    regCorrFail(
+      "CORRECTION_TERM_MATH_INVALID",
+      "Original term percentage does not match its assessment and attendance categories.",
+    );
+  }
+  return {
+    original: originalTerm,
+    revised: correctedTerm,
+    matched: matchCount,
+  };
+}
+
+// POST /api/registrar/gradebook/score-correction-requests/:correctionId/apply
+router.post(
+  "/gradebook/score-correction-requests/:correctionId/apply",
+  async (req, res) => {
+    let connection;
+    let inTransaction = false;
+    let gradeGuard = false;
+    try {
+      if (Object.keys(req.query ?? {}).length) {
+        regCorrFail(
+          "CORRECTION_QUERY_UNSUPPORTED",
+          "Query parameters are not accepted.",
+          400,
+        );
+      }
+      const correctionId = regCorrId(req.params.correctionId);
+      const body = req.body;
+      const userId = regCorrId(req.user?.user_id);
+      if (
+        !correctionId ||
+        !userId ||
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+      ) {
+        regCorrFail(
+          "CORRECTION_INPUT_INVALID",
+          "Valid correction ID, authenticated user, and JSON are required.",
+          400,
+        );
+      }
+      const allowed = new Set([
+        "expected_request_version",
+        "expected_score_version",
+        "registrar_remarks",
+        "confirm_application",
+        "dry_run",
+      ]);
+      if (Object.keys(body).some((field) => !allowed.has(field))) {
+        regCorrFail(
+          "CORRECTION_FIELDS_UNSUPPORTED",
+          "Unsupported fields supplied.",
+          400,
+        );
+      }
+      const expectedVersion = regCorrId(body.expected_request_version);
+      const expectedScoreVersion = regCorrId(body.expected_score_version);
+      const remarks =
+        typeof body.registrar_remarks === "string"
+          ? body.registrar_remarks.trim()
+          : "";
+      if (
+        !expectedVersion ||
+        expectedVersion >= 4294967295 ||
+        !expectedScoreVersion ||
+        remarks.length < 15 ||
+        remarks.length > 1000 ||
+        /[\x00-\x08\x0B\x0E-\x1F\x7F]/.test(remarks) ||
+        body.confirm_application !== true ||
+        typeof body.dry_run !== "boolean"
+      ) {
+        regCorrFail(
+          "CORRECTION_BODY_INVALID",
+          "Current request/score versions, documented registrar_remarks (15–1000), confirmation, and dry_run boolean are required.",
+          400,
+        );
+      }
+
+      connection = await db.getConnection();
+      const [[database]] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+      if (database?.database_name !== regCorrQADatabase) {
+        regCorrFail(
+          "CORRECTION_TEST_DB_ONLY",
+          "Correction application is restricted to the admission-test database.",
+          403,
+        );
+      }
+      const [registrars] = await connection.execute(
+        `SELECT u.user_id FROM users u JOIN roles r ON r.role_id = u.role_id
+        WHERE u.user_id = ? AND u.is_active = 1 AND u.is_archived = 0
+          AND r.role_name = 'Registrar'`,
+        [userId],
+      );
+      if (registrars.length !== 1)
+        regCorrFail(
+          "CORRECTION_REGISTRAR_ONLY",
+          "Active Registrar access is required.",
+          403,
+        );
+      // Pooled connection bypass flags must never leak into this transaction.
+      await connection.execute("SET @allow_approved_inc_grade_change = NULL");
+      await connection.execute("SET @allow_approved_inc_expiry = NULL");
+      await connection.execute("SET @allow_approved_grade_correction = NULL");
+      await connection.beginTransaction();
+      inTransaction = true;
+
+      // Approved-grade corrections remain QA-only.
+      await assertQaGradingDatabase(connection);
+
+      const [targets] = await connection.execute(
+        `SELECT r.grade_id, r.config_id, r.enrollment_subject_id, r.score_id,
+              cfg.offering_id
+         FROM gradebook_correction_requests r
+         JOIN gradebook_offering_config cfg ON cfg.config_id = r.config_id
+        WHERE r.correction_id = ?`,
+        [String(correctionId)],
+      );
+      if (
+        targets.length !== 1 ||
+        Number(targets[0].offering_id) !== regCorrQAOffering
+      ) {
+        regCorrFail(
+          "CORRECTION_NOT_FOUND",
+          "Correction request is outside QA Offering #131.",
+          404,
+        );
+      }
+      const target = targets[0];
+      const gradeId = Number(target.grade_id);
+      const configId = Number(target.config_id);
+      const enrollmentSubjectId = Number(target.enrollment_subject_id);
+      const scoreId = Number(target.score_id);
+
+      // Lock order matches Faculty and Program Head workflows.
+      const [offerings] = await connection.execute(
+        `SELECT so.offering_id, so.faculty_id, so.status,
+              cr.department_id, f.user_id AS instructor_user_id
+         FROM subject_offerings so
+         JOIN sections sec ON sec.section_id = so.section_id
+         JOIN courses cr ON cr.course_id = sec.course_id
+         JOIN faculty f ON f.faculty_id = so.faculty_id
+        WHERE so.offering_id = ? FOR UPDATE`,
+        [regCorrQAOffering],
+      );
+      if (offerings.length !== 1 || offerings[0].status === "Cancelled") {
+        regCorrFail(
+          "CORRECTION_OFFERING_CHANGED",
+          "The original offering is unavailable.",
+        );
+      }
+      const [configs] = await connection.execute(
+        `SELECT config_id, grading_classification, midterm_percent, final_term_percent
+         FROM gradebook_offering_config WHERE config_id = ? AND offering_id = ? FOR UPDATE`,
+        [configId, regCorrQAOffering],
+      );
+      if (
+        configs.length !== 1 ||
+        Number(configs[0].midterm_percent) !== 50 ||
+        Number(configs[0].final_term_percent) !== 50
+      ) {
+        regCorrFail(
+          "CORRECTION_CONFIG_INVALID",
+          "The 50/50 gradebook configuration has changed.",
+        );
+      }
+      const [subjects] = await connection.execute(
+        `SELECT es.status, es.offering_id, e.enrollment_status
+         FROM enrollment_subjects es JOIN enrollments e ON e.enrollment_id = es.enrollment_id
+        WHERE es.enrollment_subject_id = ? FOR UPDATE`,
+        [enrollmentSubjectId],
+      );
+      if (
+        subjects.length !== 1 ||
+        Number(subjects[0].offering_id) !== regCorrQAOffering ||
+        subjects[0].enrollment_status !== "Approved" ||
+        !["Completed", "Failed"].includes(subjects[0].status)
+      ) {
+        regCorrFail(
+          "CORRECTION_ENROLLMENT_CHANGED",
+          "Approved enrollment and completed/failed subject are required.",
+        );
+      }
+      const [grades] = await connection.execute(
+        `SELECT grade_id, enrollment_subject_id, faculty_id, grade_status,
+              grading_policy, grading_outcome, midterm_grade, final_grade,
+              overall_percentage, final_rating, remarks, outcome_reason
+         FROM grades WHERE grade_id = ? FOR UPDATE`,
+        [gradeId],
+      );
+      if (
+        grades.length !== 1 ||
+        Number(grades[0].enrollment_subject_id) !== enrollmentSubjectId ||
+        grades[0].grade_status !== "Approved" ||
+        grades[0].grading_policy !== "TWO_TERM_50_50" ||
+        grades[0].grading_outcome !== "NUMERIC" ||
+        Number(grades[0].faculty_id) !== Number(offerings[0].faculty_id)
+      ) {
+        regCorrFail(
+          "CORRECTION_GRADE_STALE",
+          "The protected published numeric grade is no longer eligible.",
+        );
+      }
+      const grade = grades[0];
+      const [publications] = await connection.execute(
+        `SELECT publication_id, grade_id, config_id, enrollment_subject_id,
+              midterm_submission_id, final_term_submission_id,
+              overall_exact_numerator, overall_exact_denominator
+         FROM gradebook_official_grade_publications WHERE grade_id = ? FOR UPDATE`,
+        [gradeId],
+      );
+      if (
+        publications.length !== 1 ||
+        Number(publications[0].config_id) !== configId ||
+        Number(publications[0].enrollment_subject_id) !== enrollmentSubjectId
+      ) {
+        regCorrFail(
+          "CORRECTION_PUBLICATION_MISSING",
+          "Official grade publication provenance is missing.",
+        );
+      }
+      const pub = publications[0];
+      const [attempts] = await connection.execute(
+        `SELECT term_submission_id, config_id, enrollment_subject_id, grading_term,
+              submission_status, term_percentage_exact_numerator,
+              term_percentage_exact_denominator, calculation_snapshot_json
+         FROM gradebook_term_submission_attempts
+        WHERE term_submission_id IN (?, ?) FOR UPDATE`,
+        [
+          String(pub.midterm_submission_id),
+          String(pub.final_term_submission_id),
+        ],
+      );
+      const terms = Object.fromEntries(
+        attempts.map((term) => [term.grading_term, term]),
+      );
+      if (
+        attempts.length !== 2 ||
+        !terms.MIDTERM ||
+        !terms.FINAL_TERM ||
+        attempts.some(
+          (row) =>
+            row.submission_status !== "APPROVED" ||
+            Number(row.config_id) !== configId ||
+            Number(row.enrollment_subject_id) !== enrollmentSubjectId,
+        )
+      ) {
+        regCorrFail(
+          "CORRECTION_APPROVED_TERMS_MISSING",
+          "Both original approved term submissions are required.",
+        );
+      }
+      const [scores] = await connection.execute(
+        `SELECT sc.score_id, sc.assessment_id, sc.score_status, sc.earned_score, sc.record_version,
+              sc.not_applicable_reason, a.grading_term, a.maximum_score, a.record_status,
+              oc.config_id
+         FROM gradebook_scores sc
+         JOIN gradebook_assessments a ON a.assessment_id = sc.assessment_id
+         JOIN gradebook_offering_categories oc ON oc.offering_category_id = a.offering_category_id
+        WHERE sc.score_id = ? AND sc.enrollment_subject_id = ? FOR UPDATE`,
+        [scoreId, enrollmentSubjectId],
+      );
+      if (
+        scores.length !== 1 ||
+        Number(scores[0].config_id) !== configId ||
+        scores[0].record_status !== "ACTIVE" ||
+        scores[0].score_status !== "SCORED" ||
+        Number(scores[0].record_version) !== expectedScoreVersion
+      ) {
+        regCorrFail(
+          "CORRECTION_SCORE_STALE",
+          "The approved assessment score is stale or has changed.",
+        );
+      }
+      const score = scores[0];
+      const [requests] = await connection.execute(
+        `SELECT * FROM gradebook_correction_requests WHERE correction_id = ? FOR UPDATE`,
+        [String(correctionId)],
+      );
+      if (
+        requests.length !== 1 ||
+        requests[0].request_status !== "APPROVED" ||
+        Number(requests[0].record_version) !== expectedVersion ||
+        Number(requests[0].grade_id) !== gradeId ||
+        Number(requests[0].config_id) !== configId ||
+        Number(requests[0].enrollment_subject_id) !== enrollmentSubjectId ||
+        Number(requests[0].score_id) !== scoreId ||
+        Number(requests[0].score_version_at_request) !== expectedScoreVersion ||
+        Number(requests[0].publication_id) !== Number(pub.publication_id) ||
+        Number(requests[0].assessment_id) !== Number(score.assessment_id) ||
+        String(requests[0].term_submission_id) !==
+          String(terms[score.grading_term]?.term_submission_id)
+      ) {
+        regCorrFail(
+          "CORRECTION_APPROVAL_STALE",
+          "An unchanged Program Head-approved correction request is required.",
+        );
+      }
+      const request = requests[0];
+      const originalScore = regCorrMoney(
+        request.original_earned_score,
+        "original score",
+      );
+      const revisedScore = regCorrMoney(
+        request.proposed_earned_score,
+        "proposed score",
+      );
+      const maximum = regCorrMoney(
+        request.maximum_score_snapshot,
+        "maximum score",
+      );
+      if (
+        originalScore !== regCorrMoney(score.earned_score, "saved score") ||
+        maximum !== regCorrMoney(score.maximum_score, "assessment maximum") ||
+        revisedScore === originalScore ||
+        revisedScore > maximum ||
+        Number(request.submitted_by_user_id) !==
+          Number(offerings[0].instructor_user_id) ||
+        !String(request.correction_reason ?? "").trim() ||
+        !String(request.evidence_summary ?? "").trim()
+      ) {
+        regCorrFail(
+          "CORRECTION_SCORE_SOURCE_INVALID",
+          "Approved source score or Faculty evidence changed.",
+        );
+      }
+      const [conflictingRequests] = await connection.execute(
+        `SELECT grade_change_request_id FROM grade_change_requests
+        WHERE grade_id = ? AND status IN ('Pending Program Head','For Registrar Processing') FOR UPDATE`,
+        [gradeId],
+      );
+      if (conflictingRequests.length)
+        regCorrFail(
+          "CORRECTION_LEGACY_CONFLICT",
+          "An older active grade-change request must be reconciled first.",
+        );
+      const [previouslyApplied] = await connection.execute(
+        `SELECT correction_id FROM gradebook_correction_requests
+        WHERE grade_id = ? AND request_status = 'APPLIED' FOR UPDATE`,
+        [gradeId],
+      );
+      if (previouslyApplied.length)
+        regCorrFail(
+          "CORRECTION_PRIOR_AMENDMENT_REVIEW",
+          "Additional corrections require a controlled multi-amendment workflow.",
+        );
+      const [heads] = await connection.execute(
+        `SELECT ph.department_id FROM users u
+         JOIN roles r ON r.role_id = u.role_id
+         JOIN faculty f ON f.user_id = u.user_id
+         JOIN program_heads ph ON ph.faculty_id = f.faculty_id
+        WHERE u.user_id = ? AND u.is_active = 1 AND u.is_archived = 0
+          AND r.role_name = 'Program Head' AND ph.is_active = 1
+          AND (ph.start_date IS NULL OR ph.start_date <= CURDATE())
+          AND (ph.end_date IS NULL OR ph.end_date >= CURDATE())`,
+        [request.reviewed_by_user_id],
+      );
+      if (
+        !heads.some(
+          (head) =>
+            Number(head.department_id) === Number(offerings[0].department_id),
+        ) ||
+        !request.reviewed_at ||
+        !String(request.review_remarks ?? "").trim()
+      ) {
+        regCorrFail(
+          "CORRECTION_REVIEWER_INVALID",
+          "The approving Program Head is no longer authorized for this offering.",
+        );
+      }
+      const [events] = await connection.execute(
+        `SELECT event_type, previous_status, new_status, proposal_snapshot_json,
+              performed_by_user_id, request_version_after
+         FROM gradebook_correction_request_events
+        WHERE correction_id = ? ORDER BY request_version_after, event_id FOR UPDATE`,
+        [String(correctionId)],
+      );
+      const validChain =
+        events.length === expectedVersion &&
+        events.every((event, index) => {
+          if (Number(event.request_version_after) !== index + 1) return false;
+          if (index === 0)
+            return (
+              event.event_type === "SUBMITTED" &&
+              event.previous_status === null &&
+              event.new_status === "SUBMITTED" &&
+              Number(event.performed_by_user_id) ===
+                Number(request.submitted_by_user_id)
+            );
+          if (event.previous_status !== events[index - 1].new_status)
+            return false;
+          return (
+            (event.event_type === "RETURNED" &&
+              event.previous_status === "SUBMITTED" &&
+              event.new_status === "RETURNED") ||
+            (event.event_type === "RESUBMITTED" &&
+              event.previous_status === "RETURNED" &&
+              event.new_status === "SUBMITTED" &&
+              Number(event.performed_by_user_id) ===
+                Number(request.submitted_by_user_id)) ||
+            (event.event_type === "APPROVED" &&
+              event.previous_status === "SUBMITTED" &&
+              event.new_status === "APPROVED" &&
+              Number(event.performed_by_user_id) ===
+                Number(request.reviewed_by_user_id))
+          );
+        });
+      const latest = events.at(-1);
+      const proposal = regCorrJson(latest?.proposal_snapshot_json);
+      if (
+        !validChain ||
+        latest?.event_type !== "APPROVED" ||
+        latest.new_status !== "APPROVED" ||
+        !proposal ||
+        proposal.correction_scope !== "ONE_ASSESSMENT_SCORE" ||
+        Number(proposal.grade_id) !== gradeId ||
+        Number(proposal.assessment_id) !== Number(request.assessment_id) ||
+        Number(proposal.score_id) !== scoreId ||
+        Number(proposal.score_version_at_request) !== expectedScoreVersion ||
+        regCorrMoney(proposal.original_earned_score, "audit original score") !==
+          originalScore ||
+        regCorrMoney(proposal.proposed_earned_score, "audit proposed score") !==
+          revisedScore ||
+        regCorrMoney(proposal.maximum_score_snapshot, "audit maximum") !==
+          maximum ||
+        proposal.correction_reason !== request.correction_reason ||
+        proposal.evidence_summary !== request.evidence_summary
+      ) {
+        regCorrFail(
+          "CORRECTION_AUDIT_INVALID",
+          "Program Head approval does not match its complete audit history.",
+        );
+      }
+      const original = regCorrJson(request.original_grade_snapshot_json);
+      if (
+        !original ||
+        Number(original.grade_id) !== gradeId ||
+        String(original.publication_id) !== String(pub.publication_id) ||
+        String(original.midterm_submission_id) !==
+          String(pub.midterm_submission_id) ||
+        String(original.final_term_submission_id) !==
+          String(pub.final_term_submission_id) ||
+        original.grade_status !== "Approved" ||
+        original.grading_outcome !== "NUMERIC" ||
+        ![
+          "midterm_grade",
+          "final_grade",
+          "overall_percentage",
+          "final_rating",
+          "remarks",
+        ].every((key) => regCorrSame(original[key], grade[key]))
+      ) {
+        regCorrFail(
+          "CORRECTION_ORIGINAL_GRADE_CHANGED",
+          "Official grade no longer matches Faculty's original snapshot.",
+        );
+      }
+      const [scoreEvents] = await connection.execute(
+        `SELECT event_type, new_score_status, new_earned_score, score_version_after
+         FROM gradebook_score_events WHERE score_id = ? ORDER BY score_version_after, event_id FOR UPDATE`,
+        [scoreId],
+      );
+      const lastScoreEvent = scoreEvents.at(-1);
+      if (
+        scoreEvents.length !== expectedScoreVersion ||
+        !scoreEvents.every(
+          (ev, i) => Number(ev.score_version_after) === i + 1,
+        ) ||
+        !lastScoreEvent ||
+        lastScoreEvent.new_score_status !== "SCORED" ||
+        regCorrMoney(lastScoreEvent.new_earned_score, "last score audit") !==
+          originalScore
+      ) {
+        regCorrFail(
+          "CORRECTION_SCORE_AUDIT_INVALID",
+          "Original score does not match its append-only history.",
+        );
+      }
+      const overlay = {
+        term: score.grading_term,
+        assessmentId: Number(score.assessment_id),
+        original: originalScore,
+        maximum,
+        proposed: revisedScore,
+      };
+      const ids = { configId, enrollmentSubjectId };
+      const mid = regCorrCalculateTerm(
+        terms.MIDTERM.calculation_snapshot_json,
+        "MIDTERM",
+        ids,
+        overlay,
+      );
+      const fin = regCorrCalculateTerm(
+        terms.FINAL_TERM.calculation_snapshot_json,
+        "FINAL_TERM",
+        ids,
+        overlay,
+      );
+      if (
+        mid.matched + fin.matched !== 1 ||
+        !regCorrEqual(
+          mid.original,
+          regCorrStoredFrac(
+            terms.MIDTERM.term_percentage_exact_numerator,
+            terms.MIDTERM.term_percentage_exact_denominator,
+            "approved Midterm",
+          ),
+        ) ||
+        !regCorrEqual(
+          fin.original,
+          regCorrStoredFrac(
+            terms.FINAL_TERM.term_percentage_exact_numerator,
+            terms.FINAL_TERM.term_percentage_exact_denominator,
+            "approved Final Term",
+          ),
+        )
+      ) {
+        regCorrFail(
+          "CORRECTION_TERM_SOURCE_INVALID",
+          "Proposed assessment is not uniquely linked to the approved term math.",
+        );
+      }
+      const originalOverall = regCorrHalf(
+        regCorrPlus(mid.original, fin.original),
+      );
+      const correctedOverall = regCorrHalf(
+        regCorrPlus(mid.revised, fin.revised),
+      );
+      if (
+        !regCorrEqual(
+          originalOverall,
+          regCorrStoredFrac(
+            pub.overall_exact_numerator,
+            pub.overall_exact_denominator,
+            "publication overall",
+          ),
+        ) ||
+        regCorrDecimal(grade.midterm_grade, 12) !==
+          regCorrDecimal(regCorrFormat(mid.original), 12) ||
+        regCorrDecimal(grade.final_grade, 12) !==
+          regCorrDecimal(regCorrFormat(fin.original), 12) ||
+        regCorrDecimal(grade.overall_percentage, 12) !==
+          regCorrDecimal(regCorrFormat(originalOverall), 12) ||
+        regCorrRating(originalOverall) !== Number(grade.final_rating).toFixed(2)
+      ) {
+        regCorrFail(
+          "CORRECTION_PUBLICATION_MATH_INVALID",
+          "Current official grade does not match its immutable published source.",
+        );
+      }
+      const revisedMid = regCorrFormat(mid.revised);
+      const revisedFinal = regCorrFormat(fin.revised);
+      const revisedRating = regCorrRating(correctedOverall);
+      const revisedRemarks =
+        correctedOverall.n >= 75n * correctedOverall.d ? "Passed" : "Failed";
+      // Trigger derives overall/rating from stored DECIMAL(15,12), not full rational.
+      // Reject threshold-edge cases where storage rounding could change the result.
+      const storedOverallScaled =
+        (regCorrDecimal(revisedMid, 12) +
+          regCorrDecimal(revisedFinal, 12) +
+          1n) /
+        2n;
+      const storedOverall = regCorrFrac(storedOverallScaled, 10n ** 12n);
+      if (
+        regCorrRating(storedOverall) !== revisedRating ||
+        storedOverall.n >= 75n * storedOverall.d !==
+          correctedOverall.n >= 75n * correctedOverall.d
+      ) {
+        regCorrFail(
+          "CORRECTION_BOUNDARY_RECONCILIATION",
+          "Corrected exact grade is on a storage-rounding threshold; manual reconciliation required.",
+        );
+      }
+
+      const [sheets] = await connection.execute(
+        `SELECT sheet_id, sheet_status, record_version, original_official_submitted_on,
+              official_submission_reference, official_date_verified_by_user_id,
+              official_date_verified_at, finalized_by_user_id, finalized_at
+         FROM gradebook_official_sheets WHERE config_id = ? FOR UPDATE`,
+        [configId],
+      );
+      if (
+        sheets.length !== 1 ||
+        sheets[0].sheet_status !== "FINALIZED" ||
+        !sheets[0].original_official_submitted_on ||
+        !String(sheets[0].official_submission_reference ?? "").trim() ||
+        !sheets[0].official_date_verified_by_user_id ||
+        !sheets[0].official_date_verified_at ||
+        !sheets[0].finalized_by_user_id ||
+        !sheets[0].finalized_at
+      ) {
+        regCorrFail(
+          "CORRECTION_SHEET_NOT_FINALIZED",
+          "A finalized, Registrar-verified original official grading sheet is required before amendment.",
+        );
+      }
+      const sheet = sheets[0];
+      const [sheetEvents] = await connection.execute(
+        `SELECT event_type, original_official_submitted_on, official_submission_reference,
+              performed_by_user_id, record_version_after
+         FROM gradebook_official_sheet_submission_events WHERE sheet_id = ?
+         ORDER BY record_version_after FOR UPDATE`,
+        [String(sheet.sheet_id)],
+      );
+      if (
+        sheetEvents[0]?.event_type !== "RECORDED" ||
+        !sheetEvents.some(
+          (event) =>
+            event.event_type === "VERIFIED" &&
+            String(event.official_submission_reference) ===
+              String(sheet.official_submission_reference) &&
+            Number(event.performed_by_user_id) ===
+              Number(sheet.official_date_verified_by_user_id),
+        )
+      ) {
+        regCorrFail(
+          "CORRECTION_SHEET_AUDIT_MISSING",
+          "Official grading-sheet date verification audit is incomplete.",
+        );
+      }
+      const [revisions] = await connection.execute(
+        `SELECT sheet_revision_number FROM gradebook_sheet_amendments
+        WHERE sheet_id = ? ORDER BY sheet_revision_number DESC LIMIT 1 FOR UPDATE`,
+        [String(sheet.sheet_id)],
+      );
+      const revision = revisions.length
+        ? Number(revisions[0].sheet_revision_number) + 1
+        : 1;
+      if (!Number.isSafeInteger(revision) || revision >= 4294967295) {
+        regCorrFail(
+          "CORRECTION_REVISION_LIMIT",
+          "Official-sheet amendment revision limit reached.",
+        );
+      }
+      const previous = {
+        correction_id: String(correctionId),
+        publication_id: String(pub.publication_id),
+        grade_id: gradeId,
+        enrollment_subject_id: enrollmentSubjectId,
+        original_score: String(request.original_earned_score),
+        original_score_version: expectedScoreVersion,
+        original_grade: {
+          grading_policy: grade.grading_policy,
+          grading_outcome: grade.grading_outcome,
+          grade_status: grade.grade_status,
+          midterm_grade: grade.midterm_grade,
+          final_grade: grade.final_grade,
+          overall_percentage: grade.overall_percentage,
+          final_rating: grade.final_rating,
+          remarks: grade.remarks,
+        },
+      };
+      const next = {
+        correction_id: String(correctionId),
+        change_scope: "ONE_ASSESSMENT_SCORE",
+        assessment_id: Number(score.assessment_id),
+        score_id: scoreId,
+        previous_score_version: expectedScoreVersion,
+        new_score_version: expectedScoreVersion + 1,
+        original_score: String(request.original_earned_score),
+        corrected_score: String(request.proposed_earned_score),
+        original_term_snapshot_ids: {
+          MIDTERM: String(pub.midterm_submission_id),
+          FINAL_TERM: String(pub.final_term_submission_id),
+        },
+        original_publication_id: String(pub.publication_id),
+        corrected_term_exact: {
+          MIDTERM: {
+            numerator: String(mid.revised.n),
+            denominator: String(mid.revised.d),
+          },
+          FINAL_TERM: {
+            numerator: String(fin.revised.n),
+            denominator: String(fin.revised.d),
+          },
+        },
+        corrected_overall_exact: {
+          numerator: String(correctedOverall.n),
+          denominator: String(correctedOverall.d),
+        },
+        corrected_midterm_grade: revisedMid,
+        corrected_final_grade: revisedFinal,
+        corrected_overall_percentage: regCorrFormat(correctedOverall),
+        corrected_final_rating: revisedRating,
+        corrected_remarks: revisedRemarks,
+        review_required_for_progression: true,
+      };
+
+      const [scoreUpdate] = await connection.execute(
+        `UPDATE gradebook_scores
+          SET earned_score = ?, updated_by_user_id = ?, record_version = record_version + 1
+        WHERE score_id = ? AND record_version = ? AND score_status = 'SCORED'
+          AND earned_score = ?`,
+        [
+          String(request.proposed_earned_score),
+          userId,
+          scoreId,
+          expectedScoreVersion,
+          String(request.original_earned_score),
+        ],
+      );
+      if (Number(scoreUpdate.affectedRows) !== 1)
+        regCorrFail(
+          "CORRECTION_SCORE_WRITE_CONFLICT",
+          "Approved score changed during Registrar processing.",
+        );
+      const [scoreEvent] = await connection.execute(
+        `INSERT INTO gradebook_score_events
+        (score_id, event_type, change_context, previous_score_status, new_score_status,
+         previous_earned_score, new_earned_score, previous_na_reason, new_na_reason,
+         change_reason, changed_by_user_id, score_version_after)
+       VALUES (?, 'UPDATED', 'AUTHORIZED_AMENDMENT', 'SCORED', 'SCORED', ?, ?, NULL, NULL, ?, ?, ?)`,
+        [
+          scoreId,
+          String(request.original_earned_score),
+          String(request.proposed_earned_score),
+          `${request.correction_reason} | Registrar: ${remarks}`,
+          userId,
+          expectedScoreVersion + 1,
+        ],
+      );
+      if (Number(scoreEvent.affectedRows) !== 1)
+        throw new Error("Authorized score history could not be recorded.");
+
+      await connection.execute("SET @allow_approved_grade_correction = 1");
+      gradeGuard = true;
+      let gradeUpdate;
+      try {
+        [gradeUpdate] = await connection.execute(
+          `UPDATE grades
+            SET midterm_grade = ?, final_grade = ?, overall_percentage = ?,
+                grading_outcome = 'NUMERIC', grade_status = 'Approved', outcome_reason = NULL
+          WHERE grade_id = ? AND grade_status = 'Approved'
+            AND grading_policy = 'TWO_TERM_50_50' AND grading_outcome = 'NUMERIC'`,
+          [revisedMid, revisedFinal, regCorrFormat(correctedOverall), gradeId],
+        );
+      } finally {
+        await connection.execute("SET @allow_approved_grade_correction = NULL");
+        gradeGuard = false;
+      }
+      if (Number(gradeUpdate.affectedRows) !== 1)
+        regCorrFail(
+          "CORRECTION_GRADE_WRITE_CONFLICT",
+          "Official grade changed before correction application.",
+        );
+      const [[after]] = await connection.execute(
+        `SELECT midterm_grade, final_grade, overall_percentage, final_rating, remarks,
+              grading_outcome, grade_status FROM grades WHERE grade_id = ?`,
+        [gradeId],
+      );
+      if (
+        !after ||
+        after.grade_status !== "Approved" ||
+        after.grading_outcome !== "NUMERIC" ||
+        regCorrDecimal(after.midterm_grade, 12) !==
+          regCorrDecimal(revisedMid, 12) ||
+        regCorrDecimal(after.final_grade, 12) !==
+          regCorrDecimal(revisedFinal, 12) ||
+        regCorrDecimal(after.overall_percentage, 12) !==
+          regCorrDecimal(regCorrFormat(storedOverall), 12) ||
+        Number(after.final_rating).toFixed(2) !== revisedRating ||
+        after.remarks !== revisedRemarks
+      ) {
+        regCorrFail(
+          "CORRECTION_GRADE_TRIGGER_CONFLICT",
+          "Database grade trigger calculated a different official grade.",
+        );
+      }
+      const [[subjectAfter]] = await connection.execute(
+        `SELECT status FROM enrollment_subjects WHERE enrollment_subject_id = ?`,
+        [enrollmentSubjectId],
+      );
+      const expectedStatus =
+        revisedRemarks === "Passed" ? "Completed" : "Failed";
+      if (!subjectAfter || subjectAfter.status !== expectedStatus) {
+        regCorrFail(
+          "CORRECTION_SUBJECT_TRIGGER_CONFLICT",
+          "Enrollment-subject status does not match corrected official grade.",
+        );
+      }
+
+      const [amendment] = await connection.execute(
+        `INSERT INTO gradebook_sheet_amendments
+        (sheet_id, sheet_revision_number, amendment_type, grade_change_request_id,
+         roster_snapshot_id, amendment_reason, previous_values_summary, new_values_summary,
+         progression_review_required, requested_by_user_id, authorized_by_user_id,
+         authorized_at, verified_by_user_id, verified_at, applied_by_user_id, applied_at)
+       VALUES (?, ?, 'GRADE_CORRECTION', NULL, NULL, ?, ?, ?, 1, ?, ?, ?, ?, NOW(), ?, NOW())`,
+        [
+          String(sheet.sheet_id),
+          revision,
+          remarks,
+          JSON.stringify(previous),
+          JSON.stringify(next),
+          Number(request.submitted_by_user_id),
+          Number(request.reviewed_by_user_id),
+          request.reviewed_at,
+          userId,
+          userId,
+        ],
+      );
+      if (Number(amendment.affectedRows) !== 1)
+        throw new Error("Official-sheet amendment could not be saved.");
+      const [marked] = await connection.execute(
+        `UPDATE gradebook_correction_requests
+          SET request_status = 'APPLIED', applied_by_user_id = ?, applied_at = NOW(6),
+              record_version = record_version + 1
+        WHERE correction_id = ? AND request_status = 'APPROVED' AND record_version = ?`,
+        [userId, String(correctionId), expectedVersion],
+      );
+      if (Number(marked.affectedRows) !== 1)
+        regCorrFail(
+          "CORRECTION_REQUEST_WRITE_CONFLICT",
+          "Approved correction request changed before application.",
+        );
+      const [event] = await connection.execute(
+        `INSERT INTO gradebook_correction_request_events
+        (correction_id, event_type, previous_status, new_status,
+         proposal_snapshot_json, event_reason, performed_by_user_id, request_version_after)
+       VALUES (?, 'APPLIED', 'APPROVED', 'APPLIED', ?, ?, ?, ?)`,
+        [
+          String(correctionId),
+          JSON.stringify({
+            ...proposal,
+            official_sheet_id: String(sheet.sheet_id),
+            sheet_revision_number: revision,
+            amendment_id: String(amendment.insertId),
+            new_official_grade: next,
+          }),
+          remarks,
+          userId,
+          expectedVersion + 1,
+        ],
+      );
+      if (Number(event.affectedRows) !== 1)
+        throw new Error("Correction application audit event was not saved.");
+      const [trail] = await connection.execute(
+        `INSERT INTO audit_trail (user_id, table_name, record_id, action,
+          old_values, new_values, created_at)
+       VALUES (?, 'grades', ?, 'UPDATE', ?, ?, NOW())`,
+        [userId, gradeId, JSON.stringify(previous), JSON.stringify(next)],
+      );
+      if (Number(trail.affectedRows) !== 1)
+        throw new Error("Official-grade audit trail was not saved.");
+      const [log] = await connection.execute(
+        `INSERT INTO audit_logs (user_id, action, table_name, record_id, description, created_at)
+       VALUES (?, 'SOURCE-LINKED GRADE CORRECTION APPLIED', 'grades', ?, ?, NOW())`,
+        [
+          userId,
+          gradeId,
+          JSON.stringify({
+            correction_id: String(correctionId),
+            amendment_id: String(amendment.insertId),
+            revision,
+            progression_review_required: true,
+            previous,
+            next,
+          }),
+        ],
+      );
+      if (Number(log.affectedRows) !== 1)
+        throw new Error("Registrar correction audit log was not saved.");
+
+      if (body.dry_run) await connection.rollback();
+      else await connection.commit();
+      inTransaction = false;
+      return res.json({
+        success: true,
+        dry_run: body.dry_run,
+        persisted: !body.dry_run,
+        correction_id: String(correctionId),
+        grade_id: gradeId,
+        publication_id: String(pub.publication_id),
+        official_sheet_id: String(sheet.sheet_id),
+        amendment_id: body.dry_run ? null : String(amendment.insertId),
+        sheet_revision_number: revision,
+        previous_grade: previous.original_grade,
+        corrected_grade: {
+          midterm_grade: after.midterm_grade,
+          final_grade: after.final_grade,
+          overall_percentage: after.overall_percentage,
+          final_rating: after.final_rating,
+          remarks: after.remarks,
+        },
+        status: body.dry_run ? "APPROVED (unchanged)" : "APPLIED",
+        assessment_history_preserved: true,
+        approved_term_snapshots_unchanged: true,
+        academic_progression_review_required: true,
+        approved_enrollments_unchanged: true,
+      });
+    } catch (error) {
+      if (inTransaction && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("REGISTRAR CORRECTION ROLLBACK:", rollbackError);
+        }
+      }
+      const status =
+        Number.isInteger(error?.status) &&
+        error.status >= 400 &&
+        error.status < 500
+          ? error.status
+          : 500;
+      if (status === 500) console.error("REGISTRAR CORRECTION ERROR:", error);
+      return res.status(status).json({
+        success: false,
+        code: status === 500 ? "CORRECTION_APPLY_ERROR" : error.code,
+        message:
+          status === 500
+            ? "Could not process the official score correction."
+            : error.message,
+      });
+    } finally {
+      if (connection) {
+        try {
+          await connection.execute(
+            "SET @allow_approved_grade_correction = NULL",
+          );
+          await connection.execute(
+            "SET @allow_approved_inc_grade_change = NULL",
+          );
+          await connection.execute("SET @allow_approved_inc_expiry = NULL");
+        } catch (cleanupError) {
+          console.error(
+            "REGISTRAR CORRECTION CONNECTION CLEANUP:",
+            cleanupError,
+          );
+          // Do not put a possibly tainted pooled session back into circulation.
+          try {
+            await connection.destroy();
+          } catch {
+            /* connection already closed */
+          }
+          connection = null;
+        }
+        connection?.release();
+      }
+    }
+  },
+);
+
+router.get(
+  "/gradebook/official-sheets/:offeringId/finalization-readiness",
+  async (req, res) => {
+    try {
+      if (Object.keys(req.query ?? {}).length !== 0) {
+        officialSheetFail(
+          "SHEET_FINALIZATION_QUERY_UNSUPPORTED",
+          "This endpoint does not accept query parameters.",
+          400,
+        );
+      }
+      const offeringId = readCalendarId(req.params.offeringId);
+      if (!offeringId) {
+        officialSheetFail(
+          "SHEET_FINALIZATION_OFFERING_INVALID",
+          "A positive offering ID is required.",
+          400,
+        );
+      }
+      await officialSheetAssertDatabase(db);
+      await officialSheetRegistrar(db, req);
+      const scope = await officialSheetScope(db, offeringId);
+      const blockers = [];
+
+      const [sheetRows] = await db.execute(officialSheetSelect, [
+        scope.configId,
+      ]);
+      const sheet = sheetRows[0] ?? null;
+      if (sheetRows.length !== 1) {
+        blockers.push({
+          code: "SHEET_NOT_RECORDED",
+          message:
+            "A unique official sheet with an actual original submission reference is required.",
+        });
+      } else if (sheet.sheet_status === "FINALIZED") {
+        blockers.push({
+          code: "SHEET_ALREADY_FINALIZED",
+          message:
+            "This sheet is already finalized; changes require an authorized amendment.",
+        });
+      } else {
+        if (
+          !sheet.original_official_submitted_on ||
+          !String(sheet.official_submission_reference ?? "").trim() ||
+          !sheet.official_date_verified_by_user_id ||
+          !sheet.official_date_verified_at
+        ) {
+          blockers.push({
+            code: "ORIGINAL_DATE_NOT_VERIFIED",
+            message:
+              "Registrar must verify the genuine original submission date and reference.",
+          });
+        }
+        const [events] = await db.execute(
+          `SELECT event_type, previous_record_version, record_version_after,
+                  DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS original_date,
+                  official_submission_reference, performed_by_user_id
+             FROM gradebook_official_sheet_submission_events
+            WHERE sheet_id = ? ORDER BY record_version_after, event_id`,
+          [String(sheet.sheet_id)],
+        );
+        const first = events.find((event) => event.event_type === "RECORDED");
+        const verified = events.find(
+          (event) => event.event_type === "VERIFIED",
+        );
+        const validAudit =
+          events.length === 2 &&
+          first?.previous_record_version == null &&
+          Number(first?.record_version_after) === 1 &&
+          Number(verified?.previous_record_version) === 1 &&
+          Number(verified?.record_version_after) === 2 &&
+          Number(first.performed_by_user_id) > 0 &&
+          Number(verified?.performed_by_user_id) ===
+            Number(sheet.official_date_verified_by_user_id) &&
+          first?.original_date === sheet.original_official_submitted_on &&
+          verified?.original_date === sheet.original_official_submitted_on &&
+          first?.official_submission_reference ===
+            sheet.official_submission_reference &&
+          verified?.official_submission_reference ===
+            sheet.official_submission_reference &&
+          Number(sheet.record_version) >= 2;
+        if (!validAudit) {
+          blockers.push({
+            code: "SUBMISSION_AUDIT_NOT_VERIFIED",
+            message:
+              "Original submission and Registrar verification audit must match the sheet.",
+          });
+        }
+      }
+
+      const [roster] = await db.execute(
+        `SELECT es.enrollment_subject_id, es.status AS subject_status,
+                es.enrollment_type, e.enrollment_status,
+                e.academic_year_id, e.semester_id, s.student_id,
+                s.student_number, g.grade_id, g.grade_status, g.grading_policy,
+                g.grading_outcome, g.final_rating, g.remarks,
+                (SELECT COUNT(*) FROM gradebook_official_grade_publications p
+                  WHERE p.grade_id = g.grade_id AND p.config_id = ?
+                    AND p.enrollment_subject_id = es.enrollment_subject_id
+                    AND EXISTS (
+                      SELECT 1 FROM gradebook_term_submission_attempts mt
+                      JOIN gradebook_term_submission_attempts ft
+                        ON ft.term_submission_id = p.final_term_submission_id
+                      WHERE mt.term_submission_id = p.midterm_submission_id
+                        AND mt.submission_status = 'APPROVED'
+                        AND mt.grading_term = 'MIDTERM'
+                        AND ft.submission_status = 'APPROVED'
+                        AND ft.grading_term = 'FINAL_TERM'
+                        AND mt.config_id = p.config_id AND ft.config_id = p.config_id
+                        AND mt.enrollment_subject_id = es.enrollment_subject_id
+                        AND ft.enrollment_subject_id = es.enrollment_subject_id
+                    )) AS publication_count,
+                (SELECT COUNT(*) FROM gradebook_special_outcomes o
+                  WHERE o.grade_id = g.grade_id AND o.record_status = 'ACTIVE'
+                    AND o.outcome_type = CASE
+                      WHEN g.grading_outcome = 'INCOMPLETE' THEN 'INCOMPLETE'
+                      WHEN g.grading_outcome = 'UNOFFICIAL_DROP' THEN 'UNOFFICIAL_DROP'
+                      ELSE NULL END) AS special_outcome_count,
+                (SELECT COUNT(*) FROM gradebook_inc_outcome_requests ir
+                  WHERE ir.config_id = ?
+                    AND ir.enrollment_subject_id = es.enrollment_subject_id
+                    AND ir.request_status = 'APPROVED') AS inc_approved_count,
+                (SELECT COUNT(*) FROM gradebook_ud_outcome_requests ur
+                  WHERE ur.config_id = ?
+                    AND ur.enrollment_subject_id = es.enrollment_subject_id
+                    AND ur.request_status = 'APPROVED') AS ud_approved_count
+           FROM enrollment_subjects es
+           JOIN enrollments e ON e.enrollment_id = es.enrollment_id
+           JOIN students s ON s.student_id = e.student_id
+           LEFT JOIN grades g ON g.enrollment_subject_id = es.enrollment_subject_id
+          WHERE es.offering_id = ?
+          ORDER BY s.student_number, es.enrollment_subject_id`,
+        [scope.configId, scope.configId, scope.configId, offeringId],
+      );
+      if (roster.length === 0) {
+        blockers.push({
+          code: "ROSTER_EMPTY",
+          message:
+            "Cannot finalize a grading sheet without an enrolled roster.",
+        });
+      }
+      const studentIds = new Set();
+      const rowProblems = [];
+      for (const row of roster) {
+        const problems = [];
+        if (studentIds.has(Number(row.student_id))) {
+          problems.push("DUPLICATE_STUDENT_IN_OFFERING");
+        }
+        studentIds.add(Number(row.student_id));
+        if (
+          row.enrollment_status !== "Approved" ||
+          Number(row.academic_year_id) !== scope.academicYearId ||
+          Number(row.semester_id) !== scope.semesterId
+        ) {
+          problems.push("ENROLLMENT_NOT_APPROVED_OR_TERM_MISMATCH");
+        }
+        if (!["Dropped", "Withdrawn"].includes(row.subject_status)) {
+          if (
+            row.grade_status !== "Approved" ||
+            row.grading_policy !== "TWO_TERM_50_50"
+          ) {
+            problems.push("OFFICIAL_GRADE_NOT_APPROVED");
+          } else if (row.grading_outcome === "NUMERIC") {
+            if (
+              !["Completed", "Failed"].includes(row.subject_status) ||
+              Number(row.publication_count) !== 1 ||
+              !["Passed", "Failed"].includes(row.remarks) ||
+              row.final_rating == null
+            ) {
+              problems.push("NUMERIC_GRADE_PUBLICATION_INVALID");
+            }
+          } else if (row.grading_outcome === "INCOMPLETE") {
+            if (
+              row.subject_status !== "Incomplete" ||
+              Number(row.final_rating) !== 4 ||
+              Number(row.special_outcome_count) !== 1 ||
+              Number(row.inc_approved_count) !== 1
+            ) {
+              problems.push("INCOMPLETE_GRADE_EVIDENCE_INVALID");
+            }
+          } else if (row.grading_outcome === "UNOFFICIAL_DROP") {
+            if (
+              row.subject_status !== "Unofficial Drop" ||
+              Number(row.final_rating) !== 6 ||
+              Number(row.special_outcome_count) !== 1 ||
+              Number(row.ud_approved_count) !== 1
+            ) {
+              problems.push("UD_GRADE_EVIDENCE_INVALID");
+            }
+          } else {
+            problems.push("UNSUPPORTED_OFFICIAL_OUTCOME");
+          }
+        } else if (row.grade_id != null && row.grade_status === "Approved") {
+          problems.push("DROPPED_OR_WITHDRAWN_HAS_APPROVED_GRADE");
+        }
+        if (problems.length) {
+          rowProblems.push({
+            enrollment_subject_id: Number(row.enrollment_subject_id),
+            student_number: row.student_number,
+            problems,
+          });
+        }
+      }
+      if (rowProblems.length > 0) {
+        blockers.push({
+          code: "ROSTER_NOT_FINALIZABLE",
+          message:
+            "Some students still have incomplete or inconsistent official results.",
+          affected_rows: rowProblems.length,
+        });
+      }
+      if (sheet) {
+        const [[snapshot]] = await db.execute(
+          `SELECT COUNT(*) AS row_count FROM gradebook_finalized_roster WHERE sheet_id = ?`,
+          [String(sheet.sheet_id)],
+        );
+        if (
+          Number(snapshot.row_count) !== 0 &&
+          sheet.sheet_status !== "FINALIZED"
+        ) {
+          blockers.push({
+            code: "PARTIAL_ROSTER_SNAPSHOT_EXISTS",
+            message:
+              "Unexpected previous roster snapshots require Registrar reconciliation.",
+          });
+        }
+      }
+      return res.json({
+        success: true,
+        read_only: true,
+        offering_id: offeringId,
+        config_id: scope.configId,
+        sheet_id: sheet ? String(sheet.sheet_id) : null,
+        sheet_status: sheet?.sheet_status ?? "NOT_RECORDED",
+        sheet_record_version: sheet ? Number(sheet.record_version) : null,
+        official_date_verified: Boolean(
+          sheet?.official_date_verified_by_user_id &&
+          sheet?.official_date_verified_at,
+        ),
+        roster_count: roster.length,
+        problematic_roster_count: rowProblems.length,
+        roster_problems: rowProblems.slice(0, 25),
+        blockers,
+        can_finalize: blockers.length === 0,
+        grades_modified: false,
+        note: "Readiness is informational, not a locked authorization. Finalization must revalidate everything in one transaction.",
+      });
+    } catch (error) {
+      return officialSheetError(res, error);
+    }
+  },
+);
+
+function historicalSourcePositiveId(value) {
+  const text = String(value ?? "");
+  if (!/^[1-9]\d*$/.test(text)) return null;
+  const valueNumber = Number(text);
+  return Number.isSafeInteger(valueNumber) ? valueNumber : null;
+}
+
+function historicalSourceFail(code, message, status = 409) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  throw error;
+}
+
+function historicalSourceSendError(res, error) {
+  const status =
+    Number.isInteger(error?.status) && error.status >= 400 && error.status < 500
+      ? error.status
+      : 500;
+  if (status === 500) console.error("HISTORICAL GRADE SOURCE ERROR:", error);
+  return res.status(status).json({
+    success: false,
+    code: status === 500 ? "HISTORICAL_SOURCE_INTERNAL_ERROR" : error.code,
+    message:
+      status === 500
+        ? "Could not register the historical grade evidence."
+        : error.message,
+  });
+}
+
+// POST /api/registrar/gradebook/historical-grades/:gradeId/register-source
+router.post(
+  "/gradebook/historical-grades/:gradeId/register-source",
+  async (req, res) => {
+    let connection;
+    let inTransaction = false;
+    try {
+      const gradeId = historicalSourcePositiveId(req.params.gradeId);
+      const actorId = historicalSourcePositiveId(req.user?.user_id);
+      if (!gradeId || !actorId) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_IDS_INVALID",
+          "Valid grade and authenticated Registrar are required.",
+          400,
+        );
+      }
+      if (Object.keys(req.query ?? {}).length !== 0) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_QUERY_UNSUPPORTED",
+          "Query parameters are not accepted.",
+          400,
+        );
+      }
+      const body = req.body;
+      const allowed = new Set([
+        "source_reference",
+        "evidence_summary",
+        "confirm_original_approved_grade",
+        "dry_run",
+      ]);
+      if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body) ||
+        Object.keys(body).some((field) => !allowed.has(field))
+      ) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_BODY_INVALID",
+          "Invalid or unsupported JSON body.",
+          400,
+        );
+      }
+      const sourceReference =
+        typeof body.source_reference === "string"
+          ? body.source_reference.trim()
+          : "";
+      const evidenceSummary =
+        typeof body.evidence_summary === "string"
+          ? body.evidence_summary.trim()
+          : "";
+      if (
+        sourceReference.length < 8 ||
+        sourceReference.length > 255 ||
+        evidenceSummary.length < 30 ||
+        evidenceSummary.length > 4000 ||
+        /[\x00-\x08\x0B\x0E-\x1F\x7F]/.test(
+          sourceReference + evidenceSummary,
+        ) ||
+        body.confirm_original_approved_grade !== true ||
+        typeof body.dry_run !== "boolean"
+      ) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_EVIDENCE_INVALID",
+          "A real source reference (8–255 chars), evidence (30–4000 chars), confirmation and boolean dry_run are required.",
+          400,
+        );
+      }
+
+      connection = await db.getConnection();
+      const [[database]] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+      if (database?.database_name !== "databaseforptc1_admission_test") {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_QA_ONLY",
+          "Source reconciliation is currently limited to the admission-test database.",
+          403,
+        );
+      }
+      const [users] = await connection.execute(
+        `SELECT r.role_name, u.is_active, u.is_archived
+         FROM users u JOIN roles r ON r.role_id = u.role_id
+        WHERE u.user_id = ?`,
+        [actorId],
+      );
+      if (
+        users.length !== 1 ||
+        users[0].role_name !== "Registrar" ||
+        Number(users[0].is_active) !== 1 ||
+        Number(users[0].is_archived) !== 0
+      ) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_REGISTRAR_REQUIRED",
+          "Only an active Registrar can register historical source evidence.",
+          403,
+        );
+      }
+
+      await connection.beginTransaction();
+      inTransaction = true;
+
+      // Resolve the offering, then acquire its lock before touching grade rows.
+      const [pointers] = await connection.execute(
+        `SELECT es.offering_id FROM grades g
+       JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
+       WHERE g.grade_id = ?`,
+        [gradeId],
+      );
+      if (
+        pointers.length !== 1 ||
+        !historicalSourcePositiveId(pointers[0].offering_id)
+      ) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_GRADE_NOT_FOUND",
+          "Grade has no traceable subject offering.",
+          404,
+        );
+      }
+      const offeringId = Number(pointers[0].offering_id);
+      const [offerings] = await connection.execute(
+        `SELECT offering_id, academic_year_id, semester_id, status
+         FROM subject_offerings WHERE offering_id = ? FOR UPDATE`,
+        [offeringId],
+      );
+      if (offerings.length !== 1 || offerings[0].status === "Cancelled") {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_OFFERING_INVALID",
+          "Offering is missing or cancelled.",
+        );
+      }
+
+      const [rows] = await connection.execute(
+        `SELECT g.grade_id, g.enrollment_subject_id, g.faculty_id,
+              g.grade_status, g.grading_policy, g.grading_outcome,
+              g.midterm_grade, g.final_grade, g.overall_percentage,
+              g.final_rating, g.remarks, g.submitted_at, g.reviewed_by, g.reviewed_at,
+              es.offering_id, es.status AS subject_status, es.enrollment_type,
+              e.enrollment_status, e.academic_year_id, e.semester_id, e.student_id,
+              s.student_number
+         FROM grades g
+         JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
+         JOIN enrollments e ON e.enrollment_id = es.enrollment_id
+         JOIN students s ON s.student_id = e.student_id
+        WHERE g.grade_id = ? FOR UPDATE`,
+        [gradeId],
+      );
+      if (rows.length !== 1 || Number(rows[0].offering_id) !== offeringId) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_GRADE_MOVED",
+          "Grade or its offering changed during review.",
+        );
+      }
+      const grade = rows[0];
+      if (
+        grade.grade_status !== "Approved" ||
+        grade.grading_outcome !== "NUMERIC" ||
+        !["LEGACY", "TWO_TERM_50_50"].includes(grade.grading_policy) ||
+        grade.final_rating == null ||
+        !["Passed", "Failed"].includes(grade.remarks) ||
+        grade.subject_status !==
+          (grade.remarks === "Passed" ? "Completed" : "Failed") ||
+        grade.enrollment_status !== "Approved" ||
+        !grade.student_number ||
+        Number(grade.academic_year_id) !==
+          Number(offerings[0].academic_year_id) ||
+        Number(grade.semester_id) !== Number(offerings[0].semester_id)
+      ) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_NOT_ELIGIBLE",
+          "Only an unchanged, approved historical numeric grade with consistent enrollment status can be registered.",
+        );
+      }
+      if (!grade.reviewed_by || !grade.reviewed_at) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_APPROVAL_MISSING",
+          "Existing approval reviewer and date are required; resolve unsupported historical records separately.",
+        );
+      }
+      const [publications] = await connection.execute(
+        `SELECT publication_id FROM gradebook_official_grade_publications
+        WHERE grade_id = ? FOR UPDATE`,
+        [gradeId],
+      );
+      if (publications.length !== 0) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_NEW_PUBLICATION_EXISTS",
+          "This grade has a new gradebook publication; use its approved source, not historical reconciliation.",
+        );
+      }
+      // A partial or missing publication for a modern term submission is a
+      // provenance problem, not evidence that a grade should be treated as old.
+      const [modernAttempts] = await connection.execute(
+        `SELECT t.term_submission_id
+         FROM gradebook_term_submission_attempts t
+         JOIN gradebook_offering_config cfg ON cfg.config_id = t.config_id
+        WHERE cfg.offering_id = ? AND t.enrollment_subject_id = ?
+        LIMIT 1 FOR UPDATE`,
+        [offeringId, Number(grade.enrollment_subject_id)],
+      );
+      if (modernAttempts.length) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_NEW_TERM_ATTEMPT_EXISTS",
+          "This grade has modern term-submission history; missing publication evidence must be reconciled instead.",
+        );
+      }
+      const [snapshots] = await connection.execute(
+        `SELECT roster_snapshot_id FROM gradebook_finalized_roster
+        WHERE grade_id = ? FOR UPDATE`,
+        [gradeId],
+      );
+      if (snapshots.length !== 0) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_ALREADY_FINALIZED",
+          "This grade already belongs to a finalized roster; use a formal amendment.",
+        );
+      }
+      const [sheetRows] = await connection.execute(
+        `SELECT sh.sheet_id, sh.sheet_status FROM gradebook_official_sheets sh
+       JOIN gradebook_offering_config cfg ON cfg.config_id = sh.config_id
+       WHERE cfg.offering_id = ? FOR UPDATE`,
+        [offeringId],
+      );
+      if (sheetRows.some((row) => row.sheet_status === "FINALIZED")) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_SHEET_FINALIZED",
+          "This official sheet is already finalized; historical review cannot bypass amendments.",
+        );
+      }
+      const [previous] = await connection.execute(
+        `SELECT historical_review_id FROM gradebook_historical_grade_source_reviews
+       WHERE grade_id = ? OR enrollment_subject_id = ? FOR UPDATE`,
+        [gradeId, Number(grade.enrollment_subject_id)],
+      );
+      if (previous.length) {
+        historicalSourceFail(
+          "HISTORICAL_SOURCE_ALREADY_REGISTERED",
+          "The historical source already has a registered review. No duplicate review was created.",
+        );
+      }
+
+      const sourceClassification =
+        grade.grading_policy === "LEGACY"
+          ? "LEGACY_POLICY"
+          : "APPROVED_WITHOUT_PUBLICATION";
+      const snapshot = {
+        grade_id: gradeId,
+        enrollment_subject_id: Number(grade.enrollment_subject_id),
+        offering_id: offeringId,
+        student_id: Number(grade.student_id),
+        student_number: grade.student_number,
+        faculty_id: grade.faculty_id,
+        grade_status: grade.grade_status,
+        grading_policy: grade.grading_policy,
+        grading_outcome: grade.grading_outcome,
+        midterm_grade: grade.midterm_grade,
+        final_grade: grade.final_grade,
+        overall_percentage: grade.overall_percentage,
+        final_rating: grade.final_rating,
+        remarks: grade.remarks,
+        reviewed_by: grade.reviewed_by,
+        reviewed_at: grade.reviewed_at,
+        submitted_at: grade.submitted_at,
+        subject_status: grade.subject_status,
+        enrollment_status: grade.enrollment_status,
+        enrollment_type: grade.enrollment_type,
+        academic_year_id: grade.academic_year_id,
+        semester_id: grade.semester_id,
+        source_classification: sourceClassification,
+        source_reference: sourceReference,
+        evidence_summary: evidenceSummary,
+      };
+      const snapshotJson = JSON.stringify(snapshot);
+      const [inserted] = await connection.execute(
+        `INSERT INTO gradebook_historical_grade_source_reviews
+       (grade_id, enrollment_subject_id, offering_id, source_classification,
+        source_reference, evidence_summary, original_grade_snapshot_json,
+        recorded_by_user_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          gradeId,
+          Number(grade.enrollment_subject_id),
+          offeringId,
+          sourceClassification,
+          sourceReference,
+          evidenceSummary,
+          snapshotJson,
+          actorId,
+        ],
+      );
+      if (Number(inserted.affectedRows) !== 1)
+        throw new Error("Historical grade source insert failed.");
+      const reviewId = String(inserted.insertId);
+      const [event] = await connection.execute(
+        `INSERT INTO gradebook_historical_grade_source_review_events
+       (historical_review_id, event_type, previous_status, new_status,
+        source_snapshot_json, event_reason, performed_by_user_id, review_version_after)
+       VALUES (?, 'RECORDED', NULL, 'PENDING_PH_REVIEW', ?, ?, ?, 1)`,
+        [reviewId, snapshotJson, evidenceSummary, actorId],
+      );
+      if (Number(event.affectedRows) !== 1)
+        throw new Error("Historical source audit insert failed.");
+
+      if (body.dry_run) await connection.rollback();
+      else await connection.commit();
+      inTransaction = false;
+      return res.status(body.dry_run ? 200 : 201).json({
+        success: true,
+        dry_run: body.dry_run,
+        persisted: !body.dry_run,
+        historical_review_id: body.dry_run ? null : reviewId,
+        grade_id: gradeId,
+        offering_id: offeringId,
+        source_classification: sourceClassification,
+        review_status: "PENDING_PH_REVIEW",
+        record_version: 1,
+        approval_unchanged: true,
+        official_grade_unchanged: true,
+        official_sheet_unchanged: true,
+        next_step:
+          "Program Head independently verifies the documented historical source; this action does not authorize finalization.",
+      });
+    } catch (error) {
+      if (inTransaction && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("HISTORICAL SOURCE ROLLBACK:", rollbackError);
+        }
+      }
+      if (error?.code === "ER_DUP_ENTRY") {
+        return res.status(409).json({
+          success: false,
+          code: "HISTORICAL_SOURCE_ALREADY_REGISTERED",
+          message:
+            "A historical review already exists; reload the existing record.",
+        });
+      }
+      return historicalSourceSendError(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
 
 export default router;

@@ -325,6 +325,16 @@ router.get("/:id/academic-records", async (req, res) => {
       });
     }
 
+    const documentMode = req.query?.document;
+
+    if (documentMode !== undefined && documentMode !== "COG") {
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_DOCUMENT_MODE",
+        message: "Only document=COG is supported.",
+      });
+    }
+
     // =================================================
     // STUDENT PROFILE
     // =================================================
@@ -347,6 +357,7 @@ router.get("/:id/academic-records", async (req, res) => {
       studentId,
       {
         executor: db,
+        studentVisibleOnly: documentMode === "COG",
       },
     );
 

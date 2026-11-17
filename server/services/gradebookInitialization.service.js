@@ -10,6 +10,9 @@
  */
 import { loadGradebookOfferingConfig } from "./gradebookOfferingConfig.service.js";
 import { GRADEBOOK_POLICY_VERSION } from "./gradebookCalculation.service.js";
+import { assertQaGradingDatabase } from "./gradebookQaWriteGuard.service.js";
+const QA_DATABASE = "databaseforptc1_admission_test";
+const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 131, 187]);
 
 function fail(code, message, status = 409, details = {}) {
   const error = new Error(message);
@@ -62,6 +65,31 @@ export async function initializeGradebookOffering(
   try {
     await connection.beginTransaction();
     transactionStarted = true;
+
+    // Keep initialization isolated until production rollout
+    await assertQaGradingDatabase(connection);
+
+    if (!dryRun) {
+      const [[database]] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+
+      if (database?.database_name !== QA_DATABASE) {
+        fail(
+          "TEST_DATABASE_ONLY",
+          "Gradebook initialization is restricted to the admission-test database.",
+          403,
+        );
+      }
+
+      if (!QA_GRADEBOOK_OFFERINGS.has(id)) {
+        fail(
+          "TEST_OFFERING_ONLY",
+          "Gradebook initialization is restricted to QA Offerings #127, #128, #131, and #187.",
+          403,
+        );
+      }
+    }
 
     // Lock the offering during initialization.
     const [offerings] = await connection.execute(

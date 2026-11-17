@@ -86,6 +86,7 @@ router.get("/curriculum-progress", async (req, res) => {
 
     const progress = await getCurriculumProgressForStudent(studentId, {
       executor: db,
+      studentVisibleOnly: true,
     });
 
     // =================================================
@@ -390,6 +391,7 @@ router.get("/", async (req, res) => {
       studentId,
       {
         executor: db,
+        studentVisibleOnly: true,
       },
     );
 

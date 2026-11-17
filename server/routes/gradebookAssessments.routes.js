@@ -1,6 +1,8 @@
 import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
+import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
+const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 const router = express.Router();
 
@@ -436,7 +438,7 @@ router.post("/:offeringId/assessments", async (req, res) => {
 
   // Permanent writes remain limited to the verified test offering.
   // Remove this test restriction only in a later production integration step.
-  if (!body.dry_run && offeringId !== 131) {
+  if (!body.dry_run && !QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
     return res.status(403).json({
       success: false,
       code: "TEST_OFFERING_ONLY",
@@ -469,6 +471,8 @@ router.post("/:offeringId/assessments", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
+    // Assessment writes, including dry runs, remain QA-only.
+    await assertQaGradingDatabase(connection);
 
     if (!body.dry_run) {
       const [dbRows] = await connection.execute(
@@ -822,11 +826,12 @@ router.patch("/:offeringId/assessments/:assessmentId", async (req, res) => {
   }
 
   // During integration, permanent writes are limited to the verified test offering.
-  if (!body.dry_run && offeringId !== 131) {
+  if (!body.dry_run && !QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
     return res.status(403).json({
       success: false,
       code: "TEST_OFFERING_ONLY",
-      message: "Committed assessment testing is limited to Offering #131.",
+      message:
+        "Committed assessment testing is limited to QA Offerings #127, #128, and #131.",
     });
   }
 
@@ -850,6 +855,8 @@ router.patch("/:offeringId/assessments/:assessmentId", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
+    // Assessment writes, including dry runs, remain QA-only.
+    await assertQaGradingDatabase(connection);
 
     if (!body.dry_run) {
       const [databaseRows] = await connection.execute(
@@ -1265,6 +1272,8 @@ router.delete("/:offeringId/assessments/:assessmentId", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
+    // Assessment writes, including dry runs, remain QA-only.
+    await assertQaGradingDatabase(connection);
 
     if (!body.dry_run) {
       const [databaseRows] = await connection.execute(
@@ -1655,6 +1664,8 @@ router.post(
     try {
       await connection.beginTransaction();
       transactionStarted = true;
+      // Assessment writes, including dry runs, remain QA-only.
+      await assertQaGradingDatabase(connection);
 
       if (!body.dry_run) {
         const [databaseRows] = await connection.execute(

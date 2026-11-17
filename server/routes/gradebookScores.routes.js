@@ -1,10 +1,15 @@
 import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
-
+import { assertCombinedSemesterCellEditable } from "../services/gradebookCombinedEditScope.service.js";
+import { requireVerifiedHistoricalIncFinalTermEntry } from "../services/gradebookIncCompletionAccess.service.js";
+import { requireModernIncPendingScoreEntry } from "../services/gradebookModernIncSource.service.js";
+import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 const router = express.Router();
+
 const TEST_DATABASE = "databaseforptc1_admission_test";
-const TEST_OFFERING_ID = 131;
+
+const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 function fail(code, message, status = 409) {
   const error = new Error(message);
@@ -241,38 +246,35 @@ router.post("/:offeringId/scores", async (req, res) => {
       message: "An authenticated instructor is required.",
     });
   }
-  // A deliberately limited first rollout. Never write to other offerings/databases yet.
-  if (!input.dryRun && offeringId !== TEST_OFFERING_ID) {
-    return res.status(403).json({
-      success: false,
-      code: "TEST_OFFERING_ONLY",
-      message: "Committed score testing is currently limited to Offering #131.",
-    });
-  }
 
   let connection;
   let transactionStarted = false;
   try {
     connection = await db.getConnection();
-    await connection.beginTransaction();
-    transactionStarted = true;
 
-    if (!input.dryRun) {
-      const [databases] = await connection.execute(
-        "SELECT DATABASE() AS database_name",
+    await assertQaGradingDatabase(connection);
+
+    const [databases] = await connection.execute(
+      "SELECT DATABASE() AS database_name",
+    );
+
+    if (databases[0]?.database_name !== TEST_DATABASE) {
+      fail(
+        "TEST_DATABASE_ONLY",
+        "Score saves are restricted to the admission-test database.",
+        403,
       );
-      if (databases[0]?.database_name !== TEST_DATABASE) {
-        fail(
-          "TEST_DATABASE_ONLY",
-          "Committed score saves are disabled outside the admission-test database.",
-          403,
-        );
-      }
     }
-
+    if (!input.dryRun && !QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
+      fail(
+        "TEST_OFFERING_ONLY",
+        "Score saves are restricted to QA Offerings #127, #128, and #131.",
+        403,
+      );
+    }
     // Serialize score writes with gradebook assessment/submission operations.
     const [offeringRows] = await connection.execute(
-      `SELECT so.offering_id, so.status, f.user_id AS assigned_user_id,
+      `SELECT so.offering_id, so.status, so.faculty_id, f.user_id AS assigned_user_id,
               u.is_active, u.is_archived, r.role_name
          FROM subject_offerings so
          LEFT JOIN faculty f ON f.faculty_id = so.faculty_id
@@ -297,9 +299,6 @@ router.post("/:offeringId/scores", async (req, res) => {
         403,
       );
     }
-    if (offering.status !== "Open") {
-      fail("OFFERING_NOT_OPEN", "Score entry requires an Open offering.");
-    }
 
     const [configRows] = await connection.execute(
       "SELECT config_id FROM gradebook_offering_config WHERE offering_id = ? FOR UPDATE",
@@ -323,24 +322,6 @@ router.post("/:offeringId/scores", async (req, res) => {
     // The old FULL_SEMESTER workflow is not migrated to term-specific submissions.
     // If any legacy grade submission is present, continue to fail closed rather
     // than inadvertently allowing edits to official historical grading records.
-    const [legacyStructureLocks] = await connection.execute(
-      "SELECT config_id FROM gradebook_structure_locks WHERE config_id = ? LIMIT 1",
-      [configId],
-    );
-    const [legacySubmissions] = await connection.execute(
-      `SELECT 1
-         FROM gradebook_grade_submission_attempts sa
-         JOIN grades g ON g.grade_id = sa.grade_id
-         JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
-        WHERE es.offering_id = ? LIMIT 1`,
-      [offeringId],
-    );
-    if (legacyStructureLocks.length || legacySubmissions.length) {
-      fail(
-        "GRADEBOOK_LEGACY_SUBMISSION_LOCKED",
-        "Legacy full-semester submission history requires the existing correction workflow.",
-      );
-    }
 
     const [assessments] = await connection.execute(
       `SELECT a.assessment_id, a.maximum_score, a.record_status,
@@ -403,13 +384,60 @@ router.post("/:offeringId/scores", async (req, res) => {
     if (
       Number(enrollment.offering_id) !== offeringId ||
       enrollment.enrollment_status !== "Approved" ||
-      enrollment.enrollment_subject_status !== "Enrolled"
+      !["Enrolled", "Incomplete"].includes(enrollment.enrollment_subject_status)
     ) {
       fail(
         "GRADEBOOK_STUDENT_NOT_ELIGIBLE",
-        "This student is not currently enrolled and approved for this offering.",
-        409,
+        "The student must have an approved, eligible enrollment subject.",
       );
+    }
+    const gradingTerm = assessments[0].grading_term;
+
+    let incCompletion = null;
+
+    if (enrollment.enrollment_subject_status === "Incomplete") {
+      if (offeringId === 130) {
+        incCompletion = await requireModernIncPendingScoreEntry(connection, {
+          offeringId,
+          configId,
+          enrollmentSubjectId: input.enrollmentSubjectId,
+          studentId: Number(enrollment.student_id),
+          actorUserId,
+          facultyId: offering.faculty_id,
+          gradingTerm,
+          assessmentId: input.assessmentId,
+          scoreStatus: input.scoreStatus,
+          changeReason: input.changeReason,
+        });
+      } else {
+        incCompletion = await requireVerifiedHistoricalIncFinalTermEntry(
+          connection,
+          {
+            offeringId,
+            configId,
+            enrollmentSubjectId: input.enrollmentSubjectId,
+            studentId: Number(enrollment.student_id),
+            actorUserId,
+            facultyId: offering.faculty_id,
+            gradingTerm,
+            changeReason: input.changeReason,
+          },
+        );
+      }
+    } else {
+      await assertCombinedSemesterCellEditable(
+        connection,
+        configId,
+        input.enrollmentSubjectId,
+        gradingTerm,
+      );
+    }
+
+    // Ordinary score entry still requires an Open offering.
+    // Ordinary score entry still requires an Open offering. A verified historical
+    // INC completion may be encoded after the original offering has closed.
+    if (!incCompletion && offering.status !== "Open") {
+      fail("OFFERING_NOT_OPEN", "Score entry requires an Open offering.");
     }
 
     // The FIRST_TERM_SUBMISSION lock protects shared assessment / meeting
@@ -420,7 +448,6 @@ router.post("/:offeringId/scores", async (req, res) => {
     // Serialization contract: the future term-submission and Program Head review
     // handlers MUST acquire the same subject_offerings and gradebook config rows
     // FOR UPDATE before creating/changing a submission, as this route does.
-    const gradingTerm = assessments[0].grading_term;
     const [termSubmissionRows] = await connection.execute(
       `SELECT term_submission_id, attempt_number, submission_status
          FROM gradebook_term_submission_attempts
@@ -576,6 +603,16 @@ router.post("/:offeringId/scores", async (req, res) => {
     if (!positiveId(scoreId)) {
       throw new Error("Score write returned an invalid score ID.");
     }
+    const auditReason = incCompletion
+      ? `INC_COMPLETION_CLAIM_${incCompletion.claim_id}: ${input.changeReason}`
+      : input.changeReason;
+    if (auditReason && auditReason.length > 2000) {
+      fail(
+        "INC_SCORE_REASON_TOO_LONG",
+        "The INC completion audit reason exceeds 2000 characters.",
+        400,
+      );
+    }
     const [event] = await connection.execute(
       `INSERT INTO gradebook_score_events
         (score_id, event_type, change_context,
@@ -593,7 +630,7 @@ router.post("/:offeringId/scores", async (req, res) => {
         input.earnedScore,
         previousReason,
         input.naReason,
-        input.changeReason,
+        auditReason,
         actorUserId,
         version,
       ],
@@ -610,10 +647,13 @@ router.post("/:offeringId/scores", async (req, res) => {
       enrollment_subject_id: input.enrollmentSubjectId,
       student_id: Number(enrollment.student_id),
       grading_term: gradingTerm,
-      edit_scope:
-        latestTermSubmission?.submission_status === "RETURNED"
+      edit_scope: incCompletion
+        ? "INC_COMPLETION_FINAL_TERM"
+        : latestTermSubmission?.submission_status === "RETURNED"
           ? "RETURNED_TERM_CORRECTION"
           : "DRAFT_ENTRY",
+      inc_completion_claim_id: incCompletion?.claim_id ?? null,
+      official_grade_unchanged: incCompletion !== null ? true : undefined,
       assessment_maximum_score: maximum.value,
       score: {
         score_id: scoreId,

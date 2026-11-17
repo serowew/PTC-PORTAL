@@ -1,10 +1,13 @@
 import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
+import { assertCombinedSemesterCellEditable } from "../services/gradebookCombinedEditScope.service.js";
+import { requireVerifiedHistoricalIncFinalTermEntry } from "../services/gradebookIncCompletionAccess.service.js";
+import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 
 const router = express.Router();
 const TEST_DATABASE = "databaseforptc1_admission_test";
-const TEST_OFFERING_ID = 131;
+const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 const ATTENDANCE_STATUSES = new Set([
   "PENDING",
@@ -97,6 +100,7 @@ router.get(
     let transactionStarted = false;
     try {
       connection = await db.getConnection();
+
       await connection.beginTransaction();
       transactionStarted = true;
 
@@ -352,7 +356,7 @@ router.get(
           lockReason = "TERM_APPROVED_LOCKED";
         else if (meeting.meeting_status !== "HELD")
           lockReason = "MEETING_NOT_HELD";
-        else if (offeringId !== TEST_OFFERING_ID)
+        else if (!QA_GRADEBOOK_OFFERINGS.has(offeringId))
           lockReason = "TEST_OFFERING_ONLY";
         student.latest_term_submission = latest
           ? {
@@ -588,20 +592,12 @@ router.post(
         message: "An authenticated instructor is required.",
       });
     }
-    if (offeringId !== TEST_OFFERING_ID) {
-      return res.status(403).json({
-        success: false,
-        code: "TEST_OFFERING_ONLY",
-        message: "Attendance saves are currently limited to Offering #131.",
-      });
-    }
 
     let connection;
     let transactionStarted = false;
     try {
       connection = await db.getConnection();
-      await connection.beginTransaction();
-      transactionStarted = true;
+      await assertQaGradingDatabase(connection);
 
       const [databaseRows] = await connection.execute(
         "SELECT DATABASE() AS database_name",
@@ -613,10 +609,17 @@ router.post(
           403,
         );
       }
-
+      if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
+        fail(
+          "TEST_OFFERING_ONLY",
+          "Attendance saves are restricted to QA Offerings #127, #128, and #131.",
+          403,
+        );
+      }
       // Match the offering -> gradebook config -> meeting -> student lock order.
       const [offeringRows] = await connection.execute(
-        `SELECT so.offering_id, so.status, f.user_id AS assigned_user_id,
+        `SELECT so.offering_id, so.status, so.faculty_id,
+        f.user_id AS assigned_user_id,
               u.is_active, u.is_archived, r.role_name
          FROM subject_offerings so
          LEFT JOIN faculty f ON f.faculty_id = so.faculty_id
@@ -639,12 +642,6 @@ router.post(
           "GRADEBOOK_INSTRUCTOR_REQUIRED",
           "Only the active assigned instructor may record attendance.",
           403,
-        );
-      }
-      if (offering.status !== "Open") {
-        fail(
-          "OFFERING_NOT_OPEN",
-          "Attendance encoding requires an Open offering.",
         );
       }
 
@@ -700,25 +697,29 @@ router.post(
       // Historical combined-semester submissions remain protected.
       // New term structure locks apply to meeting definitions, NOT to other
       // Draft students' attendance entries in this same class and term.
-      const [legacyLocks] = await connection.execute(
-        "SELECT 1 FROM gradebook_structure_locks WHERE config_id = ? LIMIT 1",
-        [configId],
-      );
       const [legacySubmissions] = await connection.execute(
         `SELECT 1
-         FROM gradebook_grade_submission_attempts sa
-         JOIN grades g ON g.grade_id = sa.grade_id
-         JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
-        WHERE es.offering_id = ? LIMIT 1`,
-        [offeringId],
+     FROM gradebook_grade_submission_attempts sa
+     JOIN grades g ON g.grade_id = sa.grade_id
+     JOIN enrollment_subjects es
+       ON es.enrollment_subject_id = g.enrollment_subject_id
+    WHERE es.offering_id = ?
+      AND NOT EXISTS (
+        SELECT 1
+          FROM gradebook_official_sheets sh
+         WHERE sh.sheet_id = sa.sheet_id
+           AND sh.config_id = ?
+      )
+    LIMIT 1`,
+        [offeringId, configId],
       );
-      if (legacyLocks.length || legacySubmissions.length) {
+
+      if (legacySubmissions.length) {
         fail(
           "GRADEBOOK_LEGACY_SUBMISSION_LOCKED",
-          "Legacy full-semester submission history requires the authorized correction workflow.",
+          "Unmatched historical submission records require the authorized correction workflow.",
         );
       }
-
       const [enrollmentRows] = await connection.execute(
         `SELECT es.enrollment_subject_id, es.offering_id,
               es.status AS enrollment_subject_status,
@@ -738,25 +739,66 @@ router.post(
         );
       }
       const enrollment = enrollmentRows[0];
+
       if (
         Number(enrollment.offering_id) !== offeringId ||
         enrollment.enrollment_status !== "Approved" ||
-        enrollment.enrollment_subject_status !== "Enrolled"
+        !["Enrolled", "Incomplete"].includes(
+          enrollment.enrollment_subject_status,
+        )
       ) {
         fail(
           "GRADEBOOK_STUDENT_NOT_ELIGIBLE",
-          "This student is not currently enrolled and approved for this offering.",
+          "The student must have an approved, eligible enrollment subject.",
         );
       }
 
-      // Only this student's latest attempt for the meeting's grading term
-      // controls attendance-cell editing. Submitted/approved terms are locked;
-      // RETURNED explicitly permits student-specific correction. MIDTERM never
-      // locks the same student's independent FINAL_TERM entries.
-      //
-      // The future term-submission and review endpoints MUST lock the same
-      // subject_offerings + gradebook_offering_config rows FOR UPDATE before
-      // changing submission state, to serialize against this attendance write.
+      const incCompletion =
+        enrollment.enrollment_subject_status === "Incomplete"
+          ? await requireVerifiedHistoricalIncFinalTermEntry(connection, {
+              offeringId,
+              configId,
+              enrollmentSubjectId: input.enrollmentSubjectId,
+              studentId: enrollment.student_id,
+              actorUserId,
+              facultyId: offering.faculty_id,
+              gradingTerm: meeting.grading_term,
+              changeReason: input.changeReason,
+            })
+          : null;
+
+      if (!incCompletion) {
+        if (offering.status !== "Open") {
+          fail(
+            "OFFERING_NOT_OPEN",
+            "Attendance encoding requires an Open offering.",
+          );
+        }
+
+        await assertCombinedSemesterCellEditable(
+          connection,
+          configId,
+          input.enrollmentSubjectId,
+          meeting.grading_term,
+        );
+
+        const [protectedGrades] = await connection.execute(
+          `SELECT grade_id
+             FROM grades
+            WHERE enrollment_subject_id = ?
+              AND grade_status = 'Approved'
+            FOR UPDATE`,
+          [input.enrollmentSubjectId],
+        );
+
+        if (protectedGrades.length) {
+          fail(
+            "GRADEBOOK_APPROVED_GRADE_LOCKED",
+            "Attendance associated with an approved grade requires the authorized correction workflow.",
+          );
+        }
+      }
+
       const [termAttempts] = await connection.execute(
         `SELECT term_submission_id, attempt_number, submission_status
          FROM gradebook_term_submission_attempts
@@ -843,6 +885,22 @@ router.post(
         );
       }
       const previous = existingRows[0] ?? null;
+      if (incCompletion) {
+        if (previous && previous.attendance_status !== "PENDING") {
+          fail(
+            "INC_ATTENDANCE_RESOLVED_LOCKED",
+            "Previously resolved attendance requires the formal correction workflow.",
+          );
+        }
+
+        if (input.attendanceStatus === "PENDING") {
+          fail(
+            "INC_ATTENDANCE_RESOLUTION_REQUIRED",
+            "INC completion must resolve a missing or pending attendance entry.",
+            400,
+          );
+        }
+      }
       if (
         (previous &&
           Number(previous.record_version) !== input.expectedVersion) ||
@@ -947,6 +1005,9 @@ router.post(
         throw new Error("Attendance timestamp was not available for audit.");
       }
       const recordedAt = savedRows[0].recorded_at;
+      const auditReason = incCompletion
+        ? `INC_COMPLETION_CLAIM_${incCompletion.claim_id}: ${input.changeReason}`
+        : input.changeReason;
       const [audit] = await connection.execute(
         `INSERT INTO gradebook_attendance_entry_events
          (attendance_id, event_type, change_context,
@@ -965,7 +1026,7 @@ router.post(
           input.statusReason,
           previous?.recorded_at ?? null,
           recordedAt,
-          input.changeReason,
+          auditReason,
           actorUserId,
           version,
         ],
@@ -982,6 +1043,15 @@ router.post(
         student_id: Number(enrollment.student_id),
         enrollment_subject_id: input.enrollmentSubjectId,
         grading_term: meeting.grading_term,
+        edit_scope: incCompletion
+          ? "INC_COMPLETION_FINAL_TERM"
+          : latestTermSubmission?.submission_status === "RETURNED"
+            ? "RETURNED_TERM_CORRECTION"
+            : "DRAFT_ENTRY",
+
+        inc_completion_claim_id: incCompletion?.claim_id ?? null,
+
+        official_grade_unchanged: incCompletion ? true : undefined,
         latest_term_submission_status:
           latestTermSubmission?.submission_status ?? null,
         attendance: {

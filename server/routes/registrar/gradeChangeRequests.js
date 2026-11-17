@@ -1,7 +1,6 @@
-// routes/registrar/gradeChangeRequests.js
-
 import express from "express";
 import db from "../../db.js";
+import { assertQaGradingDatabase } from "../../services/gradebookQaWriteGuard.service.js";
 
 const router = express.Router();
 
@@ -514,12 +513,17 @@ router.patch("/:requestId/process", async (req, res) => {
 
     connection = await db.getConnection();
 
-    // Defensive reset for pooled connection.
-    await connection.execute("SET @allow_approved_inc_grade_change = NULL");
-
-    await connection.execute("SET @allow_approved_grade_correction = NULL");
+    // Reset trigger permissions before using this connection.
+    await connection.execute(
+      "SET @allow_approved_inc_grade_change = NULL, " +
+        "@allow_approved_grade_correction = NULL, " +
+        "@allow_approved_inc_expiry = NULL",
+    );
 
     await connection.beginTransaction();
+
+    // Restrict legacy grade-change processing to QA.
+    await assertQaGradingDatabase(connection);
 
     // =================================================
     // LOCK REQUEST + CURRENT OFFICIAL GRADE
@@ -670,6 +674,22 @@ router.patch("/:requestId/process", async (req, res) => {
       return res.status(409).json({
         success: false,
         message: `Grade change request cannot be processed because its current status is '${request.status}'.`,
+      });
+    }
+
+    // INC completion processing is paused until the new verified-claim,
+    // deadline and official-sheet amendment checks are implemented.
+    // This does not affect GRADE_CORRECTION requests.
+    if (request.request_type === "INC_COMPLETION") {
+      await connection.rollback();
+      return res.status(409).json({
+        success: false,
+        code: "INC_COMPLETION_VERIFIED_WORKFLOW_REQUIRED",
+        message:
+          "INC grade conversion is temporarily unavailable until a verified completion claim and official-sheet audit can be enforced. The approved INC grade remains unchanged.",
+        grade_change_request_id: requestId,
+        grade_id: Number(request.grade_id),
+        official_grade_unchanged: true,
       });
     }
 
@@ -1257,6 +1277,78 @@ router.patch("/:requestId/process", async (req, res) => {
         });
       }
 
+      const [[correctionSource]] = await connection.execute(
+        `SELECT
+           EXISTS (
+             SELECT 1
+             FROM gradebook_official_grade_publications p
+             WHERE p.grade_id = ?
+           ) AS has_gradebook_publication,
+
+           EXISTS (
+             SELECT 1
+             FROM gradebook_finalized_roster fr
+             WHERE fr.grade_id = ?
+           ) AS has_finalized_roster,
+
+           EXISTS (
+             SELECT 1
+             FROM grade_change_requests prior
+             WHERE prior.grade_id = ?
+               AND prior.request_type = 'INC_COMPLETION'
+               AND prior.status = 'Completed'
+           ) AS has_inc_completion_history`,
+        [request.grade_id, request.grade_id, request.grade_id],
+      );
+
+      if (
+        Number(correctionSource.has_gradebook_publication) === 1 ||
+        Number(correctionSource.has_finalized_roster) === 1 ||
+        Number(correctionSource.has_inc_completion_history) === 1
+      ) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          code: "GRADE_CORRECTION_SOURCE_LINK_REQUIRED",
+          message:
+            "This official grade is backed by approved gradebook records. " +
+            "Use the controlled gradebook correction workflow with verified " +
+            "assessment changes and an official-sheet amendment. " +
+            "The legacy direct-percentage correction route is blocked.",
+        });
+      }
+
+      // Protect finalized sheets and original roster snapshots.
+      const [protectedSheets] = await connection.execute(
+        `SELECT sh.sheet_id
+     FROM gradebook_official_sheets sh
+     JOIN gradebook_offering_config cfg
+       ON cfg.config_id = sh.config_id
+    WHERE cfg.offering_id = ?
+      AND (
+        sh.sheet_status = 'FINALIZED'
+        OR EXISTS (
+          SELECT 1 FROM gradebook_finalized_roster fr
+           WHERE fr.sheet_id = sh.sheet_id
+             AND fr.grade_id = ?
+        )
+      )
+    LIMIT 1 FOR UPDATE`,
+        [request.offering_id, request.grade_id],
+      );
+
+      if (protectedSheets.length > 0) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          code: "GRADE_CORRECTION_OFFICIAL_SHEET_AMENDMENT_REQUIRED",
+          message:
+            "This official grade belongs to a finalized sheet. Use the authorized gradebook amendment workflow instead.",
+          official_grade_unchanged: true,
+        });
+      }
       // -----------------------------------------------
       // VERIFY ORIGINAL SNAPSHOT
       //
@@ -1682,9 +1774,24 @@ router.patch("/:requestId/process", async (req, res) => {
         await connection.rollback();
       } catch (rollbackError) {
         console.error("REGISTRAR GRADE CHANGE ROLLBACK ERROR:", rollbackError);
+
+        connection.destroy();
+        connection = null;
       }
     }
-
+    if (
+      error?.status === 403 &&
+      [
+        "GRADEBOOK_QA_PRODUCTION_FORBIDDEN",
+        "GRADEBOOK_QA_DATABASE_ONLY",
+      ].includes(error?.code)
+    ) {
+      return res.status(403).json({
+        success: false,
+        code: error.code,
+        message: error.message,
+      });
+    }
     console.error("REGISTRAR GRADE CHANGE PROCESS ERROR:", error);
 
     // =================================================
@@ -1711,28 +1818,28 @@ router.patch("/:requestId/process", async (req, res) => {
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   } finally {
-    // =================================================
-    // FINAL SAFETY RESET
-    // =================================================
-
     if (connection) {
-      try {
-        await connection.execute("SET @allow_approved_inc_grade_change = NULL");
-      } catch (flagResetError) {
-        console.error("FINAL INC FLAG RESET ERROR:", flagResetError);
+      let safeToReuse = true;
+
+      for (const statement of [
+        "SET @allow_approved_inc_grade_change = NULL",
+        "SET @allow_approved_grade_correction = NULL",
+      ]) {
+        try {
+          await connection.execute(statement);
+        } catch (cleanupError) {
+          safeToReuse = false;
+          console.error("GRADE CHANGE CONNECTION RESET ERROR:", cleanupError);
+        }
       }
 
-      try {
-        await connection.execute("SET @allow_approved_grade_correction = NULL");
-      } catch (flagResetError) {
-        console.error(
-          "FINAL GRADE CORRECTION FLAG RESET ERROR:",
-          flagResetError,
-        );
+      if (safeToReuse) {
+        connection.release();
+      } else {
+        connection.destroy();
       }
-
-      connection.release();
     }
   }
 });
+
 export default router;

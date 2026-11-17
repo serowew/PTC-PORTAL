@@ -290,7 +290,7 @@ export default function CertificateOfGradesR() {
       try {
         setError("");
 
-        const requestUrl = `${API_BASE_URL}/${studentId}/academic-records`;
+        const requestUrl = `${API_BASE_URL}/${studentId}/academic-records?document=COG`;
 
         const response = await authService.authFetch(requestUrl, {
           method: "GET",

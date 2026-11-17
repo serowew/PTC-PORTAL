@@ -1,10 +1,9 @@
 import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
-
+import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 const router = express.Router();
-const TEST_DATABASE = "databaseforptc1_admission_test";
-const TEST_OFFERING_ID = 131;
+const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 function fail(code, message, status = 409) {
   const error = new Error(message);
@@ -478,7 +477,7 @@ router.post("/:offeringId/attendance/meetings", async (req, res) => {
     });
   }
   // First rollout is deliberately isolated to the verified admission-test offering.
-  if (offeringId !== TEST_OFFERING_ID) {
+  if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
     return res.status(403).json({
       success: false,
       code: "TEST_OFFERING_ONLY",
@@ -491,8 +490,7 @@ router.post("/:offeringId/attendance/meetings", async (req, res) => {
   let transactionStarted = false;
   try {
     connection = await db.getConnection();
-    await connection.beginTransaction();
-    transactionStarted = true;
+    await assertQaGradingDatabase(connection);
 
     const [databaseRows] = await connection.execute(
       "SELECT DATABASE() AS database_name",
@@ -768,7 +766,7 @@ router.post(
         message: "An authenticated instructor is required.",
       });
     }
-    if (offeringId !== TEST_OFFERING_ID) {
+    if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
       return res.status(403).json({
         success: false,
         code: "TEST_OFFERING_ONLY",
@@ -781,8 +779,7 @@ router.post(
     let transactionStarted = false;
     try {
       connection = await db.getConnection();
-      await connection.beginTransaction();
-      transactionStarted = true;
+      await assertQaGradingDatabase(connection);
 
       const [databaseRows] = await connection.execute(
         "SELECT DATABASE() AS database_name",

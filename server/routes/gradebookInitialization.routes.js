@@ -45,7 +45,7 @@ function sendError(res, error) {
   });
 }
 
-// Find uninitialized offerings assigned to the current instructor.
+// Initialization candidates
 router.get("/candidates", async (req, res) => {
   try {
     const [rows] = await db.execute(
@@ -105,7 +105,7 @@ router.get("/candidates", async (req, res) => {
   }
 });
 
-// Read-only preflight. This does not authorize database writes.
+// Initialization preflight
 async function preflight(offeringId, actorId) {
   const [rows] = await db.execute(
     `
@@ -160,7 +160,7 @@ async function preflight(offeringId, actorId) {
 
   const row = rows[0];
 
-  if (Number(row.assigned_user_id) !== actorId) {
+  if (Number(row.assigned_user_id) !== Number(actorId)) {
     const error = new Error(
       "Only the assigned instructor may access this gradebook.",
     );
@@ -190,13 +190,9 @@ async function preflight(offeringId, actorId) {
     subject_name: row.subject_name,
     laboratory_hours: Number(row.laboratory_hours),
     offering_status: row.offering_status,
-
     configuration_count: Number(row.configuration_count),
-
     existing_grade_count: Number(row.existing_grade_count),
-
     enrollment_subject_count: Number(row.enrollment_subject_count),
-
     can_initialize: blockers.length === 0,
     blockers,
   };
@@ -223,8 +219,8 @@ router.get("/preflight/:offeringId", async (req, res) => {
   }
 });
 
+// GET validation through a rolled-back transaction
 // POST /api/gradebook/dry-run/:offeringId
-// Test-only endpoint. Always rolls back newly created records.
 router.post("/dry-run/:offeringId", async (req, res) => {
   const id = positiveId(req.params.offeringId);
 
@@ -273,6 +269,113 @@ router.post("/dry-run/:offeringId", async (req, res) => {
   }
 });
 
-// The temporary /commit-test route has been removed.
+// Permanent QA initialization
+// POST /api/gradebook/initialize/:offeringId
+router.post("/initialize/:offeringId", async (req, res) => {
+  const id = positiveId(req.params.offeringId);
+
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_OFFERING_ID",
+    });
+  }
+
+  const body = req.body;
+
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    Object.keys(body).length !== 1 ||
+    !Object.hasOwn(body, "dry_run") ||
+    body.dry_run !== false
+  ) {
+    return res.status(400).json({
+      success: false,
+      code: "COMMIT_CONFIRMATION_REQUIRED",
+      message: 'Specify {"dry_run": false} to initialize the gradebook.',
+    });
+  }
+
+  try {
+    const result = await initializeGradebookOffering(db, id, req.user.user_id, {
+      dryRun: false,
+    });
+
+    return res.status(result.created ? 201 : 200).json({
+      ...result,
+      success: true,
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+});
+// Gradebook Initialization
+router.post("/initialize/:offeringId", async (req, res) => {
+  const offeringId = positiveId(req.params.offeringId);
+  const actorUserId = positiveId(req.user?.user_id);
+  const body = req.body;
+
+  if (!actorUserId) {
+    return res.status(401).json({
+      success: false,
+      code: "AUTHENTICATION_REQUIRED",
+      message: "An authenticated instructor is required.",
+    });
+  }
+
+  if (!offeringId) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_OFFERING_ID",
+      message: "Provide a valid offering ID.",
+    });
+  }
+
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    Object.keys(req.query ?? {}).length !== 0 ||
+    Object.keys(body).length !== 2 ||
+    body.confirm_initialize !== true ||
+    body.dry_run !== false
+  ) {
+    return res.status(400).json({
+      success: false,
+      code: "GRADEBOOK_INIT_CONFIRMATION_REQUIRED",
+      message: "Provide confirm_initialize: true and dry_run: false.",
+    });
+  }
+
+  // Committed initialization is disabled unless explicitly enabled.
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.GRADEBOOK_QA_INITIALIZATION_ENABLED !== "true"
+  ) {
+    return res.status(403).json({
+      success: false,
+      code: "GRADEBOOK_INIT_WRITE_DISABLED",
+      message: "Committed gradebook initialization is not enabled.",
+    });
+  }
+
+  try {
+    const result = await initializeGradebookOffering(
+      db,
+      offeringId,
+      actorUserId,
+      { dryRun: false },
+    );
+
+    return res.status(result.created ? 201 : 200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+});
 
 export default router;

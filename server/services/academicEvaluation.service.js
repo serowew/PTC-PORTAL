@@ -2,6 +2,7 @@
 
 import db from "../db.js";
 import { getOfficialTransferCreditsForStudent } from "./transferCredit.service.js";
+import { officialGradeFinalizationSql } from "./officialGradeFinalization.service.js";
 
 // =====================================================
 // CONSTANTS
@@ -169,6 +170,7 @@ export async function getApprovedAcademicHistory(studentId, executor = db) {
           AND e.enrollment_status = 'Approved'
 
           AND g.grade_status = 'Approved'
+          AND ${officialGradeFinalizationSql}
 
       ORDER BY
           COALESCE(
@@ -563,6 +565,8 @@ export async function checkPrerequisites(studentId, subjectId, executor = db) {
 
                         AND g.grade_status =
                             'Approved'
+
+                            AND ${officialGradeFinalizationSql}
 
                         AND g.final_rating >= 1.00
 

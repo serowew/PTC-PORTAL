@@ -209,7 +209,7 @@ function compareAcademicRecords(a, b) {
 
 export async function getOfficialAcademicRecordForStudent(
   studentId,
-  { curriculumId = null, executor = db } = {},
+  { curriculumId = null, executor = db, studentVisibleOnly = false } = {},
 ) {
   const safeStudentId = toPositiveInt(studentId, "studentId");
 
@@ -353,6 +353,69 @@ export async function getOfficialAcademicRecordForStudent(
             AND g.final_rating
                 IS NOT NULL
 
+
+AND (
+    ? = 0
+
+    OR EXISTS (
+        SELECT 1
+        FROM gradebook_finalized_roster fr
+        JOIN gradebook_official_sheets os
+          ON os.sheet_id = fr.sheet_id
+        WHERE fr.grade_id = g.grade_id
+          AND fr.enrollment_subject_id = es.enrollment_subject_id
+          AND fr.student_id = e.student_id
+          AND fr.roster_disposition = 'APPROVED_GRADE'
+          AND fr.grade_status_snapshot = 'Approved'
+          AND os.sheet_status = 'FINALIZED'
+          AND os.finalized_at IS NOT NULL
+          AND os.finalized_roster_count = (
+              SELECT COUNT(*)
+              FROM gradebook_finalized_roster all_rows
+              WHERE all_rows.sheet_id = os.sheet_id
+          )
+    )
+
+    OR (
+        -- Preserve older approved grades without modern submission history.
+        NOT EXISTS (
+            SELECT 1
+            FROM gradebook_official_grade_publications p
+            WHERE p.grade_id = g.grade_id
+        )
+
+        AND NOT EXISTS (
+            SELECT 1
+            FROM gradebook_grade_submission_attempts a
+            WHERE a.grade_id = g.grade_id
+        )
+
+        AND NOT EXISTS (
+            SELECT 1
+            FROM gradebook_term_submission_attempts t
+            WHERE t.enrollment_subject_id = es.enrollment_subject_id
+        )
+
+        AND NOT EXISTS (
+            SELECT 1
+            FROM gradebook_inc_outcome_requests ir
+            WHERE ir.enrollment_subject_id = es.enrollment_subject_id
+        )
+
+        AND NOT EXISTS (
+            SELECT 1
+            FROM gradebook_ud_outcome_requests ur
+            WHERE ur.enrollment_subject_id = es.enrollment_subject_id
+        )
+
+        AND NOT EXISTS (
+            SELECT 1
+            FROM gradebook_special_outcomes so
+            WHERE so.grade_id = g.grade_id
+        )
+    )
+)
+
             AND e.semester_id
                 IN (1, 2)
 
@@ -362,7 +425,7 @@ export async function getOfficialAcademicRecordForStudent(
             es.enrollment_subject_id ASC,
             g.grade_id ASC
       `,
-    [safeStudentId],
+    [safeStudentId, studentVisibleOnly === true ? 1 : 0],
   );
 
   // ===================================================

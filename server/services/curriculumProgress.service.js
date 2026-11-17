@@ -115,7 +115,7 @@ function selectLatestTransferRecord(records) {
 
 export async function getCurriculumProgressForStudent(
   studentId,
-  { curriculumId = null, executor = db } = {},
+  { curriculumId = null, executor = db, studentVisibleOnly = false } = {},
 ) {
   const safeStudentId = toPositiveInt(studentId, "studentId");
 
@@ -376,6 +376,7 @@ export async function getCurriculumProgressForStudent(
     {
       curriculumId: activeCurriculumId,
       executor: database,
+      studentVisibleOnly,
     },
   );
 

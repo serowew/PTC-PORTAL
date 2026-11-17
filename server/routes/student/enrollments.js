@@ -12,6 +12,7 @@ import {
 } from "../../services/academicEvaluation.service.js";
 
 import { getOfficialTransferCreditsForStudent } from "../../services/transferCredit.service.js";
+import { officialGradeFinalizationSql } from "../../services/officialGradeFinalization.service.js";
 
 const router = express.Router();
 
@@ -326,6 +327,7 @@ async function resolveStudentProgression({
                     AND g.grade_status = 'Approved'
 
                     AND g.final_rating IS NOT NULL
+                    AND ${officialGradeFinalizationSql}
                 )
                 THEN 1
                 ELSE 0
@@ -431,7 +433,7 @@ async function resolveStudentProgression({
 
       code: "PREVIOUS_TERM_GRADES_UNRESOLVED",
 
-      reason: `${unresolvedSubjects} subject(s) from the previous Second Semester do not yet have an Approved final rating.`,
+      reason: `${unresolvedSubjects} subject(s) from the previous Second Semester do not yet have a finalized official grade result.`,
 
       previous_year_level: normalizedYearLevel,
 

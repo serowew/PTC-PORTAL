@@ -1,0 +1,2315 @@
+﻿        Boolean(snapshot) &&
+        gradeFields.every(
+          (field) =>
+            Object.prototype.hasOwnProperty.call(snapshot, field) &&
+            phHistoricalEqual(snapshot[field], grade[field]),
+        );
+      const expectedClassification =
+        grade?.grading_policy === "LEGACY"
+          ? "LEGACY_POLICY"
+          : "APPROVED_WITHOUT_PUBLICATION";
+      const validSource =
+        gradeMatchesSnapshot &&
+        offering.status !== "Cancelled" &&
+        grade.grade_status === "Approved" &&
+        grade.grading_outcome === "NUMERIC" &&
+        ["LEGACY", "TWO_TERM_50_50"].includes(grade.grading_policy) &&
+        grade.final_rating != null &&
+        ["Passed", "Failed"].includes(grade.remarks) &&
+        grade.subject_status ===
+          (grade.remarks === "Passed" ? "Completed" : "Failed") &&
+        grade.enrollment_status === "Approved" &&
+        grade.reviewed_by != null &&
+        grade.reviewed_at != null &&
+        Number(grade.academic_year_id) === Number(offering.academic_year_id) &&
+        Number(grade.semester_id) === Number(offering.semester_id) &&
+        publications.length === 0 &&
+        modernAttempts.length === 0 &&
+        finalized.length === 0 &&
+        sheetRows.length <= 1 &&
+        !sheetRows.some((row) => row.sheet_status === "FINALIZED") &&
+        request.source_classification === expectedClassification &&
+        snapshot?.source_classification === request.source_classification &&
+        snapshot?.source_reference === request.source_reference &&
+        snapshot?.evidence_summary === request.evidence_summary &&
+        typeof request.source_reference === "string" &&
+        request.source_reference.trim().length >= 8 &&
+        typeof request.evidence_summary === "string" &&
+        request.evidence_summary.trim().length >= 30;
+      if (body.action === "VERIFY" && !validSource) {
+        phHistoricalFail(
+          "PH_HISTORICAL_SOURCE_STALE",
+          "The historical approved grade, original source, or finalization state changed. Reject or reconcile it; do not verify stale evidence.",
+        );
+      }
+
+      const newStatus = body.action === "VERIFY" ? "VERIFIED" : "REJECTED";
+      const nextVersion = expectedVersion + 1;
+      const [updated] = await connection.execute(
+        `UPDATE gradebook_historical_grade_source_reviews
+            SET review_status = ?, reviewed_by_user_id = ?, reviewed_at = NOW(6),
+                review_remarks = ?, record_version = record_version + 1
+          WHERE historical_review_id = ? AND review_status = 'PENDING_PH_REVIEW'
+            AND record_version = ?`,
+        [newStatus, userId, remarks, reviewId, expectedVersion],
+      );
+      if (Number(updated.affectedRows) !== 1) {
+        phHistoricalFail(
+          "PH_HISTORICAL_VERSION_CONFLICT",
+          "The source review changed during processing.",
+        );
+      }
+      const [event] = await connection.execute(
+        `INSERT INTO gradebook_historical_grade_source_review_events
+           (historical_review_id, event_type, previous_status, new_status,
+            source_snapshot_json, event_reason, performed_by_user_id, review_version_after)
+         VALUES (?, ?, 'PENDING_PH_REVIEW', ?, ?, ?, ?, ?)`,
+        [
+          reviewId,
+          newStatus,
+          newStatus,
+          request.original_grade_snapshot_json,
+          remarks,
+          userId,
+          nextVersion,
+        ],
+      );
+      if (Number(event.affectedRows) !== 1) {
+        throw new Error("Historical source review audit was not saved.");
+      }
+      if (body.dry_run) await connection.rollback();
+      else await connection.commit();
+      inTransaction = false;
+      return res.json({
+        success: true,
+        dry_run: body.dry_run,
+        persisted: !body.dry_run,
+        historical_review_id: String(reviewId),
+        grade_id: Number(grade.grade_id),
+        offering_id: offeringId,
+        action: body.action,
+        review_status: newStatus,
+        record_version: nextVersion,
+        historical_event_id: body.dry_run ? null : String(event.insertId),
+        source_evidence_verified: newStatus === "VERIFIED",
+        official_grade_unchanged: true,
+        official_sheet_unchanged: true,
+        next_step:
+          newStatus === "VERIFIED"
+            ? "Verified source may be considered by the separate historical-grade finalization safeguard; no grade or sheet has been changed."
+            : "Evidence rejected. A controlled reconsideration or new documented process is required.",
+      });
+    } catch (error) {
+      if (inTransaction && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("PH HISTORICAL REVIEW ROLLBACK:", rollbackError);
+        }
+      }
+      return phHistoricalSendError(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
+
+/* Combined Semester Return */
+
+function combinedReturnFail(code, message, status = 409) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  throw error;
+}
+
+function combinedReturnRespond(res, error) {
+  const status =
+    Number.isInteger(error?.status) && error.status >= 400 && error.status < 500
+      ? error.status
+      : 500;
+
+  if (status === 500) {
+    console.error("COMBINED SEMESTER RETURN:", error);
+  }
+
+  return res.status(status).json({
+    success: false,
+    code: status === 500 ? "COMBINED_RETURN_INTERNAL_ERROR" : error.code,
+    message:
+      status === 500 ? "Could not return semester submission." : error.message,
+  });
+}
+
+router.post(
+  "/gradebook/semester-submissions/:submissionId/return",
+  async (req, res) => {
+    let connection;
+    let inTransaction = false;
+
+    try {
+      const submissionId = periodPositiveId(req.params.submissionId);
+
+      const body = req.body;
+
+      const allowed = new Set([
+        "expected_record_version",
+        "returned_edit_scope",
+        "review_remarks",
+        "confirm_return",
+        "dry_run",
+      ]);
+
+      const version = periodPositiveId(body?.expected_record_version);
+
+      const scope = body?.returned_edit_scope;
+
+      const remarks =
+        typeof body?.review_remarks === "string"
+          ? body.review_remarks.trim()
+          : "";
+
+      if (
+        Object.keys(req.query ?? {}).length ||
+        !submissionId ||
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body) ||
+        Object.keys(body).some((key) => !allowed.has(key)) ||
+        !version ||
+        version >= 4294967295 ||
+        !["MIDTERM", "FINAL_TERM", "BOTH"].includes(scope) ||
+        remarks.length < 15 ||
+        remarks.length > 500 ||
+        /[\x00-\x08\x0B\x0E-\x1F\x7F]/.test(remarks) ||
+        body.confirm_return !== true ||
+        typeof body.dry_run !== "boolean"
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_INPUT_INVALID",
+          "Provide submission ID, current version, return scope, remarks (15â€“500 characters), confirmation, and boolean dry_run.",
+          400,
+        );
+      }
+
+      connection = await db.getConnection();
+
+      await connection.beginTransaction();
+      inTransaction = true;
+
+      const [[dbInfo]] = await connection.execute("SELECT DATABASE() AS name");
+
+      if (dbInfo?.name !== "databaseforptc1_admission_test") {
+        combinedReturnFail(
+          "COMBINED_QA_DATABASE_ONLY",
+          "This endpoint is limited to the QA database.",
+          403,
+        );
+      }
+
+      const { userId, departmentId } = await incReviewAssertProgramHead(
+        connection,
+        req,
+      );
+
+      // Identify the submission before locking its related records.
+      const [targets] = await connection.execute(
+        `SELECT
+           a.grade_id,
+           a.sheet_id,
+           a.period_id,
+           a.attempt_number,
+           g.enrollment_subject_id,
+           es.offering_id,
+           sh.config_id
+         FROM gradebook_grade_submission_attempts a
+         JOIN grades g ON g.grade_id = a.grade_id
+         JOIN enrollment_subjects es
+           ON es.enrollment_subject_id = g.enrollment_subject_id
+         JOIN gradebook_official_sheets sh
+           ON sh.sheet_id = a.sheet_id
+         WHERE a.submission_id = ?`,
+        [submissionId],
+      );
+
+      if (targets.length !== 1) {
+        combinedReturnFail(
+          "COMBINED_SUBMISSION_NOT_FOUND",
+          "Combined submission not found.",
+          404,
+        );
+      }
+
+      const target = targets[0];
+
+      // Offering
+      const [offerings] = await connection.execute(
+        `SELECT
+           so.offering_id,
+           so.status AS offering_status,
+           so.academic_year_id,
+           so.semester_id,
+           so.faculty_id,
+           cr.department_id
+         FROM subject_offerings so
+         JOIN sections sec
+           ON sec.section_id = so.section_id
+         JOIN courses cr
+           ON cr.course_id = sec.course_id
+         WHERE so.offering_id = ?
+         FOR UPDATE`,
+        [target.offering_id],
+      );
+
+      const offering = offerings[0];
+
+      if (
+        offerings.length !== 1 ||
+        Number(offering.department_id) !== departmentId ||
+        offering.offering_status === "Cancelled"
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_DEPARTMENT_FORBIDDEN",
+          "Offering is unavailable or outside your department.",
+          403,
+        );
+      }
+
+      // Gradebook configuration
+      const [configs] = await connection.execute(
+        `SELECT
+           config_id,
+           offering_id,
+           midterm_percent,
+           final_term_percent
+         FROM gradebook_offering_config
+         WHERE config_id = ?
+           AND offering_id = ?
+         FOR UPDATE`,
+        [target.config_id, target.offering_id],
+      );
+
+      if (
+        configs.length !== 1 ||
+        Number(configs[0].midterm_percent) !== 50 ||
+        Number(configs[0].final_term_percent) !== 50
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_CONFIG_INVALID",
+          "Official 50/50 gradebook configuration changed.",
+        );
+      }
+
+      // Student enrollment
+      const [students] = await connection.execute(
+        `SELECT
+           es.enrollment_subject_id,
+           es.offering_id,
+           es.status AS subject_status,
+           e.enrollment_status
+         FROM enrollment_subjects es
+         JOIN enrollments e
+           ON e.enrollment_id = es.enrollment_id
+         WHERE es.enrollment_subject_id = ?
+         FOR UPDATE`,
+        [target.enrollment_subject_id],
+      );
+
+      if (
+        students.length !== 1 ||
+        Number(students[0].offering_id) !== Number(target.offering_id) ||
+        students[0].subject_status !== "Enrolled" ||
+        students[0].enrollment_status !== "Approved"
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_ENROLLMENT_CHANGED",
+          "Enrollment is no longer approved and active.",
+        );
+      }
+
+      // Submission period
+      const [periods] = await connection.execute(
+        `SELECT
+           period_id,
+           department_id,
+           academic_year_id,
+           semester_id
+         FROM gradebook_submission_periods
+         WHERE period_id = ?
+         FOR UPDATE`,
+        [target.period_id],
+      );
+
+      if (
+        periods.length !== 1 ||
+        Number(periods[0].department_id) !== departmentId ||
+        Number(periods[0].academic_year_id) !==
+          Number(offering.academic_year_id) ||
+        Number(periods[0].semester_id) !== Number(offering.semester_id)
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_PERIOD_MISMATCH",
+          "Submission window does not match the offering.",
+        );
+      }
+
+      // Grade
+      const [grades] = await connection.execute(
+        `SELECT
+           grade_id,
+           enrollment_subject_id,
+           faculty_id,
+           grade_status,
+           grading_policy,
+           grading_outcome,
+           midterm_grade,
+           final_grade,
+           overall_percentage,
+           final_rating
+         FROM grades
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const grade = grades[0];
+
+      if (
+        grades.length !== 1 ||
+        Number(grade.enrollment_subject_id) !==
+          Number(target.enrollment_subject_id) ||
+        Number(grade.faculty_id) !== Number(offering.faculty_id) ||
+        grade.grade_status !== "Submitted" ||
+        grade.grading_policy !== "TWO_TERM_50_50" ||
+        grade.grading_outcome !== "NUMERIC"
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_GRADE_MISMATCH",
+          "Only a source-backed submitted numeric grade can be returned.",
+        );
+      }
+
+      // Official sheet
+      const [sheets] = await connection.execute(
+        `SELECT
+           sheet_id,
+           config_id,
+           sheet_status,
+           original_official_submitted_on,
+           official_date_verified_at
+         FROM gradebook_official_sheets
+         WHERE sheet_id = ?
+         FOR UPDATE`,
+        [target.sheet_id],
+      );
+
+      if (
+        sheets.length !== 1 ||
+        Number(sheets[0].config_id) !== Number(target.config_id) ||
+        sheets[0].sheet_status !== "IN_PROGRESS" ||
+        sheets[0].original_official_submitted_on != null ||
+        sheets[0].official_date_verified_at != null
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_SHEET_LOCKED",
+          "The official sheet has already reached the official submission-date stage.",
+        );
+      }
+
+      // Published grades cannot be returned through this route.
+      const [publications] = await connection.execute(
+        `SELECT publication_id
+         FROM gradebook_official_grade_publications
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      if (publications.length) {
+        combinedReturnFail(
+          "COMBINED_RETURN_ALREADY_PUBLISHED",
+          "Published grades require the audited amendment workflow.",
+        );
+      }
+
+      // Do not mix historical term submissions with combined submissions.
+      const [oldTerms] = await connection.execute(
+        `SELECT term_submission_id
+         FROM gradebook_term_submission_attempts
+         WHERE config_id = ?
+         LIMIT 1`,
+        [target.config_id],
+      );
+
+      if (oldTerms.length) {
+        combinedReturnFail(
+          "COMBINED_RETURN_LEGACY_HISTORY",
+          "This offering has older term-based submissions requiring reconciliation.",
+        );
+      }
+
+      // Shared structure lock
+      const [locks] = await connection.execute(
+        `SELECT first_submission_id
+         FROM gradebook_structure_locks
+         WHERE config_id = ?
+         FOR UPDATE`,
+        [target.config_id],
+      );
+
+      if (locks.length !== 1) {
+        combinedReturnFail(
+          "COMBINED_RETURN_LOCK_MISSING",
+          "First combined-submission structure lock is missing.",
+        );
+      }
+
+      // Latest submission and version
+      const [latest] = await connection.execute(
+        `SELECT *
+         FROM gradebook_grade_submission_attempts
+         WHERE grade_id = ?
+         ORDER BY attempt_number DESC, submission_id DESC
+         LIMIT 1
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const submission = latest[0];
+
+      if (
+        latest.length !== 1 ||
+        String(submission.submission_id) !== String(submissionId) ||
+        String(submission.sheet_id) !== String(target.sheet_id) ||
+        Number(submission.period_id) !== Number(target.period_id) ||
+        Number(submission.record_version) !== version ||
+        submission.submission_status !== "SUBMITTED" ||
+        submission.returned_edit_scope != null ||
+        submission.reviewed_by_user_id != null ||
+        submission.reviewed_at != null ||
+        submission.grading_scope !== "FULL_SEMESTER" ||
+        submission.grading_outcome_snapshot !== "NUMERIC" ||
+        submission.special_outcome_id != null
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_NOT_CURRENT",
+          "This is not the latest pending numeric submission. Reload and retry.",
+        );
+      }
+
+      // Validate the original calculation snapshot.
+      const numericSame = (a, b) =>
+        a != null && b != null && Number(a) === Number(b);
+
+      let snapshot = null;
+
+      try {
+        snapshot =
+          typeof submission.calculation_snapshot_json === "string"
+            ? JSON.parse(submission.calculation_snapshot_json)
+            : submission.calculation_snapshot_json;
+      } catch {
+        // Invalid source snapshot
+      }
+
+      if (
+        !snapshot ||
+        snapshot.policy !== "TWO_TERM_50_50" ||
+        snapshot.grading_scope !== "FULL_SEMESTER" ||
+        Number(snapshot.offering_id) !== Number(target.offering_id) ||
+        Number(snapshot.config_id) !== Number(target.config_id) ||
+        Number(snapshot.enrollment_subject_id) !==
+          Number(target.enrollment_subject_id) ||
+        Number(snapshot.grade_id) !== Number(target.grade_id) ||
+        snapshot.calculated_terms?.MIDTERM?.state !== "READY" ||
+        snapshot.calculated_terms?.FINAL_TERM?.state !== "READY" ||
+        snapshot.calculated_semester?.state !== "READY" ||
+        !numericSame(
+          grade.midterm_grade,
+          submission.midterm_percentage_snapshot,
+        ) ||
+        !numericSame(
+          grade.final_grade,
+          submission.final_term_percentage_snapshot,
+        ) ||
+        !numericSame(
+          grade.overall_percentage,
+          submission.overall_percentage_snapshot,
+        ) ||
+        !numericSame(grade.final_rating, submission.final_rating_snapshot)
+      ) {
+        combinedReturnFail(
+          "COMBINED_RETURN_SOURCE_STALE",
+          "The submitted grade or calculation snapshot changed.",
+        );
+      }
+
+      // Verify immutable exact calculation evidence.
+      const ratios = [
+        [
+          submission.midterm_exact_numerator,
+          submission.midterm_exact_denominator,
+          snapshot.calculated_terms.MIDTERM.term_percentage,
+        ],
+        [
+          submission.final_term_exact_numerator,
+          submission.final_term_exact_denominator,
+          snapshot.calculated_terms.FINAL_TERM.term_percentage,
+        ],
+        [
+          submission.overall_exact_numerator,
+          submission.overall_exact_denominator,
+          snapshot.calculated_semester.semester_percentage,
+        ],
+      ];
+
+      for (const [numerator, denominator, source] of ratios) {
+        if (
+          !/^(0|[1-9]\d*)$/.test(String(numerator ?? "")) ||
+          !/^[1-9]\d*$/.test(String(denominator ?? "")) ||
+          String(numerator) !== String(source?.exact_numerator) ||
+          String(denominator) !== String(source?.exact_denominator)
+        ) {
+          combinedReturnFail(
+            "COMBINED_RETURN_RATIO_MISMATCH",
+            "Exact calculation provenance is inconsistent.",
+          );
+        }
+      }
+
+      // One review decision per submission attempt.
+      const [reviews] = await connection.execute(
+        `SELECT review_id
+         FROM gradebook_grade_submission_reviews
+         WHERE submission_id = ?
+         LIMIT 1
+         FOR UPDATE`,
+        [submissionId],
+      );
+
+      if (reviews.length) {
+        combinedReturnFail(
+          "COMBINED_RETURN_ALREADY_REVIEWED",
+          "This attempt already has a review decision.",
+        );
+      }
+
+      // Return the submitted attempt.
+      const [updated] = await connection.execute(
+        `UPDATE gradebook_grade_submission_attempts
+         SET submission_status = 'RETURNED',
+             returned_edit_scope = ?,
+             review_remarks = ?,
+             reviewed_by_user_id = ?,
+             reviewed_at = NOW(),
+             record_version = record_version + 1
+         WHERE submission_id = ?
+           AND submission_status = 'SUBMITTED'
+           AND record_version = ?`,
+        [scope, remarks, userId, submissionId, version],
+      );
+
+      if (Number(updated.affectedRows) !== 1) {
+        combinedReturnFail(
+          "COMBINED_RETURN_VERSION_CONFLICT",
+          "Submission changed during review.",
+        );
+      }
+
+      // Return the grade without changing its calculated values.
+      const [gradeUpdate] = await connection.execute(
+        `UPDATE grades
+         SET grade_status = 'Returned',
+             reviewed_by = ?,
+             review_remarks = ?
+         WHERE grade_id = ?
+           AND grade_status = 'Submitted'`,
+        [userId, remarks, target.grade_id],
+      );
+
+      if (Number(gradeUpdate.affectedRows) !== 1) {
+        combinedReturnFail(
+          "COMBINED_RETURN_GRADE_CONFLICT",
+          "Grade changed during return.",
+        );
+      }
+
+      // Save the Program Head review.
+      const [audit] = await connection.execute(
+        `INSERT INTO gradebook_grade_submission_reviews
+         (
+           submission_id,
+           review_decision,
+           grading_outcome_snapshot,
+           review_notes,
+           returned_edit_scope,
+           is_self_approval,
+           reviewed_by_user_id,
+           submission_version_after
+         )
+         VALUES (
+           ?, 'RETURNED', 'NUMERIC',
+           ?, ?, 0, ?, ?
+         )`,
+        [submissionId, remarks, scope, userId, version + 1],
+      );
+
+      if (Number(audit.affectedRows) !== 1) {
+        throw new Error("Could not save return-review audit.");
+      }
+
+      if (body.dry_run) {
+        await connection.rollback();
+      } else {
+        await connection.commit();
+      }
+
+      inTransaction = false;
+
+      return res.json({
+        success: true,
+        dry_run: body.dry_run,
+        persisted: !body.dry_run,
+        submission_id: String(submissionId),
+        grade_id: Number(target.grade_id),
+        submission_status: "RETURNED",
+        grade_status: "Returned",
+        returned_edit_scope: scope,
+        record_version: version + 1,
+        review_id: body.dry_run ? null : String(audit.insertId),
+        official_grade_published: false,
+        note: "Only the returned term scope may be edited. Resubmission requires the authorized combined-semester workflow.",
+      });
+    } catch (error) {
+      if (inTransaction && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("COMBINED RETURN ROLLBACK:", rollbackError);
+        }
+      }
+
+      if (error?.code === "ER_DUP_ENTRY") {
+        return combinedReturnRespond(res, {
+          status: 409,
+          code: "COMBINED_RETURN_ALREADY_REVIEWED",
+          message: "A review was already recorded. Reload the submission.",
+        });
+      }
+
+      return combinedReturnRespond(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
+
+/* Combined Semester Approval */
+
+function combinedApprovalFail(code, message, status = 409) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  throw error;
+}
+
+function combinedApprovalRespond(res, error) {
+  const status =
+    Number.isInteger(error?.status) && error.status >= 400 && error.status < 500
+      ? error.status
+      : 500;
+
+  if (status === 500) {
+    console.error("COMBINED APPROVAL:", error);
+  }
+
+  return res.status(status).json({
+    success: false,
+    code: status === 500 ? "COMBINED_APPROVAL_ERROR" : error.code,
+    message:
+      status === 500 ? "Could not approve semester submission." : error.message,
+  });
+}
+
+function combinedApprovalFraction(n, d, source, maxDigits) {
+  const numerator = String(n ?? "");
+  const denominator = String(d ?? "");
+
+  if (
+    !/^(0|[1-9]\d*)$/.test(numerator) ||
+    !/^[1-9]\d*$/.test(denominator) ||
+    numerator.length > maxDigits ||
+    denominator.length > maxDigits ||
+    String(source?.exact_numerator) !== numerator ||
+    String(source?.exact_denominator) !== denominator
+  ) {
+    combinedApprovalFail(
+      "COMBINED_APPROVAL_EXACT_SOURCE_INVALID",
+      "Approved calculations must match the submitted exact source fractions.",
+    );
+  }
+
+  const ratio = {
+    n: BigInt(numerator),
+    d: BigInt(denominator),
+  };
+
+  if (ratio.n > 100n * ratio.d) {
+    combinedApprovalFail(
+      "COMBINED_APPROVAL_PERCENT_INVALID",
+      "Grade percentage is outside 0â€“100.",
+    );
+  }
+
+  return ratio;
+}
+
+function combinedApprovalDecimal12(ratio) {
+  const scale = 1000000000000n;
+  const units = (ratio.n * scale * 2n + ratio.d) / (ratio.d * 2n);
+
+  return Number(`${units / scale}.${String(units % scale).padStart(12, "0")}`);
+}
+
+function combinedApprovalRating(ratio) {
+  for (const [minimum, rating] of [
+    [97n, "1.00"],
+    [94n, "1.25"],
+    [91n, "1.50"],
+    [88n, "1.75"],
+    [85n, "2.00"],
+    [82n, "2.25"],
+    [79n, "2.50"],
+    [76n, "2.75"],
+    [75n, "3.00"],
+  ]) {
+    if (ratio.n >= minimum * ratio.d) {
+      return rating;
+    }
+  }
+
+  return "5.00";
+}
+
+router.post(
+  "/gradebook/semester-submissions/:submissionId/approve",
+  async (req, res) => {
+    let connection;
+    let transactionOpen = false;
+
+    try {
+      const submissionId = periodPositiveId(req.params.submissionId);
+
+      const body = req.body;
+
+      const allowed = new Set([
+        "expected_record_version",
+        "review_remarks",
+        "confirm_approval",
+        "dry_run",
+      ]);
+
+      const expectedVersion = periodPositiveId(body?.expected_record_version);
+
+      const remarks =
+        typeof body?.review_remarks === "string"
+          ? body.review_remarks.trim()
+          : "";
+
+      if (
+        !submissionId ||
+        Object.keys(req.query ?? {}).length !== 0 ||
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body) ||
+        Object.keys(body).some((key) => !allowed.has(key)) ||
+        !expectedVersion ||
+        expectedVersion >= 4294967295 ||
+        remarks.length < 10 ||
+        remarks.length > 500 ||
+        /[\x00-\x08\x0B\x0E-\x1F\x7F]/.test(remarks) ||
+        body.confirm_approval !== true ||
+        typeof body.dry_run !== "boolean"
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_INPUT_INVALID",
+          "Provide the current submission version, review remarks (10â€“500 characters), confirmation, and boolean dry_run.",
+          400,
+        );
+      }
+
+      connection = await db.getConnection();
+
+      await connection.beginTransaction();
+      transactionOpen = true;
+
+      const [[database]] = await connection.execute(
+        "SELECT DATABASE() AS name",
+      );
+
+      if (database?.name !== "databaseforptc1_admission_test") {
+        combinedApprovalFail(
+          "COMBINED_QA_DATABASE_ONLY",
+          "Combined approval is limited to the QA database.",
+          403,
+        );
+      }
+
+      const { userId, departmentId } = await incReviewAssertProgramHead(
+        connection,
+        req,
+      );
+
+      // Find the submission target.
+      const [targets] = await connection.execute(
+        `SELECT a.grade_id,
+                a.sheet_id,
+                a.period_id,
+                g.enrollment_subject_id,
+                es.offering_id,
+                sh.config_id
+         FROM gradebook_grade_submission_attempts a
+         JOIN grades g
+           ON g.grade_id = a.grade_id
+         JOIN enrollment_subjects es
+           ON es.enrollment_subject_id =
+              g.enrollment_subject_id
+         JOIN gradebook_official_sheets sh
+           ON sh.sheet_id = a.sheet_id
+         WHERE a.submission_id = ?`,
+        [submissionId],
+      );
+
+      if (targets.length !== 1) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_NOT_FOUND",
+          "Submission not found.",
+          404,
+        );
+      }
+
+      const target = targets[0];
+
+      // Offering
+      const [offerings] = await connection.execute(
+        `SELECT so.offering_id,
+                so.status,
+                so.faculty_id,
+                so.academic_year_id,
+                so.semester_id,
+                cr.department_id,
+                f.user_id AS instructor_user_id,
+                u.is_active AS instructor_active,
+                u.is_archived AS instructor_archived,
+                r.role_name AS instructor_role
+         FROM subject_offerings so
+         JOIN faculty f
+           ON f.faculty_id = so.faculty_id
+         JOIN users u
+           ON u.user_id = f.user_id
+         JOIN roles r
+           ON r.role_id = u.role_id
+         JOIN sections sec
+           ON sec.section_id = so.section_id
+         JOIN courses cr
+           ON cr.course_id = sec.course_id
+         WHERE so.offering_id = ?
+         FOR UPDATE`,
+        [target.offering_id],
+      );
+
+      const offering = offerings[0];
+
+      if (
+        offerings.length !== 1 ||
+        Number(offering.department_id) !== departmentId ||
+        offering.status === "Cancelled"
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_DEPARTMENT",
+          "Offering is unavailable or outside your department.",
+          403,
+        );
+      }
+
+      if (
+        Number(offering.instructor_active) !== 1 ||
+        Number(offering.instructor_archived) !== 0 ||
+        !["Faculty", "Program Head"].includes(offering.instructor_role)
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_INSTRUCTOR_INVALID",
+          "The submitted class instructor is no longer active.",
+        );
+      }
+
+      // Gradebook configuration
+      const [configs] = await connection.execute(
+        `SELECT config_id,
+                midterm_percent,
+                final_term_percent
+         FROM gradebook_offering_config
+         WHERE config_id = ?
+           AND offering_id = ?
+         FOR UPDATE`,
+        [target.config_id, target.offering_id],
+      );
+
+      if (
+        configs.length !== 1 ||
+        Number(configs[0].midterm_percent) !== 50 ||
+        Number(configs[0].final_term_percent) !== 50
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_CONFIG",
+          "Official 50/50 gradebook configuration is required.",
+        );
+      }
+
+      // Student enrollment
+      const [students] = await connection.execute(
+        `SELECT es.offering_id,
+                es.status AS subject_status,
+                e.enrollment_status
+         FROM enrollment_subjects es
+         JOIN enrollments e
+           ON e.enrollment_id = es.enrollment_id
+         WHERE es.enrollment_subject_id = ?
+         FOR UPDATE`,
+        [target.enrollment_subject_id],
+      );
+
+      if (
+        students.length !== 1 ||
+        Number(students[0].offering_id) !== Number(target.offering_id) ||
+        students[0].subject_status !== "Enrolled" ||
+        students[0].enrollment_status !== "Approved"
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_ENROLLMENT",
+          "Student enrollment is no longer approved and active.",
+        );
+      }
+
+      // Submission period
+      const [periods] = await connection.execute(
+        `SELECT period_id,
+                department_id,
+                academic_year_id,
+                semester_id
+         FROM gradebook_submission_periods
+         WHERE period_id = ?
+         FOR UPDATE`,
+        [target.period_id],
+      );
+
+      if (
+        periods.length !== 1 ||
+        Number(periods[0].department_id) !== departmentId ||
+        Number(periods[0].academic_year_id) !==
+          Number(offering.academic_year_id) ||
+        Number(periods[0].semester_id) !== Number(offering.semester_id)
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_PERIOD",
+          "Submission period does not match the class.",
+        );
+      }
+
+      // Program Head review is allowed after
+      // the Faculty submission window closes.
+
+      // Grade
+      const [grades] = await connection.execute(
+        `SELECT grade_id,
+                faculty_id,
+                grade_status,
+                grading_policy,
+                grading_outcome,
+                midterm_grade,
+                final_grade,
+                overall_percentage,
+                final_rating,
+                reviewed_by,
+                reviewed_at,
+                review_remarks
+         FROM grades
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const grade = grades[0];
+
+      if (
+        grades.length !== 1 ||
+        Number(grade.faculty_id) !== Number(offering.faculty_id) ||
+        grade.grade_status !== "Submitted" ||
+        grade.grading_policy !== "TWO_TERM_50_50" ||
+        grade.grading_outcome !== "NUMERIC" ||
+        grade.reviewed_by != null ||
+        grade.reviewed_at != null
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_GRADE_INVALID",
+          "Only an unchanged submitted numeric grade can be approved.",
+        );
+      }
+
+      // Official sheet
+      const [sheets] = await connection.execute(
+        `SELECT sheet_id,
+                config_id,
+                sheet_status,
+                original_official_submitted_on,
+                official_date_verified_at
+         FROM gradebook_official_sheets
+         WHERE sheet_id = ?
+         FOR UPDATE`,
+        [target.sheet_id],
+      );
+
+      if (
+        sheets.length !== 1 ||
+        Number(sheets[0].config_id) !== Number(target.config_id) ||
+        sheets[0].sheet_status !== "IN_PROGRESS" ||
+        sheets[0].original_official_submitted_on != null ||
+        sheets[0].official_date_verified_at != null
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_SHEET_LOCKED",
+          "Official sheet is no longer editable.",
+        );
+      }
+
+      // Prevent duplicate official results.
+      const [publications] = await connection.execute(
+        `SELECT publication_id
+         FROM gradebook_official_grade_publications
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [grade.grade_id],
+      );
+
+      const [finalized] = await connection.execute(
+        `SELECT roster_snapshot_id
+         FROM gradebook_finalized_roster
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [grade.grade_id],
+      );
+
+      if (publications.length || finalized.length) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_ALREADY_OFFICIAL",
+          "Published or finalized grades require an amendment.",
+        );
+      }
+
+      // Preserve historical term submissions.
+      const [legacy] = await connection.execute(
+        `SELECT term_submission_id
+         FROM gradebook_term_submission_attempts
+         WHERE config_id = ?
+         LIMIT 1`,
+        [target.config_id],
+      );
+
+      if (legacy.length) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_LEGACY_HISTORY",
+          "Cannot mix older term approvals with combined submissions.",
+        );
+      }
+
+      // Shared gradebook structure lock
+      const [locks] = await connection.execute(
+        `SELECT first_submission_id
+         FROM gradebook_structure_locks
+         WHERE config_id = ?
+         FOR UPDATE`,
+        [target.config_id],
+      );
+
+      if (locks.length !== 1) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_STRUCTURE_LOCK",
+          "Combined structure lock is missing.",
+        );
+      }
+
+      const [first] = await connection.execute(
+        `SELECT submission_id
+         FROM gradebook_grade_submission_attempts
+         WHERE submission_id = ?
+           AND sheet_id = ?`,
+        [locks[0].first_submission_id, target.sheet_id],
+      );
+
+      if (first.length !== 1) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_STRUCTURE_HISTORY",
+          "Structure lock does not match this sheet.",
+        );
+      }
+
+      // Latest submission and version
+      const [attempts] = await connection.execute(
+        `SELECT *
+         FROM gradebook_grade_submission_attempts
+         WHERE grade_id = ?
+         ORDER BY attempt_number DESC,
+                  submission_id DESC
+         LIMIT 1
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const submission = attempts[0];
+
+      if (
+        attempts.length !== 1 ||
+        String(submission.submission_id) !== String(submissionId) ||
+        Number(submission.sheet_id) !== Number(target.sheet_id) ||
+        Number(submission.period_id) !== Number(target.period_id) ||
+        Number(submission.record_version) !== expectedVersion ||
+        submission.submission_status !== "SUBMITTED" ||
+        submission.grading_scope !== "FULL_SEMESTER" ||
+        submission.grading_outcome_snapshot !== "NUMERIC" ||
+        submission.special_outcome_id != null ||
+        submission.reviewed_by_user_id != null ||
+        submission.reviewed_at != null ||
+        submission.returned_edit_scope != null ||
+        Number(submission.submitted_by_user_id) !==
+          Number(offering.instructor_user_id)
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_STALE",
+          "Only the latest unreviewed submission can be approved.",
+        );
+      }
+
+      // Self-approval uses the authenticated actor.
+      const isSelfApproval =
+        Number(userId) === Number(submission.submitted_by_user_id);
+
+      if (
+        isSelfApproval &&
+        Number(offering.instructor_user_id) !== Number(userId)
+      ) {
+        combinedApprovalFail(
+          "COMBINED_SELF_APPROVAL_FORBIDDEN",
+          "Self-approval requires the assigned teaching Program Head.",
+          403,
+        );
+      }
+
+      // Numeric results cannot bypass INC/UD review.
+      const [inc] = await connection.execute(
+        `SELECT inc_request_id
+         FROM gradebook_inc_outcome_requests
+         WHERE config_id = ?
+           AND enrollment_subject_id = ?
+           AND request_status IN (
+             'SUBMITTED', 'APPROVED'
+           )
+         LIMIT 1`,
+        [target.config_id, target.enrollment_subject_id],
+      );
+
+      const [ud] = await connection.execute(
+        `SELECT ud_request_id
+         FROM gradebook_ud_outcome_requests
+         WHERE config_id = ?
+           AND enrollment_subject_id = ?
+           AND request_status IN (
+             'SUBMITTED', 'APPROVED'
+           )
+         LIMIT 1`,
+        [target.config_id, target.enrollment_subject_id],
+      );
+
+      if (inc.length || ud.length) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_SPECIAL_OUTCOME_ACTIVE",
+          "Resolve INC or UD evidence separately.",
+        );
+      }
+
+      // Prevent duplicate review decisions.
+      const [reviews] = await connection.execute(
+        `SELECT review_id
+         FROM gradebook_grade_submission_reviews
+         WHERE submission_id = ?
+         FOR UPDATE`,
+        [submissionId],
+      );
+
+      if (reviews.length) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_ALREADY_REVIEWED",
+          "This attempt already has a review decision.",
+        );
+      }
+
+      // Parse saved calculation evidence.
+      let snapshot;
+
+      try {
+        snapshot =
+          typeof submission.calculation_snapshot_json === "string"
+            ? JSON.parse(submission.calculation_snapshot_json)
+            : submission.calculation_snapshot_json;
+      } catch {
+        snapshot = null;
+      }
+
+      if (
+        !snapshot ||
+        snapshot.policy !== "TWO_TERM_50_50" ||
+        snapshot.grading_scope !== "FULL_SEMESTER" ||
+        Number(snapshot.offering_id) !== Number(target.offering_id) ||
+        Number(snapshot.config_id) !== Number(target.config_id) ||
+        Number(snapshot.enrollment_subject_id) !==
+          Number(target.enrollment_subject_id) ||
+        Number(snapshot.grade_id) !== Number(target.grade_id) ||
+        Number(snapshot.term_weights?.MIDTERM) !== 50 ||
+        Number(snapshot.term_weights?.FINAL_TERM) !== 50 ||
+        snapshot.calculated_terms?.MIDTERM?.state !== "READY" ||
+        snapshot.calculated_terms?.FINAL_TERM?.state !== "READY" ||
+        snapshot.calculated_semester?.state !== "READY"
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_SNAPSHOT",
+          "Saved semester calculation evidence is invalid.",
+        );
+      }
+
+      // Validate exact Midterm and Final calculations.
+      const midSource = snapshot.calculated_terms.MIDTERM.term_percentage;
+
+      const finSource = snapshot.calculated_terms.FINAL_TERM.term_percentage;
+
+      const allSource = snapshot.calculated_semester.semester_percentage;
+
+      const mid = combinedApprovalFraction(
+        submission.midterm_exact_numerator,
+        submission.midterm_exact_denominator,
+        midSource,
+        255,
+      );
+
+      const fin = combinedApprovalFraction(
+        submission.final_term_exact_numerator,
+        submission.final_term_exact_denominator,
+        finSource,
+        255,
+      );
+
+      const all = combinedApprovalFraction(
+        submission.overall_exact_numerator,
+        submission.overall_exact_denominator,
+        allSource,
+        1200,
+      );
+
+      // Enforce exact Midterm 50% + Final 50%.
+      if (
+        (mid.n * fin.d + fin.n * mid.d) * all.d !==
+        2n * mid.d * fin.d * all.n
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_ARITHMETIC",
+          "Saved semester ratio does not equal the exact 50/50 term calculation.",
+        );
+      }
+
+      const exactRating = combinedApprovalRating(all);
+
+      const same12 = (actual, expected, tolerance = 0) =>
+        actual != null &&
+        Number.isFinite(Number(actual)) &&
+        Math.abs(Number(actual) - Number(expected)) <= tolerance;
+
+      if (
+        !same12(
+          submission.midterm_percentage_snapshot,
+          combinedApprovalDecimal12(mid),
+        ) ||
+        !same12(
+          submission.final_term_percentage_snapshot,
+          combinedApprovalDecimal12(fin),
+        ) ||
+        !same12(
+          submission.overall_percentage_snapshot,
+          combinedApprovalDecimal12(all),
+        ) ||
+        !same12(grade.midterm_grade, submission.midterm_percentage_snapshot) ||
+        !same12(grade.final_grade, submission.final_term_percentage_snapshot) ||
+        !same12(
+          grade.overall_percentage,
+          submission.overall_percentage_snapshot,
+          2e-12,
+        ) ||
+        !same12(grade.final_rating, exactRating) ||
+        !same12(submission.final_rating_snapshot, exactRating) ||
+        !same12(snapshot.calculated_semester.numeric_equivalent, exactRating)
+      ) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_GRADE_MISMATCH",
+          "Saved grade differs from its exact approved-calculation evidence.",
+        );
+      }
+
+      // Approve the submission; publication comes next.
+      const [updated] = await connection.execute(
+        `UPDATE gradebook_grade_submission_attempts
+         SET submission_status = 'APPROVED',
+             reviewed_by_user_id = ?,
+             reviewed_at = NOW(6),
+             review_remarks = ?,
+             record_version = record_version + 1
+         WHERE submission_id = ?
+           AND submission_status = 'SUBMITTED'
+           AND record_version = ?`,
+        [userId, remarks, submissionId, expectedVersion],
+      );
+
+      if (Number(updated.affectedRows) !== 1) {
+        combinedApprovalFail(
+          "COMBINED_APPROVAL_VERSION_CONFLICT",
+          "Submission changed during review.",
+        );
+      }
+
+      // Save the Program Head audit record.
+      const [audit] = await connection.execute(
+        `INSERT INTO gradebook_grade_submission_reviews
+         (
+           submission_id,
+           review_decision,
+           grading_outcome_snapshot,
+           review_notes,
+           returned_edit_scope,
+           is_self_approval,
+           reviewed_by_user_id,
+           submission_version_after
+         )
+         VALUES (
+           ?,
+           'APPROVED',
+           'NUMERIC',
+           ?,
+           NULL,
+           ?,
+           ?,
+           ?
+         )`,
+        [
+          submissionId,
+          remarks,
+          isSelfApproval ? 1 : 0,
+          userId,
+          expectedVersion + 1,
+        ],
+      );
+
+      if (Number(audit.affectedRows) !== 1) {
+        throw new Error("Could not save combined semester review audit.");
+      }
+
+      if (body.dry_run) {
+        await connection.rollback();
+      } else {
+        await connection.commit();
+      }
+
+      transactionOpen = false;
+
+      return res.json({
+        success: true,
+        dry_run: body.dry_run,
+        persisted: !body.dry_run,
+        submission_id: String(submissionId),
+        grade_id: Number(grade.grade_id),
+        review_id: body.dry_run ? null : String(audit.insertId),
+        submission_status: "APPROVED",
+        grade_status: "Submitted",
+        record_version: expectedVersion + 1,
+        is_self_approval: isSelfApproval,
+        official_grade_published: false,
+        next_step:
+          "Source-linked official publication is required before changing the grade to Approved.",
+      });
+    } catch (error) {
+      if (transactionOpen && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("COMBINED APPROVAL ROLLBACK:", rollbackError);
+        }
+      }
+
+      if (error?.code === "ER_DUP_ENTRY") {
+        return combinedApprovalRespond(res, {
+          status: 409,
+          code: "COMBINED_APPROVAL_ALREADY_REVIEWED",
+          message: "A review was already recorded. Reload the submission.",
+        });
+      }
+
+      return combinedApprovalRespond(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
+
+/* Combined Semester Official Publication */
+
+function combinedPublishFail(code, message, status = 409) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  throw error;
+}
+
+function combinedPublishError(res, error) {
+  const status =
+    Number.isInteger(error?.status) && error.status >= 400 && error.status < 500
+      ? error.status
+      : 500;
+
+  if (status === 500) {
+    console.error("COMBINED PUBLICATION:", error);
+  }
+
+  return res.status(status).json({
+    success: false,
+    code: status === 500 ? "COMBINED_PUBLISH_INTERNAL_ERROR" : error.code,
+    message:
+      status === 500 ? "Could not publish the semester grade." : error.message,
+  });
+}
+
+function combinedPublishRatio(n, d, source, limit) {
+  const numerator = String(n ?? "");
+  const denominator = String(d ?? "");
+
+  if (
+    !/^(0|[1-9]\d*)$/.test(numerator) ||
+    !/^[1-9]\d*$/.test(denominator) ||
+    numerator.length > limit ||
+    denominator.length > limit ||
+    numerator !== String(source?.exact_numerator) ||
+    denominator !== String(source?.exact_denominator)
+  ) {
+    combinedPublishFail(
+      "COMBINED_PUBLISH_EXACT_SOURCE_INVALID",
+      "The approved submission has inconsistent exact calculation evidence.",
+    );
+  }
+
+  const result = {
+    n: BigInt(numerator),
+    d: BigInt(denominator),
+  };
+
+  if (result.n > result.d * 100n) {
+    combinedPublishFail(
+      "COMBINED_PUBLISH_PERCENT_INVALID",
+      "A term percentage is outside 0â€“100.",
+    );
+  }
+
+  return result;
+}
+
+function combinedPublishDecimalUnits(value) {
+  const text = String(value ?? "");
+  const match = /^(0|[1-9]\d{0,2})(?:\.(\d{1,12}))?$/.exec(text);
+
+  if (!match) {
+    combinedPublishFail(
+      "COMBINED_PUBLISH_DECIMAL_INVALID",
+      "Saved percentage is invalid.",
+    );
+  }
+
+  const units =
+    BigInt(match[1]) * 1000000000000n +
+    BigInt((match[2] ?? "").padEnd(12, "0") || "0");
+
+  if (units > 100000000000000n) {
+    combinedPublishFail(
+      "COMBINED_PUBLISH_PERCENT_INVALID",
+      "Saved percentage is outside 0â€“100.",
+    );
+  }
+
+  return units;
+}
+
+function combinedPublishRoundedUnits(ratio) {
+  return (2n * ratio.n * 1000000000000n + ratio.d) / (2n * ratio.d);
+}
+
+function combinedPublishRating(ratio) {
+  for (const [minimum, rating] of [
+    [97n, "1.00"],
+    [94n, "1.25"],
+    [91n, "1.50"],
+    [88n, "1.75"],
+    [85n, "2.00"],
+    [82n, "2.25"],
+    [79n, "2.50"],
+    [76n, "2.75"],
+    [75n, "3.00"],
+  ]) {
+    if (ratio.n >= minimum * ratio.d) {
+      return rating;
+    }
+  }
+
+  return "5.00";
+}
+
+router.post(
+  "/gradebook/semester-submissions/:submissionId/publish",
+  async (req, res) => {
+    let connection;
+    let inTransaction = false;
+
+    try {
+      const submissionId = periodPositiveId(req.params.submissionId);
+
+      const body = req.body;
+
+      const keys = new Set([
+        "expected_record_version",
+        "confirm_publication",
+        "dry_run",
+      ]);
+
+      const version = periodPositiveId(body?.expected_record_version);
+
+      if (
+        !submissionId ||
+        !version ||
+        version >= 4294967295 ||
+        Object.keys(req.query ?? {}).length !== 0 ||
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body) ||
+        Object.keys(body).some((key) => !keys.has(key)) ||
+        body.confirm_publication !== true ||
+        typeof body.dry_run !== "boolean"
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_INPUT_INVALID",
+          "Provide the approved submission ID, current record version, confirmation and boolean dry_run.",
+          400,
+        );
+      }
+
+      connection = await db.getConnection();
+
+      await connection.beginTransaction();
+      inTransaction = true;
+
+      const [[database]] = await connection.execute(
+        "SELECT DATABASE() AS name",
+      );
+
+      if (database?.name !== "databaseforptc1_admission_test") {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_QA_ONLY",
+          "Publication is restricted to the QA database.",
+          403,
+        );
+      }
+
+      const { userId, departmentId } = await incReviewAssertProgramHead(
+        connection,
+        req,
+      );
+
+      // Find the submission and its parent records.
+      const [targets] = await connection.execute(
+        `SELECT a.grade_id,
+                a.sheet_id,
+                a.period_id,
+                g.enrollment_subject_id,
+                es.offering_id,
+                sh.config_id
+         FROM gradebook_grade_submission_attempts a
+         JOIN grades g
+           ON g.grade_id = a.grade_id
+         JOIN enrollment_subjects es
+           ON es.enrollment_subject_id =
+              g.enrollment_subject_id
+         JOIN gradebook_official_sheets sh
+           ON sh.sheet_id = a.sheet_id
+         WHERE a.submission_id = ?`,
+        [submissionId],
+      );
+
+      if (targets.length !== 1) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_NOT_FOUND",
+          "Approved submission not found.",
+          404,
+        );
+      }
+
+      const target = targets[0];
+
+      // Lock order: offering, config, enrollment,
+      // period, grade, sheet, publication and source.
+      const [offerings] = await connection.execute(
+        `SELECT so.offering_id,
+                so.status,
+                so.faculty_id,
+                so.academic_year_id,
+                so.semester_id,
+                cr.department_id,
+                f.user_id AS instructor_user_id,
+                u.is_active AS instructor_active,
+                u.is_archived AS instructor_archived,
+                r.role_name AS instructor_role
+         FROM subject_offerings so
+         JOIN faculty f
+           ON f.faculty_id = so.faculty_id
+         JOIN users u
+           ON u.user_id = f.user_id
+         JOIN roles r
+           ON r.role_id = u.role_id
+         JOIN sections sec
+           ON sec.section_id = so.section_id
+         JOIN courses cr
+           ON cr.course_id = sec.course_id
+         WHERE so.offering_id = ?
+         FOR UPDATE`,
+        [target.offering_id],
+      );
+
+      const offering = offerings[0];
+
+      if (
+        !offering ||
+        Number(offering.department_id) !== departmentId ||
+        offering.status === "Cancelled" ||
+        Number(offering.instructor_active) !== 1 ||
+        Number(offering.instructor_archived) !== 0 ||
+        !["Faculty", "Program Head"].includes(offering.instructor_role)
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_DEPARTMENT_OR_INSTRUCTOR",
+          "Offering or department authorization is invalid.",
+          403,
+        );
+      }
+
+      // Gradebook configuration
+      const [configs] = await connection.execute(
+        `SELECT config_id,
+                offering_id,
+                midterm_percent,
+                final_term_percent
+         FROM gradebook_offering_config
+         WHERE config_id = ?
+           AND offering_id = ?
+         FOR UPDATE`,
+        [target.config_id, target.offering_id],
+      );
+
+      if (
+        configs.length !== 1 ||
+        Number(configs[0].midterm_percent) !== 50 ||
+        Number(configs[0].final_term_percent) !== 50
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_CONFIG_INVALID",
+          "The 50/50 gradebook configuration is invalid.",
+        );
+      }
+
+      // Enrollment
+      const [subjects] = await connection.execute(
+        `SELECT es.enrollment_subject_id,
+                es.offering_id,
+                es.status AS subject_status,
+                e.enrollment_status
+         FROM enrollment_subjects es
+         JOIN enrollments e
+           ON e.enrollment_id = es.enrollment_id
+         WHERE es.enrollment_subject_id = ?
+         FOR UPDATE`,
+        [target.enrollment_subject_id],
+      );
+
+      if (
+        subjects.length !== 1 ||
+        Number(subjects[0].offering_id) !== Number(target.offering_id) ||
+        subjects[0].subject_status !== "Enrolled" ||
+        subjects[0].enrollment_status !== "Approved"
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_ENROLLMENT_INVALID",
+          "The approved enrollment is not active.",
+        );
+      }
+
+      // Original submission period
+      const [periods] = await connection.execute(
+        `SELECT period_id,
+                department_id,
+                academic_year_id,
+                semester_id
+         FROM gradebook_submission_periods
+         WHERE period_id = ?
+         FOR UPDATE`,
+        [target.period_id],
+      );
+
+      if (
+        periods.length !== 1 ||
+        Number(periods[0].department_id) !== departmentId ||
+        Number(periods[0].academic_year_id) !==
+          Number(offering.academic_year_id) ||
+        Number(periods[0].semester_id) !== Number(offering.semester_id)
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_PERIOD_INVALID",
+          "The submission period does not match the offering.",
+        );
+      }
+
+      // Existing grade must still be Submitted.
+      const [grades] = await connection.execute(
+        `SELECT grade_id,
+                enrollment_subject_id,
+                faculty_id,
+                grade_status,
+                grading_policy,
+                grading_outcome,
+                midterm_grade,
+                final_grade,
+                overall_percentage,
+                final_rating,
+                remarks,
+                reviewed_by,
+                reviewed_at
+         FROM grades
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const grade = grades[0];
+
+      if (
+        !grade ||
+        Number(grade.enrollment_subject_id) !==
+          Number(target.enrollment_subject_id) ||
+        Number(grade.faculty_id) !== Number(offering.faculty_id) ||
+        grade.grade_status !== "Submitted" ||
+        grade.grading_policy !== "TWO_TERM_50_50" ||
+        grade.grading_outcome !== "NUMERIC" ||
+        grade.reviewed_by != null ||
+        grade.reviewed_at != null
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_GRADE_INVALID",
+          "The submitted grade has changed or was already processed.",
+        );
+      }
+
+      // Official sheet
+      const [sheets] = await connection.execute(
+        `SELECT sheet_id,
+                config_id,
+                sheet_status,
+                original_official_submitted_on,
+                official_date_verified_at
+         FROM gradebook_official_sheets
+         WHERE sheet_id = ?
+         FOR UPDATE`,
+        [target.sheet_id],
+      );
+
+      const sheet = sheets[0];
+
+      if (
+        !sheet ||
+        Number(sheet.config_id) !== Number(target.config_id) ||
+        sheet.sheet_status !== "IN_PROGRESS" ||
+        sheet.original_official_submitted_on != null ||
+        sheet.official_date_verified_at != null
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_SHEET_LOCKED",
+          "The official sheet is not editable.",
+        );
+      }
+
+      // No duplicate publication or finalized snapshot.
+      const [prior] = await connection.execute(
+        `SELECT publication_id
+         FROM gradebook_official_grade_publications
+         WHERE grade_id = ?
+            OR enrollment_subject_id = ?
+         FOR UPDATE`,
+        [target.grade_id, target.enrollment_subject_id],
+      );
+
+      const [finalized] = await connection.execute(
+        `SELECT roster_snapshot_id
+         FROM gradebook_finalized_roster
+         WHERE grade_id = ?
+            OR enrollment_subject_id = ?
+         FOR UPDATE`,
+        [target.grade_id, target.enrollment_subject_id],
+      );
+
+      if (prior.length || finalized.length) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_ALREADY_OFFICIAL",
+          "Grade has a publication or finalized roster record.",
+        );
+      }
+
+      // Do not mix older term-based submissions.
+      const [legacy] = await connection.execute(
+        `SELECT term_submission_id
+         FROM gradebook_term_submission_attempts
+         WHERE config_id = ?
+         LIMIT 1`,
+        [target.config_id],
+      );
+
+      const [legacyLock] = await connection.execute(
+        `SELECT first_submission_id
+         FROM gradebook_term_structure_locks
+         WHERE config_id = ?
+         LIMIT 1`,
+        [target.config_id],
+      );
+
+      if (legacy.length || legacyLock.length) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_LEGACY_HISTORY",
+          "Historical term-based submissions cannot be mixed with combined publication.",
+        );
+      }
+
+      // Active special outcomes require separate review.
+      const [incPending] = await connection.execute(
+        `SELECT inc_request_id
+         FROM gradebook_inc_outcome_requests
+         WHERE config_id = ?
+           AND enrollment_subject_id = ?
+           AND request_status IN ('SUBMITTED', 'APPROVED')
+         LIMIT 1`,
+        [target.config_id, target.enrollment_subject_id],
+      );
+
+      const [udPending] = await connection.execute(
+        `SELECT ud_request_id
+         FROM gradebook_ud_outcome_requests
+         WHERE config_id = ?
+           AND enrollment_subject_id = ?
+           AND request_status IN ('SUBMITTED', 'APPROVED')
+         LIMIT 1`,
+        [target.config_id, target.enrollment_subject_id],
+      );
+
+      if (incPending.length || udPending.length) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_SPECIAL_OUTCOME_ACTIVE",
+          "Resolve the INC or UD request before numeric publication.",
+        );
+      }
+
+      // Combined structure lock
+      const [locks] = await connection.execute(
+        `SELECT first_submission_id
+         FROM gradebook_structure_locks
+         WHERE config_id = ?
+         FOR UPDATE`,
+        [target.config_id],
+      );
+
+      if (locks.length !== 1) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_STRUCTURE_LOCK",
+          "The first-submission structure lock is missing.",
+        );
+      }
+
+      const [first] = await connection.execute(
+        `SELECT submission_id
+         FROM gradebook_grade_submission_attempts
+         WHERE submission_id = ?
+           AND sheet_id = ?`,
+        [locks[0].first_submission_id, target.sheet_id],
+      );
+
+      if (first.length !== 1) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_LOCK_HISTORY",
+          "The structure lock does not match this sheet.",
+        );
+      }
+
+      // Latest approved submission
+      const [attempts] = await connection.execute(
+        `SELECT *
+         FROM gradebook_grade_submission_attempts
+         WHERE grade_id = ?
+         ORDER BY attempt_number DESC,
+                  submission_id DESC
+         LIMIT 1
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const submission = attempts[0];
+
+      if (
+        !submission ||
+        String(submission.submission_id) !== String(submissionId) ||
+        Number(submission.record_version) !== version ||
+        Number(submission.sheet_id) !== Number(target.sheet_id) ||
+        Number(submission.period_id) !== Number(target.period_id) ||
+        submission.submission_status !== "APPROVED" ||
+        submission.grading_scope !== "FULL_SEMESTER" ||
+        submission.grading_outcome_snapshot !== "NUMERIC" ||
+        submission.special_outcome_id != null ||
+        submission.returned_edit_scope != null ||
+        !submission.reviewed_by_user_id ||
+        !submission.reviewed_at ||
+        String(submission.reviewed_by_user_id) !== String(userId) ||
+        String(submission.submitted_by_user_id) !==
+          String(offering.instructor_user_id) ||
+        !String(submission.review_remarks ?? "").trim()
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_APPROVAL_INVALID",
+          "Only the latest approved submission can be published by its reviewer.",
+        );
+      }
+
+      // Validate Program Head review audit.
+      const [reviews] = await connection.execute(
+        `SELECT review_id,
+                review_decision,
+                grading_outcome_snapshot,
+                review_notes,
+                returned_edit_scope,
+                is_self_approval,
+                reviewed_by_user_id,
+                submission_version_after
+         FROM gradebook_grade_submission_reviews
+         WHERE submission_id = ?
+         FOR UPDATE`,
+        [submissionId],
+      );
+
+      const review = reviews[0];
+
+      const selfApproval =
+        Number(submission.submitted_by_user_id) === Number(userId);
+
+      if (
+        !review ||
+        reviews.length !== 1 ||
+        review.review_decision !== "APPROVED" ||
+        review.grading_outcome_snapshot !== "NUMERIC" ||
+        review.returned_edit_scope != null ||
+        Number(review.reviewed_by_user_id) !== Number(userId) ||
+        Number(review.is_self_approval) !== Number(selfApproval) ||
+        Number(review.submission_version_after) !== version ||
+        String(review.review_notes ?? "") !==
+          String(submission.review_remarks ?? "") ||
+        (selfApproval && offering.instructor_role !== "Program Head")
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_REVIEW_MISMATCH",
+          "The Program Head approval audit does not match the submission.",
+        );
+      }
+
+      // Recheck saved calculation evidence.
+      let snapshot;
+
+      try {
+        snapshot =
+          typeof submission.calculation_snapshot_json === "string"
+            ? JSON.parse(submission.calculation_snapshot_json)
+            : submission.calculation_snapshot_json;
+      } catch {
+        snapshot = null;
+      }
+
+      if (
+        !snapshot ||
+        snapshot.policy !== "TWO_TERM_50_50" ||
+        snapshot.grading_scope !== "FULL_SEMESTER" ||
+        Number(snapshot.offering_id) !== Number(target.offering_id) ||
+        Number(snapshot.config_id) !== Number(target.config_id) ||
+        Number(snapshot.enrollment_subject_id) !==
+          Number(target.enrollment_subject_id) ||
+        Number(snapshot.grade_id) !== Number(target.grade_id) ||
+        Number(snapshot.term_weights?.MIDTERM) !== 50 ||
+        Number(snapshot.term_weights?.FINAL_TERM) !== 50 ||
+        snapshot.calculated_terms?.MIDTERM?.state !== "READY" ||
+        snapshot.calculated_terms?.FINAL_TERM?.state !== "READY" ||
+        snapshot.calculated_semester?.state !== "READY"
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_SNAPSHOT_INVALID",
+          "The approved semester snapshot is incomplete or inconsistent.",
+        );
+      }
+
+      const midterm = combinedPublishRatio(
+        submission.midterm_exact_numerator,
+        submission.midterm_exact_denominator,
+        snapshot.calculated_terms.MIDTERM.term_percentage,
+        255,
+      );
+
+      const finalTerm = combinedPublishRatio(
+        submission.final_term_exact_numerator,
+        submission.final_term_exact_denominator,
+        snapshot.calculated_terms.FINAL_TERM.term_percentage,
+        255,
+      );
+
+      const overall = combinedPublishRatio(
+        submission.overall_exact_numerator,
+        submission.overall_exact_denominator,
+        snapshot.calculated_semester.semester_percentage,
+        1200,
+      );
+
+      // Exact Midterm 50% + Final Term 50%.
+      if (
+        (midterm.n * finalTerm.d + finalTerm.n * midterm.d) * overall.d !==
+        2n * midterm.d * finalTerm.d * overall.n
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_50_50_INVALID",
+          "The exact semester percentage is not the 50/50 average.",
+        );
+      }
+
+      // Compare exact grading with database values.
+      const midUnits = combinedPublishRoundedUnits(midterm);
+
+      const finalUnits = combinedPublishRoundedUnits(finalTerm);
+
+      const overallUnits = combinedPublishRoundedUnits(overall);
+
+      const rating = combinedPublishRating(overall);
+
+      const remarks = rating === "5.00" ? "Failed" : "Passed";
+
+      const subjectStatus = rating === "5.00" ? "Failed" : "Completed";
+
+      // The existing database trigger calculates the
+      // overall grade from stored 12-decimal term values.
+      const triggerUnits = (midUnits + finalUnits + 1n) / 2n;
+
+      const difference =
+        triggerUnits >= overallUnits
+          ? triggerUnits - overallUnits
+          : overallUnits - triggerUnits;
+
+      if (
+        combinedPublishDecimalUnits(submission.midterm_percentage_snapshot) !==
+          midUnits ||
+        combinedPublishDecimalUnits(
+          submission.final_term_percentage_snapshot,
+        ) !== finalUnits ||
+        combinedPublishDecimalUnits(submission.overall_percentage_snapshot) !==
+          overallUnits ||
+        combinedPublishDecimalUnits(grade.midterm_grade) !== midUnits ||
+        combinedPublishDecimalUnits(grade.final_grade) !== finalUnits ||
+        combinedPublishDecimalUnits(grade.overall_percentage) !==
+          triggerUnits ||
+        combinedPublishDecimalUnits(
+          snapshot.calculated_semester.semester_percentage?.decimal_preview,
+        ) !== overallUnits ||
+        String(submission.final_rating_snapshot) !== rating ||
+        String(grade.final_rating) !== rating ||
+        String(snapshot.calculated_semester.numeric_equivalent) !== rating ||
+        grade.remarks !== remarks ||
+        difference > 1n
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_GRADE_MISMATCH",
+          "The saved grade and source calculation disagree; publication cancelled.",
+        );
+      }
+
+      // Approve the grade inside the transaction.
+      const [updated] = await connection.execute(
+        `UPDATE grades
+         SET grade_status = 'Approved',
+             reviewed_by = ?
+         WHERE grade_id = ?
+           AND grade_status = 'Submitted'
+           AND grading_policy = 'TWO_TERM_50_50'
+           AND grading_outcome = 'NUMERIC'`,
+        [userId, target.grade_id],
+      );
+
+      if (Number(updated.affectedRows) !== 1) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_GRADE_CONFLICT",
+          "Grade changed during publication.",
+        );
+      }
+
+      // Validate the database trigger's result.
+      const [[approved]] = await connection.execute(
+        `SELECT grade_status,
+                grading_policy,
+                grading_outcome,
+                midterm_grade,
+                final_grade,
+                overall_percentage,
+                final_rating,
+                remarks,
+                reviewed_by,
+                reviewed_at
+         FROM grades
+         WHERE grade_id = ?
+         FOR UPDATE`,
+        [target.grade_id],
+      );
+
+      const [[subject]] = await connection.execute(
+        `SELECT status
+         FROM enrollment_subjects
+         WHERE enrollment_subject_id = ?`,
+        [target.enrollment_subject_id],
+      );
+
+      if (
+        approved?.grade_status !== "Approved" ||
+        !approved.reviewed_at ||
+        approved.grading_policy !== "TWO_TERM_50_50" ||
+        approved.grading_outcome !== "NUMERIC" ||
+        Number(approved.reviewed_by) !== Number(userId) ||
+        combinedPublishDecimalUnits(approved.midterm_grade) !== midUnits ||
+        combinedPublishDecimalUnits(approved.final_grade) !== finalUnits ||
+        combinedPublishDecimalUnits(approved.overall_percentage) !==
+          triggerUnits ||
+        String(approved.final_rating) !== rating ||
+        approved.remarks !== remarks ||
+        subject?.status !== subjectStatus
+      ) {
+        combinedPublishFail(
+          "COMBINED_PUBLISH_TRIGGER_MISMATCH",
+          "The database trigger produced an unexpected result. Publication rolled back.",
+        );
+      }
+
+      // Create the official source-linked publication.
+      const [inserted] = await connection.execute(
+        `INSERT INTO gradebook_official_grade_publications
+         (
+           grade_id,
+           config_id,
+           enrollment_subject_id,
+           publication_source,
+           midterm_submission_id,
+           final_term_submission_id,
+           combined_submission_id,
+           grading_outcome_snapshot,
+           overall_exact_numerator,
+           overall_exact_denominator,
+           published_by_user_id
+         )
+         VALUES (
+           ?, ?, ?,
+           'COMBINED_SEMESTER',
+           NULL, NULL, ?,
+           'NUMERIC',
+           ?, ?, ?
+         )`,
+        [
+          target.grade_id,
+          target.config_id,
+          target.enrollment_subject_id,
+          submissionId,
+          String(overall.n),
+          String(overall.d),
+          userId,
+        ],
+      );
+
+      if (Number(inserted.affectedRows) !== 1) {
+        throw new Error(
+          "Could not insert the source-linked official publication.",
+        );
+      }
+
+      if (body.dry_run) {
+        await connection.rollback();
+      } else {
+        await connection.commit();
+      }
+
+      inTransaction = false;
+
+      return res.json({
+        success: true,
+        dry_run: body.dry_run,
+        persisted: !body.dry_run,
+        publication_id: body.dry_run ? null : String(inserted.insertId),
+        submission_id: String(submissionId),
+        grade_id: Number(target.grade_id),
+        publication_source: "COMBINED_SEMESTER",
+        grade_status: "Approved",
+        enrollment_subject_status: subjectStatus,
+        final_rating: rating,
+        is_self_approval: selfApproval,
+        official_sheet_finalized: false,
+      });
+    } catch (error) {
+      if (inTransaction && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error("COMBINED PUBLISH ROLLBACK:", rollbackError);
+        }
+      }
+
+      if (error?.code === "ER_DUP_ENTRY") {
+        return combinedPublishError(res, {
+          status: 409,
+          code: "COMBINED_PUBLISH_CONFLICT",
+          message:
+            "The grade was published or changed concurrently. Reload before trying again.",
+        });
+      }
+
+      return combinedPublishError(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
+
+router.use("/profile", profileRouter);
+router.use("/classes", classesRouter);
+router.use("/grades", gradesRouter);
+router.use("/transfer-evaluations", transferevaluationRouter);
+router.use("/offering-batches", offeringBatchesRouter);
+router.use("/gradebook/inc-completion-claims", incCompletionClaimReviewRouter);
+
+export default router;

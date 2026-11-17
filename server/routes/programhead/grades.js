@@ -741,382 +741,76 @@ router.patch("/:gradeId/return", async (req, res) => {
   }
 });
 
+// Legacy direct approval is retired. New gradebook grades must use their
+// audited publication flow; old unapproved grades need controlled review.
+// Existing Approved grades are not modified by this endpoint.
 router.patch("/:gradeId/approve", async (req, res) => {
   try {
     const programHead = await getAuthenticatedProgramHead(req, res);
+    if (!programHead) return;
 
-    if (!programHead) {
-      return;
-    }
-
-    const gradeId = Number(req.params.gradeId);
-
-    if (!Number.isInteger(gradeId) || gradeId <= 0) {
+    const gradeIdRaw = String(req.params.gradeId ?? "");
+    if (
+      !/^[1-9]\d*$/.test(gradeIdRaw) ||
+      !Number.isSafeInteger(Number(gradeIdRaw))
+    ) {
       return res.status(400).json({
         success: false,
+        code: "GRADE_ID_INVALID",
         message: "Invalid grade ID.",
       });
     }
 
     const [rows] = await db.execute(
-      `
-        SELECT
-            g.grade_id,
-            g.enrollment_subject_id,
-            g.faculty_id,
-            g.midterm_grade,
-            g.final_grade,
-            g.final_rating,
-            g.grading_policy,
-            g.grading_outcome,
-            g.outcome_reason,
-            g.overall_percentage,
-            g.remarks,
-            g.grade_status,
-            g.submitted_at,
-            g.reviewed_by,
-            g.reviewed_at,
-            g.review_remarks,
-
-            es.enrollment_id,
-            es.status AS enrollment_subject_status,
-
-            e.student_id,
-            e.enrollment_status,
-
-            s.student_number,
-            s.first_name
-                AS student_first_name,
-            s.middle_name
-                AS student_middle_name,
-            s.last_name
-                AS student_last_name,
-
-            so.offering_id,
-            so.status AS offering_status,
-
-            sub.subject_id,
-            sub.subject_code,
-            sub.subject_name,
-
-            sec.section_id,
-            sec.section_name,
-            sec.year_level,
-
-            c.course_id,
-            c.course_code,
-            c.course_name,
-            c.department_id,
-
-            ay.academic_year_id,
-            ay.academic_year,
-
-            sem.semester_id,
-            sem.semester_name,
-
-            f.employee_number
-                AS faculty_employee_number,
-            f.first_name
-                AS faculty_first_name,
-            f.middle_name
-                AS faculty_middle_name,
-            f.last_name
-                AS faculty_last_name
-        FROM grades g
-        INNER JOIN enrollment_subjects es
-            ON es.enrollment_subject_id =
-               g.enrollment_subject_id
-        INNER JOIN enrollments e
-            ON e.enrollment_id =
-               es.enrollment_id
-        INNER JOIN students s
-            ON s.student_id =
-               e.student_id
-        INNER JOIN subject_offerings so
-            ON so.offering_id =
-               es.offering_id
-        INNER JOIN subjects sub
-            ON sub.subject_id =
-               es.subject_id
-        INNER JOIN sections sec
-            ON sec.section_id =
-               es.section_id
-        INNER JOIN courses c
-            ON c.course_id =
-               sec.course_id
-        INNER JOIN academic_years ay
-            ON ay.academic_year_id =
-               so.academic_year_id
-        INNER JOIN semesters sem
-            ON sem.semester_id =
-               so.semester_id
-        INNER JOIN faculty f
-            ON f.faculty_id =
-               g.faculty_id
-        WHERE
-            g.grade_id = ?
-            AND c.department_id = ?
-        LIMIT 1
-        `,
-      [gradeId, programHead.department_id],
+      `SELECT g.grade_id, g.grade_status, g.grading_policy
+         FROM grades g
+         JOIN enrollment_subjects es
+           ON es.enrollment_subject_id = g.enrollment_subject_id
+         JOIN subject_offerings so ON so.offering_id = es.offering_id
+         JOIN sections sec ON sec.section_id = so.section_id
+         JOIN courses c ON c.course_id = sec.course_id
+        WHERE g.grade_id = ? AND c.department_id = ? LIMIT 1`,
+      [Number(gradeIdRaw), programHead.department_id],
     );
-
-    if (rows.length === 0) {
+    if (rows.length !== 1) {
       return res.status(404).json({
         success: false,
-        message:
-          "Grade was not found or is outside your Program Head department.",
+        code: "GRADE_NOT_FOUND_IN_DEPARTMENT",
+        message: "Grade was not found in your department.",
       });
     }
 
     const grade = rows[0];
-
-    if (grade.grade_status !== "Submitted") {
+    if (grade.grade_status === "Approved") {
       return res.status(409).json({
         success: false,
-        message: `Only Submitted grades may be approved. Current status: ${grade.grade_status}.`,
-      });
-    }
-
-    if (grade.enrollment_status !== "Approved") {
-      return res.status(409).json({
-        success: false,
-        message: "This student's enrollment is no longer approved.",
-      });
-    }
-
-    if (grade.enrollment_subject_status !== "Enrolled") {
-      return res.status(409).json({
-        success: false,
-        message: "This subject is no longer actively enrolled.",
-      });
-    }
-
-    if (grade.offering_status === "Cancelled") {
-      return res.status(409).json({
-        success: false,
-        message: "A grade from a cancelled class cannot be approved.",
-      });
-    }
-
-    if (!grade.remarks) {
-      return res.status(409).json({
-        success: false,
-        message: "Grade remarks are missing.",
-      });
-    }
-
-    if (
-      ["Passed", "Failed"].includes(grade.remarks) &&
-      grade.final_rating === null
-    ) {
-      return res.status(409).json({
-        success: false,
+        code: "GRADE_ALREADY_APPROVED",
         message:
-          "A final rating is required before this grade can be approved.",
-      });
-    }
-    const [updateResult] = await db.execute(
-      `
-  UPDATE grades
-  SET
-      grade_status = 'Approved',
-      reviewed_by = ?,
-      reviewed_at = CURRENT_TIMESTAMP,
-      review_remarks = NULL
-  WHERE grade_id = ?
-    AND grade_status = 'Submitted'
-  `,
-      [programHead.user_id, grade.grade_id],
-    );
-
-    if (updateResult.affectedRows !== 1) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "The grade is no longer available for return. Refresh and try again.",
+          "This grade is already approved. Its official history is preserved.",
       });
     }
 
-    const [approvedRows] = await db.execute(
-      `
-          SELECT
-              g.grade_id,
-              g.enrollment_subject_id,
-              g.faculty_id,
-              g.midterm_grade,
-              g.final_grade,
-              g.final_rating,
-              g.grading_policy,
-              g.grading_outcome,
-              g.outcome_reason,
-              g.overall_percentage,
-              g.remarks,
-              g.grade_status,
-              g.submitted_at,
-              g.reviewed_by,
-              g.reviewed_at,
-              g.review_remarks,
-              g.created_at,
-              g.updated_at,
-              es.status
-                  AS enrollment_subject_status
-          FROM grades g
-          INNER JOIN enrollment_subjects es
-              ON es.enrollment_subject_id =
-                 g.enrollment_subject_id
-          WHERE g.grade_id = ?
-          LIMIT 1
-          `,
-      [grade.grade_id],
-    );
-
-    const approved = approvedRows[0];
-
-    return res.status(200).json({
-      success: true,
-      message: "Grade approved successfully.",
-
-      program_head: {
-        program_head_id: programHead.program_head_id,
-
-        user_id: programHead.user_id,
-
-        program_head_name: programHead.program_head_name,
-
-        department: {
-          department_id: programHead.department_id,
-
-          department_code: programHead.department_code,
-
-          department_name: programHead.department_name,
-        },
-      },
-
-      student: {
-        enrollment_subject_id: grade.enrollment_subject_id,
-
-        enrollment_id: grade.enrollment_id,
-        student_id: grade.student_id,
-
-        student_number: grade.student_number,
-
-        full_name: [
-          grade.student_first_name,
-          grade.student_middle_name,
-          grade.student_last_name,
-        ]
-          .filter(Boolean)
-          .join(" "),
-      },
-
-      faculty: {
-        faculty_id: grade.faculty_id,
-
-        employee_number: grade.faculty_employee_number,
-
-        faculty_name: [
-          grade.faculty_first_name,
-          grade.faculty_middle_name,
-          grade.faculty_last_name,
-        ]
-          .filter(Boolean)
-          .join(" "),
-      },
-
-      class: {
-        offering_id: grade.offering_id,
-
-        subject: {
-          subject_id: grade.subject_id,
-          subject_code: grade.subject_code,
-          subject_name: grade.subject_name,
-        },
-
-        section: {
-          section_id: grade.section_id,
-          section_name: grade.section_name,
-          year_level: grade.year_level,
-
-          course: {
-            course_id: grade.course_id,
-            course_code: grade.course_code,
-            course_name: grade.course_name,
-          },
-        },
-
-        academic_period: {
-          academic_year_id: grade.academic_year_id,
-
-          academic_year: grade.academic_year,
-
-          semester_id: grade.semester_id,
-
-          semester_name: grade.semester_name,
-        },
-      },
-
-      grade: {
-        grade_id: approved.grade_id,
-
-        enrollment_subject_id: approved.enrollment_subject_id,
-
-        faculty_id: approved.faculty_id,
-
-        midterm_grade:
-          approved.midterm_grade !== null
-            ? Number(approved.midterm_grade)
-            : null,
-
-        final_grade:
-          approved.final_grade !== null ? Number(approved.final_grade) : null,
-
-        ...gradePolicyFields(approved),
-
-        final_rating:
-          approved.final_rating !== null ? Number(approved.final_rating) : null,
-
-        remarks: approved.remarks,
-
-        grade_status: approved.grade_status,
-
-        submitted_at: approved.submitted_at,
-
-        reviewed_by: approved.reviewed_by,
-
-        reviewed_at: approved.reviewed_at,
-
-        review_remarks: approved.review_remarks,
-
-        enrollment_subject_status: approved.enrollment_subject_status,
-
-        created_at: approved.created_at,
-        updated_at: approved.updated_at,
-      },
+    return res.status(409).json({
+      success: false,
+      code: "LEGACY_DIRECT_GRADE_APPROVAL_DISABLED",
+      message:
+        grade.grading_policy === "TWO_TERM_50_50"
+          ? "Use the official gradebook review and publication workflow. Direct approval is disabled."
+          : "Unapproved historical grades need controlled source review or migration; direct approval is disabled.",
+      grade_status: grade.grade_status,
+      grading_policy: grade.grading_policy,
+      official_grade_unchanged: true,
     });
   } catch (error) {
-    console.error(
-      "PATCH /api/program-head/grades/:gradeId/approve error:",
-      error,
-    );
-
-    if (error?.errno === 1644 || error?.sqlState === "45000") {
-      return res.status(409).json({
-        success: false,
-
-        message:
-          error.sqlMessage ||
-          error.message ||
-          "Grade approval was rejected by the database.",
-      });
-    }
-
+    console.error("LEGACY PROGRAM HEAD APPROVAL GUARD:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to approve grade.",
+      code: "LEGACY_APPROVAL_GUARD_ERROR",
+      message: "Could not inspect this grade for approval.",
     });
   }
 });
+
 // =====================================================
 // GET GRADE CHANGE REQUESTS
 //
@@ -2105,6 +1799,44 @@ router.patch("/grade-change-requests/:requestId/approve", async (req, res) => {
       });
     }
 
+    // Legacy corrections cannot alter published or finalized grades.
+    if (request.request_type === "GRADE_CORRECTION") {
+      const [[source]] = await connection.execute(
+        `SELECT
+           EXISTS (
+             SELECT 1 FROM gradebook_official_grade_publications
+             WHERE grade_id = ?
+           ) AS has_publication,
+           EXISTS (
+             SELECT 1 FROM gradebook_finalized_roster
+             WHERE grade_id = ?
+           ) AS has_finalized_roster,
+           EXISTS (
+             SELECT 1 FROM grade_change_requests
+             WHERE grade_id = ?
+               AND request_type = 'INC_COMPLETION'
+               AND status = 'Completed'
+           ) AS has_inc_history`,
+        [request.grade_id, request.grade_id, request.grade_id],
+      );
+
+      if (
+        Number(source.has_publication) === 1 ||
+        Number(source.has_finalized_roster) === 1 ||
+        Number(source.has_inc_history) === 1
+      ) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          code: "GRADE_CORRECTION_SOURCE_LINK_REQUIRED",
+          message:
+            "This grade has official publication, finalization, or INC conversion history. " +
+            "Use the source-linked correction and official-sheet amendment workflow.",
+        });
+      }
+    }
+
     // =================================================
     // INC COMPLETION VALIDATION
     // =================================================
@@ -2223,7 +1955,178 @@ router.patch("/grade-change-requests/:requestId/approve", async (req, res) => {
         });
       }
     }
+    if (
+      request.request_type === "INC_COMPLETION" &&
+      Number(request.offering_id) === 131
+    ) {
+      const [[qaDb]] = await connection.execute("SELECT DATABASE() AS name");
+      const [evidenceRows] = await connection.execute(
+        `SELECT cl.claim_id, cl.record_version, cl.grade_change_request_id,
+                  cl.verification_status, cl.submitted_by_user_id,
+                  cl.verified_by_user_id, cl.verified_at,
+                  DATE_FORMAT(cl.verified_completed_on, '%Y-%m-%d') AS completed_on,
+                  cfg.config_id, sh.sheet_id,
+                  sh.official_date_verified_at,
+                  sh.official_date_verified_by_user_id,
+                  DATE_FORMAT(DATE_ADD(sh.original_official_submitted_on, INTERVAL 1 YEAR),
+                              '%Y-%m-%d') AS deadline_on
+             FROM grades g
+             JOIN enrollment_subjects es
+               ON es.enrollment_subject_id = g.enrollment_subject_id
+             JOIN gradebook_offering_config cfg ON cfg.offering_id = es.offering_id
+             JOIN gradebook_inc_completion_claims cl ON cl.grade_id = g.grade_id
+             JOIN gradebook_official_sheets sh ON sh.config_id = cfg.config_id
+            WHERE g.grade_id = ? AND es.offering_id = 131 FOR UPDATE`,
+        [request.grade_id],
+      );
+      const evidence = evidenceRows[0];
+      if (
+        qaDb?.name !== "databaseforptc1_admission_test" ||
+        evidenceRows.length !== 1 ||
+        evidence.verification_status !== "VERIFIED_TIMELY" ||
+        evidence.grade_change_request_id !== null ||
+        !evidence.verified_at ||
+        !evidence.completed_on ||
+        !evidence.deadline_on ||
+        evidence.completed_on > evidence.deadline_on ||
+        !evidence.official_date_verified_at ||
+        !evidence.official_date_verified_by_user_id ||
+        Number(evidence.verified_by_user_id) !== Number(programHead.user_id) ||
+        Number(evidence.submitted_by_user_id) !== Number(request.requested_by)
+      ) {
+        await connection.rollback();
+        return res.status(409).json({
+          success: false,
+          code: "INC_REPLACEMENT_EVIDENCE_INVALID",
+          message:
+            "The verified claim or official-sheet evidence is missing or changed.",
+        });
+      }
 
+      // This proof is written by the new assessment-based Faculty request route.
+      const [proofRows] = await connection.execute(
+        `SELECT new_values FROM audit_trail
+            WHERE table_name = 'grade_change_requests' AND record_id = ?
+              AND action = 'INSERT'
+            ORDER BY audit_id DESC LIMIT 1 FOR UPDATE`,
+        [requestId],
+      );
+      let proof = null;
+      try {
+        proof =
+          typeof proofRows[0]?.new_values === "string"
+            ? JSON.parse(proofRows[0].new_values)
+            : proofRows[0]?.new_values;
+      } catch {
+        /* Reject missing or malformed provenance below. */
+      }
+
+      // Confirm the proposed grade matches the Faculty's original request.
+      const filedGrade = proof?.proposed_grade;
+
+      const sameGradeNumber = (stored, filed) =>
+        stored !== null &&
+        stored !== undefined &&
+        filed !== null &&
+        filed !== undefined &&
+        String(stored).trim() !== "" &&
+        String(filed).trim() !== "" &&
+        Number.isFinite(Number(stored)) &&
+        Number.isFinite(Number(filed)) &&
+        Number(stored) === Number(filed);
+
+      if (
+        !filedGrade ||
+        !sameGradeNumber(request.new_midterm_grade, filedGrade.midterm) ||
+        !sameGradeNumber(request.new_final_grade, filedGrade.final) ||
+        !sameGradeNumber(request.new_overall_percentage, filedGrade.overall) ||
+        !sameGradeNumber(request.new_final_rating, filedGrade.rating) ||
+        String(request.new_remarks) !== String(filedGrade.remarks) ||
+        request.new_grading_outcome !== "NUMERIC" ||
+        request.current_grade_status !== "Approved" ||
+        request.current_grading_policy !== "TWO_TERM_50_50" ||
+        request.current_grading_outcome !== "INCOMPLETE" ||
+        Number(request.current_final_rating) !== 4 ||
+        request.enrollment_subject_status !== "Incomplete"
+      ) {
+        await connection.rollback();
+
+        return res.status(409).json({
+          success: false,
+          code: "INC_REPLACEMENT_PROPOSAL_CHANGED",
+          message:
+            "The proposed grade no longer matches the Faculty's audited assessment-based request.",
+        });
+      }
+
+      const [termRows] = await connection.execute(
+        `SELECT term_submission_id, grading_term, submission_status,
+                  reviewed_by_user_id, reviewed_at, submitted_by_user_id,
+                  submitted_at, calculation_snapshot_json
+             FROM gradebook_term_submission_attempts
+            WHERE config_id = ? AND enrollment_subject_id = ?
+            ORDER BY grading_term, attempt_number DESC, term_submission_id DESC
+            FOR UPDATE`,
+        [evidence.config_id, request.enrollment_subject_id],
+      );
+      const latest = {};
+      for (const term of termRows) {
+        if (!latest[term.grading_term]) latest[term.grading_term] = term;
+      }
+      const mid = latest.MIDTERM;
+      const fin = latest.FINAL_TERM;
+      let snapshot = null;
+      try {
+        const raw = fin?.calculation_snapshot_json;
+        snapshot =
+          typeof raw === "string"
+            ? JSON.parse(raw)
+            : Buffer.isBuffer(raw)
+              ? JSON.parse(raw.toString("utf8"))
+              : raw;
+      } catch {
+        /* Reject invalid calculation snapshot below. */
+      }
+      if (
+        !mid ||
+        !fin ||
+        mid.submission_status !== "APPROVED" ||
+        fin.submission_status !== "APPROVED" ||
+        !mid.reviewed_at ||
+        !fin.reviewed_at ||
+        !fin.submitted_at ||
+        Number(fin.reviewed_by_user_id) !== Number(programHead.user_id) ||
+        Number(fin.submitted_by_user_id) !== Number(request.requested_by) ||
+        !(new Date(fin.submitted_at) >= new Date(evidence.verified_at)) ||
+        !(new Date(fin.reviewed_at) <= new Date(request.requested_at)) ||
+        !proof ||
+        proof.request_type !== "INC_COMPLETION" ||
+        String(proof.grade_change_request_id) !== String(requestId) ||
+        String(proof.claim_id) !== String(evidence.claim_id) ||
+        Number(proof.claim_version) !== Number(evidence.record_version) ||
+        String(proof.midterm_submission_id) !==
+          String(mid.term_submission_id) ||
+        String(proof.final_submission_id) !== String(fin.term_submission_id) ||
+        snapshot?.submission_context !== "INC_COMPLETION_FINAL_TERM" ||
+        snapshot.policy !== "TWO_TERM_50_50" ||
+        snapshot.calculated_term?.state !== "READY" ||
+        String(snapshot.inc_completion_claim_id) !==
+          String(evidence.claim_id) ||
+        Number(snapshot.inc_completion_claim_version) !==
+          Number(evidence.record_version) ||
+        Number(snapshot.original_inc_grade_id) !== Number(request.grade_id) ||
+        String(snapshot.official_sheet_id) !== String(evidence.sheet_id) ||
+        snapshot.verified_completed_on !== evidence.completed_on
+      ) {
+        await connection.rollback();
+        return res.status(409).json({
+          success: false,
+          code: "INC_REPLACEMENT_SOURCE_UNVERIFIED",
+          message:
+            "The INC replacement request is not backed by approved, matching grading snapshots.",
+        });
+      }
+    }
     // =================================================
     // GRADE CORRECTION VALIDATION
     // =================================================
