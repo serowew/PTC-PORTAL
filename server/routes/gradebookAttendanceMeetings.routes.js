@@ -3,6 +3,7 @@ import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
 import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 const router = express.Router();
+const TEST_DATABASE = "databaseforptc1_admission_test";
 const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 function fail(code, message, status = 409) {
@@ -220,7 +221,21 @@ async function assertMeetingTermStructureEditable(
       409,
     );
   }
+  const [finalizedSheets] = await connection.execute(
+    `SELECT sheet_id
+     FROM gradebook_official_sheets
+    WHERE config_id = ?
+      AND sheet_status = 'FINALIZED'
+    LIMIT 1`,
+    [configId],
+  );
 
+  if (finalizedSheets.length) {
+    fail(
+      "GRADEBOOK_OFFICIAL_SHEET_FINALIZED",
+      "Attendance meetings are locked because the official grading sheet is finalized.",
+    );
+  }
   const [legacyLocks] = await connection.execute(
     "SELECT 1 FROM gradebook_structure_locks WHERE config_id = ? LIMIT 1",
     [configId],
@@ -340,7 +355,21 @@ router.get("/:offeringId/attendance/meetings", async (req, res) => {
         WHERE es.offering_id = ? LIMIT 1`,
       [offeringId],
     );
-    const legacyLocked = legacyLocks.length > 0 || legacyAttempts.length > 0;
+    const [finalizedSheets] = await db.execute(
+      `SELECT sheet_id
+     FROM gradebook_official_sheets
+    WHERE config_id = ?
+      AND sheet_status = 'FINALIZED'
+    LIMIT 1`,
+      [config.config_id],
+    );
+
+    const officialSheetFinalized = finalizedSheets.length > 0;
+
+    const legacyLocked =
+      officialSheetFinalized ||
+      legacyLocks.length > 0 ||
+      legacyAttempts.length > 0;
 
     const [termLocks] = await db.execute(
       "SELECT grading_term FROM gradebook_term_structure_locks WHERE config_id = ?",
@@ -439,6 +468,7 @@ router.get("/:offeringId/attendance/meetings", async (req, res) => {
       grading_policy: config.grading_policy,
       policy_version: config.policy_version,
       offering_status: config.offering_status,
+
       // Kept for existing clients; use term_structure_locked for per-term controls.
       structure_locked: structureLocked,
       term_structure_locked: termStructureLocked,
@@ -502,7 +532,8 @@ router.post("/:offeringId/attendance/meetings", async (req, res) => {
         403,
       );
     }
-
+    await connection.beginTransaction();
+    transactionStarted = true;
     // Lock the offering first, matching gradebook assessment and score writes.
     const [offerings] = await connection.execute(
       `SELECT so.offering_id, so.status, so.academic_year_id, so.semester_id,
@@ -791,7 +822,8 @@ router.post(
           403,
         );
       }
-
+      await connection.beginTransaction();
+      transactionStarted = true;
       // Keep the offering -> config -> meeting lock order used for meeting creation.
       const [offerings] = await connection.execute(
         `SELECT so.offering_id, so.status, f.user_id AS assigned_user_id,

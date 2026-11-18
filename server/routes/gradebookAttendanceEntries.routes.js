@@ -609,6 +609,8 @@ router.post(
           403,
         );
       }
+      await connection.beginTransaction();
+      transactionStarted = true;
       if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
         fail(
           "TEST_OFFERING_ONLY",
@@ -768,6 +770,21 @@ router.post(
           : null;
 
       if (!incCompletion) {
+        const [finalizedSheets] = await connection.execute(
+          `SELECT sheet_id
+     FROM gradebook_official_sheets
+    WHERE config_id = ?
+      AND sheet_status = 'FINALIZED'
+    LIMIT 1`,
+          [configId],
+        );
+
+        if (finalizedSheets.length) {
+          fail(
+            "GRADEBOOK_OFFICIAL_SHEET_FINALIZED",
+            "Attendance for a finalized official sheet requires the authorized correction workflow.",
+          );
+        }
         if (offering.status !== "Open") {
           fail(
             "OFFERING_NOT_OPEN",
