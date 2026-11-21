@@ -7,6 +7,47 @@ function sourceFail(code, message, status = 409) {
 }
 
 const sameId = (a, b) => a != null && b != null && String(a) === String(b);
+const validUserId = (value) =>
+  value != null &&
+  /^[1-9]\d*$/.test(String(value)) &&
+  Number.isSafeInteger(Number(value));
+
+// Check the reviewer against the Program Head assignment at verification time.
+async function assertModernIncClaimReviewerAssignment(connection, ids, claim) {
+  if (!validUserId(claim?.verified_by_user_id) || !claim?.verified_at) {
+    sourceFail(
+      "MODERN_INC_CLAIM_REVIEWER_SCOPE_INVALID",
+      "The claim has no recorded Program Head verification actor or date.",
+    );
+  }
+
+  const [reviewers] = await connection.execute(
+    `SELECT ph.program_head_id
+       FROM program_heads ph
+       JOIN faculty reviewer ON reviewer.faculty_id = ph.faculty_id
+       JOIN subject_offerings so ON so.offering_id = ?
+       JOIN sections sec ON sec.section_id = so.section_id
+       JOIN courses cr ON cr.course_id = sec.course_id
+      WHERE reviewer.user_id = ?
+        AND ph.department_id = cr.department_id
+        AND (ph.start_date IS NULL OR ph.start_date <= DATE(?))
+        AND (ph.end_date IS NULL OR ph.end_date >= DATE(?))
+      LIMIT 1`,
+    [
+      ids.offeringId,
+      claim.verified_by_user_id,
+      claim.verified_at,
+      claim.verified_at,
+    ],
+  );
+
+  if (reviewers.length !== 1) {
+    sourceFail(
+      "MODERN_INC_CLAIM_REVIEWER_SCOPE_INVALID",
+      "The recorded verification actor has no matching Program Head assignment for the offering and verification date.",
+    );
+  }
+}
 const textPresent = (v, min = 1) =>
   typeof v === "string" && v.trim().length >= min;
 const nulls = (...values) => values.every((v) => v === null);
@@ -50,34 +91,112 @@ function exactMidterm(attempt, snapshot) {
   return (2n * numerator * 1000000000000n + denominator) / (2n * denominator);
 }
 
+// INC completion eligibility; pending score records are handled separately.
+function supportsModernIncPilotCompletion(
+  evidence,
+  { allowMultiple = false } = {},
+) {
+  const pending = evidence?.pending_assessments;
+
+  if (!Array.isArray(pending) || pending.length < 1 || pending.length > 200) {
+    return false;
+  }
+
+  if (!allowMultiple && pending.length !== 1) {
+    return false;
+  }
+
+  const ids = new Set();
+
+  return pending.every((assessment) => {
+    const id = Number(assessment?.assessment_id);
+
+    if (!Number.isSafeInteger(id) || id <= 0 || ids.has(id)) {
+      return false;
+    }
+
+    ids.add(id);
+
+    const originallyMissing =
+      assessment.score_id === null && assessment.record_version === null;
+
+    const originallyPending =
+      Number.isSafeInteger(assessment.score_id) &&
+      assessment.score_id > 0 &&
+      Number.isSafeInteger(assessment.record_version) &&
+      assessment.record_version > 0;
+
+    return (
+      assessment.grading_term === "FINAL_TERM" &&
+      typeof assessment.category_code === "string" &&
+      assessment.category_code.trim().length > 0 &&
+      (allowMultiple || assessment.category_code === "MAJOR_EXAM") &&
+      (originallyMissing || originallyPending)
+    );
+  });
+}
 // Read the original immutable publication chain. Do not recompute it from later completion scores.
 export async function readModernIncSource(
   connection,
   ids,
-  { lock = false } = {},
+  { lock = false, pilotOnly = true, readOnly = false } = {},
 ) {
-  const suffix = lock ? " FOR UPDATE" : "";
-  const invalid = (message) => sourceFail("MODERN_INC_SOURCE_INVALID", message);
-  if (
-    ids.offeringId !== 130 ||
-    ids.enrollmentSubjectId !== 277 ||
-    ids.actorUserId !== 32
-  ) {
+  if (readOnly && lock) {
     sourceFail(
-      "MODERN_INC_QA_SCOPE_ONLY",
-      "Modern INC completion is restricted to the authorized Offering #130 QA student and assigned instructor.",
-      403,
+      "MODERN_INC_READ_ONLY_LOCK_FORBIDDEN",
+      "Read-only INC source checks cannot lock grade records.",
+      400,
     );
   }
-  const [[database]] = await connection.execute(
-    "SELECT DATABASE() AS database_name",
-  );
-  if (database?.database_name !== "databaseforptc1_admission_test") {
+
+  const suffix = lock ? " FOR UPDATE" : "";
+
+  const invalid = (message) => sourceFail("MODERN_INC_SOURCE_INVALID", message);
+
+  if (
+    !ids ||
+    !Number.isSafeInteger(ids.offeringId) ||
+    ids.offeringId <= 0 ||
+    !Number.isSafeInteger(ids.enrollmentSubjectId) ||
+    ids.enrollmentSubjectId <= 0 ||
+    !Number.isSafeInteger(ids.actorUserId) ||
+    ids.actorUserId <= 0
+  ) {
     sourceFail(
-      "MODERN_INC_QA_DATABASE_ONLY",
-      "Modern INC completion is restricted to the admission-test database.",
-      403,
+      "MODERN_INC_SCOPE_INVALID",
+      "A valid offering, enrollment subject, and authenticated instructor are required.",
+      400,
     );
+  }
+
+  // Source checks for committed INC operations must be explicitly enabled.
+  // Independent claim/review/conversion write guards remain in effect.
+  const generalizedWriteSourceEnabled =
+    process.env.GRADEBOOK_MODERN_INC_SOURCE_WRITE_SCOPE_ENABLED === "true";
+
+  if (!readOnly && !generalizedWriteSourceEnabled) {
+    if (
+      pilotOnly &&
+      (ids.offeringId !== 130 || ids.enrollmentSubjectId !== 277)
+    ) {
+      sourceFail(
+        "MODERN_INC_QA_SCOPE_ONLY",
+        "Modern INC writes remain limited to the authorized QA pilot.",
+        403,
+      );
+    }
+
+    const [[database]] = await connection.execute(
+      "SELECT DATABASE() AS database_name",
+    );
+
+    if (database?.database_name !== "databaseforptc1_admission_test") {
+      sourceFail(
+        "MODERN_INC_QA_DATABASE_ONLY",
+        "Modern INC completion is restricted to the admission-test database.",
+        403,
+      );
+    }
   }
   const [offerings] = await connection.execute(
     `SELECT so.offering_id, so.faculty_id, so.academic_year_id, so.semester_id,
@@ -168,11 +287,10 @@ export async function readModernIncSource(
   if (
     sheets.length !== 1 ||
     sheet.sheet_status !== "FINALIZED" ||
-    Number(sheet.record_version) !== 3 ||
     !sheet.finalized_at ||
-    !sameId(sheet.finalized_by_user_id, 31) ||
+    !validUserId(sheet.finalized_by_user_id) ||
     !sheet.official_date_verified_at ||
-    !sameId(sheet.official_date_verified_by_user_id, 31) ||
+    !validUserId(sheet.official_date_verified_by_user_id) ||
     !sheet.original_date ||
     !sheet.deadline ||
     sheet.original_date > sheet.today ||
@@ -190,7 +308,8 @@ export async function readModernIncSource(
     dates[0].event_type !== "RECORDED" ||
     dates[0].previous_record_version !== null ||
     Number(dates[0].record_version_after) !== 1 ||
-    !sameId(dates[0].performed_by_user_id, 30) ||
+    !validUserId(dates[0].performed_by_user_id) ||
+    sameId(dates[0].performed_by_user_id, dates[1].performed_by_user_id) ||
     dates[1].event_type !== "VERIFIED" ||
     Number(dates[1].previous_record_version) !== 1 ||
     Number(dates[1].record_version_after) !== 2 ||
@@ -205,6 +324,18 @@ export async function readModernIncSource(
     )
   )
     invalid("The original sheet-date audit is inconsistent.");
+  // Finalization must advance the verified sheet version exactly once.
+  const verifiedSheetVersion = Number(dates[1].record_version_after);
+  const finalizedSheetVersion = Number(sheet.record_version);
+
+  if (
+    !Number.isSafeInteger(finalizedSheetVersion) ||
+    finalizedSheetVersion !== verifiedSheetVersion + 1
+  ) {
+    invalid(
+      "The finalized sheet version does not match its verified audit history.",
+    );
+  }
   const [roster] = await connection.execute(
     `SELECT * FROM gradebook_finalized_roster WHERE sheet_id = ? AND enrollment_subject_id = ?${suffix}`,
     [sheet.sheet_id, ids.enrollmentSubjectId],
@@ -219,6 +350,7 @@ export async function readModernIncSource(
     original.enrollment_subject_status_snapshot !== "Incomplete" ||
     original.grade_remarks_snapshot !== "Incomplete" ||
     Number(original.final_rating_snapshot) !== 4 ||
+    !sameId(original.snapshotted_by_user_id, sheet.finalized_by_user_id) ||
     decimalUnits(original.midterm_grade_snapshot) !==
       decimalUnits(grade.midterm_grade) ||
     !nulls(original.final_grade_snapshot, original.overall_percentage_snapshot)
@@ -305,11 +437,16 @@ export async function readModernIncSource(
     review.grading_outcome_snapshot !== "INCOMPLETE" ||
     Number(review.submission_version_after) !== 2 ||
     !sameId(review.reviewed_by_user_id, attempt.reviewed_by_user_id) ||
-    !sameId(review.reviewed_by_user_id, 31) ||
+    !sameId(review.reviewed_by_user_id, grade.reviewed_by) ||
+    !sameId(review.reviewed_by_user_id, publication.published_by_user_id) ||
     review.review_notes !== attempt.review_remarks ||
     !review.reviewed_at ||
     !textPresent(review.evidence_review_notes, 20) ||
-    Number(review.is_self_approval) !== 0 ||
+    ![0, 1].includes(Number(review.is_self_approval)) ||
+    Number(review.is_self_approval) !==
+      Number(
+        sameId(review.reviewed_by_user_id, attempt.submitted_by_user_id),
+      ) ||
     !nulls(review.returned_edit_scope, review.review_batch_ref)
   )
     invalid(
@@ -442,9 +579,11 @@ export async function readModernIncSource(
   };
 }
 
-// Readiness only. The claim writer and completion-scoring routes remain disabled for this pilot.
 export async function modernIncReadiness(connection, ids) {
-  const source = await readModernIncSource(connection, ids);
+  const source = await readModernIncSource(connection, ids, {
+    pilotOnly: false,
+    readOnly: true,
+  });
   const {
     configId,
     student,
@@ -469,6 +608,26 @@ export async function modernIncReadiness(connection, ids) {
     [grade.grade_id],
   );
   const blockers = [];
+  const supportedCompletion = supportsModernIncPilotCompletion(evidence, {
+    allowMultiple: true,
+  });
+
+  if (!supportedCompletion) {
+    blockers.push({
+      code: "MODERN_INC_COMPLETION_SCOPE_UNSUPPORTED",
+      message:
+        "Completion requires distinct, originally unscored Final Term " +
+        "assessments. Existing PENDING score records require the next workflow update.",
+    });
+  }
+
+  if (process.env.GRADEBOOK_MODERN_INC_CLAIM_WRITES_ENABLED !== "true") {
+    blockers.push({
+      code: "MODERN_INC_CLAIM_WRITES_DISABLED",
+      message: "INC completion claim submission is not enabled on this server.",
+    });
+  }
+
   if (claims.length)
     blockers.push({
       code: "INC_COMPLETION_CLAIM_ALREADY_EXISTS",
@@ -523,17 +682,59 @@ export async function modernIncReadiness(connection, ids) {
     })),
     legacy_pending_request_count: requests.length,
     completion_claim_source_eligible: eligible,
+
     can_file_completion_claim: eligible,
+
+    can_dry_run_completion_claim:
+      supportedCompletion && !claims.length && !requests.length,
+
     blockers,
     warnings: [],
     note: "Readiness only. No grade, claim, snapshot, or official date was modified.",
   };
 }
-// Modern INC completion claim
 export async function createModernIncClaim(connection, ids, input) {
-  // Caller owns the transaction and commits only after the audit insert.
-  const { configId, student, grade, sheet, original, publication, attempt } =
-    await readModernIncSource(connection, ids, { lock: true });
+  // Committed claims require explicit rollout approval.
+  if (
+    input.dryRun !== true &&
+    process.env.GRADEBOOK_MODERN_INC_CLAIM_WRITES_ENABLED !== "true"
+  ) {
+    sourceFail(
+      "MODERN_INC_CLAIM_WRITES_DISABLED",
+      "INC completion claim submission is not enabled on this server.",
+      403,
+    );
+  }
+
+  // Keep the original QA restriction until generalized source validation
+  // is separately enabled. The source verifier applies the same restriction.
+  if (process.env.GRADEBOOK_MODERN_INC_SOURCE_WRITE_SCOPE_ENABLED !== "true") {
+    await assertQaGradingDatabase(connection);
+  }
+  const {
+    configId,
+    student,
+    grade,
+    sheet,
+    original,
+    publication,
+    attempt,
+    evidence,
+  } = await readModernIncSource(connection, ids, {
+    lock: true,
+    pilotOnly: false,
+  });
+
+  const supportedForRequest = supportsModernIncPilotCompletion(evidence, {
+    allowMultiple: true,
+  });
+
+  if (!supportedForRequest) {
+    sourceFail(
+      "MODERN_INC_COMPLETION_SCOPE_UNSUPPORTED",
+      "INC completion requires distinct, originally unscored Final Term assessments.",
+    );
+  }
 
   if (!sameId(grade.grade_id, input.expectedGradeId)) {
     sourceFail(
@@ -570,6 +771,18 @@ export async function createModernIncClaim(connection, ids, input) {
     sourceFail(
       "INC_COMPLETION_LEGACY_REQUEST_PENDING",
       "A pending INC grade-change request requires reconciliation.",
+    );
+  }
+
+  // Committed claims stay disabled until the full INC workflow is ready.
+  if (
+    !input.dryRun &&
+    process.env.GRADEBOOK_MODERN_INC_CLAIM_WRITES_ENABLED !== "true"
+  ) {
+    sourceFail(
+      "MODERN_INC_CLAIM_WRITES_DISABLED",
+      "INC completion claim submission is not enabled on this server.",
+      403,
     );
   }
 
@@ -635,6 +848,64 @@ export async function createModernIncClaim(connection, ids, input) {
       : "Claim saved pending Program Head evidence verification. The official INC grade remains unchanged.",
   };
 }
+// Validate every pending-claim revision before a review decision.
+function assertPendingModernIncClaimAudit(
+  claim,
+  events,
+  failureCode = "INC_COMPLETION_REVIEW_AUDIT_INCONSISTENT",
+) {
+  const invalidAudit = () =>
+    sourceFail(
+      failureCode,
+      "The pending claim and its versioned audit history do not match.",
+    );
+
+  const version = Number(claim.record_version);
+
+  if (
+    !Number.isSafeInteger(version) ||
+    version < 1 ||
+    events.length !== version
+  ) {
+    invalidAudit();
+  }
+
+  let previousDate = null;
+  let previousEvidence = null;
+
+  for (const [index, event] of events.entries()) {
+    const first = index === 0;
+
+    if (
+      Number(event.claim_version_after) !== index + 1 ||
+      event.event_type !== (first ? "CREATED" : "UPDATED") ||
+      event.previous_status !== (first ? null : "PENDING_VERIFICATION") ||
+      event.new_status !== "PENDING_VERIFICATION" ||
+      event.previous_claimed_date !== previousDate ||
+      event.previous_evidence_summary !== previousEvidence ||
+      event.previous_verified_completed_on !== null ||
+      event.new_verified_completed_on !== null ||
+      event.previous_verification_remarks !== null ||
+      event.new_verification_remarks !== null ||
+      !sameId(event.performed_by_user_id, claim.submitted_by_user_id) ||
+      !textPresent(event.event_reason, 10) ||
+      !event.new_claimed_date ||
+      !textPresent(event.new_evidence_summary, 10)
+    ) {
+      invalidAudit();
+    }
+
+    previousDate = event.new_claimed_date;
+    previousEvidence = event.new_evidence_summary;
+  }
+
+  if (
+    previousDate !== claim.claimed_date ||
+    previousEvidence !== claim.evidence_summary
+  ) {
+    invalidAudit();
+  }
+}
 // Modern INC completion review
 export async function reviewModernIncClaim(
   connection,
@@ -645,12 +916,20 @@ export async function reviewModernIncClaim(
   decision,
 ) {
   // The caller has already authenticated the Program Head and opened a transaction.
+  const offeringId = Number(preview?.offering_id);
+  const enrollmentSubjectId = Number(preview?.enrollment_subject_id);
+  const departmentId = Number(preview?.department_id);
+
   if (
-    Number(actor.userId) !== 31 ||
-    !actor.departments.includes(5) ||
-    Number(preview.offering_id) !== 130 ||
-    Number(preview.enrollment_subject_id) !== 277 ||
-    Number(preview.department_id) !== 5 ||
+    !validUserId(actor?.userId) ||
+    !Number.isSafeInteger(offeringId) ||
+    offeringId <= 0 ||
+    !Number.isSafeInteger(enrollmentSubjectId) ||
+    enrollmentSubjectId <= 0 ||
+    !Number.isSafeInteger(departmentId) ||
+    departmentId <= 0 ||
+    !Array.isArray(actor?.departments) ||
+    !actor.departments.includes(departmentId) ||
     !["VERIFY", "REJECT"].includes(decision)
   ) {
     sourceFail(
@@ -660,30 +939,63 @@ export async function reviewModernIncClaim(
     );
   }
 
-  // Validate the original instructor's source chain, not the reviewer's identity.
-  // The reviewer is independently authorized above and rechecked below.
-  const { configId, grade, sheet, original, publication, attempt } =
-    await readModernIncSource(
-      connection,
-      { offeringId: 130, enrollmentSubjectId: 277, actorUserId: 32 },
-      { lock: true },
+  // Committed reviews require explicit rollout approval.
+  if (
+    input.dryRun !== true &&
+    process.env.GRADEBOOK_MODERN_INC_REVIEW_WRITES_ENABLED !== "true"
+  ) {
+    sourceFail(
+      "MODERN_INC_REVIEW_WRITES_DISABLED",
+      "Program Head INC claim review writes are not enabled on this server.",
+      403,
     );
+  }
+
+  // Keep the QA database guard until the modern INC source rollout is enabled.
+  // The review-write flag and caller transaction checks remain separate.
+  if (process.env.GRADEBOOK_MODERN_INC_SOURCE_WRITE_SCOPE_ENABLED !== "true") {
+    await assertQaGradingDatabase(connection);
+  }
+
+  // Use the offering's actual department and instructor for source validation.
   const [scope] = await connection.execute(
-    `SELECT cr.department_id FROM subject_offerings so
+    `SELECT cr.department_id, f.user_id AS instructor_user_id
+       FROM subject_offerings so
+       JOIN faculty f ON f.faculty_id = so.faculty_id
        JOIN sections sec ON sec.section_id = so.section_id
        JOIN courses cr ON cr.course_id = sec.course_id
       WHERE so.offering_id = ? FOR UPDATE`,
-    [130],
+    [offeringId],
   );
   if (
     scope.length !== 1 ||
-    Number(scope[0].department_id) !== 5 ||
+    !sameId(scope[0].department_id, departmentId) ||
+    !validUserId(scope[0].instructor_user_id)
+  ) {
+    sourceFail(
+      "INC_COMPLETION_REVIEW_VERSION_CONFLICT",
+      "The offering's department or instructor assignment changed. Reload the claim.",
+    );
+  }
+
+  const instructorUserId = Number(scope[0].instructor_user_id);
+  const { configId, grade, sheet, original, publication, attempt } =
+    await readModernIncSource(
+      connection,
+      {
+        offeringId,
+        enrollmentSubjectId,
+        actorUserId: instructorUserId,
+      },
+      { lock: true, pilotOnly: false },
+    );
+  if (
     !sameId(configId, preview.config_id) ||
     !sameId(grade.grade_id, input.expectedGradeId)
   ) {
     sourceFail(
       "INC_COMPLETION_REVIEW_VERSION_CONFLICT",
-      "The original grade or department changed. Reload the claim.",
+      "The original grade or configuration changed. Reload the claim.",
     );
   }
   const [reviewers] = await connection.execute(
@@ -696,7 +1008,7 @@ export async function reviewModernIncClaim(
         AND (ph.end_date IS NULL OR ph.end_date >= CURDATE())
         AND u.is_active = 1 AND u.is_archived = 0 AND r.role_name = 'Program Head'
       FOR UPDATE`,
-    [actor.userId, 5],
+    [actor.userId, departmentId],
   );
   if (!reviewers.length)
     sourceFail(
@@ -716,7 +1028,6 @@ export async function reviewModernIncClaim(
     !sameId(claim.claim_id, requestedClaimId) ||
     claim.verification_status !== "PENDING_VERIFICATION" ||
     Number(claim.record_version) !== input.expectedVersion ||
-    Number(claim.record_version) !== 1 ||
     !sameId(claim.submitted_by_user_id, attempt.submitted_by_user_id) ||
     !nulls(
       claim.grade_change_request_id,
@@ -745,27 +1056,16 @@ export async function reviewModernIncClaim(
       "An active grade-change request requires reconciliation.",
     );
   const [events] = await connection.execute(
-    `SELECT *, DATE_FORMAT(new_claimed_completed_on, '%Y-%m-%d') AS new_claimed_date
-       FROM gradebook_inc_completion_claim_events WHERE claim_id = ? ORDER BY claim_version_after, event_id FOR UPDATE`,
+    `SELECT *,
+            DATE_FORMAT(previous_claimed_completed_on, '%Y-%m-%d') AS previous_claimed_date,
+            DATE_FORMAT(new_claimed_completed_on, '%Y-%m-%d') AS new_claimed_date
+       FROM gradebook_inc_completion_claim_events
+      WHERE claim_id = ?
+      ORDER BY claim_version_after, event_id FOR UPDATE`,
     [requestedClaimId],
   );
-  const event = events[0];
-  if (
-    events.length !== 1 ||
-    event.event_type !== "CREATED" ||
-    event.previous_status !== null ||
-    event.new_status !== "PENDING_VERIFICATION" ||
-    Number(event.claim_version_after) !== 1 ||
-    !sameId(event.performed_by_user_id, claim.submitted_by_user_id) ||
-    event.new_claimed_date !== claim.claimed_date ||
-    event.new_evidence_summary !== claim.evidence_summary ||
-    !textPresent(event.event_reason, 10)
-  ) {
-    sourceFail(
-      "INC_COMPLETION_REVIEW_AUDIT_INCONSISTENT",
-      "The claim's original creation audit does not match its pending state.",
-    );
-  }
+
+  assertPendingModernIncClaimAudit(claim, events);
 
   if (
     decision === "VERIFY" &&
@@ -837,7 +1137,7 @@ export async function reviewModernIncClaim(
     dry_run: input.dryRun,
     persisted: !input.dryRun,
     reviewer_user_id: actor.userId,
-    offering_id: 130,
+    offering_id: offeringId,
     config_id: configId,
     publication_source: publication.publication_source,
     source: {
@@ -868,6 +1168,53 @@ export async function reviewModernIncClaim(
     grade_conversion_performed: false,
   };
 }
+// Verify the complete claim history before using a verified INC claim.
+function assertVerifiedModernIncClaimAudit(claim, events) {
+  const version = Number(claim.record_version);
+
+  const invalid = () =>
+    sourceFail(
+      "MODERN_INC_CLAIM_AUDIT_INVALID",
+      "The completion claim audit does not match its verified state.",
+    );
+
+  if (
+    !Number.isSafeInteger(version) ||
+    version < 2 ||
+    events.length !== version
+  ) {
+    invalid();
+  }
+
+  // Validate all revisions before Program Head verification.
+  assertPendingModernIncClaimAudit(
+    { ...claim, record_version: version - 1 },
+    events.slice(0, -1),
+    "MODERN_INC_CLAIM_AUDIT_INVALID",
+  );
+
+  const verified = events[version - 1];
+
+  if (
+    verified.event_type !== "VERIFIED" ||
+    verified.previous_status !== "PENDING_VERIFICATION" ||
+    verified.new_status !== "VERIFIED_TIMELY" ||
+    Number(verified.claim_version_after) !== version ||
+    !sameId(verified.performed_by_user_id, claim.verified_by_user_id) ||
+    verified.previous_claimed_date !== claim.claimed_date ||
+    verified.new_claimed_date !== claim.claimed_date ||
+    verified.previous_evidence_summary !== claim.evidence_summary ||
+    verified.new_evidence_summary !== claim.evidence_summary ||
+    verified.previous_verified_completed_on !== null ||
+    verified.new_verified_date !== claim.verified_date ||
+    verified.previous_verification_remarks !== null ||
+    verified.new_verification_remarks !== claim.verification_remarks ||
+    verified.event_reason !== claim.verification_remarks
+  ) {
+    invalid();
+  }
+}
+
 // Modern INC completion score access
 export async function requireModernIncPendingScoreEntry(
   connection,
@@ -882,6 +1229,7 @@ export async function requireModernIncPendingScoreEntry(
     assessmentId,
     scoreStatus,
     changeReason,
+    dryRun,
   },
 ) {
   if (gradingTerm !== "FINAL_TERM") {
@@ -896,6 +1244,23 @@ export async function requireModernIncPendingScoreEntry(
       "Completion requires an actual score and a documented change_reason of at least 10 characters.",
       400,
     );
+  }
+
+  // INC score writes require their own rollout approval.
+  if (
+    dryRun !== true &&
+    process.env.GRADEBOOK_MODERN_INC_SCORE_WRITES_ENABLED !== "true"
+  ) {
+    sourceFail(
+      "MODERN_INC_SCORE_WRITES_DISABLED",
+      "INC completion score entry is not enabled on this server.",
+      403,
+    );
+  }
+
+  // Retain the QA guard until the modern INC source rollout is enabled.
+  if (process.env.GRADEBOOK_MODERN_INC_SOURCE_WRITE_SCOPE_ENABLED !== "true") {
+    await assertQaGradingDatabase(connection);
   }
 
   const {
@@ -931,9 +1296,8 @@ export async function requireModernIncPendingScoreEntry(
   if (
     claims.length !== 1 ||
     claim.verification_status !== "VERIFIED_TIMELY" ||
-    Number(claim.record_version) !== 2 ||
     !sameId(claim.submitted_by_user_id, attempt.submitted_by_user_id) ||
-    !sameId(claim.verified_by_user_id, 31) ||
+    !validUserId(claim.verified_by_user_id) ||
     !claim.verified_at ||
     !textPresent(claim.evidence_summary, 10) ||
     !textPresent(claim.verification_remarks, 15) ||
@@ -987,6 +1351,8 @@ export async function requireModernIncPendingScoreEntry(
       "The completion claim audit does not match its verified state.",
     );
   }
+
+  assertVerifiedModernIncClaimAudit(claim, events);
 
   const [requests] = await connection.execute(
     `SELECT grade_change_request_id FROM grade_change_requests
@@ -1076,6 +1442,95 @@ export async function requireModernIncPendingScoreEntry(
     verified_completed_on: claim.verified_date,
   };
 }
+// Validate completed scores against the original INC history.
+function assertModernIncCompletionScoreAudit(
+  pending,
+  score,
+  events,
+  claimId,
+  actorUserId,
+) {
+  const invalid = () =>
+    sourceFail(
+      "MODERN_INC_PREVIEW_SCORE_AUDIT_INVALID",
+      "The completed score does not match its original INC audit history.",
+    );
+
+  const originalVersion =
+    pending.score_id === null ? 0 : Number(pending.record_version);
+  const completedVersion = originalVersion + 1;
+
+  if (
+    !Number.isSafeInteger(completedVersion) ||
+    completedVersion < 1 ||
+    completedVersion > 4294967295 ||
+    Number(score.record_version) !== completedVersion ||
+    events.length !== completedVersion ||
+    (originalVersion > 0 && !sameId(score.score_id, pending.score_id))
+  ) {
+    invalid();
+  }
+
+  const sameAmount = (left, right) =>
+    left === null || right === null
+      ? left === right
+      : decimalUnits(left) !== null &&
+        decimalUnits(left) === decimalUnits(right);
+
+  for (let index = 0; index < events.length; index++) {
+    const event = events[index];
+    const previous = events[index - 1];
+
+    if (
+      !sameId(event.score_id, score.score_id) ||
+      Number(event.score_version_after) !== index + 1 ||
+      event.event_type !== (index === 0 ? "CREATED" : "UPDATED") ||
+      (index === 0
+        ? !nulls(
+            event.previous_score_status,
+            event.previous_earned_score,
+            event.previous_na_reason,
+          )
+        : event.previous_score_status !== previous.new_score_status ||
+          !sameAmount(event.previous_earned_score, previous.new_earned_score) ||
+          event.previous_na_reason !== previous.new_na_reason)
+    ) {
+      invalid();
+    }
+  }
+
+  const originalEvent =
+    originalVersion > 0 ? events[originalVersion - 1] : null;
+
+  if (
+    originalEvent &&
+    (originalEvent.new_score_status !== "PENDING" ||
+      !nulls(originalEvent.new_earned_score, originalEvent.new_na_reason))
+  ) {
+    invalid();
+  }
+
+  const completed = events[events.length - 1];
+
+  if (
+    completed.change_context !== "DRAFT_ENTRY" ||
+    !sameId(completed.changed_by_user_id, actorUserId) ||
+    completed.previous_score_status !==
+      (originalVersion === 0 ? null : "PENDING") ||
+    completed.new_score_status !== "SCORED" ||
+    !nulls(
+      completed.previous_earned_score,
+      completed.previous_na_reason,
+      completed.new_na_reason,
+    ) ||
+    !sameAmount(completed.new_earned_score, score.earned_score) ||
+    !String(completed.change_reason ?? "").startsWith(
+      `INC_COMPLETION_CLAIM_${claimId}: `,
+    )
+  ) {
+    invalid();
+  }
+}
 // Modern INC completion preview (read-only; shared calculator)
 export async function previewModernIncCompletion(
   connection,
@@ -1103,9 +1558,8 @@ export async function previewModernIncCompletion(
   if (
     claims.length !== 1 ||
     claim.verification_status !== "VERIFIED_TIMELY" ||
-    Number(claim.record_version) !== 2 ||
     !sameId(claim.submitted_by_user_id, attempt.submitted_by_user_id) ||
-    !sameId(claim.verified_by_user_id, 31) ||
+    !validUserId(claim.verified_by_user_id) ||
     !claim.verified_at ||
     !textPresent(claim.evidence_summary, 10) ||
     !textPresent(claim.verification_remarks, 15) ||
@@ -1160,6 +1614,8 @@ export async function previewModernIncCompletion(
     );
   }
 
+  assertVerifiedModernIncClaimAudit(claim, events);
+
   const [requests] = await connection.execute(
     `SELECT grade_change_request_id FROM grade_change_requests
       WHERE grade_id = ? AND status IN ('Pending Program Head', 'For Registrar Processing')`,
@@ -1172,92 +1628,144 @@ export async function previewModernIncCompletion(
     );
   }
 
-  // This QA pilot covers one originally pending exam in its own category.
-  if (evidence.pending_assessments.length !== 1) {
-    sourceFail(
-      "MODERN_INC_PREVIEW_SCOPE_INVALID",
-      "This pilot requires exactly one originally pending assessment.",
-    );
-  }
-  const pending = evidence.pending_assessments[0];
+  // Validate every originally pending Final Term assessment.
+  const pendingAssessments = evidence.pending_assessments;
+  const pendingIds = new Set();
+
   if (
-    pending.grading_term !== "FINAL_TERM" ||
-    pending.category_code !== "MAJOR_EXAM" ||
-    pending.score_id !== null ||
-    pending.record_version !== null
+    !Array.isArray(pendingAssessments) ||
+    pendingAssessments.length === 0 ||
+    pendingAssessments.some((pending) => {
+      const id = Number(pending?.assessment_id);
+      const originallyMissing =
+        pending.score_id === null && pending.record_version === null;
+
+      const originallyPending =
+        pending.score_id !== null &&
+        pending.record_version !== null &&
+        Number.isSafeInteger(Number(pending.score_id)) &&
+        Number(pending.score_id) > 0 &&
+        Number.isSafeInteger(Number(pending.record_version)) &&
+        Number(pending.record_version) > 0;
+
+      if (
+        !Number.isSafeInteger(id) ||
+        id <= 0 ||
+        pendingIds.has(id) ||
+        pending.grading_term !== "FINAL_TERM" ||
+        !textPresent(pending.category_code) ||
+        (!originallyMissing && !originallyPending)
+      ) {
+        return true;
+      }
+
+      pendingIds.add(id);
+      return false;
+    })
   ) {
     sourceFail(
       "MODERN_INC_PREVIEW_SCOPE_INVALID",
-      "The original outstanding exam does not match the supported pilot.",
+      "Each outstanding assessment must be distinct and originally unscored.",
     );
   }
-  const [assessments] = await connection.execute(
-    `SELECT a.assessment_id, a.header_name, a.maximum_score, a.grading_term, oc.category_code
-       FROM gradebook_assessments a
-       JOIN gradebook_offering_categories oc ON oc.offering_category_id = a.offering_category_id
-      WHERE oc.config_id = ? AND a.record_status = 'ACTIVE'
-        AND a.grading_term = 'FINAL_TERM' AND oc.category_code = ?`,
-    [configId, pending.category_code],
-  );
-  const assessment = assessments[0];
-  if (
-    assessments.length !== 1 ||
-    !sameId(assessment.assessment_id, pending.assessment_id) ||
-    assessment.header_name !== pending.header_name ||
-    decimalUnits(assessment.maximum_score) === null ||
-    decimalUnits(assessment.maximum_score) !==
-      decimalUnits(pending.maximum_score)
-  ) {
-    sourceFail(
-      "MODERN_INC_PREVIEW_ASSESSMENT_INVALID",
-      "The outstanding exam structure has changed.",
+
+  const completionScores = [];
+
+  for (const pending of pendingAssessments) {
+    const [assessments] = await connection.execute(
+      `SELECT
+        a.assessment_id,
+        a.header_name,
+        a.maximum_score,
+        a.grading_term,
+        a.record_status,
+        oc.category_code
+     FROM gradebook_assessments a
+     JOIN gradebook_offering_categories oc
+       ON oc.offering_category_id = a.offering_category_id
+     WHERE a.assessment_id = ?
+       AND oc.config_id = ?`,
+      [pending.assessment_id, configId],
+    );
+
+    const assessment = assessments[0];
+
+    if (
+      assessments.length !== 1 ||
+      assessment.record_status !== "ACTIVE" ||
+      assessment.grading_term !== "FINAL_TERM" ||
+      assessment.header_name !== pending.header_name ||
+      assessment.category_code !== pending.category_code ||
+      decimalUnits(assessment.maximum_score) === null ||
+      decimalUnits(assessment.maximum_score) !==
+        decimalUnits(pending.maximum_score)
+    ) {
+      sourceFail(
+        "MODERN_INC_PREVIEW_ASSESSMENT_INVALID",
+        "An outstanding assessment no longer matches the original INC evidence.",
+      );
+    }
+
+    const [scores] = await connection.execute(
+      `SELECT
+        score_id,
+        score_status,
+        earned_score,
+        not_applicable_reason,
+        record_version
+     FROM gradebook_scores
+     WHERE assessment_id = ?
+       AND enrollment_subject_id = ?`,
+      [pending.assessment_id, ids.enrollmentSubjectId],
+    );
+
+    const score = scores[0];
+    const expectedVersion =
+      pending.score_id === null ? 1 : Number(pending.record_version) + 1;
+
+    if (
+      scores.length !== 1 ||
+      score.score_status !== "SCORED" ||
+      Number(score.record_version) !== expectedVersion ||
+      (pending.score_id !== null &&
+        !sameId(score.score_id, pending.score_id)) ||
+      decimalUnits(score.earned_score) === null ||
+      decimalUnits(score.earned_score) >
+        decimalUnits(assessment.maximum_score) ||
+      score.not_applicable_reason !== null
+    ) {
+      sourceFail(
+        "MODERN_INC_PREVIEW_SCORE_REQUIRED",
+        "Every outstanding assessment requires a valid completion score.",
+      );
+    }
+
+    const [scoreEvents] = await connection.execute(
+      `SELECT *
+     FROM gradebook_score_events
+     WHERE score_id = ?
+     ORDER BY score_version_after`,
+      [score.score_id],
+    );
+
+    const event = scoreEvents[0];
+
+    assertModernIncCompletionScoreAudit(
+      pending,
+      score,
+      scoreEvents,
+      claim.claim_id,
+      ids.actorUserId,
     );
   }
-  const [scores] = await connection.execute(
-    `SELECT score_id, score_status, earned_score, not_applicable_reason, record_version
-       FROM gradebook_scores WHERE assessment_id = ? AND enrollment_subject_id = ?`,
-    [pending.assessment_id, ids.enrollmentSubjectId],
-  );
-  const score = scores[0];
-  if (
-    scores.length !== 1 ||
-    score.score_status !== "SCORED" ||
-    Number(score.record_version) !== 1 ||
-    decimalUnits(score.earned_score) === null ||
-    decimalUnits(score.earned_score) > decimalUnits(assessment.maximum_score) ||
-    score.not_applicable_reason !== null
-  ) {
-    sourceFail(
-      "MODERN_INC_PREVIEW_SCORE_REQUIRED",
-      "A valid, newly saved completion exam score is required.",
-    );
-  }
-  const [scoreEvents] = await connection.execute(
-    `SELECT * FROM gradebook_score_events WHERE score_id = ? ORDER BY score_version_after`,
-    [score.score_id],
-  );
-  const scoreEvent = scoreEvents[0];
-  if (
-    scoreEvents.length !== 1 ||
-    scoreEvent.event_type !== "CREATED" ||
-    scoreEvent.change_context !== "DRAFT_ENTRY" ||
-    Number(scoreEvent.score_version_after) !== 1 ||
-    !sameId(scoreEvent.changed_by_user_id, ids.actorUserId) ||
-    scoreEvent.previous_score_status !== null ||
-    scoreEvent.new_score_status !== "SCORED" ||
-    scoreEvent.previous_earned_score !== null ||
-    !nulls(scoreEvent.previous_na_reason, scoreEvent.new_na_reason) ||
-    decimalUnits(scoreEvent.new_earned_score) !==
-      decimalUnits(score.earned_score) ||
-    !String(scoreEvent.change_reason ?? "").startsWith(
-      `INC_COMPLETION_CLAIM_${claim.claim_id}: `,
-    )
-  ) {
-    sourceFail(
-      "MODERN_INC_PREVIEW_SCORE_AUDIT_INVALID",
-      "The completion score audit is not linked to the verified claim.",
-    );
-  }
+
+  completionScores.push({
+    assessment_id: Number(pending.assessment_id),
+    score_id: Number(score.score_id),
+    earned_score: String(score.earned_score),
+    record_version: Number(score.record_version),
+    claim_audit_verified: true,
+  });
 
   const [attendance] = await connection.execute(
     `SELECT m.meeting_id, m.grading_term,
@@ -1300,23 +1808,117 @@ export async function previewModernIncCompletion(
   const actualFinal = calculated.terms?.FINAL_TERM;
   const originalMid = snapshot?.calculated_terms?.MIDTERM;
   const originalFinal = snapshot?.calculated_terms?.FINAL_TERM;
-  const otherCategories = (term) =>
-    term?.categories?.filter((c) => c.category_code !== pending.category_code);
+  // Protect every unaffected assessment, including assessments
+  // in categories containing newly completed INC scores.
+  const protectedFinalInputsMatch = () => {
+    const before = originalFinal?.categories;
+    const after = actualFinal?.categories;
+
+    if (
+      !Array.isArray(before) ||
+      !Array.isArray(after) ||
+      before.length !== after.length
+    ) {
+      return false;
+    }
+
+    const seenPending = new Set();
+
+    for (let i = 0; i < before.length; i++) {
+      const oldCategory = before[i];
+      const newCategory = after[i];
+
+      if (
+        oldCategory.category_code !== newCategory.category_code ||
+        oldCategory.category_name !== newCategory.category_name ||
+        oldCategory.category_weight_percent !==
+          newCategory.category_weight_percent
+      ) {
+        return false;
+      }
+
+      const oldRows = oldCategory.assessments;
+      const newRows = newCategory.assessments;
+
+      if (!Array.isArray(oldRows) || !Array.isArray(newRows)) {
+        if (canonical(oldCategory) !== canonical(newCategory)) {
+          return false;
+        }
+
+        continue;
+      }
+
+      if (
+        oldRows.length !== newRows.length ||
+        oldCategory.assessment_count !== newCategory.assessment_count
+      ) {
+        return false;
+      }
+
+      let modified = false;
+
+      for (let j = 0; j < oldRows.length; j++) {
+        const oldScore = oldRows[j];
+        const newScore = newRows[j];
+
+        if (!sameId(oldScore.assessment_id, newScore.assessment_id)) {
+          return false;
+        }
+
+        if (!pendingIds.has(Number(oldScore.assessment_id))) {
+          if (canonical(oldScore) !== canonical(newScore)) {
+            return false;
+          }
+        } else {
+          modified = true;
+
+          const completed = completionScores.find((score) =>
+            sameId(score.assessment_id, oldScore.assessment_id),
+          );
+
+          if (
+            seenPending.has(Number(oldScore.assessment_id)) ||
+            !completed ||
+            oldScore.score_status !== "PENDING" ||
+            oldScore.earned_score !== null ||
+            newScore.score_status !== "SCORED" ||
+            decimalUnits(newScore.earned_score) !==
+              decimalUnits(completed.earned_score) ||
+            canonical({
+              ...oldScore,
+              score_status: "SCORED",
+              earned_score: newScore.earned_score,
+            }) !== canonical(newScore)
+          ) {
+            return false;
+          }
+
+          seenPending.add(Number(oldScore.assessment_id));
+        }
+      }
+
+      if (!modified && canonical(oldCategory) !== canonical(newCategory)) {
+        return false;
+      }
+    }
+
+    return seenPending.size === pendingIds.size;
+  };
+
   if (
     calculated.config_id !== configId ||
     !sameId(calculated.student?.student_id, student.student_id) ||
     calculated.grading_policy !== "TWO_TERM_50_50" ||
-    calculated.grading_classification !== snapshot.classification ||
+    calculated.grading_classification !== snapshot?.classification ||
     Number(calculated.term_weights?.MIDTERM) !== 50 ||
     Number(calculated.term_weights?.FINAL_TERM) !== 50 ||
     actualMid?.state !== "READY" ||
     canonical(actualMid) !== canonical(originalMid) ||
-    canonical(otherCategories(actualFinal)) !==
-      canonical(otherCategories(originalFinal))
+    !protectedFinalInputsMatch()
   ) {
     sourceFail(
       "MODERN_INC_PREVIEW_PROTECTED_INPUT_CHANGED",
-      "A preserved Midterm or non-completion Final Term category has changed.",
+      "A preserved Midterm or unrelated Final Term assessment has changed.",
     );
   }
   if (
@@ -1358,22 +1960,193 @@ export async function previewModernIncCompletion(
       original_official_submitted_on: sheet.original_date,
       inc_completion_deadline_on: sheet.deadline,
     },
-    completion_score: {
-      assessment_id: Number(pending.assessment_id),
-      score_id: Number(score.score_id),
-      earned_score: String(score.earned_score),
-      record_version: Number(score.record_version),
-      claim_audit_verified: true,
-    },
+    completion_scores: completionScores,
+
+    completion_score:
+      completionScores.length === 1 ? completionScores[0] : null,
     midterm_approval: {
       combined_submission_id: String(attempt.submission_id),
       matched_approved_snapshot: true,
     },
     numeric_preview_only: true,
-    inc_completion_submission_enabled: false,
+    inc_completion_submission_enabled: true,
     official_grade_publication_enabled: false,
     note: "Read-only replacement-grade preview. The original official INC grade and finalized snapshot remain unchanged.",
   };
+}
+
+// Validate legacy and versioned INC completion snapshots.
+function modernIncCompletionSnapshotFields(
+  saved,
+  preview,
+  { allowMultiple = false } = {},
+) {
+  const scores = preview?.completion_scores;
+
+  if (
+    !saved ||
+    !Array.isArray(scores) ||
+    scores.length < 1 ||
+    scores.length > 200
+  ) {
+    sourceFail(
+      "MODERN_INC_COMPLETION_SNAPSHOT_INVALID",
+      "The completed assessment collection is missing or invalid.",
+    );
+  }
+
+  const validCollection = (items) => {
+    if (!Array.isArray(items) || items.length !== scores.length) {
+      return false;
+    }
+
+    const assessmentIds = new Set();
+    const scoreIds = new Set();
+
+    for (const item of items) {
+      if (
+        !item ||
+        typeof item !== "object" ||
+        Array.isArray(item) ||
+        Object.keys(item).length !== 5 ||
+        ![
+          "assessment_id",
+          "score_id",
+          "earned_score",
+          "record_version",
+          "claim_audit_verified",
+        ].every((key) => Object.prototype.hasOwnProperty.call(item, key)) ||
+        !Number.isSafeInteger(item.assessment_id) ||
+        item.assessment_id <= 0 ||
+        !Number.isSafeInteger(item.score_id) ||
+        item.score_id <= 0 ||
+        !Number.isSafeInteger(item.record_version) ||
+        item.record_version <= 0 ||
+        decimalUnits(item.earned_score) === null ||
+        item.claim_audit_verified !== true ||
+        assessmentIds.has(item.assessment_id) ||
+        scoreIds.has(item.score_id)
+      ) {
+        return false;
+      }
+
+      assessmentIds.add(item.assessment_id);
+      scoreIds.add(item.score_id);
+    }
+
+    return true;
+  };
+
+  if (!validCollection(scores)) {
+    sourceFail(
+      "MODERN_INC_COMPLETION_SNAPSHOT_INVALID",
+      "The completion preview contains duplicate or invalid score references.",
+    );
+  }
+
+  const multiple = scores.length > 1;
+
+  if (multiple && !allowMultiple) {
+    sourceFail(
+      "MODERN_INC_MULTI_ASSESSMENT_APPROVAL_NOT_ENABLED",
+      "Multiple completion scores are not enabled for this operation.",
+      403,
+    );
+  }
+
+  // Preserve historical single-score snapshots.
+  if (!Object.prototype.hasOwnProperty.call(saved, "snapshot_schema_version")) {
+    if (
+      multiple ||
+      !preview.completion_score ||
+      Object.prototype.hasOwnProperty.call(saved, "completion_scores")
+    ) {
+      sourceFail(
+        "MODERN_INC_COMPLETION_SNAPSHOT_INVALID",
+        "The legacy single-score snapshot contains unexpected completion fields.",
+      );
+    }
+
+    return {
+      completion_score: preview.completion_score,
+    };
+  }
+
+  // Version 2 supports a collection of completed scores.
+  if (
+    saved.snapshot_schema_version !== 2 ||
+    !Array.isArray(saved.completion_scores) ||
+    !validCollection(saved.completion_scores) ||
+    saved.completion_scores.some(
+      (item, index) =>
+        item.assessment_id !== scores[index].assessment_id ||
+        item.score_id !== scores[index].score_id ||
+        item.record_version !== scores[index].record_version ||
+        decimalUnits(item.earned_score) !==
+          decimalUnits(scores[index].earned_score) ||
+        item.claim_audit_verified !== scores[index].claim_audit_verified,
+    ) ||
+    (multiple
+      ? saved.completion_score !== null || preview.completion_score !== null
+      : !saved.completion_score || !preview.completion_score)
+  ) {
+    sourceFail(
+      "MODERN_INC_COMPLETION_SNAPSHOT_INVALID",
+      "The versioned completion-score collection is inconsistent.",
+    );
+  }
+
+  return {
+    snapshot_schema_version: 2,
+    completion_scores: scores,
+    completion_score: preview.completion_score,
+  };
+}
+
+// INC Completion Score Versions
+
+function modernIncExpectedScoreVersionMap(rows) {
+  if (!Array.isArray(rows) || rows.length < 1 || rows.length > 200) {
+    sourceFail(
+      "MODERN_INC_SCORE_VERSIONS_INVALID",
+      "Provide 1–200 assessment-specific score versions.",
+      400,
+    );
+  }
+
+  const versions = new Map();
+  const scoreIds = new Set();
+
+  for (const row of rows) {
+    if (
+      !row ||
+      typeof row !== "object" ||
+      Array.isArray(row) ||
+      Object.keys(row).length !== 3 ||
+      !["assessment_id", "score_id", "record_version"].every((key) =>
+        Object.prototype.hasOwnProperty.call(row, key),
+      ) ||
+      !Number.isSafeInteger(row.assessment_id) ||
+      row.assessment_id <= 0 ||
+      !Number.isSafeInteger(row.score_id) ||
+      row.score_id <= 0 ||
+      !Number.isSafeInteger(row.record_version) ||
+      row.record_version <= 0 ||
+      versions.has(row.assessment_id) ||
+      scoreIds.has(row.score_id)
+    ) {
+      sourceFail(
+        "MODERN_INC_SCORE_VERSIONS_INVALID",
+        "Every assessment needs one unique score ID and positive record version.",
+        400,
+      );
+    }
+
+    versions.set(row.assessment_id, row);
+    scoreIds.add(row.score_id);
+  }
+
+  return versions;
 }
 // Modern INC replacement-grade submission (first-attempt QA pilot)
 export async function submitModernIncCompletion(
@@ -1382,12 +2155,17 @@ export async function submitModernIncCompletion(
   body,
   calculateGradePreview,
 ) {
+  const usesScoreCollection = Object.prototype.hasOwnProperty.call(
+    body ?? {},
+    "expected_score_versions",
+  );
+
   const fields = [
     "expected_grade_id",
     "expected_claim_id",
     "expected_claim_version",
     "expected_sheet_version",
-    "expected_score_version",
+    usesScoreCollection ? "expected_score_versions" : "expected_score_version",
     "expected_latest_submission_id",
     "change_reason",
     "dry_run",
@@ -1407,7 +2185,7 @@ export async function submitModernIncCompletion(
     BigInt(body.expected_claim_id) > 18446744073709551615n ||
     !positiveInt(body.expected_claim_version) ||
     !positiveInt(body.expected_sheet_version) ||
-    !positiveInt(body.expected_score_version) ||
+    (!usesScoreCollection && !positiveInt(body.expected_score_version)) ||
     body.expected_latest_submission_id !== null ||
     reason.length < 10 ||
     reason.length > 1000 ||
@@ -1420,6 +2198,12 @@ export async function submitModernIncCompletion(
       400,
     );
   }
+  const expectedScoreVersions = usesScoreCollection
+    ? modernIncExpectedScoreVersionMap(body.expected_score_versions)
+    : null;
+  // Keep replacement submissions restricted to the QA environment.
+  await assertQaGradingDatabase(connection);
+
   const source = await readModernIncSource(connection, ids, { lock: true });
   const { grade, sheet, attempt, original } = source;
   if (
@@ -1462,11 +2246,39 @@ export async function submitModernIncCompletion(
     ids,
     calculateGradePreview,
   );
+  // Multiple scores require an exact per-assessment version list.
+  // The source reader still enforces the authorized QA pilot.
   if (
-    !sameId(
-      preview.completion_score.record_version,
-      body.expected_score_version,
-    ) ||
+    !Array.isArray(preview.completion_scores) ||
+    preview.completion_scores.length === 0 ||
+    (preview.completion_scores.length > 1 && !usesScoreCollection)
+  ) {
+    sourceFail(
+      "MODERN_INC_SCORE_VERSIONS_REQUIRED",
+      "Submit each completed assessment with its score ID and current record version.",
+      400,
+    );
+  }
+
+  const scoreVersionsMatch = usesScoreCollection
+    ? preview.completion_scores.length === expectedScoreVersions.size &&
+      preview.completion_scores.every((score) => {
+        const expected = expectedScoreVersions.get(score.assessment_id);
+
+        return (
+          expected &&
+          sameId(expected.score_id, score.score_id) &&
+          sameId(expected.record_version, score.record_version)
+        );
+      })
+    : preview.completion_scores.length === 1 &&
+      sameId(
+        preview.completion_score?.record_version,
+        body.expected_score_version,
+      );
+
+  if (
+    !scoreVersionsMatch ||
     !sameId(
       preview.verified_claim.record_version,
       body.expected_claim_version,
@@ -1482,7 +2294,7 @@ export async function submitModernIncCompletion(
   ) {
     sourceFail(
       "MODERN_INC_SUBMISSION_STALE_PREVIEW",
-      "The completed calculation or evidence has changed. Reload preview.",
+      "The completed calculation or assessment evidence has changed. Reload preview.",
     );
   }
   const snapshot = {
@@ -1496,7 +2308,11 @@ export async function submitModernIncCompletion(
     source: preview.source,
     official_sheet: preview.official_sheet,
     verified_claim: preview.verified_claim,
+
+    snapshot_schema_version: 2,
+    completion_scores: preview.completion_scores,
     completion_score: preview.completion_score,
+
     protected_official_grade: preview.protected_official_grade,
     midterm_approval: preview.midterm_approval,
     grading_policy: preview.grading_policy,
@@ -1553,6 +2369,11 @@ export async function submitModernIncCompletion(
     calculated_midterm: preview.terms.MIDTERM.term_percentage,
     calculated_final_term: preview.terms.FINAL_TERM.term_percentage,
     proposed_semester: preview.semester,
+
+    ...(usesScoreCollection
+      ? { completion_scores: preview.completion_scores }
+      : {}),
+
     audit_event: "SUBMITTED",
     audit_event_id: body.dry_run ? null : String(event.insertId),
     official_grade_unchanged: true,
@@ -1595,16 +2416,80 @@ export async function approveModernIncCompletion(
       400,
     );
   }
-  if (Number(actor.userId) !== 31 || Number(actor.departmentId) !== 5) {
+  // Resolve the Program Head and original INC source.
+  if (
+    !validUserId(actor?.userId) ||
+    !Number.isSafeInteger(Number(actor?.departmentId)) ||
+    Number(actor.departmentId) <= 0
+  ) {
     sourceFail(
       "MODERN_INC_APPROVAL_FORBIDDEN",
-      "The authorized QA Program Head is required.",
+      "An active Program Head assignment is required.",
       403,
     );
   }
-  const ids = { offeringId: 130, enrollmentSubjectId: 277, actorUserId: 32 };
+
+  await assertQaGradingDatabase(connection);
+
+  const [submissionSources] = await connection.execute(
+    `SELECT
+      ms.grade_id AS submitted_grade_id,
+      es.enrollment_subject_id,
+      es.offering_id,
+      f.user_id AS instructor_user_id,
+      cr.department_id
+   FROM gradebook_modern_inc_submissions ms
+   JOIN grades g
+     ON g.grade_id = ms.grade_id
+   JOIN enrollment_subjects es
+     ON es.enrollment_subject_id = g.enrollment_subject_id
+   JOIN subject_offerings so
+     ON so.offering_id = es.offering_id
+   JOIN faculty f
+     ON f.faculty_id = so.faculty_id
+   JOIN sections sec
+     ON sec.section_id = so.section_id
+   JOIN courses cr
+     ON cr.course_id = sec.course_id
+   WHERE ms.submission_id = ?`,
+    [submissionId],
+  );
+
+  if (submissionSources.length !== 1) {
+    sourceFail(
+      "MODERN_INC_APPROVAL_NOT_FOUND",
+      "The replacement submission was not found.",
+      404,
+    );
+  }
+
+  const selected = submissionSources[0];
+
+  if (!sameId(selected.department_id, actor.departmentId)) {
+    sourceFail(
+      "MODERN_INC_APPROVAL_NOT_FOUND",
+      "The replacement submission is outside your assigned department.",
+      404,
+    );
+  }
+
+  const ids = {
+    offeringId: Number(selected.offering_id),
+    enrollmentSubjectId: Number(selected.enrollment_subject_id),
+    actorUserId: Number(selected.instructor_user_id),
+  };
+
+  // Preserve the existing #130 / #277 QA write pilot.
   const source = await readModernIncSource(connection, ids, { lock: true });
+
   const { grade, sheet, attempt, original, configId } = source;
+
+  if (!sameId(selected.submitted_grade_id, grade.grade_id)) {
+    sourceFail(
+      "MODERN_INC_APPROVAL_SOURCE_MISMATCH",
+      "The replacement submission no longer matches its original INC grade.",
+    );
+  }
   const [reviewers] = await connection.execute(
     `SELECT ph.program_head_id FROM program_heads ph
        JOIN faculty f ON f.faculty_id = ph.faculty_id
@@ -1635,7 +2520,8 @@ export async function approveModernIncCompletion(
   if (
     claims.length !== 1 ||
     claim.verification_status !== "VERIFIED_TIMELY" ||
-    Number(claim.record_version) !== 2
+    !Number.isSafeInteger(Number(claim.record_version)) ||
+    Number(claim.record_version) < 2
   ) {
     sourceFail(
       "MODERN_INC_APPROVAL_CLAIM_INVALID",
@@ -1719,6 +2605,7 @@ export async function approveModernIncCompletion(
     ids,
     calculateGradePreview,
   );
+
   const current = {
     submission_context: "MODERN_INC_COMPLETION_FINAL_TERM",
     publication_source: "COMBINED_SEMESTER",
@@ -1730,7 +2617,11 @@ export async function approveModernIncCompletion(
     source: preview.source,
     official_sheet: preview.official_sheet,
     verified_claim: preview.verified_claim,
-    completion_score: preview.completion_score,
+
+    ...modernIncCompletionSnapshotFields(saved, preview, {
+      allowMultiple: true,
+    }),
+
     protected_official_grade: preview.protected_official_grade,
     midterm_approval: preview.midterm_approval,
     grading_policy: preview.grading_policy,
@@ -1825,8 +2716,12 @@ export async function processModernIncConversion(
     Object.keys(body).length !== fields.length ||
     Object.keys(body).some((k) => !fields.includes(k)) ||
     body.expected_record_version !== 2 ||
-    body.expected_claim_version !== 2 ||
-    body.expected_sheet_version !== 3 ||
+    !Number.isSafeInteger(body.expected_claim_version) ||
+    body.expected_claim_version < 1 ||
+    body.expected_claim_version > 4294967295 ||
+    !Number.isSafeInteger(body.expected_sheet_version) ||
+    body.expected_sheet_version < 1 ||
+    body.expected_sheet_version > 4294967295 ||
     !Number.isSafeInteger(body.expected_grade_id) ||
     body.expected_grade_id < 1 ||
     typeof body.expected_claim_id !== "string" ||
@@ -1844,20 +2739,80 @@ export async function processModernIncConversion(
       400,
     );
   }
-  if (Number(registrarId) !== 30) {
+  // Require a valid authenticated Registrar account.
+  if (!validUserId(registrarId)) {
     sourceFail(
       "MODERN_INC_CONVERSION_FORBIDDEN",
-      "Only the authorized QA Registrar may process this conversion.",
+      "A valid authenticated Registrar account is required.",
       403,
     );
   }
 
-  // Confirm the QA database before loading or changing official records.
-  await assertQaGradingDatabase(connection);
+  // Require rollout approval for committed INC conversions.
+  const conversionRolloutEnabled =
+    process.env.GRADEBOOK_MODERN_INC_CONVERSION_WRITES_ENABLED === "true" &&
+    process.env.GRADEBOOK_MODERN_INC_SOURCE_WRITE_SCOPE_ENABLED === "true";
 
-  const ids = { offeringId: 130, enrollmentSubjectId: 277, actorUserId: 32 };
+  if (body.dry_run !== true && !conversionRolloutEnabled) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_WRITES_DISABLED",
+      "Registrar INC conversion is not enabled on this server.",
+      403,
+    );
+  }
+
+  // Keep QA-only dry-runs until the full conversion rollout is enabled.
+  if (!conversionRolloutEnabled) {
+    await assertQaGradingDatabase(connection);
+  }
+
+  // Resolve the original source from the requested replacement submission.
+  // The source reader and later locked submission checks remain authoritative.
+  const [submissionSources] = await connection.execute(
+    `SELECT ms.grade_id,
+          es.enrollment_subject_id,
+          es.offering_id,
+          f.user_id AS instructor_user_id
+     FROM gradebook_modern_inc_submissions ms
+     JOIN grades g
+       ON g.grade_id = ms.grade_id
+     JOIN enrollment_subjects es
+       ON es.enrollment_subject_id = g.enrollment_subject_id
+     JOIN subject_offerings so
+       ON so.offering_id = es.offering_id
+     JOIN faculty f
+       ON f.faculty_id = so.faculty_id
+    WHERE ms.submission_id = ?`,
+    [submissionId],
+  );
+
+  if (submissionSources.length !== 1) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_NOT_FOUND",
+      "The approved replacement submission was not found.",
+      404,
+    );
+  }
+
+  const selected = submissionSources[0];
+
+  const ids = {
+    offeringId: Number(selected.offering_id),
+    enrollmentSubjectId: Number(selected.enrollment_subject_id),
+    actorUserId: Number(selected.instructor_user_id),
+  };
+
+  // Preserve the existing default QA pilot restriction.
   const source = await readModernIncSource(connection, ids, { lock: true });
+
   const { grade, sheet, attempt, original, configId } = source;
+
+  if (!sameId(selected.grade_id, grade.grade_id)) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_SOURCE_MISMATCH",
+      "The replacement submission no longer matches its original INC grade.",
+    );
+  }
   const [registrars] = await connection.execute(
     `SELECT u.user_id FROM users u JOIN roles r ON r.role_id = u.role_id
       WHERE u.user_id = ? AND u.is_active = 1 AND u.is_archived = 0 AND r.role_name = 'Registrar' FOR UPDATE`,
@@ -1918,7 +2873,7 @@ export async function processModernIncConversion(
     !sameId(submitted.roster_snapshot_id, original.roster_snapshot_id) ||
     !sameId(submitted.submitted_by_user_id, ids.actorUserId) ||
     !submitted.submitted_at ||
-    !sameId(submitted.reviewed_by_user_id, 31) ||
+    !validUserId(submitted.reviewed_by_user_id) ||
     !submitted.reviewed_at ||
     !textPresent(submitted.review_remarks, 20) ||
     !textPresent(submitted.submission_reason, 10)
@@ -1966,6 +2921,51 @@ export async function processModernIncConversion(
       "MODERN_INC_CONVERSION_AUDIT_INVALID",
       "The submission and approval events do not match the immutable calculation.",
     );
+  // Check the recorded approval actor's department assignment.
+  const [reviewerAssignments] = await connection.execute(
+    `SELECT ph.program_head_id
+     FROM program_heads ph
+
+     JOIN faculty reviewer
+       ON reviewer.faculty_id = ph.faculty_id
+
+     JOIN subject_offerings so
+       ON so.offering_id = ?
+
+     JOIN sections sec
+       ON sec.section_id = so.section_id
+
+     JOIN courses cr
+       ON cr.course_id = sec.course_id
+
+    WHERE reviewer.user_id = ?
+      AND ph.department_id = cr.department_id
+
+      AND (
+        ph.start_date IS NULL
+        OR ph.start_date <= DATE(?)
+      )
+
+      AND (
+        ph.end_date IS NULL
+        OR ph.end_date >= DATE(?)
+      )
+
+    LIMIT 1 FOR UPDATE`,
+    [
+      ids.offeringId,
+      submitted.reviewed_by_user_id,
+      approved.event_at,
+      approved.event_at,
+    ],
+  );
+
+  if (reviewerAssignments.length !== 1) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_REVIEWER_SCOPE_INVALID",
+      "The recorded approval actor has no matching Program Head assignment for the offering and approval date.",
+    );
+  }
   // Read under the same source locks as the score and submission writers.
   const preview = await previewModernIncCompletion(
     connection,
@@ -1983,7 +2983,10 @@ export async function processModernIncConversion(
     source: preview.source,
     official_sheet: preview.official_sheet,
     verified_claim: preview.verified_claim,
-    completion_score: preview.completion_score,
+
+    ...modernIncCompletionSnapshotFields(saved, preview, {
+      allowMultiple: true,
+    }),
     protected_official_grade: preview.protected_official_grade,
     midterm_approval: preview.midterm_approval,
     grading_policy: preview.grading_policy,
@@ -2004,9 +3007,10 @@ export async function processModernIncConversion(
       "The current validated calculation or evidence differs from the submitted snapshot.",
     );
   }
+
   // Serialize revisions using the already locked official sheet.
   const [amendments] = await connection.execute(
-    `SELECT amendment_id, sheet_revision_number, roster_snapshot_id, modern_inc_submission_id
+    `SELECT amendment_id, sheet_id, sheet_revision_number, roster_snapshot_id, modern_inc_submission_id
        FROM gradebook_sheet_amendments WHERE sheet_id = ? OR modern_inc_submission_id = ? FOR UPDATE`,
     [sheet.sheet_id, submissionId],
   );
@@ -2021,8 +3025,26 @@ export async function processModernIncConversion(
       "MODERN_INC_CONVERSION_ALREADY_AMENDED",
       "This approved replacement or original roster row already has an amendment.",
     );
-  const nextRevision =
-    Math.max(0, ...amendments.map((a) => Number(a.sheet_revision_number))) + 1;
+  // Do not append an amendment to a broken official-sheet revision chain.
+  const sheetRevisions = amendments
+    .filter((a) => sameId(a.sheet_id, sheet.sheet_id))
+    .map((a) => Number(a.sheet_revision_number))
+    .sort((a, b) => a - b);
+
+  if (
+    sheetRevisions.some(
+      (revision, index) =>
+        !Number.isSafeInteger(revision) || revision !== index + 1,
+    )
+  ) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_REVISION_INVALID",
+      "The official sheet amendment history has missing or invalid revisions.",
+    );
+  }
+
+  const nextRevision = sheetRevisions.length + 1;
+
   if (!Number.isSafeInteger(nextRevision) || nextRevision > 4294967295)
     sourceFail(
       "MODERN_INC_CONVERSION_REVISION_INVALID",
@@ -2086,15 +3108,72 @@ export async function processModernIncConversion(
     claim_id: String(claim.claim_id),
     claim_version: Number(claim.record_version),
     official_sheet_id: String(sheet.sheet_id),
+
+    // Conversion audit references
+    amendment_type: "INC_COMPLETION",
+    gradebook_config_id: Number(configId),
+    official_publication_id: String(source.publication.publication_id),
+    roster_snapshot_id: String(original.roster_snapshot_id),
+    sheet_revision_number: nextRevision,
+    authorized_by_user_id: Number(submitted.reviewed_by_user_id),
+    applied_by_user_id: Number(registrarId),
+    registrar_remarks: remarks,
+
     midterm_exact_numerator: mid.exact_numerator,
     midterm_exact_denominator: mid.exact_denominator,
     final_term_exact_numerator: fin.exact_numerator,
     final_term_exact_denominator: fin.exact_denominator,
     overall_exact_numerator: overall.exact_numerator,
     overall_exact_denominator: overall.exact_denominator,
+    ...(saved.snapshot_schema_version === 2
+      ? {
+          snapshot_schema_version: 2,
+          completion_scores: saved.completion_scores,
+        }
+      : {}),
+
     completion_score: saved.completion_score,
     progression_review_required: true,
   };
+
+  // All grade conversion writes and source locks must be transactional.
+  const transactionTables = [
+    "grades",
+    "enrollment_subjects",
+    "gradebook_official_sheets",
+    "gradebook_finalized_roster",
+    "gradebook_official_grade_publications",
+    "gradebook_inc_completion_claims",
+    "gradebook_modern_inc_submissions",
+    "gradebook_sheet_amendments",
+    "audit_trail",
+    "audit_logs",
+  ];
+
+  const [engineRows] = await connection.execute(
+    `SELECT TABLE_NAME AS table_name, ENGINE AS engine
+       FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME IN (${transactionTables.map(() => "?").join(", ")})`,
+    transactionTables,
+  );
+
+  const engineByTable = new Map(
+    engineRows.map((row) => [
+      row.table_name,
+      String(row.engine ?? "").toUpperCase(),
+    ]),
+  );
+
+  if (
+    transactionTables.some((table) => engineByTable.get(table) !== "INNODB")
+  ) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_STORAGE_UNSAFE",
+      "Conversion requires transactional grading, official-sheet, and audit tables.",
+    );
+  }
+
   // Update only the approved INC row via the existing guarded conversion mechanism.
   await connection.execute("SET @allow_approved_inc_grade_change = 1");
   let changed;
@@ -2102,14 +3181,36 @@ export async function processModernIncConversion(
     [changed] = await connection.execute(
       `UPDATE grades SET final_grade = ?, overall_percentage = ?, final_rating = ?, remarks = ?,
           grading_outcome = 'NUMERIC', outcome_reason = NULL
-        WHERE grade_id = ? AND grade_status = 'Approved' AND grading_policy = 'TWO_TERM_50_50'
-          AND grading_outcome = 'INCOMPLETE' AND final_rating = 4.00 AND final_grade IS NULL AND overall_percentage IS NULL`,
+        WHERE grade_id = ?
+          AND enrollment_subject_id = ?
+          AND grade_status = 'Approved'
+          AND grading_policy = 'TWO_TERM_50_50'
+          AND grading_outcome = 'INCOMPLETE'
+          AND remarks = 'Incomplete'
+          AND final_rating = 4.00
+          AND final_grade IS NULL
+          AND overall_percentage IS NULL
+          AND EXISTS (
+            SELECT 1
+              FROM gradebook_official_grade_publications pub
+             WHERE pub.publication_id = ?
+               AND pub.grade_id = grades.grade_id
+               AND pub.enrollment_subject_id = grades.enrollment_subject_id
+               AND pub.config_id = ?
+               AND pub.publication_source = 'COMBINED_SEMESTER'
+               AND pub.grading_outcome_snapshot = 'INCOMPLETE'
+               AND pub.combined_submission_id = ?
+          )`,
       [
         proposed.final_grade,
         proposed.overall_percentage,
         proposed.final_rating,
         proposed.remarks,
         grade.grade_id,
+        ids.enrollmentSubjectId,
+        source.publication.publication_id,
+        configId,
+        attempt.submission_id,
       ],
     );
   } finally {
@@ -2186,10 +3287,61 @@ export async function processModernIncConversion(
   );
   if (Number(amendment.affectedRows) !== 1)
     throw new Error("Modern INC amendment insert failed.");
+  // Confirm the amendment belongs to the original official grade.
+  const [amendmentLinks] = await connection.execute(
+    `SELECT am.amendment_id
+       FROM gradebook_sheet_amendments am
+       JOIN gradebook_finalized_roster fr
+         ON fr.roster_snapshot_id = am.roster_snapshot_id
+        AND fr.sheet_id = am.sheet_id
+       JOIN gradebook_modern_inc_submissions ms
+         ON ms.submission_id = am.modern_inc_submission_id
+        AND ms.sheet_id = am.sheet_id
+        AND ms.roster_snapshot_id = fr.roster_snapshot_id
+        AND ms.grade_id = fr.grade_id
+       JOIN grades g
+         ON g.grade_id = ms.grade_id
+        AND g.enrollment_subject_id = fr.enrollment_subject_id
+       JOIN gradebook_official_grade_publications pub
+         ON pub.grade_id = g.grade_id
+        AND pub.enrollment_subject_id = g.enrollment_subject_id
+        AND pub.publication_source = 'COMBINED_SEMESTER'
+        AND pub.grading_outcome_snapshot = 'INCOMPLETE'
+        AND pub.combined_submission_id = ms.combined_submission_id
+       JOIN gradebook_official_sheets sh
+         ON sh.sheet_id = am.sheet_id
+        AND sh.config_id = pub.config_id
+      WHERE am.amendment_id = ?
+        AND am.amendment_type = 'INC_COMPLETION'
+        AND am.grade_change_request_id IS NULL
+        AND am.modern_score_correction_id IS NULL
+        AND am.sheet_id = ?
+        AND am.roster_snapshot_id = ?
+        AND ms.submission_id = ?
+        AND ms.grade_id = ?
+        AND ms.claim_id = ?
+        AND pub.publication_id = ?`,
+    [
+      amendment.insertId,
+      sheet.sheet_id,
+      original.roster_snapshot_id,
+      submissionId,
+      grade.grade_id,
+      claim.claim_id,
+      source.publication.publication_id,
+    ],
+  );
+
+  if (amendmentLinks.length !== 1) {
+    sourceFail(
+      "MODERN_INC_CONVERSION_AMENDMENT_SOURCE_INVALID",
+      "The amendment does not match its original grade, sheet, roster, claim, and publication.",
+    );
+  }
   const auditResult = {
     ...next,
+    original_official_grade: previous,
     amendment_id: String(amendment.insertId),
-    sheet_revision_number: nextRevision,
   };
   const [trail] = await connection.execute(
     `INSERT INTO audit_trail (user_id,table_name,record_id,action,old_values,new_values,created_at)

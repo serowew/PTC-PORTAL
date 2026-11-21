@@ -15,9 +15,11 @@ export async function assertCombinedSemesterCellEditable(
     combinedEditFail("COMBINED_TERM_INVALID", "Invalid grading term.");
   }
 
-  // Caller already holds the offering and config locks.
   const [sheets] = await connection.execute(
-    `SELECT sheet_id, sheet_status
+    `SELECT sheet_id, sheet_status,
+            original_official_submitted_on,
+            official_submission_reference,
+            official_date_verified_at
        FROM gradebook_official_sheets
       WHERE config_id = ?`,
     [configId],
@@ -36,6 +38,19 @@ export async function assertCombinedSemesterCellEditable(
     combinedEditFail(
       "COMBINED_SHEET_FINALIZED",
       "The finalized sheet cannot be edited.",
+    );
+  }
+
+  // Officially submitted gradebooks require the correction workflow.
+  if (
+    sheet &&
+    (sheet.original_official_submitted_on != null ||
+      sheet.official_submission_reference != null ||
+      sheet.official_date_verified_at != null)
+  ) {
+    combinedEditFail(
+      "COMBINED_OFFICIAL_SUBMISSION_RECORDED",
+      "Official submission evidence has been recorded. Use the authorized correction workflow.",
     );
   }
 
@@ -64,6 +79,25 @@ export async function assertCombinedSemesterCellEditable(
       "COMBINED_LOCK_HISTORY_MISMATCH",
       "The combined submission history and structure lock are inconsistent.",
     );
+  }
+
+  // Confirm the structure lock belongs to this official sheet.
+  if (locks.length === 1) {
+    const [firstSubmissions] = await connection.execute(
+      `SELECT submission_id
+         FROM gradebook_grade_submission_attempts
+        WHERE submission_id = ?
+          AND sheet_id = ?
+        LIMIT 1`,
+      [locks[0].first_submission_id, sheet.sheet_id],
+    );
+
+    if (firstSubmissions.length !== 1) {
+      combinedEditFail(
+        "COMBINED_LOCK_SOURCE_INVALID",
+        "The structure lock does not reference the original submission on this sheet.",
+      );
+    }
   }
 
   // No combined submission exists yet.

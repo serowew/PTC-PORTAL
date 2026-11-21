@@ -13,7 +13,6 @@ import {
   Filter,
   GraduationCap,
   MapPin,
-  MessageSquareText,
   RefreshCw,
   RotateCcw,
   Save,
@@ -31,14 +30,12 @@ import { api } from "../../../services/api";
 import "../../../styles/EnterGrades.css";
 
 const API_BASE_URL = `${api.baseUrl}/api/faculty/classes`;
-const LEGACY_DIRECT_PERCENTAGE_ENTRY_ENABLED = false;
 const MODERN_GRADEBOOK_API = `${api.baseUrl}/api/gradebook`;
 
 type GradeStatus = "Draft" | "Submitted" | "Returned" | "Approved";
 
 type GradeRemark = "Passed" | "Failed" | "Incomplete" | "Unofficial Drop";
 
-type GradeOutcome = "NUMERIC" | "INCOMPLETE" | "UNOFFICIAL_DROP";
 type AssessmentMode = "create" | "edit" | "remove";
 type AssessmentTerm = "MIDTERM" | "FINAL_TERM";
 
@@ -334,80 +331,6 @@ interface TermAssessmentColumn {
   assessment: ModernGradebookAssessment | null;
 }
 
-interface GradeMutationResponse {
-  success: boolean;
-
-  message?: string;
-  error?: string;
-
-  missing_fields?: string[];
-
-  grade?: {
-    grade_id: number;
-    enrollment_subject_id: number;
-
-    midterm_grade: number | null;
-    final_grade: number | null;
-    overall_percentage?: number | null;
-    final_rating: number | null;
-
-    grading_policy?: string;
-    grading_outcome?: string;
-    outcome_reason?: string | null;
-
-    remarks: GradeRemark | null;
-
-    grade_status: GradeStatus;
-  };
-}
-
-interface GradeForm {
-  gradingOutcome: GradeOutcome;
-  outcomeReason: string;
-  midtermGrade: string;
-  finalGrade: string;
-}
-
-interface GradePreview {
-  complete: boolean;
-  overallPercentage: number | null;
-  finalRating: number | null;
-  remarks: GradeRemark | null;
-}
-
-interface RowFeedback {
-  type: "success" | "error";
-  message: string;
-}
-
-interface IncCompletionForm {
-  midtermGrade: string;
-  finalGrade: string;
-  completionRemarks: string;
-}
-
-interface IncCompletionResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-
-  request?: {
-    grade_change_request_id: number;
-    grade_id: number;
-    request_type: "INC_COMPLETION";
-    status: string;
-  };
-
-  proposed_grade?: {
-    midterm_grade: number;
-    final_grade: number;
-    overall_percentage: number;
-    final_rating: number;
-    grading_outcome: "NUMERIC";
-    remarks: "Passed" | "Failed";
-  };
-}
-
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
 
@@ -437,30 +360,6 @@ function parsePositiveInt(value: string | null): number | null {
   }
 
   return parsed;
-}
-
-function gradeValueToString(value: number | null | undefined): string {
-  if (value === null || value === undefined) {
-    return "";
-  }
-
-  return String(value);
-}
-
-function createGradeForm(grade: FacultyGrade | null): GradeForm {
-  const storedOutcome = grade?.grading_outcome;
-
-  const gradingOutcome: GradeOutcome =
-    storedOutcome === "INCOMPLETE" || storedOutcome === "UNOFFICIAL_DROP"
-      ? storedOutcome
-      : "NUMERIC";
-
-  return {
-    gradingOutcome,
-    outcomeReason: grade?.outcome_reason || "",
-    midtermGrade: gradeValueToString(grade?.midterm_grade),
-    finalGrade: gradeValueToString(grade?.final_grade),
-  };
 }
 
 function formatDays(value: string | null): string {
@@ -495,174 +394,10 @@ function getRoomLabel(room: FacultyClass["room"]): string {
   return room.room_code || room.room_name || "—";
 }
 
-function formatDateTime(value: string | null): string {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString();
-}
-
 function getGradeStatus(
   student: GradebookStudent,
 ): GradeStatus | "Not Started" {
   return student.grade?.grade_status || "Not Started";
-}
-
-function isEditable(student: GradebookStudent): boolean {
-  if (!LEGACY_DIRECT_PERCENTAGE_ENTRY_ENABLED) {
-    return false;
-  }
-
-  if (student.subject_status !== "Enrolled") {
-    return false;
-  }
-
-  if (!student.grade) {
-    return true;
-  }
-
-  return (
-    student.grade.grade_status === "Draft" ||
-    student.grade.grade_status === "Returned"
-  );
-}
-
-function isApprovedIncomplete(student: GradebookStudent): boolean {
-  return (
-    student.subject_status === "Incomplete" &&
-    student.grade?.grade_status === "Approved" &&
-    student.grade?.grading_outcome === "INCOMPLETE" &&
-    student.grade?.remarks === "Incomplete" &&
-    Number(student.grade?.final_rating) === 4
-  );
-}
-
-function getIncCompletionStatusLabel(
-  request: IncCompletionRequestSummary,
-): string {
-  if (request.status === "For Registrar Processing") {
-    return "Waiting for Registrar";
-  }
-
-  return "Waiting for Program Head";
-}
-
-function getIncCompletionStatusClass(
-  request: IncCompletionRequestSummary,
-): string {
-  return request.status === "For Registrar Processing"
-    ? "registrar"
-    : "program-head";
-}
-
-const GRADE_BANDS = [
-  [97, 1.0],
-  [94, 1.25],
-  [91, 1.5],
-  [88, 1.75],
-  [85, 2.0],
-  [82, 2.25],
-  [79, 2.5],
-  [76, 2.75],
-  [75, 3.0],
-  [0, 5.0],
-] as const;
-
-function parsePercentageHundredths(value: string): number | null {
-  const clean = value.trim();
-
-  if (!clean || !/^\d+(?:\.\d{1,2})?$/.test(clean)) {
-    return null;
-  }
-
-  const numeric = Number(clean);
-
-  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) {
-    return null;
-  }
-
-  return Math.round(numeric * 100);
-}
-
-function calculateGradePreview(form: GradeForm): GradePreview {
-  if (form.gradingOutcome === "INCOMPLETE") {
-    return {
-      complete: true,
-      overallPercentage: null,
-      finalRating: 4,
-      remarks: "Incomplete",
-    };
-  }
-
-  if (form.gradingOutcome === "UNOFFICIAL_DROP") {
-    return {
-      complete: true,
-      overallPercentage: null,
-      finalRating: 6,
-      remarks: "Unofficial Drop",
-    };
-  }
-
-  const midterm = parsePercentageHundredths(form.midtermGrade);
-  const finalTerm = parsePercentageHundredths(form.finalGrade);
-
-  if (midterm === null || finalTerm === null) {
-    return {
-      complete: false,
-      overallPercentage: null,
-      finalRating: null,
-      remarks: null,
-    };
-  }
-
-  // Same TWO_TERM_50_50 rule used by the backend.
-  // Keep hundredths so 74.995 never rounds up to a passing 75.
-  const sum = midterm + finalTerm;
-  const overallPercentage = sum / 200;
-
-  const finalRating =
-    GRADE_BANDS.find(([threshold]) => sum >= threshold * 200)?.[1] ?? 5;
-
-  const remarks: GradeRemark =
-    finalRating >= 1 && finalRating <= 3 ? "Passed" : "Failed";
-
-  return {
-    complete: true,
-    overallPercentage,
-    finalRating,
-    remarks,
-  };
-}
-
-function validatePercentageField(
-  value: string,
-  label: string,
-  required = false,
-): string | null {
-  const clean = value.trim();
-
-  if (!clean) {
-    return required ? `${label} is required.` : null;
-  }
-
-  if (!/^\d+(?:\.\d{1,2})?$/.test(clean)) {
-    return `${label} must be a percentage from 0 to 100 with at most two decimal places.`;
-  }
-
-  const numeric = Number(clean);
-
-  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) {
-    return `${label} must be between 0 and 100.`;
-  }
-
-  return null;
 }
 
 function emptySummary(): GradebookSummary {
@@ -676,7 +411,100 @@ function emptySummary(): GradebookSummary {
   };
 }
 
-// Inline assessment scores
+interface ModernGradePercent {
+  display: string;
+}
+
+interface ModernGradeCategoryPreview {
+  category_code: string;
+  category_name: string;
+  category_weight_percent: string;
+  state: string;
+  category_percentage: ModernGradePercent | null;
+  contribution_percent_points: ModernGradePercent | null;
+}
+
+interface ModernGradePreviewResponse {
+  success: boolean;
+  read_only: boolean;
+  offering_id: number;
+  student: {
+    enrollment_subject_id: number;
+    student_number: string;
+    student_name: string;
+  };
+  terms: Record<
+    AssessmentTerm,
+    {
+      state: string;
+      term_percentage: ModernGradePercent | null;
+      categories: ModernGradeCategoryPreview[];
+      incomplete_category_codes: string[];
+    }
+  >;
+  semester: {
+    state: string;
+    semester_percentage: ModernGradePercent | null;
+    numeric_equivalent: string | null;
+    pass_fail: "PASS" | "FAIL" | null;
+  };
+  code?: string;
+  message?: string;
+}
+interface ReturnedSpecialEvidence {
+  outcome_type: "INCOMPLETE" | "UNOFFICIAL_DROP";
+  outcome_reason: string;
+  missing_requirements: string | null;
+  evidence_summary: string;
+  review_notes: string | null;
+  evidence_review_notes: string | null;
+}
+interface LatestCombinedSubmissionResponse {
+  success: boolean;
+  offering_id: number;
+  enrollment_subject_id: number;
+
+  grade: {
+    grade_status: string;
+    grading_outcome: string;
+  } | null;
+
+  latest_submission: {
+    submission_id: string;
+    record_version: number;
+    attempt_number: number;
+    submission_status: string;
+    returned_edit_scope: AssessmentTerm | "BOTH" | null;
+    review_remarks: string | null;
+  } | null;
+  returned_special_outcome?: ReturnedSpecialEvidence | null;
+  code?: string;
+  message?: string;
+}
+
+interface CombinedSemesterResubmitResponse {
+  success: boolean;
+  dry_run: boolean;
+  persisted: boolean;
+  previous_submission_id: string;
+  submission_id: string | null;
+  status: string;
+  returned_scope: AssessmentTerm | "BOTH";
+  message?: string;
+  code?: string;
+}
+
+interface CombinedSemesterSubmissionResponse {
+  success: boolean;
+  dry_run?: boolean;
+  persisted?: boolean;
+  offering_id?: number;
+  enrollment_subject_id?: number;
+  submission_id?: string | null;
+  status?: string;
+  code?: string;
+  message?: string;
+}
 function scoreCents(value: string): bigint | null {
   const matched = /^(0|[1-9]\d{0,7})(?:\.(\d{1,2}))?$/.exec(value.trim());
   if (!matched) return null;
@@ -968,20 +796,254 @@ interface AttendanceDraft {
   status: AttendanceStatus;
   reason: string;
 }
+// Attendance Summary
+
+interface AttendancePreviewPercent {
+  display: string;
+}
+
+interface AttendancePreviewCategory {
+  category_code: string;
+  category_weight_percent: string;
+  state: string;
+  held_session_count: number;
+  present_or_late_count: number;
+  absent_count: number;
+  excused_count: number;
+  not_applicable_count: number;
+  pending_count: number;
+  counted_session_count: number;
+  category_percentage: AttendancePreviewPercent | null;
+  contribution_percent_points: AttendancePreviewPercent | null;
+}
+
+interface AttendancePreviewResponse {
+  success: boolean;
+  offering_id: number;
+  student: {
+    enrollment_subject_id: number;
+  };
+  terms: Record<AssessmentTerm, { categories: AttendancePreviewCategory[] }>;
+  message?: string;
+}
+
+function AttendanceSummary({
+  offeringId,
+  term,
+  students,
+  refreshKey,
+}: {
+  offeringId: number;
+  term: AssessmentTerm;
+  students: AttendanceStudent[];
+  refreshKey: number;
+}) {
+  const navigate = useNavigate();
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [preview, setPreview] = useState<AttendancePreviewResponse | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const studentId = students.some(
+    (student) => student.enrollment_subject_id === selectedId,
+  )
+    ? selectedId
+    : (students[0]?.enrollment_subject_id ?? null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setPreview(null);
+    setError("");
+
+    if (studentId === null) {
+      setLoading(false);
+      return () => controller.abort();
+    }
+
+    setLoading(true);
+
+    const load = async () => {
+      try {
+        const response = await authService.authFetch(
+          `${MODERN_GRADEBOOK_API}/${offeringId}/students/${studentId}/grade-preview`,
+          {
+            method: "GET",
+            signal: controller.signal,
+          },
+        );
+
+        const data =
+          await readJsonResponse<AttendancePreviewResponse>(response);
+
+        if (controller.signal.aborted) return;
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        if (
+          !response.ok ||
+          !data.success ||
+          data.offering_id !== offeringId ||
+          data.student?.enrollment_subject_id !== studentId ||
+          !Array.isArray(data.terms?.[term]?.categories)
+        ) {
+          throw new Error(
+            data.message ||
+              "Attendance summary is unavailable for this student.",
+          );
+        }
+
+        setPreview(data);
+      } catch (caught) {
+        if (!controller.signal.aborted) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Unable to load attendance summary.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => controller.abort();
+  }, [offeringId, studentId, term, refreshKey, navigate]);
+
+  const attendance = preview?.terms[term].categories.find(
+    (category) => category.category_code === "ATTENDANCE",
+  );
+
+  const ready = attendance?.state === "READY";
+
+  return (
+    <div className="faculty-gradebook-table-meta">
+      <div className="faculty-gradebook-header__title">
+        <div>
+          <strong>
+            Attendance Summary — {term === "MIDTERM" ? "Midterm" : "Final Term"}
+          </strong>
+
+          <p>
+            Read-only calculation from saved Held meetings. No grade is
+            submitted here.
+          </p>
+        </div>
+      </div>
+
+      <label className="faculty-gradebook-filter">
+        <span>Student</span>
+
+        <select
+          value={studentId ?? ""}
+          disabled={students.length === 0}
+          onChange={(event) => setSelectedId(Number(event.target.value))}
+        >
+          {students.map((student) => (
+            <option
+              key={student.enrollment_subject_id}
+              value={student.enrollment_subject_id}
+            >
+              {student.student_number} — {student.student_name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {loading ? (
+        <small>Calculating attendance...</small>
+      ) : error ? (
+        <small role="alert">{error}</small>
+      ) : attendance ? (
+        <div>
+          <strong>
+            {ready
+              ? `${attendance.category_percentage?.display ?? "—"}%`
+              : "Incomplete"}
+          </strong>
+
+          <p>
+            Attended: {attendance.present_or_late_count} /{" "}
+            {attendance.counted_session_count}
+            {" · "}Absent: {attendance.absent_count}
+            {" · "}Excused: {attendance.excused_count}
+            {" · "}N/A: {attendance.not_applicable_count}
+            {" · "}Pending: {attendance.pending_count}
+          </p>
+
+          <p>
+            Attendance weight: {attendance.category_weight_percent}%{" · "}
+            Weighted contribution:{" "}
+            {ready
+              ? `${
+                  attendance.contribution_percent_points?.display ?? "—"
+                } percentage points`
+              : "Not available until attendance is complete"}
+          </p>
+
+          {!ready && (
+            <small>
+              Status: {attendance.state.replaceAll("_", " ")}. Incomplete
+              attendance is not an official percentage.
+            </small>
+          )}
+
+          {ready && (
+            <small>
+              Calculated preview only; official grades require the separate
+              approval and finalization process.
+            </small>
+          )}
+        </div>
+      ) : (
+        <small>No saved attendance summary available.</small>
+      )}
+    </div>
+  );
+}
 
 function AttendanceRegister({
   offeringId,
   refreshKey,
   readOnlyStudentIds,
+  returnedStudentIds,
+  returnedPermission,
+  onAttendanceSaved,
 }: {
   offeringId: number;
   refreshKey: number;
   readOnlyStudentIds: number[];
+  returnedStudentIds: number[];
+  returnedPermission: {
+    enrollmentSubjectId: number;
+    scope: AssessmentTerm | "BOTH";
+  } | null;
+  onAttendanceSaved: () => void;
 }) {
   const navigate = useNavigate();
-  const lockedStudentIds = new Set(readOnlyStudentIds);
 
   const [term, setTerm] = useState<AssessmentTerm>("MIDTERM");
+
+  const lockedStudentIds = new Set([
+    ...readOnlyStudentIds,
+    ...returnedStudentIds.filter(
+      (id) =>
+        returnedPermission?.enrollmentSubjectId !== id ||
+        (returnedPermission.scope !== "BOTH" &&
+          returnedPermission.scope !== term),
+    ),
+  ]);
 
   const [meetings, setMeetings] = useState<AttendanceMeetingsResponse | null>(
     null,
@@ -1306,6 +1368,7 @@ function AttendanceRegister({
 
       setMeetingReloadKey((current) => current + 1);
       setReloadKey((current) => current + 1);
+      onAttendanceSaved();
     } catch (caught) {
       setHeldError(
         caught instanceof Error
@@ -1489,6 +1552,7 @@ function AttendanceRegister({
       }
 
       setReloadKey((current) => current + 1);
+      onAttendanceSaved();
     } catch (caught) {
       setFeedback((current) => ({
         ...current,
@@ -1894,7 +1958,531 @@ function AttendanceRegister({
           </table>
         </div>
       )}
+
+      {currentRegister && !registerLoading && (
+        <AttendanceSummary
+          key={`${offeringId}-${term}`}
+          offeringId={offeringId}
+          term={term}
+          students={currentRegister.students}
+          refreshKey={reloadKey}
+        />
+      )}
     </section>
+  );
+}
+// Special Outcomes (QA pilot)
+type SpecialOutcomeType = "INCOMPLETE" | "UNOFFICIAL_DROP";
+
+interface SpecialOutcomeSubmitResponse {
+  success: boolean;
+  dry_run?: boolean;
+  persisted?: boolean;
+  offering_id?: number;
+  enrollment_subject_id?: number;
+  submission_id?: string | null;
+  status?: string;
+  grading_outcome?: string;
+  pending_assessment_count?: number;
+  absent_meetings?: number;
+  code?: string;
+  message?: string;
+  note?: string;
+}
+
+function SpecialOutcomeSubmission({
+  offeringId,
+  student,
+  onSubmitted,
+}: {
+  offeringId: number;
+  student: GradebookStudent;
+  onSubmitted: () => void;
+}) {
+  const navigate = useNavigate();
+
+  const [type, setType] = useState<SpecialOutcomeType>("INCOMPLETE");
+
+  const [reason, setReason] = useState("");
+  const [missingRequirements, setMissingRequirements] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const hasControlChars = (value: string) =>
+    [...value].some((character) => {
+      const code = character.charCodeAt(0);
+      return (code < 32 && ![9, 10, 13].includes(code)) || code === 127;
+    });
+
+  const validText = (value: string, min: number, max: number) => {
+    const text = value.trim();
+
+    return text.length >= min && text.length <= max && !hasControlChars(text);
+  };
+
+  const canSubmit =
+    !busy &&
+    !success &&
+    validText(reason, 10, 500) &&
+    validText(evidence, 20, 2000) &&
+    (type === "UNOFFICIAL_DROP" || validText(missingRequirements, 10, 2000));
+
+  const submit = async () => {
+    if (!canSubmit) {
+      setError("Complete the reason, evidence, and required INC details.");
+      return;
+    }
+
+    const specialOutcome = {
+      outcome_type: type,
+      outcome_reason: reason.trim(),
+      missing_requirements:
+        type === "INCOMPLETE" ? missingRequirements.trim() : null,
+      evidence_summary: evidence.trim(),
+    };
+
+    const endpoint =
+      `${MODERN_GRADEBOOK_API}/${offeringId}/students/` +
+      `${student.enrollment_subject_id}/semester-submissions`;
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_latest_submission_id: null,
+          expected_latest_submission_record_version: null,
+          special_outcome: specialOutcome,
+          dry_run: dryRun,
+        }),
+      });
+
+      const data =
+        await readJsonResponse<SpecialOutcomeSubmitResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.offering_id !== offeringId ||
+        data.enrollment_subject_id !== student.enrollment_subject_id ||
+        data.status !== "SUBMITTED" ||
+        data.grading_outcome !== type
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "Special outcome submission was rejected.",
+        );
+      }
+
+      return data;
+    };
+
+    setBusy(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const validation = await request(true);
+
+      if (validation.dry_run !== true || validation.persisted !== false) {
+        throw new Error("The backend did not confirm a safe dry-run.");
+      }
+
+      const label = type === "INCOMPLETE" ? "INC (4.00)" : "UD (6.00)";
+
+      const confirmed = window.confirm(
+        `Submit ${label} for ${student.full_name}?\n\n` +
+          `Documented absent meetings: ${validation.absent_meetings ?? 0}\n` +
+          `Pending assessments: ${
+            validation.pending_assessment_count ?? 0
+          }\n\n` +
+          "The Program Head must review this outcome individually. " +
+          "Submitting does not publish an official grade.",
+      );
+
+      if (!confirmed) return;
+
+      const result = await request(false);
+
+      if (
+        result.dry_run !== false ||
+        result.persisted !== true ||
+        !result.submission_id
+      ) {
+        throw new Error("The backend did not confirm a saved submission.");
+      }
+
+      setSuccess(
+        `${label} submission #${result.submission_id} saved for ` +
+          "individual Program Head review. It is not yet official.",
+      );
+
+      onSubmitted();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to submit special outcome.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="faculty-gradebook-table-meta" style={{ display: "block" }}>
+      <strong>Special Outcome — INC / UD</strong>
+
+      <p>
+        For documented incomplete requirements or unofficial-drop evidence. This
+        QA pilot is limited to authorized students and needs individual Program
+        Head approval.
+      </p>
+
+      <div className="faculty-gradebook-tools">
+        <label className="faculty-gradebook-filter">
+          <span>Outcome</span>
+
+          <select
+            value={type}
+            disabled={busy}
+            onChange={(event) => {
+              setType(event.target.value as SpecialOutcomeType);
+              setError("");
+              setSuccess("");
+            }}
+          >
+            <option value="INCOMPLETE">INC — 4.00</option>
+
+            <option value="UNOFFICIAL_DROP">UD — 6.00</option>
+          </select>
+        </label>
+
+        <label className="faculty-gradebook-filter">
+          <span>Outcome reason (10–500 characters)</span>
+
+          <textarea
+            className="faculty-grade-input"
+            rows={3}
+            maxLength={500}
+            value={reason}
+            disabled={busy}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Explain why the special outcome is necessary"
+          />
+        </label>
+
+        {type === "INCOMPLETE" && (
+          <label className="faculty-gradebook-filter">
+            <span>Missing requirements (10–2000 characters)</span>
+
+            <textarea
+              className="faculty-grade-input"
+              rows={3}
+              maxLength={2000}
+              value={missingRequirements}
+              disabled={busy}
+              onChange={(event) => setMissingRequirements(event.target.value)}
+              placeholder="List specific unfinished Final Term requirements"
+            />
+          </label>
+        )}
+
+        <label className="faculty-gradebook-filter">
+          <span>Evidence summary (20–2000 characters)</span>
+
+          <textarea
+            className="faculty-grade-input"
+            rows={3}
+            maxLength={2000}
+            value={evidence}
+            disabled={busy}
+            onChange={(event) => setEvidence(event.target.value)}
+            placeholder="Describe the assessment and attendance evidence on record"
+          />
+        </label>
+
+        <button
+          type="button"
+          className="faculty-grade-header-button"
+          disabled={!canSubmit}
+          onClick={() => void submit()}
+        >
+          <Send size={15} />
+
+          {busy ? "Validating..." : "Submit Special Outcome"}
+        </button>
+      </div>
+
+      {error && <p role="alert">{error}</p>}
+
+      {success && <p role="status">{success}</p>}
+
+      <small>
+        INC requires a complete Midterm and pending Final Term assessments. UD
+        requires recorded absences and supporting evidence. The backend verifies
+        attendance, submission period, and official-sheet locks.
+      </small>
+    </div>
+  );
+}
+// Returned special outcome
+
+interface SpecialOutcomeResubmitResponse {
+  success: boolean;
+  dry_run: boolean;
+  persisted: boolean;
+  offering_id: number;
+  enrollment_subject_id: number;
+  previous_submission_id: string;
+  submission_id: string | null;
+  grading_outcome: "INCOMPLETE" | "UNOFFICIAL_DROP";
+  submission_status: string;
+  original_review_preserved: boolean;
+  message?: string;
+  code?: string;
+}
+
+function ReturnedSpecialOutcomeResubmission({
+  offeringId,
+  student,
+  previous,
+  original,
+  onSubmitted,
+}: {
+  offeringId: number;
+  student: GradebookStudent;
+  previous: NonNullable<LatestCombinedSubmissionResponse["latest_submission"]>;
+  original: ReturnedSpecialEvidence;
+  onSubmitted: (newSubmissionId: string) => void;
+}) {
+  const navigate = useNavigate();
+
+  const [reason, setReason] = useState(original.outcome_reason);
+  const [missing, setMissing] = useState(original.missing_requirements ?? "");
+  const [evidence, setEvidence] = useState(original.evidence_summary);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const validText = (value: string, min: number, max: number) => {
+    const trimmed = value.trim();
+
+    return (
+      trimmed.length >= min &&
+      trimmed.length <= max &&
+      ![...trimmed].some((character) => {
+        const code = character.charCodeAt(0);
+
+        return (code < 32 && ![9, 10, 13].includes(code)) || code === 127;
+      })
+    );
+  };
+
+  const revised =
+    reason.trim() !== original.outcome_reason ||
+    evidence.trim() !== original.evidence_summary ||
+    (original.outcome_type === "INCOMPLETE" &&
+      missing.trim() !== (original.missing_requirements ?? ""));
+
+  const canResubmit =
+    !busy &&
+    revised &&
+    validText(reason, 10, 500) &&
+    validText(evidence, 20, 2000) &&
+    (original.outcome_type === "UNOFFICIAL_DROP" ||
+      validText(missing, 10, 2000));
+
+  const submit = async () => {
+    if (!canResubmit) return;
+
+    setBusy(true);
+    setError("");
+
+    const endpoint =
+      `${MODERN_GRADEBOOK_API}/${offeringId}/students/` +
+      `${student.enrollment_subject_id}/special-outcome-submissions/` +
+      `${previous.submission_id}/resubmit`;
+
+    const specialOutcome = {
+      outcome_type: original.outcome_type,
+      outcome_reason: reason.trim(),
+      missing_requirements:
+        original.outcome_type === "INCOMPLETE" ? missing.trim() : null,
+      evidence_summary: evidence.trim(),
+    };
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_record_version: previous.record_version,
+          confirm_resubmission: true,
+          dry_run: dryRun,
+          special_outcome: specialOutcome,
+        }),
+      });
+
+      const data =
+        await readJsonResponse<SpecialOutcomeResubmitResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+
+        navigate("/login", { replace: true });
+
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.dry_run !== dryRun ||
+        data.persisted !== !dryRun ||
+        data.offering_id !== offeringId ||
+        data.enrollment_subject_id !== student.enrollment_subject_id ||
+        data.previous_submission_id !== previous.submission_id ||
+        data.grading_outcome !== original.outcome_type ||
+        data.submission_status !== "SUBMITTED" ||
+        data.original_review_preserved !== true ||
+        (!dryRun && !data.submission_id)
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The server rejected the special-outcome resubmission.",
+        );
+      }
+
+      return data;
+    };
+
+    try {
+      // Verify the evidence revision without committing.
+      await request(true);
+
+      const label =
+        original.outcome_type === "INCOMPLETE" ? "INC (4.00)" : "UD (6.00)";
+
+      const confirmed = window.confirm(
+        `Resubmit revised ${label} evidence for ${student.full_name}?\n\n` +
+          "Only the supporting documentation changes. " +
+          "The original submission and Program Head return " +
+          "remain preserved for review.",
+      );
+
+      if (!confirmed) return;
+
+      // Save the revised evidence and new submission attempt.
+      const saved = await request(false);
+
+      onSubmitted(saved.submission_id!);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to resubmit the special outcome.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="faculty-gradebook-table-meta" style={{ display: "block" }}>
+      <strong>
+        Returned{" "}
+        {original.outcome_type === "INCOMPLETE" ? "INC (4.00)" : "UD (6.00)"}
+        {" — Revise Evidence"}
+      </strong>
+
+      <p>
+        Program Head return scope:{" "}
+        {previous.returned_edit_scope?.replaceAll("_", " ") ?? "—"}. This
+        resubmission revises documentation only; scores and attendance remain
+        unchanged.
+      </p>
+
+      {previous.review_remarks && (
+        <p>Return remarks: {previous.review_remarks}</p>
+      )}
+
+      {original.evidence_review_notes && (
+        <p>Evidence review: {original.evidence_review_notes}</p>
+      )}
+
+      <div className="faculty-gradebook-tools">
+        <label className="faculty-gradebook-filter">
+          <span>Outcome reason (10–500 characters)</span>
+
+          <textarea
+            className="faculty-grade-input"
+            rows={3}
+            maxLength={500}
+            disabled={busy}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+          />
+        </label>
+
+        {original.outcome_type === "INCOMPLETE" && (
+          <label className="faculty-gradebook-filter">
+            <span>Missing requirements (10–2000 characters)</span>
+
+            <textarea
+              className="faculty-grade-input"
+              rows={3}
+              maxLength={2000}
+              disabled={busy}
+              value={missing}
+              onChange={(event) => setMissing(event.target.value)}
+            />
+          </label>
+        )}
+
+        <label className="faculty-gradebook-filter">
+          <span>Evidence summary (20–2000 characters)</span>
+
+          <textarea
+            className="faculty-grade-input"
+            rows={3}
+            maxLength={2000}
+            disabled={busy}
+            value={evidence}
+            onChange={(event) => setEvidence(event.target.value)}
+          />
+        </label>
+
+        <button
+          type="button"
+          className="faculty-grade-header-button"
+          disabled={!canResubmit}
+          onClick={() => void submit()}
+        >
+          <Send size={15} />
+
+          {busy ? "Validating..." : "Resubmit Special Outcome"}
+        </button>
+      </div>
+
+      {!revised && (
+        <small>Revise at least one evidence field before resubmitting.</small>
+      )}
+
+      {error && <p role="alert">{error}</p>}
+    </div>
   );
 }
 export default function EnterGrades() {
@@ -1969,37 +2557,29 @@ export default function EnterGrades() {
   const [assessmentMaximum, setAssessmentMaximum] = useState("");
   const [assessmentRemovalReason, setAssessmentRemovalReason] = useState("");
 
-  const [forms, setForms] = useState<Record<number, GradeForm>>({});
-
-  const [rowFeedback, setRowFeedback] = useState<Record<number, RowFeedback>>(
-    {},
-  );
-
-  const [savingId, setSavingId] = useState<number | null>(null);
-
-  const [submittingId, setSubmittingId] = useState<number | null>(null);
-
-  const [submitStudent, setSubmitStudent] = useState<GradebookStudent | null>(
-    null,
-  );
-
-  const [submitModalError, setSubmitModalError] = useState("");
-
   const [studentSearch, setStudentSearch] = useState("");
-
   const [statusFilter, setStatusFilter] = useState("All");
+  const [previewStudentId, setPreviewStudentId] = useState<number | null>(null);
+  const [modernPreview, setModernPreview] =
+    useState<ModernGradePreviewResponse | null>(null);
+  const [modernPreviewLoading, setModernPreviewLoading] = useState(false);
+  const [modernPreviewError, setModernPreviewError] = useState("");
+  const [modernPreviewRefreshKey, setModernPreviewRefreshKey] = useState(0);
+  const [latestCombined, setLatestCombined] =
+    useState<LatestCombinedSubmissionResponse | null>(null);
 
-  const [incStudent, setIncStudent] = useState<GradebookStudent | null>(null);
+  const [latestCombinedLoading, setLatestCombinedLoading] = useState(false);
 
-  const [incForm, setIncForm] = useState<IncCompletionForm>({
-    midtermGrade: "",
-    finalGrade: "",
-    completionRemarks: "",
-  });
+  const [latestCombinedError, setLatestCombinedError] = useState("");
 
-  const [incSubmitting, setIncSubmitting] = useState(false);
+  const [resubmittingCombined, setResubmittingCombined] = useState(false);
 
-  const [incError, setIncError] = useState("");
+  const [resubmissionMessage, setResubmissionMessage] = useState("");
+  const [resubmissionError, setResubmissionError] = useState("");
+  const [semesterSubmitting, setSemesterSubmitting] = useState(false);
+  const [semesterSubmissionError, setSemesterSubmissionError] = useState("");
+  const [semesterSubmissionMessage, setSemesterSubmissionMessage] =
+    useState("");
 
   useEffect(() => {
     if (!authenticated) {
@@ -2133,7 +2713,6 @@ export default function EnterGrades() {
         setGradebookClass(null);
 
         setStudents([]);
-        setForms({});
         setSummary(emptySummary());
 
         return;
@@ -2213,7 +2792,9 @@ export default function EnterGrades() {
           returned:
             data.summary?.returned ??
             loadedStudents.filter(
-              (student) => student.grade?.grade_status === "Returned",
+              (student) =>
+                student.grade?.grade_status === "Returned" &&
+                student.grade?.grading_outcome === "NUMERIC",
             ).length,
 
           approved:
@@ -2222,16 +2803,6 @@ export default function EnterGrades() {
               (student) => student.grade?.grade_status === "Approved",
             ).length,
         });
-
-        const nextForms: Record<number, GradeForm> = {};
-
-        loadedStudents.forEach((student) => {
-          nextForms[student.enrollment_subject_id] = createGradeForm(
-            student.grade,
-          );
-        });
-
-        setForms(nextForms);
       } catch (requestError) {
         if (
           requestError instanceof DOMException &&
@@ -2245,7 +2816,6 @@ export default function EnterGrades() {
         setGradebookClass(null);
 
         setStudents([]);
-        setForms({});
         setSummary(emptySummary());
 
         setGradebookError(
@@ -2442,6 +3012,7 @@ export default function EnterGrades() {
           }),
         };
       });
+      setModernPreviewRefreshKey((current) => current + 1);
     },
     [navigate],
   );
@@ -2706,6 +3277,152 @@ export default function EnterGrades() {
     }
   };
 
+  useEffect(() => {
+    const offeringId = selectedOfferingId;
+    const enrollmentSubjectId = previewStudentId;
+    const controller = new AbortController();
+    setModernPreview(null);
+    setModernPreviewError("");
+
+    if (
+      !authenticated ||
+      userRole !== "Faculty" ||
+      !offeringId ||
+      !enrollmentSubjectId ||
+      modernGradebook?.offering_id !== offeringId ||
+      !modernGradebook.students.some(
+        (student) =>
+          student.enrollment_subject_id === enrollmentSubjectId &&
+          student.is_current_enrolled,
+      )
+    ) {
+      setModernPreviewLoading(false);
+      return () => controller.abort();
+    }
+
+    setModernPreviewLoading(true);
+    const loadPreview = async () => {
+      try {
+        const response = await authService.authFetch(
+          `${MODERN_GRADEBOOK_API}/${offeringId}/students/${enrollmentSubjectId}/grade-preview`,
+          { method: "GET", signal: controller.signal },
+        );
+        const data =
+          await readJsonResponse<ModernGradePreviewResponse>(response);
+        if (controller.signal.aborted) return;
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+        if (
+          !response.ok ||
+          !data.success ||
+          data.offering_id !== offeringId ||
+          data.student?.enrollment_subject_id !== enrollmentSubjectId ||
+          !data.terms?.MIDTERM ||
+          !data.terms?.FINAL_TERM ||
+          !data.semester
+        ) {
+          throw new Error(data.message || "Grade calculation is unavailable.");
+        }
+        setModernPreview(data);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setModernPreviewError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load the grade calculation.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setModernPreviewLoading(false);
+      }
+    };
+    void loadPreview();
+    return () => controller.abort();
+  }, [
+    authenticated,
+    userRole,
+    selectedOfferingId,
+    previewStudentId,
+    modernGradebook?.offering_id,
+    modernGradebook?.students,
+    modernPreviewRefreshKey,
+    navigate,
+  ]);
+  useEffect(() => {
+    const offeringId = selectedOfferingId;
+    const studentId = previewStudentId;
+    const controller = new AbortController();
+
+    setLatestCombined(null);
+    setLatestCombinedError("");
+
+    if (!authenticated || userRole !== "Faculty" || !offeringId || !studentId) {
+      setLatestCombinedLoading(false);
+      return () => controller.abort();
+    }
+
+    setLatestCombinedLoading(true);
+
+    const load = async () => {
+      try {
+        const response = await authService.authFetch(
+          `${MODERN_GRADEBOOK_API}/${offeringId}/students/${studentId}/semester-submissions/latest`,
+          {
+            method: "GET",
+            signal: controller.signal,
+          },
+        );
+
+        const data =
+          await readJsonResponse<LatestCombinedSubmissionResponse>(response);
+
+        if (controller.signal.aborted) return;
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        if (
+          !response.ok ||
+          !data.success ||
+          data.offering_id !== offeringId ||
+          data.enrollment_subject_id !== studentId
+        ) {
+          throw new Error(data.message || "Could not load submission status.");
+        }
+
+        setLatestCombined(data);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setLatestCombinedError(
+            error instanceof Error
+              ? error.message
+              : "Could not load submission status.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLatestCombinedLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => controller.abort();
+  }, [
+    authenticated,
+    userRole,
+    selectedOfferingId,
+    previewStudentId,
+    gradebookRefreshKey,
+    navigate,
+  ]);
   const selectedClass = useMemo(() => {
     return (
       classes.find((item) => item.offering_id === selectedOfferingId) ||
@@ -2750,6 +3467,278 @@ export default function EnterGrades() {
     );
   }, [modernGradebook, selectedOfferingId]);
 
+  const returnedSpecialSubmission =
+    selectedOfferingId === 187 &&
+    previewStudentId === 341 &&
+    latestCombined?.offering_id === selectedOfferingId &&
+    latestCombined.enrollment_subject_id === previewStudentId &&
+    latestCombined.grade?.grade_status === "Returned" &&
+    ["INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+      latestCombined.grade.grading_outcome,
+    ) &&
+    latestCombined.latest_submission?.submission_status === "RETURNED" &&
+    latestCombined.returned_special_outcome?.outcome_type ===
+      latestCombined.grade.grading_outcome
+      ? {
+          previous: latestCombined.latest_submission,
+          original: latestCombined.returned_special_outcome,
+        }
+      : null;
+  const returnedSubmission =
+    latestCombined?.offering_id === selectedOfferingId &&
+    latestCombined.enrollment_subject_id === previewStudentId &&
+    latestCombined.grade?.grade_status === "Returned" &&
+    latestCombined.grade.grading_outcome === "NUMERIC" &&
+    latestCombined.latest_submission?.submission_status === "RETURNED" &&
+    ["MIDTERM", "FINAL_TERM", "BOTH"].includes(
+      latestCombined.latest_submission.returned_edit_scope ?? "",
+    )
+      ? latestCombined.latest_submission
+      : null;
+
+  const resubmitReturnedSemester = async () => {
+    const offeringId = selectedOfferingId;
+    const studentId = previewStudentId;
+    const previous = returnedSubmission;
+
+    const rosterStudent = modernStudentByEnrollmentSubject.get(studentId ?? -1);
+
+    if (
+      resubmittingCombined ||
+      !offeringId ||
+      !studentId ||
+      !previous ||
+      !rosterStudent?.is_current_enrolled ||
+      selectedClass?.offering_status !== "Open" ||
+      modernPreview?.offering_id !== offeringId ||
+      modernPreview.student.enrollment_subject_id !== studentId ||
+      modernPreview.terms.MIDTERM.state !== "READY" ||
+      modernPreview.terms.FINAL_TERM.state !== "READY" ||
+      modernPreview.semester.state !== "READY"
+    ) {
+      setResubmissionError(
+        "A complete, current returned submission is required.",
+      );
+      return;
+    }
+
+    const endpoint =
+      `${MODERN_GRADEBOOK_API}/${offeringId}/students/${studentId}` +
+      `/semester-submissions/${previous.submission_id}/resubmit`;
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_record_version: previous.record_version,
+          confirm_resubmission: true,
+          dry_run: dryRun,
+        }),
+      });
+
+      const data =
+        await readJsonResponse<CombinedSemesterResubmitResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.status !== "SUBMITTED" ||
+        data.previous_submission_id !== previous.submission_id ||
+        data.returned_scope !== previous.returned_edit_scope
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The backend rejected resubmission.",
+        );
+      }
+
+      return data;
+    };
+
+    setResubmittingCombined(true);
+    setResubmissionError("");
+    setResubmissionMessage("");
+
+    try {
+      const validation = await request(true);
+
+      if (validation.dry_run !== true || validation.persisted !== false) {
+        throw new Error(
+          "The backend did not confirm safe resubmission validation.",
+        );
+      }
+
+      const scopeLabel =
+        previous.returned_edit_scope === "BOTH"
+          ? "Midterm and Final Term"
+          : previous.returned_edit_scope === "MIDTERM"
+            ? "Midterm"
+            : "Final Term";
+
+      const confirmed = window.confirm(
+        `Resubmit the returned semester grade?\n\n` +
+          `Returned scope: ${scopeLabel}\n` +
+          "The Program Head will review the revised, server-calculated result.",
+      );
+
+      if (!confirmed) return;
+
+      const result = await request(false);
+
+      if (!result.persisted || result.dry_run || !result.submission_id) {
+        throw new Error("The backend did not confirm a saved resubmission.");
+      }
+
+      setResubmissionMessage(
+        `Resubmission #${result.submission_id} saved. ` +
+          "Waiting for Program Head review.",
+      );
+
+      setGradebookRefreshKey((value) => value + 1);
+      setModernPreviewRefreshKey((value) => value + 1);
+    } catch (error) {
+      setResubmissionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to resubmit semester grade.",
+      );
+
+      setGradebookRefreshKey((value) => value + 1);
+    } finally {
+      setResubmittingCombined(false);
+    }
+  };
+
+  const submitCombinedSemester = async () => {
+    const offeringId = selectedOfferingId;
+    const studentId = previewStudentId;
+
+    const student = students.find(
+      (item) => item.enrollment_subject_id === studentId,
+    );
+
+    const rosterStudent = modernStudentByEnrollmentSubject.get(studentId ?? -1);
+
+    if (
+      semesterSubmitting ||
+      !offeringId ||
+      !studentId ||
+      !student ||
+      student.grade !== null ||
+      !rosterStudent?.is_current_enrolled ||
+      selectedClass?.offering_status !== "Open" ||
+      modernPreview?.offering_id !== offeringId ||
+      modernPreview.student.enrollment_subject_id !== studentId ||
+      modernPreview.terms.MIDTERM.state !== "READY" ||
+      modernPreview.terms.FINAL_TERM.state !== "READY" ||
+      modernPreview.semester.state !== "READY"
+    ) {
+      setSemesterSubmissionError(
+        "This student is not eligible for a new combined submission. " +
+          "Check both terms, enrollment, and existing grade history.",
+      );
+      return;
+    }
+
+    setSemesterSubmitting(true);
+    setSemesterSubmissionError("");
+    setResubmissionError("");
+    setResubmissionMessage("");
+
+    const endpoint =
+      `${MODERN_GRADEBOOK_API}/${offeringId}` +
+      `/students/${studentId}/semester-submissions`;
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_latest_submission_id: null,
+          expected_latest_submission_record_version: null,
+          dry_run: dryRun,
+        }),
+      });
+
+      const data =
+        await readJsonResponse<CombinedSemesterSubmissionResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.offering_id !== offeringId ||
+        data.enrollment_subject_id !== studentId ||
+        data.status !== "SUBMITTED"
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "Combined semester submission was rejected.",
+        );
+      }
+
+      return data;
+    };
+
+    try {
+      // Validate all grading requirements without saving.
+      const validation = await request(true);
+
+      if (validation.dry_run !== true || validation.persisted !== false) {
+        throw new Error("The backend did not confirm a safe dry-run.");
+      }
+
+      const confirmed = window.confirm(
+        `Submit the combined semester grade for ${student.full_name}?\n\n` +
+          `Midterm: ${modernPreview.terms.MIDTERM.term_percentage?.display ?? "—"}%\n` +
+          `Final Term: ${modernPreview.terms.FINAL_TERM.term_percentage?.display ?? "—"}%\n` +
+          `Semester: ${modernPreview.semester.semester_percentage?.display ?? "—"}%\n` +
+          `Numeric Equivalent: ${modernPreview.semester.numeric_equivalent ?? "—"}\n\n` +
+          "The backend will recalculate and lock the submitted result " +
+          "for Program Head review. This does not publish an official grade.",
+      );
+
+      if (!confirmed) return;
+
+      // Save the combined semester submission.
+      const result = await request(false);
+
+      if (result.persisted !== true || !result.submission_id) {
+        throw new Error("The server did not confirm a saved submission.");
+      }
+
+      setSemesterSubmissionMessage(
+        `Submission #${result.submission_id} was saved. ` +
+          "Waiting for Program Head review; the grade is not yet published.",
+      );
+
+      setGradebookRefreshKey((current) => current + 1);
+      setModernPreviewRefreshKey((current) => current + 1);
+    } catch (error) {
+      setSemesterSubmissionError(
+        error instanceof Error ? error.message : "Unable to submit grade.",
+      );
+    } finally {
+      setSemesterSubmitting(false);
+    }
+  };
+
   const filteredStudents = useMemo(() => {
     const query = studentSearch.trim().toLowerCase();
 
@@ -2787,7 +3776,7 @@ export default function EnterGrades() {
     setStudentSearch("");
     setStatusFilter("All");
 
-    setRowFeedback({});
+    setPreviewStudentId(null);
 
     setGradebookError("");
   };
@@ -2826,562 +3815,6 @@ export default function EnterGrades() {
     setClassSearch("");
   };
 
-  const updateForm = (
-    enrollmentSubjectId: number,
-    field: keyof GradeForm,
-    value: string,
-  ) => {
-    setForms((current) => ({
-      ...current,
-
-      [enrollmentSubjectId]: {
-        ...(current[enrollmentSubjectId] || {
-          gradingOutcome: "NUMERIC",
-          outcomeReason: "",
-          midtermGrade: "",
-          finalGrade: "",
-        }),
-
-        [field]: value,
-      },
-    }));
-
-    setRowFeedback((current) => {
-      const next = {
-        ...current,
-      };
-
-      delete next[enrollmentSubjectId];
-
-      return next;
-    });
-  };
-
-  const buildGradeBody = (form: GradeForm) => {
-    const specialOutcome = form.gradingOutcome !== "NUMERIC";
-
-    return {
-      midterm_grade: specialOutcome ? null : form.midtermGrade.trim() || null,
-      final_grade: specialOutcome ? null : form.finalGrade.trim() || null,
-      grading_outcome: form.gradingOutcome,
-      outcome_reason: specialOutcome ? form.outcomeReason.trim() : null,
-    };
-  };
-
-  const validateOutcomeReason = (form: GradeForm): string | null => {
-    if (form.gradingOutcome === "NUMERIC") {
-      return null;
-    }
-
-    const reason = form.outcomeReason.trim();
-
-    if (!reason) {
-      return "A reason is required for Incomplete or Unofficial Drop.";
-    }
-
-    if (reason.length > 500) {
-      return "Outcome reason must not exceed 500 characters.";
-    }
-
-    return null;
-  };
-
-  const validateNumericFields = (form: GradeForm): string | null => {
-    if (form.gradingOutcome !== "NUMERIC") {
-      return validateOutcomeReason(form);
-    }
-
-    return (
-      validatePercentageField(form.midtermGrade, "Midterm") ||
-      validatePercentageField(form.finalGrade, "Final Term")
-    );
-  };
-
-  const validateForSubmit = (form: GradeForm): string | null => {
-    if (form.gradingOutcome !== "NUMERIC") {
-      return validateOutcomeReason(form);
-    }
-
-    return (
-      validatePercentageField(form.midtermGrade, "Midterm", true) ||
-      validatePercentageField(form.finalGrade, "Final Term", true)
-    );
-  };
-
-  const saveDraftRequest = async (
-    student: GradebookStudent,
-    showSuccess: boolean,
-  ) => {
-    if (!selectedOfferingId) {
-      throw new Error("No class is selected.");
-    }
-
-    const id = student.enrollment_subject_id;
-
-    const form = forms[id];
-
-    if (!form) {
-      throw new Error("Grade form is unavailable.");
-    }
-
-    const numericError = validateNumericFields(form);
-
-    if (numericError) {
-      throw new Error(numericError);
-    }
-
-    const response = await authService.authFetch(
-      `${API_BASE_URL}/${selectedOfferingId}/grades/${id}/draft`,
-      {
-        method: "PUT",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify(buildGradeBody(form)),
-      },
-    );
-
-    const data = await readJsonResponse<GradeMutationResponse>(response);
-
-    if (response.status === 401) {
-      authService.logout();
-
-      navigate("/login", {
-        replace: true,
-      });
-
-      throw new Error("Your session has expired.");
-    }
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || data.error || "Unable to save grade.");
-    }
-
-    if (showSuccess) {
-      setRowFeedback((current) => ({
-        ...current,
-
-        [id]: {
-          type: "success",
-
-          message: data.message || "Draft grade saved successfully.",
-        },
-      }));
-    }
-
-    return data;
-  };
-
-  const saveDraft = async (student: GradebookStudent) => {
-    const id = student.enrollment_subject_id;
-
-    if (!isEditable(student)) {
-      return;
-    }
-
-    try {
-      setSavingId(id);
-
-      setRowFeedback((current) => {
-        const next = {
-          ...current,
-        };
-
-        delete next[id];
-
-        return next;
-      });
-
-      await saveDraftRequest(student, true);
-
-      setGradebookRefreshKey((current) => current + 1);
-    } catch (requestError) {
-      console.error("SAVE FACULTY DRAFT GRADE ERROR:", requestError);
-
-      setRowFeedback((current) => ({
-        ...current,
-
-        [id]: {
-          type: "error",
-
-          message:
-            requestError instanceof Error
-              ? requestError.message
-              : "Unable to save draft grade.",
-        },
-      }));
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  const submitGrade = (student: GradebookStudent) => {
-    if (!selectedOfferingId) {
-      return;
-    }
-
-    const id = student.enrollment_subject_id;
-
-    if (!isEditable(student)) {
-      return;
-    }
-
-    const form = forms[id];
-
-    if (!form) {
-      return;
-    }
-
-    const validationError = validateForSubmit(form);
-
-    if (validationError) {
-      setRowFeedback((current) => ({
-        ...current,
-
-        [id]: {
-          type: "error",
-
-          message: validationError,
-        },
-      }));
-
-      return;
-    }
-
-    setSubmitModalError("");
-    setSubmitStudent(student);
-  };
-
-  const closeSubmitModal = () => {
-    if (submitStudent && submittingId === submitStudent.enrollment_subject_id) {
-      return;
-    }
-
-    setSubmitStudent(null);
-    setSubmitModalError("");
-  };
-
-  const confirmSubmitGrade = async () => {
-    if (!submitStudent || !selectedOfferingId) {
-      return;
-    }
-
-    const student = submitStudent;
-    const id = student.enrollment_subject_id;
-
-    if (!isEditable(student)) {
-      setSubmitStudent(null);
-      return;
-    }
-
-    const form = forms[id];
-
-    if (!form) {
-      setSubmitModalError("Grade form is unavailable.");
-      return;
-    }
-
-    const validationError = validateForSubmit(form);
-
-    if (validationError) {
-      setSubmitModalError(validationError);
-
-      setRowFeedback((current) => ({
-        ...current,
-
-        [id]: {
-          type: "error",
-          message: validationError,
-        },
-      }));
-
-      return;
-    }
-
-    try {
-      setSubmittingId(id);
-      setSubmitModalError("");
-
-      setRowFeedback((current) => {
-        const next = {
-          ...current,
-        };
-
-        delete next[id];
-
-        return next;
-      });
-
-      await saveDraftRequest(student, false);
-
-      const response = await authService.authFetch(
-        `${API_BASE_URL}/${selectedOfferingId}/grades/${id}/submit`,
-        {
-          method: "PATCH",
-        },
-      );
-
-      const data = await readJsonResponse<GradeMutationResponse>(response);
-
-      if (response.status === 401) {
-        authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
-        return;
-      }
-
-      if (!response.ok || !data.success) {
-        const missing =
-          Array.isArray(data.missing_fields) && data.missing_fields.length > 0
-            ? ` Missing: ${data.missing_fields.join(", ")}.`
-            : "";
-
-        throw new Error(
-          `${
-            data.message || data.error || "Unable to submit grade."
-          }${missing}`,
-        );
-      }
-
-      setRowFeedback((current) => ({
-        ...current,
-
-        [id]: {
-          type: "success",
-
-          message: data.message || "Grade submitted successfully.",
-        },
-      }));
-
-      setSubmitStudent(null);
-      setSubmitModalError("");
-
-      setGradebookRefreshKey((current) => current + 1);
-    } catch (requestError) {
-      console.error("SUBMIT FACULTY GRADE ERROR:", requestError);
-
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to submit grade.";
-
-      setSubmitModalError(message);
-
-      setRowFeedback((current) => ({
-        ...current,
-
-        [id]: {
-          type: "error",
-
-          message,
-        },
-      }));
-    } finally {
-      setSubmittingId(null);
-    }
-  };
-
-  const submitModalForm = submitStudent
-    ? forms[submitStudent.enrollment_subject_id] ||
-      createGradeForm(submitStudent.grade)
-    : null;
-
-  const submitModalPreview = submitModalForm
-    ? calculateGradePreview(submitModalForm)
-    : null;
-
-  const submitModalOutcomeLabel =
-    submitModalForm?.gradingOutcome === "NUMERIC"
-      ? "Numeric Grade"
-      : submitModalForm?.gradingOutcome === "INCOMPLETE"
-        ? "Incomplete"
-        : submitModalForm?.gradingOutcome === "UNOFFICIAL_DROP"
-          ? "Unofficial Drop"
-          : "—";
-
-  const openIncCompletion = (student: GradebookStudent) => {
-    if (!isApprovedIncomplete(student)) {
-      return;
-    }
-
-    setIncStudent(student);
-
-    setIncForm({
-      midtermGrade: gradeValueToString(student.grade?.midterm_grade),
-      finalGrade: gradeValueToString(student.grade?.final_grade),
-      completionRemarks: "",
-    });
-
-    setIncError("");
-  };
-
-  const closeIncCompletion = () => {
-    if (incSubmitting) {
-      return;
-    }
-
-    setIncStudent(null);
-
-    setIncForm({
-      midtermGrade: "",
-      finalGrade: "",
-      completionRemarks: "",
-    });
-
-    setIncError("");
-  };
-
-  const incPreview = calculateGradePreview({
-    gradingOutcome: "NUMERIC",
-    outcomeReason: "",
-    midtermGrade: incForm.midtermGrade,
-    finalGrade: incForm.finalGrade,
-  });
-
-  const submitIncCompletion = async () => {
-    if (!incStudent || !selectedOfferingId) {
-      return;
-    }
-
-    const midtermError = validatePercentageField(
-      incForm.midtermGrade,
-      "Midterm",
-      true,
-    );
-
-    if (midtermError) {
-      setIncError(midtermError);
-      return;
-    }
-
-    const finalError = validatePercentageField(
-      incForm.finalGrade,
-      "Final Term",
-      true,
-    );
-
-    if (finalError) {
-      setIncError(finalError);
-      return;
-    }
-
-    const completionRemarks = incForm.completionRemarks.trim();
-
-    if (!completionRemarks) {
-      setIncError("Completion remarks are required.");
-      return;
-    }
-
-    if (completionRemarks.length > 1000) {
-      setIncError("Completion remarks must not exceed 1000 characters.");
-      return;
-    }
-
-    if (!incPreview.complete) {
-      setIncError("Both Midterm and Final Term grades are required.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Submit INC completion for ${incStudent.student_number} - ${incStudent.full_name}?\n\n` +
-        `Midterm: ${incForm.midtermGrade}\n` +
-        `Final Term: ${incForm.finalGrade}\n` +
-        `Overall: ${
-          incPreview.overallPercentage !== null
-            ? incPreview.overallPercentage.toFixed(2)
-            : "—"
-        }\n` +
-        `Final Rating: ${
-          incPreview.finalRating !== null
-            ? incPreview.finalRating.toFixed(2)
-            : "—"
-        }\n` +
-        `Result: ${incPreview.remarks || "—"}\n\n` +
-        "This will be sent to the Program Head for approval.",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setIncSubmitting(true);
-      setIncError("");
-
-      const response = await authService.authFetch(
-        `${API_BASE_URL}/${selectedOfferingId}/grades/${incStudent.enrollment_subject_id}/inc-completion`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            midterm_grade: Number(incForm.midtermGrade),
-            final_grade: Number(incForm.finalGrade),
-            completion_remarks: completionRemarks,
-          }),
-        },
-      );
-
-      const data = await readJsonResponse<IncCompletionResponse>(response);
-
-      if (response.status === 401) {
-        authService.logout();
-
-        navigate("/login", {
-          replace: true,
-        });
-
-        return;
-      }
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message ||
-            data.error ||
-            "Unable to submit INC completion request.",
-        );
-      }
-
-      const enrollmentSubjectId = incStudent.enrollment_subject_id;
-
-      setRowFeedback((current) => ({
-        ...current,
-        [enrollmentSubjectId]: {
-          type: "success",
-          message:
-            data.message ||
-            "INC completion request submitted to the Program Head.",
-        },
-      }));
-
-      setIncStudent(null);
-
-      setIncForm({
-        midtermGrade: "",
-        finalGrade: "",
-        completionRemarks: "",
-      });
-
-      setGradebookRefreshKey((current) => current + 1);
-    } catch (requestError) {
-      console.error("SUBMIT INC COMPLETION ERROR:", requestError);
-
-      setIncError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to submit INC completion request.",
-      );
-    } finally {
-      setIncSubmitting(false);
-    }
-  };
-
   const refreshGradebook = () => {
     setGradebookRefreshKey((current) => current + 1);
   };
@@ -3417,8 +3850,8 @@ export default function EnterGrades() {
             <h1>Enter Grades</h1>
 
             <p>
-              Encode and submit grades for students with official Approved
-              enrollment in your assigned classes.
+              Record assessments and attendance, then review the calculated
+              Midterm, Final Term and semester grades.
             </p>
           </div>
 
@@ -3798,9 +4231,8 @@ export default function EnterGrades() {
                     <span>Official Class Record</span>
                     <h2>Class Gradebook</h2>
                     <p>
-                      View recorded grades and encode assessment scores for
-                      eligible students. Legacy percentage entry remains
-                      read-only.
+                      Enter assessment scores and view backend-calculated
+                      grades. Existing official results stay read-only.
                     </p>
                   </div>
                 </div>
@@ -3931,28 +4363,21 @@ export default function EnterGrades() {
                     <table
                       className="faculty-grade-table"
                       style={{
-                        minWidth: 1910 + termAssessmentColumns.length * 185,
+                        minWidth: 860 + termAssessmentColumns.length * 185,
                       }}
                     >
                       <thead>
                         <tr>
                           <th>Student</th>
-                          <th>Outcome</th>
-                          <th>Midterm %</th>
-                          <th>Final Term %</th>
-                          <th>Overall %</th>
-                          <th>Final Rating</th>
-                          <th>Result</th>
-                          <th>Reason</th>
-                          <th>Status</th>
-                          <th>Program Head Review</th>
-                          <th>Actions</th>
+                          <th>Academic Status</th>
+                          <th>Official Record</th>
+                          <th>Grade Calculation</th>
                           {termAssessmentColumns.map(
                             ({ category, assessment }) => (
                               <th
                                 key={`${category.category_code}:${assessment?.assessment_id ?? "none"}`}
                                 title={`${category.category_name} · ${category.category_percent}%`}
-                                style={{ width: 185, minWidth: 185 }}
+                                style={{ minWidth: 185 }}
                               >
                                 <div>
                                   {category.category_name} ·{" "}
@@ -3962,50 +4387,25 @@ export default function EnterGrades() {
                                   {assessment
                                     ? `${assessment.header_name} (Max ${assessment.maximum_score})`
                                     : category.category_code === "ATTENDANCE"
-                                      ? "Per-meeting attendance"
-                                      : "No assessment yet"}
+                                      ? "Attendance per meeting"
+                                      : "No assessments yet"}
                                 </small>
                               </th>
                             ),
                           )}
                         </tr>
                       </thead>
-
                       <tbody>
                         {filteredStudents.map((student) => {
                           const id = student.enrollment_subject_id;
-                          const form =
-                            forms[id] || createGradeForm(student.grade);
-                          const editable = isEditable(student);
-                          const isSaving = savingId === id;
-                          const isSubmitting = submittingId === id;
-                          const busy = isSaving || isSubmitting;
+                          const record =
+                            modernStudentByEnrollmentSubject.get(id);
                           const status = getGradeStatus(student);
-                          const feedback = rowFeedback[id];
-                          const preview = calculateGradePreview(form);
-
-                          const useStoredResult =
-                            !editable && Boolean(student.grade);
-
-                          const overallPercentage = useStoredResult
-                            ? (student.grade?.overall_percentage ?? null)
-                            : preview.overallPercentage;
-
-                          const finalRating = useStoredResult
-                            ? (student.grade?.final_rating ?? null)
-                            : preview.finalRating;
-
-                          const resultRemark = useStoredResult
-                            ? (student.grade?.remarks ?? null)
-                            : preview.remarks;
-
                           return (
                             <tr
                               key={id}
                               className={
-                                student.grade?.grade_status === "Returned"
-                                  ? "returned-row"
-                                  : ""
+                                status === "Returned" ? "returned-row" : ""
                               }
                             >
                               <td>
@@ -4013,326 +4413,65 @@ export default function EnterGrades() {
                                   <span className="faculty-grade-student__avatar">
                                     <UserRound size={16} />
                                   </span>
-
                                   <div>
                                     <strong>{student.full_name}</strong>
                                     <span>{student.student_number}</span>
-                                    <small>
-                                      Enrollment Subject #
-                                      {student.enrollment_subject_id}
-                                    </small>
+                                    <small>Enrollment Subject #{id}</small>
                                   </div>
                                 </div>
                               </td>
-
-                              <td>
-                                <select
-                                  className="faculty-grade-remarks"
-                                  value={form.gradingOutcome}
-                                  onChange={(event) =>
-                                    updateForm(
-                                      id,
-                                      "gradingOutcome",
-                                      event.target.value as GradeOutcome,
-                                    )
-                                  }
-                                  disabled={!editable || busy}
-                                  aria-label={`Grade outcome for ${student.full_name}`}
-                                >
-                                  <option value="NUMERIC">Numeric Grade</option>
-                                  <option value="INCOMPLETE">Incomplete</option>
-                                  <option value="UNOFFICIAL_DROP">
-                                    Unofficial Drop
-                                  </option>
-                                </select>
-                              </td>
-
-                              <td>
-                                <input
-                                  className="faculty-grade-input"
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  step="0.01"
-                                  value={form.midtermGrade}
-                                  onChange={(event) =>
-                                    updateForm(
-                                      id,
-                                      "midtermGrade",
-                                      event.target.value,
-                                    )
-                                  }
-                                  disabled={
-                                    !editable ||
-                                    busy ||
-                                    form.gradingOutcome !== "NUMERIC"
-                                  }
-                                  placeholder={
-                                    form.gradingOutcome === "NUMERIC"
-                                      ? "0-100"
-                                      : "—"
-                                  }
-                                  aria-label={`Midterm percentage for ${student.full_name}`}
-                                />
-                              </td>
-
-                              <td>
-                                <input
-                                  className="faculty-grade-input"
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  step="0.01"
-                                  value={form.finalGrade}
-                                  onChange={(event) =>
-                                    updateForm(
-                                      id,
-                                      "finalGrade",
-                                      event.target.value,
-                                    )
-                                  }
-                                  disabled={
-                                    !editable ||
-                                    busy ||
-                                    form.gradingOutcome !== "NUMERIC"
-                                  }
-                                  placeholder={
-                                    form.gradingOutcome === "NUMERIC"
-                                      ? "0-100"
-                                      : "—"
-                                  }
-                                  aria-label={`Final Term percentage for ${student.full_name}`}
-                                />
-                              </td>
-
-                              <td>
-                                <div className="faculty-grade-rating-field">
-                                  <strong>
-                                    {overallPercentage !== null
-                                      ? overallPercentage.toFixed(3)
-                                      : "—"}
-                                  </strong>
-                                  <small>Automatic 50/50 average</small>
-                                </div>
-                              </td>
-
-                              <td>
-                                <div className="faculty-grade-rating-field">
-                                  <strong>
-                                    {finalRating !== null
-                                      ? Number(finalRating).toFixed(2)
-                                      : "—"}
-                                  </strong>
-                                  <small>Automatic</small>
-                                </div>
-                              </td>
-
-                              <td>
-                                <div className="faculty-grade-rating-field">
-                                  <strong>{resultRemark || "—"}</strong>
-                                  <small>Calculated by policy</small>
-                                </div>
-                              </td>
-
-                              <td>
-                                {form.gradingOutcome === "NUMERIC" ? (
-                                  <span className="faculty-grade-no-review">
-                                    Not required
-                                  </span>
-                                ) : (
-                                  <input
-                                    className="faculty-grade-remarks"
-                                    type="text"
-                                    maxLength={500}
-                                    value={form.outcomeReason}
-                                    onChange={(event) =>
-                                      updateForm(
-                                        id,
-                                        "outcomeReason",
-                                        event.target.value,
-                                      )
-                                    }
-                                    disabled={!editable || busy}
-                                    placeholder={
-                                      form.gradingOutcome === "INCOMPLETE"
-                                        ? "Reason for incomplete..."
-                                        : "Reason for unofficial drop..."
-                                    }
-                                    aria-label={`Outcome reason for ${student.full_name}`}
-                                  />
-                                )}
-                              </td>
-
                               <td>
                                 <div className="faculty-grade-status-cell">
+                                  <strong>{student.subject_status}</strong>
                                   <span
-                                    className={`faculty-grade-status ${status
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")}`}
+                                    className={`faculty-grade-status ${status.toLowerCase().replace(/\s+/g, "-")}`}
                                   >
                                     {status}
                                   </span>
-
-                                  {student.grade?.submitted_at && (
-                                    <small>
-                                      Submitted{" "}
-                                      {formatDateTime(
-                                        student.grade.submitted_at,
-                                      )}
-                                    </small>
-                                  )}
                                 </div>
                               </td>
-
                               <td>
-                                {student.grade?.review?.review_remarks ? (
-                                  <div className="faculty-grade-review">
-                                    <span className="faculty-grade-review__icon">
-                                      <MessageSquareText size={14} />
-                                    </span>
-
-                                    <div>
-                                      <strong>
-                                        {student.grade.review
-                                          .reviewed_by_username ||
-                                          "Program Head"}
-                                      </strong>
-                                      <p>
-                                        {student.grade.review.review_remarks}
-                                      </p>
-                                      <small>
-                                        {formatDateTime(
-                                          student.grade.review.reviewed_at,
-                                        )}
-                                      </small>
-                                    </div>
-                                  </div>
-                                ) : student.grade?.grade_status ===
-                                  "Approved" ? (
-                                  <div className="faculty-grade-review approved">
-                                    <span className="faculty-grade-review__icon">
-                                      <CheckCircle2 size={14} />
-                                    </span>
-
-                                    <div>
-                                      <strong>Approved</strong>
-                                      <small>
-                                        {formatDateTime(
-                                          student.grade.review.reviewed_at,
-                                        )}
-                                      </small>
-                                    </div>
-                                  </div>
+                                <div className="faculty-grade-rating-field">
+                                  <strong>
+                                    {student.grade?.final_rating == null
+                                      ? "—"
+                                      : Number(
+                                          student.grade.final_rating,
+                                        ).toFixed(2)}
+                                  </strong>
+                                  <small>
+                                    {status === "Approved"
+                                      ? "Approved record · Read-only"
+                                      : "Historical / submission record"}
+                                  </small>
+                                </div>
+                              </td>
+                              <td>
+                                {record?.is_current_enrolled ? (
+                                  <button
+                                    type="button"
+                                    className="faculty-grade-header-button"
+                                    onClick={() => {
+                                      setPreviewStudentId(id);
+                                      setSemesterSubmissionError("");
+                                      setSemesterSubmissionMessage("");
+                                    }}
+                                    aria-pressed={previewStudentId === id}
+                                  >
+                                    <BookOpenCheck size={14} />
+                                    {previewStudentId === id
+                                      ? "Selected"
+                                      : "View Calculation"}
+                                  </button>
                                 ) : (
-                                  <span className="faculty-grade-no-review">
-                                    No review yet
+                                  <span className="faculty-grade-locked">
+                                    <ShieldCheck size={13} /> Official record
+                                    protected
                                   </span>
                                 )}
                               </td>
-
-                              <td>
-                                <div className="faculty-grade-actions">
-                                  {editable ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="faculty-grade-save"
-                                        onClick={() => void saveDraft(student)}
-                                        disabled={busy}
-                                      >
-                                        <Save size={13} />
-                                        {isSaving
-                                          ? "Saving..."
-                                          : student.grade?.grade_status ===
-                                              "Returned"
-                                            ? "Save Correction"
-                                            : "Save Draft"}
-                                      </button>
-
-                                      <button
-                                        type="button"
-                                        className="faculty-grade-submit"
-                                        onClick={() =>
-                                          void submitGrade(student)
-                                        }
-                                        disabled={busy}
-                                      >
-                                        <Send size={13} />
-                                        {isSubmitting
-                                          ? "Submitting..."
-                                          : student.grade?.grade_status ===
-                                              "Returned"
-                                            ? "Resubmit"
-                                            : "Submit Grade"}
-                                      </button>
-                                    </>
-                                  ) : isApprovedIncomplete(student) &&
-                                    student.inc_completion_request ? (
-                                    <>
-                                      <span
-                                        className={`faculty-grade-inc-request-status ${getIncCompletionStatusClass(
-                                          student.inc_completion_request,
-                                        )}`}
-                                      >
-                                        <Clock3 size={13} />
-                                        {getIncCompletionStatusLabel(
-                                          student.inc_completion_request,
-                                        )}
-                                      </span>
-
-                                      <span className="faculty-grade-locked">
-                                        <ShieldCheck size={13} />
-                                        Approved INC · Request #
-                                        {
-                                          student.inc_completion_request
-                                            .grade_change_request_id
-                                        }
-                                      </span>
-                                    </>
-                                  ) : isApprovedIncomplete(student) ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="faculty-grade-inc-complete"
-                                        onClick={() =>
-                                          openIncCompletion(student)
-                                        }
-                                      >
-                                        <FilePenLine size={13} />
-                                        Complete INC
-                                      </button>
-
-                                      <span className="faculty-grade-locked">
-                                        <ShieldCheck size={13} />
-                                        Approved INC
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="faculty-grade-locked">
-                                      <ShieldCheck size={13} />
-                                      {student.subject_status !== "Enrolled"
-                                        ? `Academic result: ${student.subject_status}`
-                                        : status === "Submitted"
-                                          ? "Waiting for Program Head"
-                                          : status === "Approved"
-                                            ? "Official grade locked"
-                                            : "Locked"}
-                                    </span>
-                                  )}
-
-                                  {feedback && (
-                                    <div
-                                      className={`faculty-grade-feedback ${feedback.type}`}
-                                    >
-                                      {feedback.message}
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
                               {termAssessmentColumns.map(
                                 ({ category, assessment }) => {
-                                  const record =
-                                    modernStudentByEnrollmentSubject.get(id);
                                   const score = assessment
                                     ? (record?.scores_by_assessment_id[
                                         String(assessment.assessment_id)
@@ -4345,10 +4484,16 @@ export default function EnterGrades() {
                                     [127, 128, 130, 131].includes(
                                       selectedOfferingId ?? -1,
                                     ) &&
-                                    status !== "Submitted" &&
-                                    status !== "Approved",
+                                    (status === "Not Started" ||
+                                      status === "Draft" ||
+                                      (status === "Returned" &&
+                                        previewStudentId === id &&
+                                        returnedSubmission !== null &&
+                                        (returnedSubmission.returned_edit_scope ===
+                                          "BOTH" ||
+                                          returnedSubmission.returned_edit_scope ===
+                                            assessmentTerm))),
                                   );
-
                                   return (
                                     <td
                                       key={`${category.category_code}:${assessment?.assessment_id ?? "none"}`}
@@ -4374,14 +4519,14 @@ export default function EnterGrades() {
                                               ? "Not on roster"
                                               : category.category_code ===
                                                   "ATTENDANCE"
-                                                ? "Tracked by meeting"
+                                                ? "Attendance"
                                                 : "Not configured"}
                                           </strong>
                                           <small>
                                             {category.category_code ===
                                             "ATTENDANCE"
-                                              ? "Separate attendance register"
-                                              : "Assessment not created"}
+                                              ? "Use attendance register"
+                                              : "No assessment column"}
                                           </small>
                                         </div>
                                       )}
@@ -4395,6 +4540,367 @@ export default function EnterGrades() {
                       </tbody>
                     </table>
                   </div>
+                  {previewStudentId !== null && (
+                    <div
+                      className="faculty-gradebook-table-meta"
+                      style={{ display: "block" }}
+                    >
+                      <strong>Calculated Semester Grade</strong>
+                      {modernPreviewLoading && <p>Calculating grades...</p>}
+                      {modernPreviewError && (
+                        <p role="alert">{modernPreviewError}</p>
+                      )}
+                      {modernPreview &&
+                        modernPreview.student.enrollment_subject_id ===
+                          previewStudentId && (
+                          <div>
+                            <p>
+                              <strong>
+                                {modernPreview.student.student_name}
+                              </strong>{" "}
+                              · {modernPreview.student.student_number}
+                            </p>
+                            <div
+                              className="faculty-grade-summary"
+                              style={{ margin: "12px 0" }}
+                            >
+                              {(["MIDTERM", "FINAL_TERM"] as const).map(
+                                (value) => (
+                                  <article
+                                    key={value}
+                                    className="faculty-grade-summary-card faculty-grade-summary-card--total"
+                                  >
+                                    <div>
+                                      <small>
+                                        {value === "MIDTERM"
+                                          ? "Midterm · 50%"
+                                          : "Final Term · 50%"}
+                                      </small>
+                                      <strong>
+                                        {modernPreview.terms[value]
+                                          .term_percentage?.display ?? "—"}
+                                        %
+                                      </strong>
+                                      <span>
+                                        {modernPreview.terms[value].state}
+                                      </span>
+                                    </div>
+                                  </article>
+                                ),
+                              )}
+                              <article className="faculty-grade-summary-card faculty-grade-summary-card--approved">
+                                <div>
+                                  <small>Semester Result</small>
+                                  <strong>
+                                    {modernPreview.semester.semester_percentage
+                                      ?.display ?? "—"}
+                                    %
+                                  </strong>
+                                  <span>{modernPreview.semester.state}</span>
+                                </div>
+                              </article>
+                              <article className="faculty-grade-summary-card faculty-grade-summary-card--draft">
+                                <div>
+                                  <small>Numeric Equivalent</small>
+                                  <strong>
+                                    {modernPreview.semester
+                                      .numeric_equivalent ?? "—"}
+                                  </strong>
+                                  <span>
+                                    {modernPreview.semester.pass_fail ??
+                                      "Not complete"}
+                                  </span>
+                                </div>
+                              </article>
+                            </div>
+                            <table className="faculty-grade-table">
+                              <thead>
+                                <tr>
+                                  <th>Term</th>
+                                  <th>Category</th>
+                                  <th>Weight</th>
+                                  <th>Category %</th>
+                                  <th>Contribution</th>
+                                  <th>Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(["MIDTERM", "FINAL_TERM"] as const).flatMap(
+                                  (value) =>
+                                    modernPreview.terms[value].categories.map(
+                                      (category) => (
+                                        <tr
+                                          key={`${value}:${category.category_code}`}
+                                        >
+                                          <td>
+                                            {value === "MIDTERM"
+                                              ? "Midterm"
+                                              : "Final Term"}
+                                          </td>
+                                          <td>{category.category_name}</td>
+                                          <td>
+                                            {category.category_weight_percent}%
+                                          </td>
+                                          <td>
+                                            {category.category_percentage
+                                              ?.display ?? "—"}
+                                          </td>
+                                          <td>
+                                            {category
+                                              .contribution_percent_points
+                                              ?.display ?? "—"}
+                                          </td>
+                                          <td>
+                                            {category.state.replaceAll(
+                                              "_",
+                                              " ",
+                                            )}
+                                          </td>
+                                        </tr>
+                                      ),
+                                    ),
+                                )}
+                              </tbody>
+                            </table>
+                            {students.some(
+                              (student) =>
+                                student.enrollment_subject_id ===
+                                  previewStudentId &&
+                                student.grade?.grade_status === "Returned",
+                            ) && (
+                              <div className="faculty-gradebook-table-meta">
+                                <div>
+                                  <strong>
+                                    {returnedSpecialSubmission &&
+                                      selectedOfferingId &&
+                                      selectedClass?.offering_status ===
+                                        "Open" &&
+                                      modernStudentByEnrollmentSubject.get(
+                                        previewStudentId,
+                                      )?.is_current_enrolled &&
+                                      students.some(
+                                        (student) =>
+                                          student.enrollment_subject_id ===
+                                            previewStudentId &&
+                                          student.grade?.grade_status ===
+                                            "Returned",
+                                      ) && (
+                                        <ReturnedSpecialOutcomeResubmission
+                                          key={`${selectedOfferingId}:${previewStudentId}:${returnedSpecialSubmission.previous.submission_id}`}
+                                          offeringId={selectedOfferingId}
+                                          student={
+                                            students.find(
+                                              (student) =>
+                                                student.enrollment_subject_id ===
+                                                previewStudentId,
+                                            )!
+                                          }
+                                          previous={
+                                            returnedSpecialSubmission.previous
+                                          }
+                                          original={
+                                            returnedSpecialSubmission.original
+                                          }
+                                          onSubmitted={(submissionId) => {
+                                            setResubmissionMessage(
+                                              `Revised special-outcome submission #${submissionId} saved for Program Head review.`,
+                                            );
+
+                                            setGradebookRefreshKey(
+                                              (value) => value + 1,
+                                            );
+                                            setModernPreviewRefreshKey(
+                                              (value) => value + 1,
+                                            );
+                                          }}
+                                        />
+                                      )}
+                                    {students.some(
+                                      (student) =>
+                                        student.enrollment_subject_id ===
+                                          previewStudentId &&
+                                        student.grade?.grade_status ===
+                                          "Returned" &&
+                                        [
+                                          "INCOMPLETE",
+                                          "UNOFFICIAL_DROP",
+                                        ].includes(
+                                          student.grade.grading_outcome ?? "",
+                                        ),
+                                    ) &&
+                                      !returnedSpecialSubmission && (
+                                        <div className="faculty-gradebook-table-meta">
+                                          <strong>Returned INC / UD</strong>
+
+                                          <p>
+                                            {latestCombinedLoading
+                                              ? "Checking return evidence..."
+                                              : latestCombinedError ||
+                                                "Special-outcome evidence resubmission is unavailable for this student. Editing is locked."}
+                                          </p>
+                                        </div>
+                                      )}
+                                    Returned Grade — Revise and Resubmit
+                                  </strong>
+
+                                  {latestCombinedLoading ? (
+                                    <p>Checking return instructions...</p>
+                                  ) : returnedSubmission ? (
+                                    <>
+                                      <p>
+                                        Editable scope:{" "}
+                                        {returnedSubmission.returned_edit_scope ===
+                                        "BOTH"
+                                          ? "Midterm and Final Term"
+                                          : returnedSubmission.returned_edit_scope ===
+                                              "MIDTERM"
+                                            ? "Midterm only"
+                                            : "Final Term only"}
+                                      </p>
+
+                                      <p>
+                                        {returnedSubmission.review_remarks ||
+                                          "See Program Head comments."}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <p>
+                                      Returned submission details are
+                                      unavailable. Editing is locked.
+                                    </p>
+                                  )}
+
+                                  {latestCombinedError && (
+                                    <p role="alert">{latestCombinedError}</p>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  className="faculty-grade-header-button"
+                                  disabled={
+                                    !returnedSubmission ||
+                                    resubmittingCombined ||
+                                    modernPreviewLoading ||
+                                    modernPreview.semester.state !== "READY" ||
+                                    modernPreview.terms.MIDTERM.state !==
+                                      "READY" ||
+                                    modernPreview.terms.FINAL_TERM.state !==
+                                      "READY"
+                                  }
+                                  onClick={() =>
+                                    void resubmitReturnedSemester()
+                                  }
+                                >
+                                  <Send size={15} />
+                                  {resubmittingCombined
+                                    ? "Validating..."
+                                    : "Resubmit Semester Grade"}
+                                </button>
+                              </div>
+                            )}
+
+                            {resubmissionError && (
+                              <p role="alert">{resubmissionError}</p>
+                            )}
+
+                            {resubmissionMessage && (
+                              <p role="status">{resubmissionMessage}</p>
+                            )}
+                            {selectedOfferingId === 130 &&
+                              [277, 334].includes(previewStudentId) &&
+                              selectedClass?.offering_status === "Open" &&
+                              modernStudentByEnrollmentSubject.get(
+                                previewStudentId,
+                              )?.is_current_enrolled &&
+                              students.some(
+                                (student) =>
+                                  student.enrollment_subject_id ===
+                                    previewStudentId && student.grade === null,
+                              ) && (
+                                <SpecialOutcomeSubmission
+                                  key={`${selectedOfferingId}:${previewStudentId}`}
+                                  offeringId={selectedOfferingId}
+                                  student={
+                                    students.find(
+                                      (student) =>
+                                        student.enrollment_subject_id ===
+                                        previewStudentId,
+                                    )!
+                                  }
+                                  onSubmitted={() => {
+                                    setGradebookRefreshKey(
+                                      (value) => value + 1,
+                                    );
+                                    setModernPreviewRefreshKey(
+                                      (value) => value + 1,
+                                    );
+                                  }}
+                                />
+                              )}
+                            <div className="faculty-gradebook-table-meta">
+                              <div>
+                                <strong>Combined Semester Submission</strong>
+                                <p>
+                                  New submissions include both grading terms and
+                                  are checked against saved scores and
+                                  attendance.
+                                </p>
+                              </div>
+
+                              {students.some(
+                                (student) =>
+                                  student.enrollment_subject_id ===
+                                    previewStudentId && student.grade !== null,
+                              ) ? (
+                                <small>
+                                  Existing grade record protected. New
+                                  first-time submission is unavailable for this
+                                  student.
+                                </small>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="faculty-grade-header-button"
+                                  disabled={
+                                    semesterSubmitting ||
+                                    modernPreviewLoading ||
+                                    modernPreview.semester.state !== "READY" ||
+                                    modernPreview.terms.MIDTERM.state !==
+                                      "READY" ||
+                                    modernPreview.terms.FINAL_TERM.state !==
+                                      "READY" ||
+                                    selectedClass?.offering_status !== "Open" ||
+                                    !modernStudentByEnrollmentSubject.get(
+                                      previewStudentId,
+                                    )?.is_current_enrolled
+                                  }
+                                  onClick={() => void submitCombinedSemester()}
+                                >
+                                  <Send size={15} />
+                                  {semesterSubmitting
+                                    ? "Validating / Submitting..."
+                                    : "Submit Semester Grade"}
+                                </button>
+                              )}
+                            </div>
+
+                            {semesterSubmissionError && (
+                              <p role="alert">{semesterSubmissionError}</p>
+                            )}
+
+                            {semesterSubmissionMessage && (
+                              <p role="status">{semesterSubmissionMessage}</p>
+                            )}
+                            <p>
+                              {modernPreview.semester.state === "READY"
+                                ? "All required categories are complete. This is a calculated preview, not an official submitted grade."
+                                : "Complete all required Midterm and Final Term assessments and attendance before submission."}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  )}
                 </>
               )}
             </section>
@@ -4408,6 +4914,9 @@ export default function EnterGrades() {
               key={selectedOfferingId}
               offeringId={selectedOfferingId}
               refreshKey={gradebookRefreshKey}
+              onAttendanceSaved={() =>
+                setModernPreviewRefreshKey((current) => current + 1)
+              }
               readOnlyStudentIds={students
                 .filter((student) =>
                   ["Approved", "Submitted"].includes(
@@ -4415,78 +4924,35 @@ export default function EnterGrades() {
                   ),
                 )
                 .map((student) => student.enrollment_subject_id)}
+              returnedStudentIds={students
+                .filter((student) => student.grade?.grade_status === "Returned")
+                .map((student) => student.enrollment_subject_id)}
+              returnedPermission={
+                returnedSubmission && previewStudentId
+                  ? {
+                      enrollmentSubjectId: previewStudentId,
+                      scope: returnedSubmission.returned_edit_scope as
+                        | AssessmentTerm
+                        | "BOTH",
+                    }
+                  : null
+              }
             />
           )}
         {!classesLoading && classes.length > 0 && (
           <section className="faculty-grade-workflow-section">
             <header>
               <div>
-                <span>Grade Submission Process</span>
+                <span>Assessment-Based Grading</span>
                 <h2>Faculty Grade Workflow</h2>
                 <p>
-                  Follow the normal grading sequence before a grade becomes an
-                  official academic result.
+                  Enter assessment scores, record held-meeting attendance,
+                  review the Midterm and Final Term calculation, and submit the
+                  combined semester grade through the authorized backend
+                  workflow.
                 </p>
               </div>
             </header>
-
-            <div className="faculty-grade-workflow">
-              <article>
-                <span className="faculty-grade-workflow__number">01</span>
-                <span className="faculty-grade-workflow__icon">
-                  <FilePenLine size={17} />
-                </span>
-                <div>
-                  <strong>Encode</strong>
-                  <p>
-                    Choose Numeric Grade for normal 0–100 Midterm and Final Term
-                    encoding, or choose Incomplete / Unofficial Drop and provide
-                    a required reason. Final Rating and Result are calculated
-                    automatically by policy.
-                  </p>
-                </div>
-              </article>
-
-              <article>
-                <span className="faculty-grade-workflow__number">02</span>
-                <span className="faculty-grade-workflow__icon">
-                  <Save size={17} />
-                </span>
-                <div>
-                  <strong>Save Draft</strong>
-                  <p>
-                    Keep unfinished grade records editable before submission.
-                  </p>
-                </div>
-              </article>
-
-              <article>
-                <span className="faculty-grade-workflow__number">03</span>
-                <span className="faculty-grade-workflow__icon">
-                  <Send size={17} />
-                </span>
-                <div>
-                  <strong>Submit</strong>
-                  <p>
-                    Lock the grade and send it to the Program Head for review.
-                  </p>
-                </div>
-              </article>
-
-              <article>
-                <span className="faculty-grade-workflow__number">04</span>
-                <span className="faculty-grade-workflow__icon">
-                  <BadgeCheck size={17} />
-                </span>
-                <div>
-                  <strong>Review</strong>
-                  <p>
-                    The Program Head approves the grade or returns it for
-                    correction.
-                  </p>
-                </div>
-              </article>
-            </div>
           </section>
         )}
 
@@ -4761,346 +5227,6 @@ export default function EnterGrades() {
                           : "Remove Assessment"}
                   </button>
                 )}
-              </footer>
-            </section>
-          </div>
-        )}
-
-        {submitStudent && submitModalForm && submitModalPreview && (
-          <div
-            className="faculty-inc-modal-backdrop"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                closeSubmitModal();
-              }
-            }}
-          >
-            <section
-              className="faculty-inc-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="faculty-submit-grade-modal-title"
-            >
-              <header className="faculty-inc-modal__header">
-                <div>
-                  <span>Grade Submission</span>
-                  <h2 id="faculty-submit-grade-modal-title">
-                    Confirm Grade Submission
-                  </h2>
-                  <p>
-                    Review the grade details before sending this record to the
-                    Program Head.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className="faculty-inc-modal__close"
-                  onClick={closeSubmitModal}
-                  disabled={
-                    submittingId === submitStudent.enrollment_subject_id
-                  }
-                  aria-label="Close grade submission modal"
-                >
-                  <X size={18} />
-                </button>
-              </header>
-
-              <div className="faculty-inc-modal__student">
-                <div>
-                  <small>Student</small>
-                  <strong>{submitStudent.full_name}</strong>
-                  <span>{submitStudent.student_number}</span>
-                </div>
-
-                <div>
-                  <small>Class</small>
-                  <strong>
-                    {selectedClass
-                      ? `${selectedClass.subject.subject_code} — ${selectedClass.section.section_name}`
-                      : "Selected Class"}
-                  </strong>
-                  <span>
-                    {selectedClass
-                      ? `${selectedClass.academic_period.academic_year} / ${selectedClass.academic_period.semester_name}`
-                      : "Current gradebook"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="faculty-inc-modal__preview">
-                <div>
-                  <small>Outcome</small>
-                  <strong>{submitModalOutcomeLabel}</strong>
-                </div>
-
-                <div>
-                  <small>Final Rating</small>
-                  <strong>
-                    {submitModalPreview.finalRating !== null
-                      ? submitModalPreview.finalRating.toFixed(2)
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <small>Result</small>
-                  <strong>{submitModalPreview.remarks || "—"}</strong>
-                </div>
-              </div>
-
-              {submitModalForm.gradingOutcome === "NUMERIC" ? (
-                <div className="faculty-inc-modal__student">
-                  <div>
-                    <small>Midterm Grade</small>
-                    <strong>{submitModalForm.midtermGrade || "—"}</strong>
-                    <span>Percentage grade</span>
-                  </div>
-
-                  <div>
-                    <small>Final Term Grade</small>
-                    <strong>{submitModalForm.finalGrade || "—"}</strong>
-                    <span>Percentage grade</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="faculty-inc-modal__notice">
-                  <MessageSquareText size={17} />
-                  <p>
-                    <strong>Reason:</strong>{" "}
-                    {submitModalForm.outcomeReason.trim() ||
-                      "No reason provided."}
-                  </p>
-                </div>
-              )}
-
-              {submitModalError && (
-                <div className="faculty-inc-modal__error" role="alert">
-                  <AlertCircle size={16} />
-                  <span>{submitModalError}</span>
-                </div>
-              )}
-
-              <div className="faculty-inc-modal__notice">
-                <ShieldCheck size={17} />
-                <p>
-                  After submission, Faculty cannot edit this grade unless the
-                  Program Head returns it for correction.
-                </p>
-              </div>
-
-              <footer className="faculty-inc-modal__footer">
-                <button
-                  type="button"
-                  className="faculty-inc-modal__cancel"
-                  onClick={closeSubmitModal}
-                  disabled={
-                    submittingId === submitStudent.enrollment_subject_id
-                  }
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className="faculty-inc-modal__submit"
-                  onClick={() => void confirmSubmitGrade()}
-                  disabled={
-                    submittingId === submitStudent.enrollment_subject_id
-                  }
-                >
-                  <Send size={15} />
-                  {submittingId === submitStudent.enrollment_subject_id
-                    ? "Submitting..."
-                    : "Submit Grade"}
-                </button>
-              </footer>
-            </section>
-          </div>
-        )}
-
-        {incStudent && (
-          <div
-            className="faculty-inc-modal-backdrop"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                closeIncCompletion();
-              }
-            }}
-          >
-            <section
-              className="faculty-inc-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="faculty-inc-modal-title"
-            >
-              <header className="faculty-inc-modal__header">
-                <div>
-                  <span>INC Completion</span>
-                  <h2 id="faculty-inc-modal-title">
-                    Complete Incomplete Grade
-                  </h2>
-                  <p>
-                    Enter the completed numeric grades after verifying the
-                    student's missing course requirement.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className="faculty-inc-modal__close"
-                  onClick={closeIncCompletion}
-                  disabled={incSubmitting}
-                  aria-label="Close INC completion modal"
-                >
-                  <X size={18} />
-                </button>
-              </header>
-
-              <div className="faculty-inc-modal__student">
-                <div>
-                  <small>Student</small>
-                  <strong>{incStudent.full_name}</strong>
-                  <span>{incStudent.student_number}</span>
-                </div>
-
-                <div>
-                  <small>Current Official Grade</small>
-                  <strong>4.00 — Incomplete</strong>
-                  <span>
-                    {incStudent.grade?.outcome_reason ||
-                      "No incomplete reason recorded."}
-                  </span>
-                </div>
-              </div>
-
-              <div className="faculty-inc-modal__form">
-                <label>
-                  <span>Midterm Grade</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={incForm.midtermGrade}
-                    onChange={(event) =>
-                      setIncForm((current) => ({
-                        ...current,
-                        midtermGrade: event.target.value,
-                      }))
-                    }
-                    disabled={incSubmitting}
-                    placeholder="0-100"
-                  />
-                </label>
-
-                <label>
-                  <span>Final Term Grade</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={incForm.finalGrade}
-                    onChange={(event) =>
-                      setIncForm((current) => ({
-                        ...current,
-                        finalGrade: event.target.value,
-                      }))
-                    }
-                    disabled={incSubmitting}
-                    placeholder="0-100"
-                  />
-                </label>
-              </div>
-
-              <div className="faculty-inc-modal__preview">
-                <div>
-                  <small>Overall</small>
-                  <strong>
-                    {incPreview.overallPercentage !== null
-                      ? incPreview.overallPercentage.toFixed(2)
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <small>Final Rating</small>
-                  <strong>
-                    {incPreview.finalRating !== null
-                      ? incPreview.finalRating.toFixed(2)
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <small>Result</small>
-                  <strong>{incPreview.remarks || "—"}</strong>
-                </div>
-              </div>
-
-              <label className="faculty-inc-modal__remarks">
-                <span>Completion Remarks</span>
-                <textarea
-                  value={incForm.completionRemarks}
-                  onChange={(event) =>
-                    setIncForm((current) => ({
-                      ...current,
-                      completionRemarks: event.target.value,
-                    }))
-                  }
-                  disabled={incSubmitting}
-                  rows={4}
-                  maxLength={1000}
-                  placeholder="Example: Student completed and passed the missing final activity submitted through Google Drive."
-                />
-                <small>
-                  Describe the completed requirement that you verified.
-                </small>
-              </label>
-
-              {incError && (
-                <div className="faculty-inc-modal__error" role="alert">
-                  <AlertCircle size={16} />
-                  <span>{incError}</span>
-                </div>
-              )}
-
-              <div className="faculty-inc-modal__notice">
-                <ShieldCheck size={17} />
-                <p>
-                  Submitting this does not immediately change the student's
-                  official grade. The request will first be sent to the Program
-                  Head for review, then to the Registrar for official
-                  processing.
-                </p>
-              </div>
-
-              <footer className="faculty-inc-modal__footer">
-                <button
-                  type="button"
-                  className="faculty-inc-modal__cancel"
-                  onClick={closeIncCompletion}
-                  disabled={incSubmitting}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className="faculty-inc-modal__submit"
-                  onClick={() => void submitIncCompletion()}
-                  disabled={
-                    incSubmitting ||
-                    !incPreview.complete ||
-                    !incForm.completionRemarks.trim()
-                  }
-                >
-                  <Send size={15} />
-                  {incSubmitting ? "Submitting..." : "Send to Program Head"}
-                </button>
               </footer>
             </section>
           </div>

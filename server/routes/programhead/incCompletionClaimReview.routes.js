@@ -1,6 +1,9 @@
 import express from "express";
 import db from "../../db.js";
-import { reviewModernIncClaim } from "../../services/gradebookModernIncSource.service.js";
+import {
+  readModernIncSource,
+  reviewModernIncClaim,
+} from "../../services/gradebookModernIncSource.service.js";
 const router = express.Router();
 const QA_DB = "databaseforptc1_admission_test";
 const QA_OFFERING_ID = 131;
@@ -70,6 +73,64 @@ async function assertQaDatabase(connection) {
       403,
     );
   }
+}
+
+// Verified INC Sheet Deadline
+async function readVerifiedIncSheetDeadline(connection, sheet) {
+  const verifiedFieldsPresent = Boolean(
+    sheet &&
+    ["IN_PROGRESS", "FINALIZED"].includes(sheet.sheet_status) &&
+    sheet.original_official_submitted_on &&
+    sheet.inc_completion_deadline_on &&
+    String(sheet.official_submission_reference ?? "").trim() &&
+    positiveInt(sheet.official_date_verified_by_user_id) &&
+    sheet.official_date_verified_at,
+  );
+
+  if (!verifiedFieldsPresent) {
+    return {
+      deadline: null,
+      verifiedFieldsPresent: false,
+      auditValid: false,
+    };
+  }
+
+  const [events] = await connection.execute(
+    `SELECT event_type, previous_record_version, record_version_after,
+            DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS original_date,
+            official_submission_reference, performed_by_user_id
+       FROM gradebook_official_sheet_submission_events
+      WHERE sheet_id = ?
+      ORDER BY record_version_after, event_id`,
+    [String(sheet.sheet_id)],
+  );
+
+  const recorded = events[0];
+  const verified = events[1];
+
+  const auditValid =
+    events.length === 2 &&
+    recorded.event_type === "RECORDED" &&
+    recorded.previous_record_version == null &&
+    Number(recorded.record_version_after) === 1 &&
+    Number(recorded.performed_by_user_id) > 0 &&
+    verified.event_type === "VERIFIED" &&
+    Number(verified.previous_record_version) === 1 &&
+    Number(verified.record_version_after) === 2 &&
+    Number(verified.performed_by_user_id) ===
+      Number(sheet.official_date_verified_by_user_id) &&
+    events.every(
+      (event) =>
+        event.original_date === sheet.original_official_submitted_on &&
+        event.official_submission_reference ===
+          sheet.official_submission_reference,
+    );
+
+  return {
+    deadline: auditValid ? sheet.inc_completion_deadline_on : null,
+    verifiedFieldsPresent: true,
+    auditValid,
+  };
 }
 
 async function activeProgramHead(connection, req) {
@@ -202,30 +263,85 @@ router.get("/", async (req, res) => {
       );
     }
     connection = await db.getConnection();
-    await assertQaDatabase(connection);
     const actor = await activeProgramHead(connection, req);
     const placeholders = actor.departments.map(() => "?").join(",");
     const statusWhere =
       verificationStatus === "ALL" ? "" : "AND cl.verification_status = ?";
-    const values = [QA_OFFERING_ID, ...actor.departments];
-    if (verificationStatus !== "ALL") values.push(verificationStatus);
+    const values = [...actor.departments];
+
+    if (verificationStatus !== "ALL") {
+      values.push(verificationStatus);
+    }
+
     const [rows] = await connection.execute(
-      `SELECT ${claimSelect} ${claimFrom}
-        WHERE so.offering_id = ? AND cr.department_id IN (${placeholders})
-        ${statusWhere}
-        ORDER BY cl.submitted_at DESC, cl.claim_id DESC LIMIT ${MAX_RESULTS}`,
+      `SELECT ${claimSelect},
+                 CASE
+            WHEN EXISTS (
+              SELECT 1
+                FROM gradebook_official_grade_publications pub
+               WHERE pub.grade_id = cl.grade_id
+                 AND pub.config_id = cfg.config_id
+                 AND pub.enrollment_subject_id = es.enrollment_subject_id
+                 AND pub.publication_source = 'COMBINED_SEMESTER'
+                 AND pub.grading_outcome_snapshot = 'INCOMPLETE'
+                 AND pub.combined_submission_id IS NOT NULL
+            ) THEN 'MODERN_COMBINED_INC'
+
+            WHEN NOT EXISTS (
+              SELECT 1
+                FROM gradebook_official_grade_publications pub
+               WHERE pub.grade_id = cl.grade_id
+            )
+            AND EXISTS (
+              SELECT 1
+                FROM gradebook_inc_outcome_requests inc
+               WHERE inc.config_id = cfg.config_id
+                 AND inc.enrollment_subject_id = es.enrollment_subject_id
+                 AND inc.request_status = 'APPROVED'
+            )
+            AND EXISTS (
+              SELECT 1
+                FROM gradebook_official_sheets sheet
+               WHERE sheet.config_id = cfg.config_id
+                 AND sheet.sheet_status = 'FINALIZED'
+            ) THEN 'HISTORICAL_INC'
+
+            ELSE 'SOURCE_NOT_CLASSIFIED'
+          END AS source_workflow
+
+     ${claimFrom}
+
+    WHERE cr.department_id IN (${placeholders})
+      ${statusWhere}
+
+    ORDER BY cl.submitted_at DESC, cl.claim_id DESC
+    LIMIT ${MAX_RESULTS}`,
       values,
     );
+
+    res.set("Cache-Control", "no-store");
+
     return res.json({
       success: true,
       read_only: true,
       reviewer_user_id: actor.userId,
-      offering_id: QA_OFFERING_ID,
+      offering_scope: "ASSIGNED_DEPARTMENTS",
+      offering_id: null,
       verification_status_filter: verificationStatus,
       count: rows.length,
       has_more: rows.length === MAX_RESULTS,
       claims: rows.map((row) => ({
         claim_id: String(row.claim_id),
+
+        offering_id: Number(row.offering_id),
+
+        source_workflow: row.source_workflow,
+
+        review_readiness_supported:
+          row.source_workflow === "MODERN_COMBINED_INC" ||
+          (row.source_workflow === "HISTORICAL_INC" &&
+            Number(row.offering_id) === QA_OFFERING_ID),
+
         grade_id: Number(row.grade_id),
         enrollment_subject_id: Number(row.enrollment_subject_id),
         student_id: Number(row.student_id),
@@ -262,13 +378,14 @@ router.get("/:claimId/review-readiness", async (req, res) => {
       );
     }
     connection = await db.getConnection();
-    await assertQaDatabase(connection);
+
     const actor = await activeProgramHead(connection, req);
     const placeholders = actor.departments.map(() => "?").join(",");
     const [rows] = await connection.execute(
       `SELECT ${claimSelect} ${claimFrom}
-        WHERE cl.claim_id = ? AND so.offering_id = ? AND cr.department_id IN (${placeholders})`,
-      [requestedClaimId, QA_OFFERING_ID, ...actor.departments],
+    WHERE cl.claim_id = ?
+      AND cr.department_id IN (${placeholders})`,
+      [requestedClaimId, ...actor.departments],
     );
     if (rows.length !== 1) {
       fail(
@@ -293,6 +410,257 @@ router.get("/:claimId/review-readiness", async (req, res) => {
         WHERE claim_id = ? ORDER BY claim_version_after, event_id`,
       [requestedClaimId],
     );
+    // Identify the official source before choosing the readiness workflow.
+    const [publications] = await connection.execute(
+      `SELECT publication_source, config_id, enrollment_subject_id,
+              grading_outcome_snapshot, combined_submission_id
+         FROM gradebook_official_grade_publications
+        WHERE grade_id = ?`,
+      [claim.grade_id],
+    );
+
+    const publication = publications[0] ?? null;
+
+    const isModernCombinedInc =
+      publications.length === 1 &&
+      publication.publication_source === "COMBINED_SEMESTER" &&
+      Number(publication.config_id) === claim.config_id &&
+      Number(publication.enrollment_subject_id) ===
+        claim.enrollment_subject_id &&
+      publication.grading_outcome_snapshot === "INCOMPLETE" &&
+      publication.combined_submission_id !== null;
+
+    if (isModernCombinedInc) {
+      const blockers = [];
+      const addBlocker = (code, message) => blockers.push({ code, message });
+
+      const reviewWritesEnabled =
+        process.env.GRADEBOOK_MODERN_INC_REVIEW_WRITES_ENABLED === "true";
+
+      const [instructors] = await connection.execute(
+        `SELECT f.user_id
+       FROM faculty f
+      WHERE f.faculty_id = ?`,
+        [row.offering_faculty_id],
+      );
+
+      const instructorUserId =
+        instructors.length === 1 ? positiveInt(instructors[0].user_id) : null;
+
+      let source = null;
+
+      if (!instructorUserId) {
+        addBlocker(
+          "MODERN_INC_INSTRUCTOR_MISSING",
+          "The assigned instructor could not be verified.",
+        );
+      } else {
+        try {
+          source = await readModernIncSource(
+            connection,
+            {
+              offeringId: claim.offering_id,
+              enrollmentSubjectId: claim.enrollment_subject_id,
+              actorUserId: instructorUserId,
+            },
+            { pilotOnly: false, readOnly: true },
+          );
+        } catch (error) {
+          if (
+            ![
+              "MODERN_INC_SOURCE_INVALID",
+              "GRADEBOOK_INSTRUCTOR_REQUIRED",
+            ].includes(error?.code)
+          ) {
+            throw error;
+          }
+
+          addBlocker(
+            "MODERN_INC_SOURCE_NOT_VERIFIED",
+            "The original combined INC grade, publication, " +
+              "finalized roster, or official-sheet evidence is inconsistent.",
+          );
+        }
+      }
+
+      // Claim Audit
+      const created = events[0] ?? null;
+      const latest = events.at(-1);
+
+      const auditValid =
+        events.length > 0 &&
+        events.length === claim.record_version &&
+        events.every(
+          (event, index) => Number(event.claim_version_after) === index + 1,
+        ) &&
+        created.event_type === "CREATED" &&
+        created.previous_status === null &&
+        created.new_status === "PENDING_VERIFICATION" &&
+        Number(created.claim_version_after) === 1 &&
+        Number(created.performed_by_user_id) === claim.submitted_by_user_id &&
+        created.new_claimed_completed_on === claim.claimed_completed_on &&
+        created.new_evidence_summary === row.evidence_summary &&
+        String(created.event_reason ?? "").trim().length >= 10 &&
+        Number(latest.claim_version_after) === claim.record_version &&
+        latest.new_status === claim.verification_status;
+
+      if (!auditValid) {
+        addBlocker(
+          "INC_COMPLETION_AUDIT_INCONSISTENT",
+          "Claim audit history does not match the stored claim.",
+        );
+      }
+
+      if (
+        claim.grade_change_request_id !== null ||
+        !instructorUserId ||
+        claim.submitted_by_user_id !== instructorUserId ||
+        (source && Number(source.grade.grade_id) !== claim.grade_id)
+      ) {
+        addBlocker(
+          "MODERN_INC_CLAIM_SOURCE_MISMATCH",
+          "The claim is not linked to the original assigned instructor and INC grade.",
+        );
+      }
+
+      if (
+        (source && claim.claimed_completed_on > source.sheet.today) ||
+        (claim.verification_status === "PENDING_VERIFICATION" &&
+          (claim.verified_completed_on !== null ||
+            claim.verified_by_user_id !== null ||
+            row.verified_at !== null))
+      ) {
+        addBlocker(
+          "MODERN_INC_CLAIM_STATE_INVALID",
+          "The stored completion date or pending verification fields are inconsistent.",
+        );
+      }
+
+      if (
+        claim.verification_status === "PENDING_VERIFICATION" &&
+        (claim.record_version !== 1 ||
+          events.length !== 1 ||
+          claim.verification_remarks !== null ||
+          String(row.evidence_summary ?? "").trim().length < 10)
+      ) {
+        addBlocker(
+          "MODERN_INC_INITIAL_CLAIM_INVALID",
+          "Only the original, unchanged pending claim can receive its first review.",
+        );
+      }
+
+      if (claim.verification_status !== "PENDING_VERIFICATION") {
+        addBlocker(
+          "INC_COMPLETION_CLAIM_NOT_PENDING",
+          "Only pending claims can receive an initial review.",
+        );
+      }
+
+      // Legacy Grade-Change Conflicts
+      const [conflictingRequests] = await connection.execute(
+        `SELECT grade_change_request_id
+       FROM grade_change_requests
+      WHERE grade_id = ?
+        AND status IN (
+          'Pending Program Head',
+          'For Registrar Processing'
+        )
+      LIMIT 1`,
+        [claim.grade_id],
+      );
+
+      if (conflictingRequests.length) {
+        addBlocker(
+          "INC_COMPLETION_LEGACY_REQUEST_PENDING",
+          "A separate pending grade-change request requires reconciliation.",
+        );
+      }
+
+      // Readiness reports write availability, but never performs a write.
+      if (!reviewWritesEnabled) {
+        addBlocker(
+          "MODERN_INC_REVIEW_WRITES_DISABLED",
+          "Program Head INC claim reviews are not enabled on this server.",
+        );
+      }
+
+      const deadline = source?.sheet.deadline ?? null;
+      const canReview = blockers.length === 0;
+
+      const claimedDateComparison = deadline
+        ? claim.claimed_completed_on <= deadline
+          ? "CLAIMED_ON_OR_BEFORE_DEADLINE"
+          : "CLAIMED_AFTER_DEADLINE"
+        : null;
+
+      res.set("Cache-Control", "no-store");
+
+      return res.json({
+        success: true,
+        read_only: true,
+
+        source_workflow: source ? "MODERN_COMBINED_INC" : "SOURCE_NOT_VERIFIED",
+
+        reviewer_user_id: actor.userId,
+        claim,
+        source_verified: source !== null,
+
+        source: source
+          ? {
+              publication_source: source.publication.publication_source,
+
+              publication_id: String(source.publication.publication_id),
+
+              combined_submission_id: String(source.attempt.submission_id),
+
+              roster_snapshot_id: String(source.original.roster_snapshot_id),
+
+              special_outcome_id: String(source.attempt.special_outcome_id),
+            }
+          : null,
+
+        official_grade: {
+          grade_id: claim.grade_id,
+          grade_status: row.grade_status,
+          grading_outcome: row.grading_outcome,
+          final_rating: String(row.final_rating),
+        },
+
+        initial_completion_reason: created?.event_reason ?? null,
+
+        official_sheet: {
+          sheet_id: source ? String(source.sheet.sheet_id) : null,
+
+          original_official_submitted_on: source?.sheet.original_date ?? null,
+
+          deadline_established: deadline !== null,
+          inc_completion_deadline_on: deadline,
+        },
+
+        claimed_date_comparison_only: claimedDateComparison,
+
+        review: {
+          can_review: canReview,
+          can_reject: canReview,
+          can_verify: canReview && deadline !== null,
+
+          blockers,
+          verification_blockers: [],
+
+          note:
+            "Readiness is not proof of completion. " +
+            "Review requires actual evidence, a verified completion date, " +
+            "and a separate protected write request.",
+        },
+
+        audit_events: events.map((event) => ({
+          ...event,
+          event_id: String(event.event_id),
+          claim_version_after: Number(event.claim_version_after),
+          performed_by_user_id: Number(event.performed_by_user_id),
+        })),
+      });
+    }
     const [sheets] = await connection.execute(
       `SELECT sheet_id, sheet_status,
               DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS original_official_submitted_on,
@@ -398,14 +766,23 @@ router.get("/:claimId/review-readiness", async (req, res) => {
       );
     }
     const sheet = sheets[0] ?? null;
-    const deadline = sheet?.inc_completion_deadline_on ?? null;
-    if (
-      !deadline ||
-      !String(sheet?.official_submission_reference ?? "").trim()
-    ) {
+
+    const sheetVerification = await readVerifiedIncSheetDeadline(
+      connection,
+      sheet,
+    );
+
+    const deadline = sheetVerification.deadline;
+
+    if (!sheetVerification.verifiedFieldsPresent) {
       addVerificationBlocker(
         "INC_COMPLETION_DEADLINE_UNVERIFIED",
-        "Registrar must verify the original official grading-sheet submission date before a timely/late decision.",
+        "Registrar must record the original grading-sheet date, and the Program Head must verify it before a timely/late decision.",
+      );
+    } else if (!sheetVerification.auditValid) {
+      addVerificationBlocker(
+        "INC_COMPLETION_SHEET_AUDIT_INVALID",
+        "The original sheet date or reference does not match the RECORDED and VERIFIED audit events.",
       );
     }
     const canReview = blockers.length === 0;
@@ -594,7 +971,6 @@ async function processDecision(req, res, decision) {
     connection = await db.getConnection();
     await connection.beginTransaction();
     inTransaction = true;
-    await assertQaDatabase(connection);
     const actor = await activeProgramHead(connection, req);
 
     // Locate first without exposing details from other departments or offerings.
@@ -611,8 +987,53 @@ async function processDecision(req, res, decision) {
         WHERE cl.claim_id = ?`,
       [requestedClaimId],
     );
-    // Modern combined INC review
-    if (previews.length === 1 && Number(previews[0].offering_id) === 130) {
+    // Modern INC review
+    const modernPreview = previews.length === 1 ? previews[0] : null;
+
+    // Confirm that the Program Head belongs to the claim's department.
+    if (
+      !modernPreview ||
+      !actor.departments.includes(Number(modernPreview.department_id))
+    ) {
+      fail(
+        "INC_COMPLETION_REVIEW_CLAIM_NOT_FOUND",
+        "Completion claim was not found in your assigned department.",
+        404,
+      );
+    }
+
+    // Identify modern INC claims using their official publication.
+    const [modernPublications] = await connection.execute(
+      `SELECT pub.publication_id
+     FROM gradebook_inc_completion_claims cl
+     JOIN gradebook_official_grade_publications pub
+       ON pub.grade_id = cl.grade_id
+    WHERE cl.claim_id = ?
+      AND pub.config_id = ?
+      AND pub.enrollment_subject_id = ?
+      AND pub.publication_source = 'COMBINED_SEMESTER'
+      AND pub.grading_outcome_snapshot = 'INCOMPLETE'
+      AND pub.combined_submission_id IS NOT NULL
+    LIMIT 1`,
+      [
+        requestedClaimId,
+        modernPreview.config_id,
+        modernPreview.enrollment_subject_id,
+      ],
+    );
+
+    if (modernPublications.length > 0) {
+      // Committed modern INC reviews require explicit rollout approval.
+      if (
+        input.dryRun !== true &&
+        process.env.GRADEBOOK_MODERN_INC_REVIEW_WRITES_ENABLED !== "true"
+      ) {
+        fail(
+          "MODERN_INC_REVIEW_WRITES_DISABLED",
+          "Program Head INC claim review writes are not enabled on this server.",
+          403,
+        );
+      }
       const result = await reviewModernIncClaim(
         connection,
         actor,
@@ -632,6 +1053,28 @@ async function processDecision(req, res, decision) {
 
       return res.status(200).json(result);
     }
+
+    // Prevent unsupported publications from entering historical review.
+    const [otherPublications] = await connection.execute(
+      `SELECT pub.publication_id
+         FROM gradebook_inc_completion_claims cl
+         JOIN gradebook_official_grade_publications pub
+           ON pub.grade_id = cl.grade_id
+        WHERE cl.claim_id = ? LIMIT 1`,
+      [requestedClaimId],
+    );
+
+    if (otherPublications.length > 0) {
+      fail(
+        "INC_COMPLETION_REVIEW_SOURCE_UNSUPPORTED",
+        "This claim's official publication cannot use the historical INC review workflow.",
+        409,
+      );
+    }
+
+    // Historical INC decisions remain restricted to the QA source.
+    await assertQaDatabase(connection);
+
     if (
       previews.length !== 1 ||
       Number(previews[0].offering_id) !== QA_OFFERING_ID ||
@@ -723,10 +1166,11 @@ async function processDecision(req, res, decision) {
         WHERE config_id = ? AND enrollment_subject_id = ? FOR UPDATE`,
       [configId, preview.enrollment_subject_id],
     );
-    if (outcomes.length !== 1 || outcomes[0].request_status !== "APPROVED") {
+    if (publications.length !== 0 || claim.offering_id !== QA_OFFERING_ID) {
       fail(
-        "INC_COMPLETION_REVIEW_OUTCOME_INELIGIBLE",
-        "An approved INC outcome request is required.",
+        "INC_COMPLETION_REVIEW_SOURCE_UNSUPPORTED",
+        "This claim has no supported official INC publication source.",
+        409,
       );
     }
     const [sheets] = await connection.execute(
@@ -840,18 +1284,28 @@ async function processDecision(req, res, decision) {
     }
 
     let nextStatus = "REJECTED";
-    const deadline = sheet?.inc_completion_deadline_on ?? null;
+
+    const sheetVerification = await readVerifiedIncSheetDeadline(
+      connection,
+      sheet,
+    );
+
+    const deadline = sheetVerification.deadline;
     const [[clock]] = await connection.execute(
       "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today",
     );
     if (decision === "VERIFY") {
-      if (
-        !deadline ||
-        !String(sheet?.official_submission_reference ?? "").trim()
-      ) {
+      if (!sheetVerification.verifiedFieldsPresent) {
         fail(
           "INC_COMPLETION_REVIEW_DEADLINE_UNVERIFIED",
-          "Registrar must verify the actual original grading-sheet date and its source reference before verification.",
+          "Registrar must record the original sheet date and reference; the Program Head must verify them first.",
+        );
+      }
+
+      if (!sheetVerification.auditValid) {
+        fail(
+          "INC_COMPLETION_REVIEW_SHEET_AUDIT_INVALID",
+          "Original official-sheet verification does not match its preserved RECORDED and VERIFIED audit events.",
         );
       }
       if (input.verifiedDate > clock.today) {

@@ -2,7 +2,6 @@ import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
 import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
-const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 const router = express.Router();
 
@@ -51,7 +50,24 @@ async function assertAssessmentTermEditable(
     error.status = 409;
     throw error;
   }
+  const [finalizedSheets] = await connection.execute(
+    `SELECT sheet_id
+     FROM gradebook_official_sheets
+    WHERE config_id = ? AND sheet_status = 'FINALIZED'
+    LIMIT 1`,
+    [configId],
+  );
 
+  if (finalizedSheets.length > 0) {
+    const error = new Error(
+      "Assessment structure is locked because the official grading sheet is finalized.",
+    );
+
+    error.code = "GRADEBOOK_OFFICIAL_SHEET_FINALIZED";
+    error.status = 409;
+
+    throw error;
+  }
   const [legacyLocks] = await connection.execute(
     "SELECT config_id FROM gradebook_structure_locks WHERE config_id = ? LIMIT 1",
     [configId],
@@ -168,7 +184,15 @@ router.get("/:offeringId/assessments", async (req, res) => {
         message: "This offering has no initialized gradebook.",
       });
     }
+    const [finalizedSheets] = await db.execute(
+      `SELECT sheet_id
+     FROM gradebook_official_sheets
+    WHERE config_id = ? AND sheet_status = 'FINALIZED'
+    LIMIT 1`,
+      [config.config_id],
+    );
 
+    const officialSheetFinalized = finalizedSheets.length > 0;
     const [legacyLocks] = await db.execute(
       "SELECT config_id FROM gradebook_structure_locks WHERE config_id = ? LIMIT 1",
       [config.config_id],
@@ -181,7 +205,10 @@ router.get("/:offeringId/assessments", async (req, res) => {
         WHERE es.offering_id = ? LIMIT 1`,
       [offeringId],
     );
-    const legacyLocked = legacyLocks.length > 0 || legacyAttempts.length > 0;
+    const legacyLocked =
+      officialSheetFinalized ||
+      legacyLocks.length > 0 ||
+      legacyAttempts.length > 0;
 
     const [termLocks] = await db.execute(
       `SELECT grading_term
@@ -301,6 +328,7 @@ router.get("/:offeringId/assessments", async (req, res) => {
       grading_policy: config.grading_policy,
       policy_version: config.policy_version,
       offering_status: config.offering_status,
+      official_sheet_finalized: officialSheetFinalized,
       structure_locked: structureLocked,
       can_edit_structure: !structureLocked && config.offering_status === "Open",
       term_structure_locked: termStructureLocked,
@@ -436,16 +464,6 @@ router.post("/:offeringId/assessments", async (req, res) => {
     });
   }
 
-  // Permanent writes remain limited to the verified test offering.
-  // Remove this test restriction only in a later production integration step.
-  if (!body.dry_run && !QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
-    return res.status(403).json({
-      success: false,
-      code: "TEST_OFFERING_ONLY",
-      message: "Committed assessment testing is limited to Offering #131.",
-    });
-  }
-
   const actorUserId = positiveId(req.user?.user_id);
   if (!actorUserId) {
     return res.status(401).json({
@@ -471,21 +489,18 @@ router.post("/:offeringId/assessments", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
-    // Assessment writes, including dry runs, remain QA-only.
-    await assertQaGradingDatabase(connection);
 
-    if (!body.dry_run) {
-      const [dbRows] = await connection.execute(
-        "SELECT DATABASE() AS database_name",
+    // Enable committed assessment creation only after rollout approval.
+    if (
+      !body.dry_run &&
+      process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
+    ) {
+      const error = new Error(
+        "Assessment creation is not enabled on this server.",
       );
-      if (dbRows[0]?.database_name !== "databaseforptc1_admission_test") {
-        const error = new Error(
-          "Committed test is disabled outside the admission-test database.",
-        );
-        error.code = "TEST_DATABASE_ONLY";
-        error.status = 403;
-        throw error;
-      }
+      error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
+      error.status = 403;
+      throw error;
     }
 
     // Serialize assessment structure changes against this offering.
@@ -825,16 +840,6 @@ router.patch("/:offeringId/assessments/:assessmentId", async (req, res) => {
     requestedMaximum = `${whole}.${decimals.padEnd(2, "0")}`;
   }
 
-  // During integration, permanent writes are limited to the verified test offering.
-  if (!body.dry_run && !QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
-    return res.status(403).json({
-      success: false,
-      code: "TEST_OFFERING_ONLY",
-      message:
-        "Committed assessment testing is limited to QA Offerings #127, #128, and #131.",
-    });
-  }
-
   const actorUserId = positiveId(req.user?.user_id);
   if (!actorUserId) {
     return res.status(401).json({
@@ -855,23 +860,19 @@ router.patch("/:offeringId/assessments/:assessmentId", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
-    // Assessment writes, including dry runs, remain QA-only.
-    await assertQaGradingDatabase(connection);
 
-    if (!body.dry_run) {
-      const [databaseRows] = await connection.execute(
-        "SELECT DATABASE() AS database_name",
+    // Assessment changes require explicit rollout approval.
+    if (
+      !body.dry_run &&
+      process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
+    ) {
+      const error = new Error(
+        "Assessment editing is not enabled on this server.",
       );
-      if (databaseRows[0]?.database_name !== "databaseforptc1_admission_test") {
-        const error = new Error(
-          "Committed test is disabled outside the admission-test database.",
-        );
-        error.code = "TEST_DATABASE_ONLY";
-        error.status = 403;
-        throw error;
-      }
+      error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
+      error.status = 403;
+      throw error;
     }
-
     // Use the same lock ordering as assessment creation.
     const [offerings] = await connection.execute(
       `SELECT so.offering_id, so.status,
@@ -1243,15 +1244,6 @@ router.delete("/:offeringId/assessments/:assessmentId", async (req, res) => {
     });
   }
 
-  // Production enablement is intentionally deferred.
-  if (!body.dry_run && offeringId !== 131) {
-    return res.status(403).json({
-      success: false,
-      code: "TEST_OFFERING_ONLY",
-      message: "Committed assessment testing is limited to Offering #131.",
-    });
-  }
-
   const actorUserId = positiveId(req.user?.user_id);
   if (!actorUserId) {
     return res.status(401).json({
@@ -1272,21 +1264,18 @@ router.delete("/:offeringId/assessments/:assessmentId", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
-    // Assessment writes, including dry runs, remain QA-only.
-    await assertQaGradingDatabase(connection);
 
-    if (!body.dry_run) {
-      const [databaseRows] = await connection.execute(
-        "SELECT DATABASE() AS database_name",
+    // Assessment removal requires explicit rollout approval.
+    if (
+      !body.dry_run &&
+      process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
+    ) {
+      const error = new Error(
+        "Assessment removal is not enabled on this server.",
       );
-      if (databaseRows[0]?.database_name !== "databaseforptc1_admission_test") {
-        const error = new Error(
-          "Committed test is disabled outside the admission-test database.",
-        );
-        error.code = "TEST_DATABASE_ONLY";
-        error.status = 403;
-        throw error;
-      }
+      error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
+      error.status = 403;
+      throw error;
     }
 
     // Use the same lock order as create/update: offering -> config -> assessment -> scores.
@@ -1635,15 +1624,6 @@ router.post(
       });
     }
 
-    // Keep committed write tests isolated to Offering #131 in the admission-test database.
-    if (!body.dry_run && offeringId !== 131) {
-      return res.status(403).json({
-        success: false,
-        code: "TEST_OFFERING_ONLY",
-        message: "Committed assessment testing is limited to Offering #131.",
-      });
-    }
-
     const actorUserId = positiveId(req.user?.user_id);
     if (!actorUserId) {
       return res.status(401).json({
@@ -1664,23 +1644,18 @@ router.post(
     try {
       await connection.beginTransaction();
       transactionStarted = true;
-      // Assessment writes, including dry runs, remain QA-only.
-      await assertQaGradingDatabase(connection);
 
-      if (!body.dry_run) {
-        const [databaseRows] = await connection.execute(
-          "SELECT DATABASE() AS database_name",
+      // Restoration writes require explicit rollout approval.
+      if (
+        !body.dry_run &&
+        process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
+      ) {
+        const error = new Error(
+          "Assessment restoration is not enabled on this server.",
         );
-        if (
-          databaseRows[0]?.database_name !== "databaseforptc1_admission_test"
-        ) {
-          const error = new Error(
-            "Committed test is disabled outside the admission-test database.",
-          );
-          error.code = "TEST_DATABASE_ONLY";
-          error.status = 403;
-          throw error;
-        }
+        error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
+        error.status = 403;
+        throw error;
       }
 
       // Serialize with all other assessment operations: offering -> config -> assessment -> scores.

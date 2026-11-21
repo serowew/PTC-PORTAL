@@ -2920,8 +2920,9 @@ router.get(
         message: "This endpoint does not accept query parameters.",
       });
     }
-    // Modern combined INC readiness
-    if (ids.offeringId === 130) {
+    // Modern INC readiness for all offerings except the legacy #131 pilot.
+    // Modern claim creation remains restricted to the authorized QA pilot.
+    if (ids.offeringId !== TERM_SUBMISSION_TEST_OFFERING) {
       let modernConnection;
       let transactionOpen = false;
       try {
@@ -2946,14 +2947,6 @@ router.get(
       } finally {
         modernConnection?.release();
       }
-    }
-
-    if (ids.offeringId !== TERM_SUBMISSION_TEST_OFFERING) {
-      return sendError(res, {
-        status: 403,
-        code: "INC_COMPLETION_TEST_OFFERING_ONLY",
-        message: "INC completion readiness is limited to QA Offering #131.",
-      });
     }
 
     let connection;
@@ -3287,8 +3280,10 @@ router.post(
     } catch (error) {
       return sendError(res, error);
     }
-    // Modern INC completion claim
-    if (ids.offeringId === 130) {
+
+    // Modern claim validation for all offerings except legacy #131.
+    // Non-pilot commits remain blocked by the service.
+    if (ids.offeringId !== TERM_SUBMISSION_TEST_OFFERING) {
       let connection;
       let transactionOpen = false;
 
@@ -5952,7 +5947,163 @@ router.post(
     }
   },
 );
+// Latest combined submission
 
+router.get(
+  "/:offeringId/students/:enrollmentSubjectId/semester-submissions/latest",
+  async (req, res) => {
+    const offeringId = positiveId(req.params.offeringId);
+    const enrollmentSubjectId = positiveId(req.params.enrollmentSubjectId);
+
+    if (!offeringId || !enrollmentSubjectId || Object.keys(req.query).length) {
+      return res.status(400).json({
+        success: false,
+        code: "COMBINED_LATEST_INPUT_INVALID",
+        message: "Provide valid IDs without query parameters.",
+      });
+    }
+
+    try {
+      const [ownership] = await db.execute(
+        `SELECT f.user_id AS assigned_user_id
+         FROM subject_offerings so
+         JOIN faculty f ON f.faculty_id = so.faculty_id
+         WHERE so.offering_id = ?`,
+        [offeringId],
+      );
+
+      if (ownership.length !== 1) {
+        fail("COMBINED_OFFERING_NOT_FOUND", "Class offering not found.", 404);
+      }
+
+      if (Number(ownership[0].assigned_user_id) !== Number(req.user?.user_id)) {
+        fail(
+          "COMBINED_INSTRUCTOR_ONLY",
+          "Only the assigned instructor may view submissions.",
+          403,
+        );
+      }
+
+      const [subjects] = await db.execute(
+        `SELECT es.enrollment_subject_id
+         FROM enrollment_subjects es
+         WHERE es.enrollment_subject_id = ?
+           AND es.offering_id = ?`,
+        [enrollmentSubjectId, offeringId],
+      );
+
+      if (subjects.length !== 1) {
+        fail(
+          "COMBINED_STUDENT_NOT_FOUND",
+          "Student is not assigned to this offering.",
+          404,
+        );
+      }
+
+      const [grades] = await db.execute(
+        `SELECT grade_id, grade_status, grading_outcome
+         FROM grades
+         WHERE enrollment_subject_id = ?`,
+        [enrollmentSubjectId],
+      );
+
+      if (grades.length > 1) {
+        fail("COMBINED_DUPLICATE_GRADE", "Conflicting grade records exist.");
+      }
+
+      const grade = grades[0] ?? null;
+      let latestSubmission = null;
+
+      if (grade) {
+        const [attempts] = await db.execute(
+          `SELECT submission_id, record_version,
+                  submission_status, returned_edit_scope,
+                  review_remarks, attempt_number,
+                  submitted_by_user_id
+           FROM gradebook_grade_submission_attempts
+           WHERE grade_id = ?
+           ORDER BY attempt_number DESC, submission_id DESC
+           LIMIT 1`,
+          [grade.grade_id],
+        );
+
+        const latest = attempts[0];
+
+        if (
+          latest &&
+          Number(latest.submitted_by_user_id) === Number(req.user?.user_id)
+        ) {
+          latestSubmission = {
+            submission_id: String(latest.submission_id),
+            record_version: Number(latest.record_version),
+            attempt_number: Number(latest.attempt_number),
+            submission_status: latest.submission_status,
+            returned_edit_scope: latest.returned_edit_scope,
+            review_remarks: latest.review_remarks,
+          };
+        }
+      }
+      // Returned special outcome evidence
+
+      let returnedSpecialEvidence = null;
+
+      if (
+        grade?.grade_status === "Returned" &&
+        ["INCOMPLETE", "UNOFFICIAL_DROP"].includes(grade.grading_outcome) &&
+        latestSubmission?.submission_status === "RETURNED"
+      ) {
+        const [specialRows] = await db.execute(
+          `SELECT so.outcome_type, so.outcome_reason,
+            so.missing_requirements, so.evidence_summary,
+            rev.review_notes, rev.evidence_review_notes
+       FROM gradebook_grade_submission_attempts attempt
+       JOIN gradebook_special_outcomes so
+         ON so.special_outcome_id = attempt.special_outcome_id
+        AND so.grade_id = attempt.grade_id
+       JOIN gradebook_grade_submission_reviews rev
+         ON rev.submission_id = attempt.submission_id
+      WHERE attempt.grade_id = ?
+        AND attempt.submission_id = ?
+        AND attempt.submission_status = 'RETURNED'
+        AND so.record_status = 'ACTIVE'
+      LIMIT 1`,
+          [grade.grade_id, latestSubmission.submission_id],
+        );
+
+        if (
+          specialRows.length === 1 &&
+          specialRows[0].outcome_type === grade.grading_outcome
+        ) {
+          returnedSpecialEvidence = {
+            outcome_type: specialRows[0].outcome_type,
+            outcome_reason: specialRows[0].outcome_reason,
+            missing_requirements: specialRows[0].missing_requirements,
+            evidence_summary: specialRows[0].evidence_summary,
+            review_notes: specialRows[0].review_notes,
+            evidence_review_notes: specialRows[0].evidence_review_notes,
+          };
+        }
+      }
+      res.set("Cache-Control", "no-store");
+
+      return res.json({
+        success: true,
+        offering_id: offeringId,
+        enrollment_subject_id: enrollmentSubjectId,
+        grade: grade
+          ? {
+              grade_status: grade.grade_status,
+              grading_outcome: grade.grading_outcome,
+            }
+          : null,
+        latest_submission: latestSubmission,
+        returned_special_outcome: returnedSpecialEvidence,
+      });
+    } catch (error) {
+      return sendError(res, error);
+    }
+  },
+);
 /* Combined Semester Submission */
 
 router.post(
@@ -6036,17 +6187,16 @@ router.post(
           requestedSpecial.missing_requirements?.trim() ?? null,
         evidence_summary: requestedSpecial.evidence_summary.trim(),
       };
-      // Special-outcome QA scope
+
+      // Special-outcome writes require separate rollout approval.
       if (
-        ids.offeringId !== 130 ||
-        ids.actorUserId !== 32 ||
-        ![277, 334].includes(ids.enrollmentSubjectId)
+        body.dry_run !== true &&
+        process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true"
       ) {
         return res.status(403).json({
           success: false,
-          code: "COMBINED_SPECIAL_QA_ONLY",
-          message:
-            "Special-outcome submissions are restricted to the authorized Offering #130 QA students.",
+          code: "COMBINED_SPECIAL_OUTCOME_WRITES_DISABLED",
+          message: "Combined INC/UD submission is not enabled on this server.",
         });
       }
     }
@@ -6058,9 +6208,17 @@ router.post(
       connection = await db.getConnection();
       await connection.beginTransaction();
       transactionOpen = true;
-
-      // Combined grading writes remain QA-only.
-      await assertQaGradingDatabase(connection);
+      // Allow committed combined submissions only after rollout approval.
+      if (
+        body.dry_run !== true &&
+        process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true"
+      ) {
+        previewFail(
+          "COMBINED_SUBMISSION_WRITES_DISABLED",
+          "Combined semester grade submission is not enabled on this server.",
+          403,
+        );
+      }
 
       // Offering and instructor
       const [offeringRows] = await connection.execute(
@@ -6920,8 +7078,17 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // Combined grading writes remain QA-only.
-      await assertQaGradingDatabase(connection);
+      // Committed resubmissions require explicit rollout approval.
+      if (
+        body.dry_run !== true &&
+        process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true"
+      ) {
+        previewFail(
+          "COMBINED_RESUBMIT_WRITES_DISABLED",
+          "Combined semester grade resubmission is not enabled on this server.",
+          403,
+        );
+      }
 
       // Offering
       const [offerings] = await connection.execute(
@@ -7745,8 +7912,13 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // Combined grading writes remain QA-only.
-      await assertQaGradingDatabase(connection);
+      // The service independently validates the instructor and rollout gates.
+      if (
+        process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true" ||
+        process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true"
+      ) {
+        await assertQaGradingDatabase(connection);
+      }
 
       const result = await resubmitSpecialOutcome(
         connection,

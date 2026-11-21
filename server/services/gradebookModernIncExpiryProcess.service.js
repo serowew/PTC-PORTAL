@@ -58,16 +58,22 @@ export async function processModernIncExpiry(
   body,
 ) {
   const { reason, dryRun } = validateBody(body);
-  if (Number(registrarId) !== 30) {
+  // Committed expiry processing requires explicit rollout approval.
+  if (
+    !dryRun &&
+    process.env.GRADEBOOK_MODERN_INC_EXPIRY_WRITES_ENABLED !== "true"
+  ) {
     fail(
       403,
-      "MODERN_INC_EXPIRY_QA_REGISTRAR_ONLY",
-      "This QA-pilot expiry endpoint is limited to the authorized test Registrar.",
+      "MODERN_INC_EXPIRY_WRITES_DISABLED",
+      "Modern INC expiry processing is not enabled on this server.",
     );
   }
-  // Confirm the QA database and active Registrar before processing.
-  await assertQaGradingDatabase(connection);
 
+  // Keep QA-only validation while committed expiry writes are disabled.
+  if (process.env.GRADEBOOK_MODERN_INC_EXPIRY_WRITES_ENABLED !== "true") {
+    await assertQaGradingDatabase(connection);
+  }
   const [registrars] = await connection.execute(
     `SELECT u.user_id
      FROM users u
@@ -87,6 +93,49 @@ export async function processModernIncExpiry(
       "An active Registrar account is required to process INC expiry.",
     );
   }
+
+  // Expiry must be atomic across official grades, amendments, and audits.
+  const transactionalTables = [
+    "grades",
+    "enrollment_subjects",
+    "gradebook_official_sheets",
+    "gradebook_finalized_roster",
+    "gradebook_official_grade_publications",
+    "gradebook_grade_submission_attempts",
+    "gradebook_inc_completion_claims",
+    "gradebook_modern_inc_submissions",
+    "grade_change_requests",
+    "gradebook_inc_expiry_actions",
+    "gradebook_sheet_amendments",
+    "audit_trail",
+    "audit_logs",
+  ];
+
+  const [storageRows] = await connection.execute(
+    `SELECT TABLE_NAME AS table_name, ENGINE AS engine
+       FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME IN (${transactionalTables.map(() => "?").join(", ")})`,
+    transactionalTables,
+  );
+
+  const tableEngines = new Map(
+    storageRows.map((row) => [
+      row.table_name,
+      String(row.engine ?? "").toUpperCase(),
+    ]),
+  );
+
+  if (
+    transactionalTables.some((table) => tableEngines.get(table) !== "INNODB")
+  ) {
+    fail(
+      409,
+      "MODERN_INC_EXPIRY_TRANSACTION_STORAGE_UNSAFE",
+      "INC expiry requires InnoDB for all official-grade, source, and audit tables.",
+    );
+  }
+
   // Resolve the source only for locking; it is fully revalidated after locks.
   const initial = await inspectModernIncExpiryReadiness(connection, gradeId);
   const sheetId = initial.source.sheet_id;
@@ -204,20 +253,33 @@ export async function processModernIncExpiry(
     );
   }
 
-  // The original finalized sheet and roster are never updated.
+  // Check the complete amendment history before adding a new revision.
   const [revisions] = await connection.execute(
-    `SELECT sheet_revision_number FROM gradebook_sheet_amendments
-      WHERE sheet_id = ? ORDER BY sheet_revision_number DESC LIMIT 1 FOR UPDATE`,
+    `SELECT sheet_revision_number
+       FROM gradebook_sheet_amendments
+      WHERE sheet_id = ?
+      ORDER BY sheet_revision_number ASC
+      FOR UPDATE`,
     [sheetId],
   );
-  const revision = revisions.length
-    ? Number(revisions[0].sheet_revision_number) + 1
-    : 1;
-  if (
-    !Number.isSafeInteger(revision) ||
-    revision < 1 ||
-    revision > 4294967295
-  ) {
+
+  let revision = 1;
+
+  for (const row of revisions) {
+    const savedRevision = Number(row.sheet_revision_number);
+
+    if (!Number.isSafeInteger(savedRevision) || savedRevision !== revision) {
+      fail(
+        409,
+        "MODERN_INC_EXPIRY_REVISION_HISTORY_INVALID",
+        "Official sheet amendment revisions are missing or inconsistent.",
+      );
+    }
+
+    revision += 1;
+  }
+
+  if (revision > 4294967295) {
     fail(
       409,
       "MODERN_INC_EXPIRY_REVISION_LIMIT",
@@ -266,6 +328,13 @@ export async function processModernIncExpiry(
     enrollment_subject_status: "Failed",
     outcome_reason: outcomeReason,
     expiry_authority: "REGISTRAR_AUTHORIZED_MODERN_INC_EXPIRY",
+
+    // Expiry audit references
+    amendment_type: "INC_EXPIRY",
+    official_publication_id: String(readiness.source.publication_id),
+    sheet_revision_number: revision,
+    expiry_reason: reason,
+    processed_by_user_id: Number(registrarId),
   };
 
   // Existing DB trigger is the only authority allowed to convert an Approved INC.
@@ -273,11 +342,51 @@ export async function processModernIncExpiry(
   await connection.execute("SET @allow_approved_inc_expiry = 1");
   try {
     [updated] = await connection.execute(
-      `UPDATE grades SET grading_outcome = 'EXPIRED_INCOMPLETE',
-         outcome_reason = ?, grade_status = 'Approved'
-       WHERE grade_id = ? AND grade_status = 'Approved'
-         AND grading_outcome = 'INCOMPLETE' AND final_rating = 4.00`,
-      [outcomeReason, gradeId],
+      `UPDATE grades
+          SET grading_outcome = 'EXPIRED_INCOMPLETE',
+              outcome_reason = ?,
+              grade_status = 'Approved'
+        WHERE grade_id = ?
+          AND enrollment_subject_id = ?
+          AND grade_status = 'Approved'
+          AND grading_policy = 'TWO_TERM_50_50'
+          AND grading_outcome = 'INCOMPLETE'
+          AND final_rating = 4.00
+          AND remarks = 'Incomplete'
+          AND final_grade IS NULL
+          AND overall_percentage IS NULL
+          AND EXISTS (
+            SELECT 1
+              FROM gradebook_official_grade_publications pub
+              JOIN gradebook_official_sheets sh
+                ON sh.config_id = pub.config_id
+              JOIN gradebook_finalized_roster fr
+                ON fr.sheet_id = sh.sheet_id
+             WHERE pub.publication_id = ?
+               AND pub.grade_id = grades.grade_id
+               AND pub.enrollment_subject_id = grades.enrollment_subject_id
+               AND pub.publication_source = 'COMBINED_SEMESTER'
+               AND pub.grading_outcome_snapshot = 'INCOMPLETE'
+               AND pub.combined_submission_id IS NOT NULL
+               AND sh.sheet_id = ?
+               AND sh.sheet_status = 'FINALIZED'
+               AND sh.record_version = ?
+               AND fr.roster_snapshot_id = ?
+               AND fr.grade_id = grades.grade_id
+               AND fr.enrollment_subject_id = grades.enrollment_subject_id
+               AND fr.roster_disposition = 'APPROVED_GRADE'
+               AND fr.grading_outcome_snapshot = 'INCOMPLETE'
+               AND fr.final_rating_snapshot = 4.00
+          )`,
+      [
+        outcomeReason,
+        gradeId,
+        readiness.enrollment_subject_id,
+        readiness.source.publication_id,
+        sheetId,
+        body.expected_sheet_record_version,
+        readiness.source.original_roster_snapshot_id,
+      ],
     );
   } finally {
     await connection.execute("SET @allow_approved_inc_expiry = NULL");
@@ -353,6 +462,77 @@ export async function processModernIncExpiry(
   );
   if (Number(expiryAction.affectedRows) !== 1) {
     throw new Error("INC expiry action insert failed.");
+  }
+  // Verify the expiry action, amendment, roster, and original publication agree.
+  const [expiryLinks] = await connection.execute(
+    `SELECT ea.expiry_id
+       FROM gradebook_inc_expiry_actions ea
+       JOIN gradebook_sheet_amendments am
+         ON am.amendment_id = ea.amendment_id
+        AND am.sheet_id = ea.sheet_id
+       JOIN gradebook_finalized_roster fr
+         ON fr.roster_snapshot_id = am.roster_snapshot_id
+        AND fr.sheet_id = ea.sheet_id
+        AND fr.grade_id = ea.grade_id
+       JOIN grades g
+         ON g.grade_id = fr.grade_id
+        AND g.enrollment_subject_id = fr.enrollment_subject_id
+       JOIN gradebook_official_sheets sh
+         ON sh.sheet_id = ea.sheet_id
+       JOIN gradebook_official_grade_publications pub
+         ON pub.grade_id = g.grade_id
+        AND pub.enrollment_subject_id = g.enrollment_subject_id
+        AND pub.config_id = sh.config_id
+       JOIN gradebook_grade_submission_attempts originalSubmission
+         ON originalSubmission.submission_id = pub.combined_submission_id
+        AND originalSubmission.grade_id = g.grade_id
+        AND originalSubmission.sheet_id = sh.sheet_id
+      WHERE ea.expiry_id = ?
+        AND ea.grade_id = ?
+        AND ea.sheet_id = ?
+        AND ea.amendment_id = ?
+        AND am.roster_snapshot_id = ?
+        AND pub.publication_id = ?
+        AND ea.processed_by_user_id = ?
+        AND am.applied_by_user_id = ?
+        AND ea.deadline_on = ?
+        AND ea.expiry_reason = ?
+        AND am.amendment_reason = ?
+        AND am.sheet_revision_number = ?
+        AND am.amendment_type = 'INC_EXPIRY'
+        AND am.grade_change_request_id IS NULL
+        AND am.modern_inc_submission_id IS NULL
+        AND am.modern_score_correction_id IS NULL
+        AND pub.publication_source = 'COMBINED_SEMESTER'
+        AND pub.grading_outcome_snapshot = 'INCOMPLETE'
+        AND originalSubmission.grading_outcome_snapshot = 'INCOMPLETE'
+        AND sh.sheet_status = 'FINALIZED'
+        AND fr.roster_disposition = 'APPROVED_GRADE'
+        AND fr.grading_outcome_snapshot = 'INCOMPLETE'
+        AND g.grade_status = 'Approved'
+        AND g.grading_outcome = 'EXPIRED_INCOMPLETE'`,
+    [
+      String(expiryAction.insertId),
+      gradeId,
+      sheetId,
+      String(amendment.insertId),
+      readiness.source.original_roster_snapshot_id,
+      readiness.source.publication_id,
+      registrarId,
+      registrarId,
+      readiness.policy_decision.deadline_on,
+      reason,
+      reason,
+      revision,
+    ],
+  );
+
+  if (expiryLinks.length !== 1) {
+    fail(
+      409,
+      "MODERN_INC_EXPIRY_AMENDMENT_SOURCE_INVALID",
+      "The expiry action does not match its original grade, amendment, roster, and official publication.",
+    );
   }
   const auditAfter = {
     ...after,

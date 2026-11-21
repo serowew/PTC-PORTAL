@@ -79,15 +79,48 @@ export async function validateResubmittedSpecialApproval(
   snapshot,
   reviewerUserId,
   expectedSubmissionVersion = 1,
+  lock = true,
 ) {
-  // Pilot is intentionally restricted; never generalize by changing this guard alone.
+  // Always verify that the submission matches its gradebook scope.
   check(
-    Number(target.offering_id) === 187 &&
-      Number(target.config_id) === 10 &&
-      Number(target.enrollment_subject_id) === 341 &&
-      Number(reviewerUserId) === 31,
-    "SPECIAL_APPROVAL_QA_FIXTURE_ONLY",
-    "This validator is limited to the isolated QA fixture.",
+    [
+      target?.offering_id,
+      target?.config_id,
+      target?.enrollment_subject_id,
+      target?.grade_id,
+      target?.sheet_id,
+      target?.period_id,
+      submission?.submission_id,
+      reviewerUserId,
+    ].every(positiveId) &&
+      equalId(submission?.grade_id, target.grade_id) &&
+      equalId(submission?.sheet_id, target.sheet_id) &&
+      equalId(submission?.period_id, target.period_id) &&
+      equalId(snapshot?.offering_id, target.offering_id) &&
+      equalId(snapshot?.config_id, target.config_id) &&
+      equalId(snapshot?.enrollment_subject_id, target.enrollment_subject_id) &&
+      equalId(snapshot?.grade_id, target.grade_id),
+    "SPECIAL_APPROVAL_SCOPE_INVALID",
+    "The special-outcome submission does not match its gradebook scope.",
+  );
+
+  // Verify record identity independently of the pilot offering and reviewer IDs.
+  check(
+    [
+      target.offering_id,
+      target.config_id,
+      target.enrollment_subject_id,
+      target.grade_id,
+      target.sheet_id,
+      target.period_id,
+      reviewerUserId,
+    ].every(positiveId) &&
+      equalId(grade.grade_id, target.grade_id) &&
+      equalId(submission.grade_id, target.grade_id) &&
+      equalId(submission.sheet_id, target.sheet_id) &&
+      equalId(submission.period_id, target.period_id),
+    "SPECIAL_APPROVAL_SOURCE_MISMATCH",
+    "The resubmitted INC/UD grade, sheet, and submission do not match.",
   );
 
   const type = grade.grading_outcome;
@@ -124,7 +157,7 @@ export async function validateResubmittedSpecialApproval(
 
   const [attempts] = await connection.execute(
     `SELECT * FROM gradebook_grade_submission_attempts
-      WHERE grade_id = ? ORDER BY attempt_number, submission_id FOR UPDATE`,
+         WHERE grade_id = ? ORDER BY attempt_number, submission_id ${lock ? "FOR UPDATE" : ""}`,
     [target.grade_id],
   );
   check(
@@ -135,7 +168,7 @@ export async function validateResubmittedSpecialApproval(
   );
 
   const [outcomes] = await connection.execute(
-    `SELECT * FROM gradebook_special_outcomes WHERE grade_id = ? FOR UPDATE`,
+    `SELECT * FROM gradebook_special_outcomes WHERE grade_id = ? ${lock ? "FOR UPDATE" : ""}`,
     [target.grade_id],
   );
   const outcome = outcomes[0];
@@ -153,7 +186,7 @@ export async function validateResubmittedSpecialApproval(
 
   const [events] = await connection.execute(
     `SELECT * FROM gradebook_special_outcome_events
-      WHERE special_outcome_id = ? ORDER BY record_version_after, event_id FOR UPDATE`,
+           WHERE special_outcome_id = ? ORDER BY record_version_after, event_id ${lock ? "FOR UPDATE" : ""}`,
     [outcome.special_outcome_id],
   );
   check(
@@ -165,7 +198,7 @@ export async function validateResubmittedSpecialApproval(
   const [reviews] = await connection.execute(
     `SELECT r.* FROM gradebook_grade_submission_reviews r
        JOIN gradebook_grade_submission_attempts a ON a.submission_id = r.submission_id
-      WHERE a.grade_id = ? ORDER BY a.attempt_number FOR UPDATE`,
+             WHERE a.grade_id = ? ORDER BY a.attempt_number ${lock ? "FOR UPDATE" : ""}`,
     [target.grade_id],
   );
   const reviewsBySubmission = new Map(
@@ -288,7 +321,6 @@ export async function validateResubmittedSpecialApproval(
           review.grading_outcome_snapshot === type &&
           review.returned_edit_scope === a.returned_edit_scope &&
           equalId(review.reviewed_by_user_id, a.reviewed_by_user_id) &&
-          Number(review.reviewed_by_user_id) === reviewerUserId &&
           Number(review.submission_version_after) === 2 &&
           review.review_notes === a.review_remarks &&
           readable(review.evidence_review_notes, 20, 2000),
@@ -369,7 +401,7 @@ export async function validateResubmittedSpecialApproval(
        LEFT JOIN gradebook_scores sc ON sc.assessment_id = a.assessment_id AND sc.enrollment_subject_id = ?
       WHERE oc.config_id = ? AND a.record_status = 'ACTIVE'
         AND COALESCE(sc.score_status, 'PENDING') = 'PENDING'
-      ORDER BY a.grading_term, a.assessment_id FOR UPDATE`,
+             ORDER BY a.grading_term, a.assessment_id ${lock ? "FOR UPDATE" : ""}`,
     [target.enrollment_subject_id, target.config_id],
   );
   const [attendance] = await connection.execute(
@@ -382,7 +414,7 @@ export async function validateResubmittedSpecialApproval(
            AND a.enrollment_subject_id = ?
       WHERE m.config_id = ? AND m.meeting_status = 'HELD'
         AND m.meeting_date <= CURDATE()
-      ORDER BY m.meeting_date, m.meeting_id FOR UPDATE`,
+           ORDER BY m.meeting_date, m.meeting_id ${lock ? "FOR UPDATE" : ""}`,
     [target.enrollment_subject_id, target.config_id],
   );
   const absences = attendance.filter(

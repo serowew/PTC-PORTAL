@@ -22,17 +22,32 @@
   padding: 28px 30px 38px;
   color: var(--rgc-text-950);
   background:
-    radial-gradient(circle at top right, rgba(21, 148, 82, 0.06), transparent 30%),
+    radial-gradient(
+      circle at top right,
+      rgba(21, 148, 82, 0.06),
+      transparent 30%
+    ),
     var(--rgc-bg);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 .registrar-grade-change-page *,
 .registrar-grade-change-page *::before,
-.registrar-grade-change-page *::after { box-sizing: border-box; }
+.registrar-grade-change-page *::after {
+  box-sizing: border-box;
+}
 .registrar-grade-change-page button,
 .registrar-grade-change-page input,
 .registrar-grade-change-page select,
-.registrar-grade-change-page textarea { font: inherit; }
+.registrar-grade-change-page textarea {
+  font: inherit;
+}
 .registrar-grade-change-page button:focus-visible,
 .registrar-grade-change-page input:focus-visible,
 .registrar-grade-change-page select:focus-visible,
@@ -53,7 +68,12 @@
   padding: 25px 28px;
   border: 1px solid rgba(15, 122, 69, 0.18);
   border-radius: 18px;
-  background: linear-gradient(105deg, rgba(255,255,255,.98) 0%, rgba(247,253,249,.98) 66%, rgba(230,247,237,.98) 100%);
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(247, 253, 249, 0.98) 66%,
+    rgba(230, 247, 237, 0.98) 100%
+  );
   box-shadow: 0 9px 28px rgba(20, 55, 34, 0.07);
 }
 .registrar-grade-change-hero::after {
@@ -68,8 +88,14 @@
   pointer-events: none;
 }
 .registrar-grade-change-hero-copy,
-.registrar-grade-change-hero-actions { position: relative; z-index: 1; }
-.registrar-grade-change-hero-copy { min-width: 0; max-width: 790px; }
+.registrar-grade-change-hero-actions {
+  position: relative;
+  z-index: 1;
+}
+.registrar-grade-change-hero-copy {
+  min-width: 0;
+  max-width: 790px;
+}
 .registrar-grade-change-back {
   display: inline-flex;
   align-items: center;
@@ -80,12 +106,16 @@
   border: 1px solid #d2e1d7;
   border-radius: 8px;
   color: var(--rgc-green-800);
-  background: rgba(255,255,255,.78);
+  background: rgba(255, 255, 255, 0.78);
   font-size: 10.5px;
   font-weight: 710;
   cursor: pointer;
 }
-.registrar-grade-change-back:hover { border-color: #b9cfc0; color: var(--rgc-green-900); background: #fff; }
+.registrar-grade-change-back:hover {
+  border-color: #b9cfc0;
+  color: var(--rgc-green-900);
+  background: #fff;
+}
 .registrar-grade-change-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -94,7 +124,7 @@
   color: var(--rgc-green-800);
   font-size: 12px;
   font-weight: 750;
-  letter-spacing: .055em;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
 }
 .registrar-grade-change-eyebrow-icon {
@@ -113,7 +143,7 @@
   font-size: clamp(26px, 3vw, 34px);
   font-weight: 760;
   line-height: 1.15;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 .registrar-grade-change-hero p {
   max-width: 760px;
@@ -122,7 +152,11 @@
   font-size: 14px;
   line-height: 1.65;
 }
-.registrar-grade-change-hero-actions { display: flex; flex: 0 0 auto; align-items: center; }
+.registrar-grade-change-hero-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
 .registrar-grade-change-refresh {
   display: inline-flex;
   align-items: center;
@@ -134,7 +168,7 @@
   border-radius: 10px;
   color: #fff;
   background: var(--rgc-green-800);
-  box-shadow: 0 5px 13px rgba(13, 101, 59, .18);
+  box-shadow: 0 5px 13px rgba(13, 101, 59, 0.18);
   font-size: 12px;
   font-weight: 720;
   line-height: 1;
@@ -145,16 +179,25 @@
   transform: translateY(-1px);
   border-color: var(--rgc-green-900);
   background: var(--rgc-green-900);
-  box-shadow: 0 8px 17px rgba(13,101,59,.2);
+  box-shadow: 0 8px 17px rgba(13, 101, 59, 0.2);
 }
-.registrar-grade-change-refresh:disabled { opacity: .58; cursor: not-allowed; }
-.registrar-grade-change-spin { animation: registrar-grade-change-spin .8s linear infinite; }
-@keyframes registrar-grade-change-spin { to { transform: rotate(360deg); } }
+.registrar-grade-change-refresh:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+.registrar-grade-change-spin {
+  animation: registrar-grade-change-spin 0.8s linear infinite;
+}
+@keyframes registrar-grade-change-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* NOTICE */
 .registrar-grade-change-notice {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-start;
   gap: 10px;
   margin-bottom: 16px;
@@ -162,10 +205,18 @@
   border: 1px solid var(--rgc-border);
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 4px 15px rgba(20,55,34,.035);
+  box-shadow: 0 4px 15px rgba(20, 55, 34, 0.035);
 }
-.registrar-grade-change-notice.success { border-color: #c6e1cf; color: var(--rgc-green-800); background: #f3fbf6; }
-.registrar-grade-change-notice.error { border-color: #efc7c4; color: #963d36; background: #fff7f6; }
+.registrar-grade-change-notice.success {
+  border-color: #c6e1cf;
+  color: var(--rgc-green-800);
+  background: #f3fbf6;
+}
+.registrar-grade-change-notice.error {
+  border-color: #efc7c4;
+  color: #963d36;
+  background: #fff7f6;
+}
 .registrar-grade-change-notice-icon {
   display: inline-flex;
   align-items: center;
@@ -173,15 +224,23 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: rgba(255,255,255,.7);
+  background: rgba(255, 255, 255, 0.7);
 }
-.registrar-grade-change-notice strong { display: block; font-size: 11px; font-weight: 750; }
-.registrar-grade-change-notice p { margin: 3px 0 0; font-size: 9.5px; line-height: 1.45; }
+.registrar-grade-change-notice strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 750;
+}
+.registrar-grade-change-notice p {
+  margin: 3px 0 0;
+  font-size: 9.5px;
+  line-height: 1.45;
+}
 
 /* STATS */
 .registrar-grade-change-stats {
   display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -195,11 +254,11 @@
   border: 1px solid var(--rgc-border);
   border-radius: 14px;
   background: var(--rgc-surface);
-  box-shadow: 0 5px 17px rgba(24,54,35,.045);
+  box-shadow: 0 5px 17px rgba(24, 54, 35, 0.045);
 }
 .registrar-grade-change-stat-card--primary {
-  border-color: rgba(15,122,69,.22);
-  background: linear-gradient(120deg,#fff,#f5fcf8);
+  border-color: rgba(15, 122, 69, 0.22);
+  background: linear-gradient(120deg, #fff, #f5fcf8);
 }
 .registrar-grade-change-stat-icon {
   display: inline-flex;
@@ -216,16 +275,22 @@
 .registrar-grade-change-stat-icon--primary {
   border-color: transparent;
   color: #fff;
-  background: linear-gradient(145deg,var(--rgc-green-700),var(--rgc-green-900));
+  background: linear-gradient(
+    145deg,
+    var(--rgc-green-700),
+    var(--rgc-green-900)
+  );
 }
-.registrar-grade-change-stat-card > div { min-width: 0; }
+.registrar-grade-change-stat-card > div {
+  min-width: 0;
+}
 .registrar-grade-change-stat-card small {
   display: block;
   margin-bottom: 2px;
   color: var(--rgc-text-600);
   font-size: 10px;
   font-weight: 740;
-  letter-spacing: .035em;
+  letter-spacing: 0.035em;
   text-transform: uppercase;
 }
 .registrar-grade-change-stat-card strong {
@@ -254,7 +319,7 @@
   border: 1px solid var(--rgc-border);
   border-radius: 18px;
   background: var(--rgc-surface);
-  box-shadow: 0 9px 28px rgba(31,56,40,.06);
+  box-shadow: 0 9px 28px rgba(31, 56, 40, 0.06);
 }
 .registrar-grade-change-panel-heading {
   display: flex;
@@ -263,20 +328,33 @@
   gap: 20px;
   padding: 19px 21px 15px;
   border-bottom: 1px solid #edf2ee;
-  background: linear-gradient(100deg,#fff 0%,#f9fcfa 100%);
+  background: linear-gradient(100deg, #fff 0%, #f9fcfa 100%);
 }
-.registrar-grade-change-panel-heading > div { min-width: 0; }
+.registrar-grade-change-panel-heading > div {
+  min-width: 0;
+}
 .registrar-grade-change-panel-heading > div > span {
   display: block;
   margin-bottom: 4px;
   color: var(--rgc-green-700);
   font-size: 9px;
   font-weight: 780;
-  letter-spacing: .055em;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
 }
-.registrar-grade-change-panel-heading h2 { margin: 0; color: var(--rgc-text-950); font-size: 17px; font-weight: 760; }
-.registrar-grade-change-panel-heading p { max-width: 720px; margin: 5px 0 0; color: var(--rgc-text-500); font-size: 10.5px; line-height: 1.5; }
+.registrar-grade-change-panel-heading h2 {
+  margin: 0;
+  color: var(--rgc-text-950);
+  font-size: 17px;
+  font-weight: 760;
+}
+.registrar-grade-change-panel-heading p {
+  max-width: 720px;
+  margin: 5px 0 0;
+  color: var(--rgc-text-500);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
 .registrar-grade-change-count {
   flex: 0 0 auto;
   padding: 5px 9px;
@@ -290,17 +368,27 @@
 }
 .registrar-grade-change-toolbar {
   display: grid;
-  grid-template-columns: minmax(260px,1.6fr) minmax(220px,.8fr) auto;
+  grid-template-columns: minmax(260px, 1.6fr) minmax(220px, 0.8fr) auto;
   align-items: end;
   gap: 11px;
   padding: 14px 16px 16px;
   border-bottom: 1px solid #edf2ee;
 }
 .registrar-grade-change-search,
-.registrar-grade-change-filter-field { display: grid; min-width: 0; gap: 6px; }
+.registrar-grade-change-filter-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
 .registrar-grade-change-search > span,
-.registrar-grade-change-filter-field > span { color: var(--rgc-text-600); font-size: 9px; font-weight: 730; }
-.registrar-grade-change-search > div { position: relative; }
+.registrar-grade-change-filter-field > span {
+  color: var(--rgc-text-600);
+  font-size: 9px;
+  font-weight: 730;
+}
+.registrar-grade-change-search > div {
+  position: relative;
+}
 .registrar-grade-change-search svg {
   position: absolute;
   top: 50%;
@@ -321,12 +409,17 @@
   background: #fff;
   font-size: 10.5px;
 }
-.registrar-grade-change-search input { padding: 8px 10px 8px 32px; }
-.registrar-grade-change-filter-field select { padding: 8px 10px; cursor: pointer; }
+.registrar-grade-change-search input {
+  padding: 8px 10px 8px 32px;
+}
+.registrar-grade-change-filter-field select {
+  padding: 8px 10px;
+  cursor: pointer;
+}
 .registrar-grade-change-search input:focus,
 .registrar-grade-change-filter-field select:focus {
   border-color: #8bc0a0;
-  box-shadow: 0 0 0 3px rgba(21,148,82,.1);
+  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.1);
 }
 .registrar-grade-change-clear {
   display: inline-flex;
@@ -344,8 +437,15 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.registrar-grade-change-clear:hover:not(:disabled) { border-color: #b8cfbf; color: var(--rgc-green-800); background: var(--rgc-green-50); }
-.registrar-grade-change-clear:disabled { opacity: .48; cursor: not-allowed; }
+.registrar-grade-change-clear:hover:not(:disabled) {
+  border-color: #b8cfbf;
+  color: var(--rgc-green-800);
+  background: var(--rgc-green-50);
+}
+.registrar-grade-change-clear:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
 
 /* STATES */
 .registrar-grade-change-state {
@@ -360,10 +460,19 @@
   background: #fbfdfc;
   text-align: center;
 }
-.registrar-grade-change-state--loading { grid-template-columns: auto auto; justify-content: center; min-height: 160px; text-align: left; }
-.registrar-grade-change-state--empty { grid-template-columns: auto minmax(0,440px); justify-content: center; text-align: left; }
+.registrar-grade-change-state--loading {
+  grid-template-columns: auto auto;
+  justify-content: center;
+  min-height: 160px;
+  text-align: left;
+}
+.registrar-grade-change-state--empty {
+  grid-template-columns: auto minmax(0, 440px);
+  justify-content: center;
+  text-align: left;
+}
 .registrar-grade-change-state--error {
-  grid-template-columns: auto minmax(0,1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   min-height: auto;
   border-color: #efc7c4;
   color: #913b35;
@@ -380,10 +489,25 @@
   color: var(--rgc-green-800);
   background: var(--rgc-green-100);
 }
-.registrar-grade-change-state--error .registrar-grade-change-state-icon { color: var(--rgc-danger); background: var(--rgc-danger-soft); }
-.registrar-grade-change-state strong { display: block; color: inherit; font-size: 11.5px; font-weight: 750; }
-.registrar-grade-change-state p { margin: 3px 0 0; color: var(--rgc-text-500); font-size: 9.8px; line-height: 1.45; }
-.registrar-grade-change-state--error p { color: #a35a55; }
+.registrar-grade-change-state--error .registrar-grade-change-state-icon {
+  color: var(--rgc-danger);
+  background: var(--rgc-danger-soft);
+}
+.registrar-grade-change-state strong {
+  display: block;
+  color: inherit;
+  font-size: 11.5px;
+  font-weight: 750;
+}
+.registrar-grade-change-state p {
+  margin: 3px 0 0;
+  color: var(--rgc-text-500);
+  font-size: 9.8px;
+  line-height: 1.45;
+}
+.registrar-grade-change-state--error p {
+  color: #a35a55;
+}
 .registrar-grade-change-state--error button {
   min-height: 34px;
   padding: 6px 10px;
@@ -401,19 +525,27 @@
   border: 3px solid #dce9e1;
   border-top-color: var(--rgc-green-700);
   border-radius: 50%;
-  animation: registrar-grade-change-spin .75s linear infinite;
+  animation: registrar-grade-change-spin 0.75s linear infinite;
 }
 
 /* REQUEST CARDS */
-.registrar-grade-change-request-list { display: grid; gap: 13px; padding: 14px; background: #fafcfb; }
+.registrar-grade-change-request-list {
+  display: grid;
+  gap: 13px;
+  padding: 14px;
+  background: #fafcfb;
+}
 .registrar-grade-change-card {
   overflow: hidden;
   border: 1px solid #dfe8e2;
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 4px 15px rgba(20,55,34,.035);
+  box-shadow: 0 4px 15px rgba(20, 55, 34, 0.035);
 }
-.registrar-grade-change-card:hover { border-color: #c4dacb; box-shadow: 0 8px 22px rgba(20,55,34,.055); }
+.registrar-grade-change-card:hover {
+  border-color: #c4dacb;
+  box-shadow: 0 8px 22px rgba(20, 55, 34, 0.055);
+}
 .registrar-grade-change-card-header {
   display: flex;
   align-items: flex-start;
@@ -421,11 +553,11 @@
   gap: 15px;
   padding: 14px 15px;
   border-bottom: 1px solid #edf2ee;
-  background: linear-gradient(100deg,#fff 0%,#fbfdfc 100%);
+  background: linear-gradient(100deg, #fff 0%, #fbfdfc 100%);
 }
 .registrar-grade-change-student {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -442,10 +574,25 @@
   color: var(--rgc-green-800);
   background: var(--rgc-green-100);
 }
-.registrar-grade-change-student > div { min-width: 0; }
-.registrar-grade-change-student strong { display: block; overflow: hidden; color: var(--rgc-text-950); font-size: 11.5px; font-weight: 760; text-overflow: ellipsis; white-space: nowrap; }
+.registrar-grade-change-student > div {
+  min-width: 0;
+}
+.registrar-grade-change-student strong {
+  display: block;
+  overflow: hidden;
+  color: var(--rgc-text-950);
+  font-size: 11.5px;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .registrar-grade-change-student p,
-.registrar-grade-change-student small { margin: 2px 0 0; color: var(--rgc-text-500); font-size: 9px; line-height: 1.35; }
+.registrar-grade-change-student small {
+  margin: 2px 0 0;
+  color: var(--rgc-text-500);
+  font-size: 9px;
+  line-height: 1.35;
+}
 .registrar-grade-change-status {
   display: inline-flex;
   flex: 0 0 auto;
@@ -460,22 +607,41 @@
   line-height: 1;
   white-space: nowrap;
 }
-.registrar-grade-change-status > span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.registrar-grade-change-status--pending { border-color: #c8dff8; color: #245f9e; background: #f1f7fd; }
-.registrar-grade-change-status--completed { border-color: #c7e2d0; color: var(--rgc-green-800); background: var(--rgc-green-50); }
+.registrar-grade-change-status > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.registrar-grade-change-status--pending {
+  border-color: #c8dff8;
+  color: #245f9e;
+  background: #f1f7fd;
+}
+.registrar-grade-change-status--completed {
+  border-color: #c7e2d0;
+  color: var(--rgc-green-800);
+  background: var(--rgc-green-50);
+}
 
 /* CONTEXT */
-.registrar-grade-change-context { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); border-bottom: 1px solid #edf2ee; }
+.registrar-grade-change-context {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #edf2ee;
+}
 .registrar-grade-change-context-item {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-start;
   gap: 8px;
   min-width: 0;
   padding: 12px 14px;
   border-right: 1px solid #edf2ee;
 }
-.registrar-grade-change-context-item:last-child { border-right: 0; }
+.registrar-grade-change-context-item:last-child {
+  border-right: 0;
+}
 .registrar-grade-change-context-icon {
   display: inline-flex;
   align-items: center;
@@ -486,7 +652,9 @@
   color: var(--rgc-green-800);
   background: var(--rgc-green-50);
 }
-.registrar-grade-change-context-item > div { min-width: 0; }
+.registrar-grade-change-context-item > div {
+  min-width: 0;
+}
 .registrar-grade-change-context-item small,
 .registrar-grade-change-grade-grid small,
 .registrar-grade-change-reason small,
@@ -496,24 +664,48 @@
   color: var(--rgc-text-500);
   font-size: 8px;
   font-weight: 760;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.registrar-grade-change-context-item strong { display: block; margin-top: 2px; overflow-wrap: anywhere; color: var(--rgc-text-800); font-size: 10px; font-weight: 740; line-height: 1.35; }
-.registrar-grade-change-context-item p { margin: 2px 0 0; overflow-wrap: anywhere; color: var(--rgc-text-500); font-size: 8.8px; line-height: 1.4; }
+.registrar-grade-change-context-item strong {
+  display: block;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  color: var(--rgc-text-800);
+  font-size: 10px;
+  font-weight: 740;
+  line-height: 1.35;
+}
+.registrar-grade-change-context-item p {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--rgc-text-500);
+  font-size: 8.8px;
+  line-height: 1.4;
+}
 
 /* GRADE COMPARISON */
 .registrar-grade-change-comparison {
   display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding: 13px;
   border-bottom: 1px solid #edf2ee;
   background: #fbfdfc;
 }
-.registrar-grade-change-grade-block { overflow: hidden; border: 1px solid #e0e9e3; border-radius: 11px; background: #fff; }
-.registrar-grade-change-grade-block--original { border-color: #e0e9e3; }
-.registrar-grade-change-grade-block--approved { border-color: #cde3d5; box-shadow: 0 3px 10px rgba(15,122,69,.035); }
+.registrar-grade-change-grade-block {
+  overflow: hidden;
+  border: 1px solid #e0e9e3;
+  border-radius: 11px;
+  background: #fff;
+}
+.registrar-grade-change-grade-block--original {
+  border-color: #e0e9e3;
+}
+.registrar-grade-change-grade-block--approved {
+  border-color: #cde3d5;
+  box-shadow: 0 3px 10px rgba(15, 122, 69, 0.035);
+}
 .registrar-grade-change-grade-block > header {
   display: flex;
   align-items: center;
@@ -523,7 +715,9 @@
   border-bottom: 1px solid #edf2ee;
   background: #fafcfb;
 }
-.registrar-grade-change-grade-block--approved > header { background: linear-gradient(100deg,#fff 0%,#f3fbf6 100%); }
+.registrar-grade-change-grade-block--approved > header {
+  background: linear-gradient(100deg, #fff 0%, #f3fbf6 100%);
+}
 .registrar-grade-change-grade-block > header > span {
   display: inline-flex;
   flex: 0 0 31px;
@@ -535,10 +729,29 @@
   color: var(--rgc-text-600);
   background: #eef2ef;
 }
-.registrar-grade-change-grade-block--approved > header > span { color: var(--rgc-green-800); background: var(--rgc-green-100); }
-.registrar-grade-change-grade-block header small { display: block; color: var(--rgc-text-500); font-size: 8px; font-weight: 720; letter-spacing: .035em; text-transform: uppercase; }
-.registrar-grade-change-grade-block header strong { display: block; margin-top: 2px; color: var(--rgc-text-800); font-size: 10.5px; font-weight: 750; }
-.registrar-grade-change-grade-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.registrar-grade-change-grade-block--approved > header > span {
+  color: var(--rgc-green-800);
+  background: var(--rgc-green-100);
+}
+.registrar-grade-change-grade-block header small {
+  display: block;
+  color: var(--rgc-text-500);
+  font-size: 8px;
+  font-weight: 720;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+.registrar-grade-change-grade-block header strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--rgc-text-800);
+  font-size: 10.5px;
+  font-weight: 750;
+}
+.registrar-grade-change-grade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .registrar-grade-change-grade-grid > div {
   display: grid;
   min-width: 0;
@@ -550,17 +763,43 @@
   border-bottom: 1px solid #edf2ee;
   text-align: center;
 }
-.registrar-grade-change-grade-grid > div:nth-child(3n) { border-right: none; }
-.registrar-grade-change-grade-grid > div:nth-last-child(-n+3) { border-bottom: none; }
-.registrar-grade-change-grade-grid strong { color: var(--rgc-text-800); font-size: 10.5px; font-weight: 760; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.registrar-grade-change-reason { min-height: 65px; padding: 10px 11px; border-top: 1px solid #edf2ee; }
-.registrar-grade-change-reason p { margin: 4px 0 0; overflow-wrap: anywhere; color: var(--rgc-text-600); font-size: 9px; line-height: 1.48; }
+.registrar-grade-change-grade-grid > div:nth-child(3n) {
+  border-right: none;
+}
+.registrar-grade-change-grade-grid > div:nth-last-child(-n + 3) {
+  border-bottom: none;
+}
+.registrar-grade-change-grade-grid strong {
+  color: var(--rgc-text-800);
+  font-size: 10.5px;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.registrar-grade-change-reason {
+  min-height: 65px;
+  padding: 10px 11px;
+  border-top: 1px solid #edf2ee;
+}
+.registrar-grade-change-reason p {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--rgc-text-600);
+  font-size: 9px;
+  line-height: 1.48;
+}
 
 /* REVIEW */
-.registrar-grade-change-review-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; padding: 12px 13px; border-bottom: 1px solid #edf2ee; }
+.registrar-grade-change-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  padding: 12px 13px;
+  border-bottom: 1px solid #edf2ee;
+}
 .registrar-grade-change-review-note {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-start;
   gap: 8px;
   min-width: 0;
@@ -580,12 +819,25 @@
   color: var(--rgc-green-800);
   background: var(--rgc-green-100);
 }
-.registrar-grade-change-review-note strong { display: block; color: var(--rgc-text-800); font-size: 9.5px; font-weight: 740; }
-.registrar-grade-change-review-note p { margin: 3px 0 0; color: var(--rgc-text-500); font-size: 8.8px; line-height: 1.45; }
-.registrar-grade-change-review-note b { color: var(--rgc-text-700); font-weight: 750; }
+.registrar-grade-change-review-note strong {
+  display: block;
+  color: var(--rgc-text-800);
+  font-size: 9.5px;
+  font-weight: 740;
+}
+.registrar-grade-change-review-note p {
+  margin: 3px 0 0;
+  color: var(--rgc-text-500);
+  font-size: 8.8px;
+  line-height: 1.45;
+}
+.registrar-grade-change-review-note b {
+  color: var(--rgc-text-700);
+  font-weight: 750;
+}
 .registrar-grade-change-completed-note {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-start;
   gap: 8px;
   margin: 0 13px 12px;
@@ -604,9 +856,23 @@
   border-radius: 8px;
   background: #fff;
 }
-.registrar-grade-change-completed-note strong { display: block; font-size: 9.5px; font-weight: 750; }
-.registrar-grade-change-completed-note p { margin: 3px 0 0; color: var(--rgc-text-600); font-size: 8.8px; line-height: 1.45; }
-.registrar-grade-change-completed-note small { display: block; margin-top: 3px; color: var(--rgc-text-500); font-size: 8px; }
+.registrar-grade-change-completed-note strong {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 750;
+}
+.registrar-grade-change-completed-note p {
+  margin: 3px 0 0;
+  color: var(--rgc-text-600);
+  font-size: 8.8px;
+  line-height: 1.45;
+}
+.registrar-grade-change-completed-note small {
+  display: block;
+  margin-top: 3px;
+  color: var(--rgc-text-500);
+  font-size: 8px;
+}
 
 /* FOOTER / ACTION */
 .registrar-grade-change-card-footer {
@@ -618,8 +884,16 @@
   padding: 10px 13px;
   background: #fff;
 }
-.registrar-grade-change-card-footer > div { min-width: 0; }
-.registrar-grade-change-card-footer > div strong { display: block; margin-top: 2px; color: var(--rgc-text-800); font-size: 9.5px; font-weight: 740; }
+.registrar-grade-change-card-footer > div {
+  min-width: 0;
+}
+.registrar-grade-change-card-footer > div strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--rgc-text-800);
+  font-size: 9.5px;
+  font-weight: 740;
+}
 .registrar-grade-change-process {
   display: inline-flex;
   align-items: center;
@@ -631,14 +905,22 @@
   border-radius: 8px;
   color: #fff;
   background: var(--rgc-green-700);
-  box-shadow: 0 4px 10px rgba(15,122,69,.13);
+  box-shadow: 0 4px 10px rgba(15, 122, 69, 0.13);
   font-size: 9.5px;
   font-weight: 730;
   white-space: nowrap;
   cursor: pointer;
 }
-.registrar-grade-change-process:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--rgc-green-900); background: var(--rgc-green-900); box-shadow: 0 6px 13px rgba(13,101,59,.17); }
-.registrar-grade-change-process:disabled { opacity: .55; cursor: not-allowed; }
+.registrar-grade-change-process:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--rgc-green-900);
+  background: var(--rgc-green-900);
+  box-shadow: 0 6px 13px rgba(13, 101, 59, 0.17);
+}
+.registrar-grade-change-process:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .registrar-grade-change-complete-label {
   display: inline-flex;
   align-items: center;
@@ -662,17 +944,17 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(13,28,20,.52);
+  background: rgba(13, 28, 20, 0.52);
   backdrop-filter: blur(3px);
 }
 .registrar-grade-change-modal {
-  width: min(650px,100%);
+  width: min(650px, 100%);
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   border: 1px solid #dce8df;
   border-radius: 16px;
   background: #fff;
-  box-shadow: 0 24px 70px rgba(20,48,31,.22);
+  box-shadow: 0 24px 70px rgba(20, 48, 31, 0.22);
 }
 .registrar-grade-change-modal-header {
   display: flex;
@@ -681,9 +963,14 @@
   gap: 15px;
   padding: 18px 20px 16px;
   border-bottom: 1px solid #edf2ee;
-  background: linear-gradient(100deg,#fff 0%,#fbfdfc 100%);
+  background: linear-gradient(100deg, #fff 0%, #fbfdfc 100%);
 }
-.registrar-grade-change-modal-header > div { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 10px; min-width: 0; }
+.registrar-grade-change-modal-header > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
 .registrar-grade-change-modal-icon {
   display: inline-flex;
   flex: 0 0 37px;
@@ -695,9 +982,26 @@
   color: var(--rgc-green-800);
   background: var(--rgc-green-100);
 }
-.registrar-grade-change-modal-header small { display: block; color: var(--rgc-green-700); font-size: 8.5px; font-weight: 780; letter-spacing: .055em; text-transform: uppercase; }
-.registrar-grade-change-modal-header h2 { margin: 2px 0 0; color: var(--rgc-text-950); font-size: 17px; font-weight: 760; }
-.registrar-grade-change-modal-header p { margin: 4px 0 0; color: var(--rgc-text-500); font-size: 9.3px; line-height: 1.48; }
+.registrar-grade-change-modal-header small {
+  display: block;
+  color: var(--rgc-green-700);
+  font-size: 8.5px;
+  font-weight: 780;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.registrar-grade-change-modal-header h2 {
+  margin: 2px 0 0;
+  color: var(--rgc-text-950);
+  font-size: 17px;
+  font-weight: 760;
+}
+.registrar-grade-change-modal-header p {
+  margin: 4px 0 0;
+  color: var(--rgc-text-500);
+  font-size: 9.3px;
+  line-height: 1.48;
+}
 .registrar-grade-change-modal-close {
   display: inline-flex;
   flex: 0 0 34px;
@@ -712,14 +1016,40 @@
   background: #fff;
   cursor: pointer;
 }
-.registrar-grade-change-modal-close:hover:not(:disabled) { color: var(--rgc-text-800); background: #f7faf8; }
-.registrar-grade-change-modal-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; padding: 14px 18px 0; }
-.registrar-grade-change-modal-summary > div { display: grid; min-width: 0; gap: 2px; padding: 10px; border: 1px solid #e1eae4; border-radius: 9px; background: #fafcfb; }
-.registrar-grade-change-modal-summary strong { overflow-wrap: anywhere; color: var(--rgc-text-800); font-size: 9.8px; font-weight: 740; }
-.registrar-grade-change-modal-summary span { overflow-wrap: anywhere; color: var(--rgc-text-500); font-size: 8.4px; line-height: 1.4; }
+.registrar-grade-change-modal-close:hover:not(:disabled) {
+  color: var(--rgc-text-800);
+  background: #f7faf8;
+}
+.registrar-grade-change-modal-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 14px 18px 0;
+}
+.registrar-grade-change-modal-summary > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid #e1eae4;
+  border-radius: 9px;
+  background: #fafcfb;
+}
+.registrar-grade-change-modal-summary strong {
+  overflow-wrap: anywhere;
+  color: var(--rgc-text-800);
+  font-size: 9.8px;
+  font-weight: 740;
+}
+.registrar-grade-change-modal-summary span {
+  overflow-wrap: anywhere;
+  color: var(--rgc-text-500);
+  font-size: 8.4px;
+  line-height: 1.4;
+}
 .registrar-grade-change-modal-warning {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-start;
   gap: 8px;
   margin: 12px 18px 0;
@@ -729,12 +1059,34 @@
   color: var(--rgc-green-800);
   background: #f5fbf7;
 }
-.registrar-grade-change-modal-warning svg { margin-top: 1px; }
-.registrar-grade-change-modal-warning p { margin: 0; color: var(--rgc-text-600); font-size: 8.9px; line-height: 1.48; }
-.registrar-grade-change-modal-field { padding: 14px 18px 18px; }
-.registrar-grade-change-modal-field > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.registrar-grade-change-modal-field label { color: var(--rgc-text-700); font-size: 9.8px; font-weight: 740; }
-.registrar-grade-change-modal-field > div:first-child span { color: var(--rgc-text-500); font-size: 8.5px; }
+.registrar-grade-change-modal-warning svg {
+  margin-top: 1px;
+}
+.registrar-grade-change-modal-warning p {
+  margin: 0;
+  color: var(--rgc-text-600);
+  font-size: 8.9px;
+  line-height: 1.48;
+}
+.registrar-grade-change-modal-field {
+  padding: 14px 18px 18px;
+}
+.registrar-grade-change-modal-field > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.registrar-grade-change-modal-field label {
+  color: var(--rgc-text-700);
+  font-size: 9.8px;
+  font-weight: 740;
+}
+.registrar-grade-change-modal-field > div:first-child span {
+  color: var(--rgc-text-500);
+  font-size: 8.5px;
+}
 .registrar-grade-change-modal-field textarea {
   width: 100%;
   min-height: 112px;
@@ -748,7 +1100,10 @@
   font-size: 10.5px;
   line-height: 1.5;
 }
-.registrar-grade-change-modal-field textarea:focus { border-color: #8bc0a0; box-shadow: 0 0 0 3px rgba(21,148,82,.1); }
+.registrar-grade-change-modal-field textarea:focus {
+  border-color: #8bc0a0;
+  box-shadow: 0 0 0 3px rgba(21, 148, 82, 0.1);
+}
 .registrar-grade-change-modal-error {
   display: flex;
   align-items: center;
@@ -762,7 +1117,14 @@
   font-size: 9px;
   font-weight: 690;
 }
-.registrar-grade-change-modal > footer { display: flex; justify-content: flex-end; gap: 8px; padding: 13px 18px; border-top: 1px solid #edf2ee; background: #fafcfb; }
+.registrar-grade-change-modal > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 13px 18px;
+  border-top: 1px solid #edf2ee;
+  background: #fafcfb;
+}
 .registrar-grade-change-modal > footer button {
   display: inline-flex;
   align-items: center;
@@ -775,64 +1137,141 @@
   font-weight: 720;
   cursor: pointer;
 }
-.registrar-grade-change-modal > footer .cancel { border: 1px solid #d5e0d8; color: var(--rgc-text-600); background: #fff; }
-.registrar-grade-change-modal > footer .confirm { border: 1px solid var(--rgc-green-700); color: #fff; background: var(--rgc-green-700); }
-.registrar-grade-change-modal > footer .confirm:hover:not(:disabled) { border-color: var(--rgc-green-900); background: var(--rgc-green-900); }
+.registrar-grade-change-modal > footer .cancel {
+  border: 1px solid #d5e0d8;
+  color: var(--rgc-text-600);
+  background: #fff;
+}
+.registrar-grade-change-modal > footer .confirm {
+  border: 1px solid var(--rgc-green-700);
+  color: #fff;
+  background: var(--rgc-green-700);
+}
+.registrar-grade-change-modal > footer .confirm:hover:not(:disabled) {
+  border-color: var(--rgc-green-900);
+  background: var(--rgc-green-900);
+}
 .registrar-grade-change-modal > footer button:disabled,
-.registrar-grade-change-modal-close:disabled { opacity: .55; cursor: not-allowed; }
+.registrar-grade-change-modal-close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 
 /* RESPONSIVE */
 @media (max-width: 1050px) {
   .registrar-grade-change-comparison,
-  .registrar-grade-change-review-grid { grid-template-columns: 1fr; }
+  .registrar-grade-change-review-grid {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 850px) {
-  .registrar-grade-change-page { padding: 22px 20px 32px; }
-  .registrar-grade-change-hero { align-items: stretch; flex-direction: column; }
-  .registrar-grade-change-refresh { width: 100%; }
-  .registrar-grade-change-toolbar { grid-template-columns: 1fr 1fr; }
-  .registrar-grade-change-clear { grid-column: 1 / -1; }
-  .registrar-grade-change-context { grid-template-columns: 1fr; }
-  .registrar-grade-change-context-item { border-right: 0; border-bottom: 1px solid #edf2ee; }
-  .registrar-grade-change-context-item:last-child { border-bottom: 0; }
+  .registrar-grade-change-page {
+    padding: 22px 20px 32px;
+  }
+  .registrar-grade-change-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .registrar-grade-change-refresh {
+    width: 100%;
+  }
+  .registrar-grade-change-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+  .registrar-grade-change-clear {
+    grid-column: 1 / -1;
+  }
+  .registrar-grade-change-context {
+    grid-template-columns: 1fr;
+  }
+  .registrar-grade-change-context-item {
+    border-right: 0;
+    border-bottom: 1px solid #edf2ee;
+  }
+  .registrar-grade-change-context-item:last-child {
+    border-bottom: 0;
+  }
 }
 @media (max-width: 620px) {
-  .registrar-grade-change-page { padding: 18px 14px 28px; }
-  .registrar-grade-change-hero { padding: 21px 19px; border-radius: 15px; }
-  .registrar-grade-change-hero h1 { font-size: 25px; }
+  .registrar-grade-change-page {
+    padding: 18px 14px 28px;
+  }
+  .registrar-grade-change-hero {
+    padding: 21px 19px;
+    border-radius: 15px;
+  }
+  .registrar-grade-change-hero h1 {
+    font-size: 25px;
+  }
   .registrar-grade-change-stats,
   .registrar-grade-change-toolbar,
-  .registrar-grade-change-modal-summary { grid-template-columns: 1fr; }
-  .registrar-grade-change-clear { grid-column: auto; width: 100%; }
+  .registrar-grade-change-modal-summary {
+    grid-template-columns: 1fr;
+  }
+  .registrar-grade-change-clear {
+    grid-column: auto;
+    width: 100%;
+  }
   .registrar-grade-change-panel-heading,
   .registrar-grade-change-card-header,
-  .registrar-grade-change-card-footer { align-items: stretch; flex-direction: column; }
+  .registrar-grade-change-card-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .registrar-grade-change-count,
   .registrar-grade-change-status,
-  .registrar-grade-change-complete-label { width: fit-content; }
-  .registrar-grade-change-grade-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .registrar-grade-change-complete-label {
+    width: fit-content;
+  }
+  .registrar-grade-change-grade-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .registrar-grade-change-grade-grid > div,
   .registrar-grade-change-grade-grid > div:nth-child(3n),
-  .registrar-grade-change-grade-grid > div:nth-last-child(-n+3) { border-right: 1px solid #edf2ee; border-bottom: 1px solid #edf2ee; }
-  .registrar-grade-change-grade-grid > div:nth-child(2n) { border-right: 0; }
-  .registrar-grade-change-grade-grid > div:nth-last-child(-n+2) { border-bottom: 0; }
-  .registrar-grade-change-process { width: 100%; }
+  .registrar-grade-change-grade-grid > div:nth-last-child(-n + 3) {
+    border-right: 1px solid #edf2ee;
+    border-bottom: 1px solid #edf2ee;
+  }
+  .registrar-grade-change-grade-grid > div:nth-child(2n) {
+    border-right: 0;
+  }
+  .registrar-grade-change-grade-grid > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+  .registrar-grade-change-process {
+    width: 100%;
+  }
   .registrar-grade-change-state--loading,
   .registrar-grade-change-state--empty,
-  .registrar-grade-change-state--error { grid-template-columns: 1fr; justify-items: center; text-align: center; }
-  .registrar-grade-change-state--error button { width: 100%; }
-  .registrar-grade-change-modal-backdrop { align-items: flex-start; padding: 10px; }
-  .registrar-grade-change-modal { max-height: calc(100vh - 20px); }
-  .registrar-grade-change-modal > footer { flex-direction: column-reverse; }
-  .registrar-grade-change-modal > footer button { width: 100%; }
+  .registrar-grade-change-state--error {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .registrar-grade-change-state--error button {
+    width: 100%;
+  }
+  .registrar-grade-change-modal-backdrop {
+    align-items: flex-start;
+    padding: 10px;
+  }
+  .registrar-grade-change-modal {
+    max-height: calc(100vh - 20px);
+  }
+  .registrar-grade-change-modal > footer {
+    flex-direction: column-reverse;
+  }
+  .registrar-grade-change-modal > footer button {
+    width: 100%;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .registrar-grade-change-page *,
   .registrar-grade-change-page *::before,
   .registrar-grade-change-page *::after {
-    animation-duration: .01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -885,14 +1324,24 @@
   padding: 24px 26px 44px;
   overflow-x: clip;
   background:
-    radial-gradient(circle at 7% 8%, rgba(25, 140, 83, .14), transparent 28%),
-    radial-gradient(circle at 96% 3%, rgba(206, 170, 62, .13), transparent 30%),
-    repeating-linear-gradient(137deg,
-      transparent 0 70px, rgba(255,255,255,.14) 70px 82px,
-      transparent 82px 154px),
-    repeating-linear-gradient(45deg,
-      transparent 0 116px, rgba(34,125,75,.055) 116px 134px,
-      transparent 134px 240px),
+    radial-gradient(circle at 7% 8%, rgba(25, 140, 83, 0.14), transparent 28%),
+    radial-gradient(
+      circle at 96% 3%,
+      rgba(206, 170, 62, 0.13),
+      transparent 30%
+    ),
+    repeating-linear-gradient(
+      137deg,
+      transparent 0 70px,
+      rgba(255, 255, 255, 0.14) 70px 82px,
+      transparent 82px 154px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 116px,
+      rgba(34, 125, 75, 0.055) 116px 134px,
+      transparent 134px 240px
+    ),
     linear-gradient(180deg, #e4f2e9, #d8eae0);
 }
 
@@ -901,14 +1350,22 @@
   min-height: 186px;
   margin-bottom: 16px;
   padding: 28px 30px;
-  border: 1px solid rgba(5, 87, 48, .22);
+  border: 1px solid rgba(5, 87, 48, 0.22);
   border-radius: 24px;
   color: #fff;
   background:
-    radial-gradient(circle at 82% 0%, rgba(242,255,247,.16) 0 7%, transparent 7.5%),
-    radial-gradient(circle at 106% 110%, rgba(239,255,240,.14) 0 20%, transparent 20.5%),
+    radial-gradient(
+      circle at 82% 0%,
+      rgba(242, 255, 247, 0.16) 0 7%,
+      transparent 7.5%
+    ),
+    radial-gradient(
+      circle at 106% 110%,
+      rgba(239, 255, 240, 0.14) 0 20%,
+      transparent 20.5%
+    ),
     linear-gradient(110deg, #034b2e 0%, #08723e 64%, #29935c 100%);
-  box-shadow: 0 16px 32px rgba(14, 86, 50, .17);
+  box-shadow: 0 16px 32px rgba(14, 86, 50, 0.17);
 }
 .registrar-grade-change-hero::before {
   content: "";
@@ -917,7 +1374,7 @@
   top: -95px;
   width: 245px;
   height: 245px;
-  border: 48px solid rgba(255,255,255,.065);
+  border: 48px solid rgba(255, 255, 255, 0.065);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -926,45 +1383,64 @@
   right: -95px;
   width: 270px;
   height: 270px;
-  border: 1px solid rgba(244,255,245,.18);
+  border: 1px solid rgba(244, 255, 245, 0.18);
 }
-.registrar-grade-change-hero-copy { max-width: 790px; }
+.registrar-grade-change-hero-copy {
+  max-width: 790px;
+}
 .registrar-grade-change-back {
   min-height: 32px;
   margin-bottom: 12px;
   padding: 6px 11px;
-  border: 1px solid rgba(255,255,255,.23);
+  border: 1px solid rgba(255, 255, 255, 0.23);
   border-radius: 10px;
   color: #f2fff6;
-  background: rgba(255,255,255,.13);
+  background: rgba(255, 255, 255, 0.13);
   font-size: 11px;
 }
-.registrar-grade-change-back:hover { border-color: rgba(255,255,255,.46); color: #fff; background: rgba(255,255,255,.2); }
-.registrar-grade-change-eyebrow { color: #f3fff6; font-size: 11px; letter-spacing: .045em; }
+.registrar-grade-change-back:hover {
+  border-color: rgba(255, 255, 255, 0.46);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+}
+.registrar-grade-change-eyebrow {
+  color: #f3fff6;
+  font-size: 11px;
+  letter-spacing: 0.045em;
+}
 .registrar-grade-change-eyebrow-icon {
   width: 29px;
   height: 29px;
-  border: 1px solid rgba(255,255,255,.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
-  background: rgba(255,255,255,.2);
+  background: rgba(255, 255, 255, 0.2);
 }
-.registrar-grade-change-hero h1 { color: #fff; font-size: clamp(26px, 3vw, 36px); font-weight: 800; }
-.registrar-grade-change-hero p { max-width: 800px; color: #e7f8ed; font-size: 13px; line-height: 1.7; }
+.registrar-grade-change-hero h1 {
+  color: #fff;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 800;
+}
+.registrar-grade-change-hero p {
+  max-width: 800px;
+  color: #e7f8ed;
+  font-size: 13px;
+  line-height: 1.7;
+}
 .registrar-grade-change-refresh {
   min-height: 43px;
   padding: 10px 17px;
-  border-color: rgba(255,255,255,.8);
+  border-color: rgba(255, 255, 255, 0.8);
   border-radius: 11px;
   color: #075b36;
   background: #fff;
-  box-shadow: 0 8px 18px rgba(4,55,28,.1);
+  box-shadow: 0 8px 18px rgba(4, 55, 28, 0.1);
   font-size: 12px;
 }
 .registrar-grade-change-refresh:hover:not(:disabled) {
   border-color: #fff;
   color: #074e30;
   background: #e9fff0;
-  box-shadow: 0 10px 23px rgba(4,55,28,.19);
+  box-shadow: 0 10px 23px rgba(4, 55, 28, 0.19);
 }
 
 /* Three existing metrics: green / warm amber / blue, no invented fourth card. */
@@ -973,10 +1449,10 @@
   gap: 12px;
   margin-bottom: 17px;
   padding: 11px;
-  border: 1px solid rgba(255,255,255,.86);
+  border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 23px;
-  background: rgba(255,255,255,.63);
-  box-shadow: 0 12px 28px rgba(18,76,48,.09);
+  background: rgba(255, 255, 255, 0.63);
+  box-shadow: 0 12px 28px rgba(18, 76, 48, 0.09);
 }
 .registrar-grade-change-stat-card {
   position: relative;
@@ -984,10 +1460,10 @@
   padding: 19px 17px;
   gap: 14px;
   overflow: hidden;
-  border: 1px solid rgba(235,246,237,.92);
+  border: 1px solid rgba(235, 246, 237, 0.92);
   border-radius: 17px;
   background: #edf9f1;
-  box-shadow: 0 5px 13px rgba(25,76,44,.035);
+  box-shadow: 0 5px 13px rgba(25, 76, 44, 0.035);
   isolation: isolate;
 }
 .registrar-grade-change-stat-card::before {
@@ -1006,15 +1482,27 @@
   width: 105px;
   height: 105px;
   border-radius: 50%;
-  background: rgba(24,143,78,.075);
+  background: rgba(24, 143, 78, 0.075);
   pointer-events: none;
 }
-.registrar-grade-change-stat-card:nth-child(2) { background: #fff8e7; }
-.registrar-grade-change-stat-card:nth-child(3) { background: #eff5ff; }
-.registrar-grade-change-stat-card:nth-child(2)::before { background: #dca10b; }
-.registrar-grade-change-stat-card:nth-child(3)::before { background: #2863f1; }
-.registrar-grade-change-stat-card:nth-child(2)::after { background: rgba(218,164,20,.11); }
-.registrar-grade-change-stat-card:nth-child(3)::after { background: rgba(53,105,230,.09); }
+.registrar-grade-change-stat-card:nth-child(2) {
+  background: #fff8e7;
+}
+.registrar-grade-change-stat-card:nth-child(3) {
+  background: #eff5ff;
+}
+.registrar-grade-change-stat-card:nth-child(2)::before {
+  background: #dca10b;
+}
+.registrar-grade-change-stat-card:nth-child(3)::before {
+  background: #2863f1;
+}
+.registrar-grade-change-stat-card:nth-child(2)::after {
+  background: rgba(218, 164, 20, 0.11);
+}
+.registrar-grade-change-stat-card:nth-child(3)::after {
+  background: rgba(53, 105, 230, 0.09);
+}
 .registrar-grade-change-stat-icon,
 .registrar-grade-change-stat-icon--primary {
   position: relative;
@@ -1026,37 +1514,56 @@
   border-radius: 13px;
   color: #fff;
   background: linear-gradient(150deg, #0e9653, #035e39);
-  box-shadow: 0 7px 15px rgba(17,107,63,.14);
+  box-shadow: 0 7px 15px rgba(17, 107, 63, 0.14);
 }
-.registrar-grade-change-stat-icon svg { display: block; stroke: currentColor; opacity: 1; }
-.registrar-grade-change-stat-card:nth-child(2) .registrar-grade-change-stat-icon {
+.registrar-grade-change-stat-icon svg {
+  display: block;
+  stroke: currentColor;
+  opacity: 1;
+}
+.registrar-grade-change-stat-card:nth-child(2)
+  .registrar-grade-change-stat-icon {
   border-color: #f1d690;
   color: #ad7a00;
   background: #fff2d0;
   box-shadow: none;
 }
-.registrar-grade-change-stat-card:nth-child(3) .registrar-grade-change-stat-icon {
+.registrar-grade-change-stat-card:nth-child(3)
+  .registrar-grade-change-stat-icon {
   border-color: #cfddff;
   color: #2863f1;
   background: #eaf1ff;
   box-shadow: none;
 }
-.registrar-grade-change-stat-card small { margin-bottom: 4px; color: #596d60; font-size: 10px; font-weight: 800; }
-.registrar-grade-change-stat-card strong { color: #17251c; font-size: clamp(21px, 2.2vw, 26px); font-weight: 830; }
-.registrar-grade-change-stat-card p { margin-top: 3px; color: #788a7b; font-size: 10px; }
+.registrar-grade-change-stat-card small {
+  margin-bottom: 4px;
+  color: #596d60;
+  font-size: 10px;
+  font-weight: 800;
+}
+.registrar-grade-change-stat-card strong {
+  color: #17251c;
+  font-size: clamp(21px, 2.2vw, 26px);
+  font-weight: 830;
+}
+.registrar-grade-change-stat-card p {
+  margin-top: 3px;
+  color: #788a7b;
+  font-size: 10px;
+}
 
 /* Queue directory, filters, status markers. */
 .registrar-grade-change-panel {
-  border: 1px solid rgba(230,242,234,.94);
+  border: 1px solid rgba(230, 242, 234, 0.94);
   border-radius: 24px;
   background: #fff;
-  box-shadow: 0 16px 34px rgba(26,74,47,.095);
+  box-shadow: 0 16px 34px rgba(26, 74, 47, 0.095);
 }
 .registrar-grade-change-panel-heading {
   align-items: center;
   padding: 23px 25px 20px;
   border-bottom: 1px solid #e3eee7;
-  background: linear-gradient(110deg,#fff 67%,#f1faf5 100%);
+  background: linear-gradient(110deg, #fff 67%, #f1faf5 100%);
 }
 .registrar-grade-change-panel-heading > div > span {
   display: inline-flex;
@@ -1069,8 +1576,15 @@
   background: #e7f7ed;
   font-size: 9.5px;
 }
-.registrar-grade-change-panel-heading h2 { font-size: 22px; font-weight: 800; }
-.registrar-grade-change-panel-heading p { margin-top: 7px; font-size: 11px; line-height: 1.6; }
+.registrar-grade-change-panel-heading h2 {
+  font-size: 22px;
+  font-weight: 800;
+}
+.registrar-grade-change-panel-heading p {
+  margin-top: 7px;
+  font-size: 11px;
+  line-height: 1.6;
+}
 .registrar-grade-change-count {
   padding: 9px 13px;
   border-color: #cce9d4;
@@ -1085,7 +1599,11 @@
   background: #fbfdfb;
 }
 .registrar-grade-change-search > span,
-.registrar-grade-change-filter-field > span { color: #506455; font-size: 10px; font-weight: 760; }
+.registrar-grade-change-filter-field > span {
+  color: #506455;
+  font-size: 10px;
+  font-weight: 760;
+}
 .registrar-grade-change-search input,
 .registrar-grade-change-filter-field select {
   min-height: 44px;
@@ -1097,137 +1615,371 @@
   background: #fff;
   font-size: 12px;
 }
-.registrar-grade-change-search input { padding-left: 35px; }
-.registrar-grade-change-search svg { left: 12px; color: #667f6f; }
+.registrar-grade-change-search input {
+  padding-left: 35px;
+}
+.registrar-grade-change-search svg {
+  left: 12px;
+  color: #667f6f;
+}
 .registrar-grade-change-clear {
   min-height: 44px;
   padding: 10px 14px;
   border-radius: 11px;
   font-size: 11px;
 }
-.registrar-grade-change-request-list { gap: 17px; padding: 18px 22px 23px; background: #f8fcf9; }
+.registrar-grade-change-request-list {
+  gap: 17px;
+  padding: 18px 22px 23px;
+  background: #f8fcf9;
+}
 .registrar-grade-change-card {
   border-color: #dcebe1;
   border-radius: 17px;
-  box-shadow: 0 7px 20px rgba(27,75,47,.055);
+  box-shadow: 0 7px 20px rgba(27, 75, 47, 0.055);
 }
-.registrar-grade-change-card:hover { border-color: #b8d9c3; box-shadow: 0 11px 25px rgba(27,75,47,.09); }
-.registrar-grade-change-card-header { padding: 17px 19px; background: linear-gradient(110deg,#fff,#f7fcf9); }
-.registrar-grade-change-student-icon { color: #fff; background: #0c7848; border-color: #0c7848; }
-.registrar-grade-change-student strong { font-size: 13px; }
+.registrar-grade-change-card:hover {
+  border-color: #b8d9c3;
+  box-shadow: 0 11px 25px rgba(27, 75, 47, 0.09);
+}
+.registrar-grade-change-card-header {
+  padding: 17px 19px;
+  background: linear-gradient(110deg, #fff, #f7fcf9);
+}
+.registrar-grade-change-student-icon {
+  color: #fff;
+  background: #0c7848;
+  border-color: #0c7848;
+}
+.registrar-grade-change-student strong {
+  font-size: 13px;
+}
 .registrar-grade-change-student p,
-.registrar-grade-change-student small { font-size: 10px; }
-.registrar-grade-change-status { padding: 7px 11px; font-size: 10px; }
-.registrar-grade-change-context-item { padding: 15px 18px; }
-.registrar-grade-change-context-icon { border-radius: 10px; }
+.registrar-grade-change-student small {
+  font-size: 10px;
+}
+.registrar-grade-change-status {
+  padding: 7px 11px;
+  font-size: 10px;
+}
+.registrar-grade-change-context-item {
+  padding: 15px 18px;
+}
+.registrar-grade-change-context-icon {
+  border-radius: 10px;
+}
 .registrar-grade-change-context-item small,
 .registrar-grade-change-grade-grid small,
 .registrar-grade-change-reason small,
 .registrar-grade-change-card-footer small,
-.registrar-grade-change-modal-summary small { font-size: 9px; }
-.registrar-grade-change-context-item strong { font-size: 11px; }
-.registrar-grade-change-context-item p { font-size: 9.5px; }
-.registrar-grade-change-comparison { gap: 14px; padding: 16px 18px; background: #fcfefc; }
-.registrar-grade-change-grade-block { border-color: #dce9e0; border-radius: 13px; }
-.registrar-grade-change-grade-block--approved { border-color: #b7e2c7; box-shadow: 0 5px 13px rgba(19,114,63,.055); }
-.registrar-grade-change-grade-block--approved > header { background: #effaf3; }
-.registrar-grade-change-grade-block > header { padding: 12px 13px; }
-.registrar-grade-change-grade-block header strong { font-size: 11px; }
-.registrar-grade-change-grade-grid > div { padding: 11px 12px; }
-.registrar-grade-change-grade-grid strong { font-size: 11px; }
-.registrar-grade-change-reason { padding: 12px 14px; }
-.registrar-grade-change-reason p { font-size: 10px; }
-.registrar-grade-change-review-grid { gap: 11px; padding: 15px 18px; }
-.registrar-grade-change-review-note { padding: 12px; border-radius: 11px; }
-.registrar-grade-change-review-note strong { font-size: 10.5px; }
-.registrar-grade-change-review-note p { font-size: 10px; }
-.registrar-grade-change-completed-note { margin: 0 18px 15px; padding: 12px 14px; }
-.registrar-grade-change-completed-note strong { font-size: 10.5px; }
-.registrar-grade-change-completed-note p { font-size: 10px; }
-.registrar-grade-change-card-footer { min-height: 65px; padding: 12px 18px; border-top: 1px solid #edf3ee; background: #fff; }
-.registrar-grade-change-card-footer > div strong { font-size: 10.5px; }
-.registrar-grade-change-process { min-height: 40px; padding: 10px 14px; border-radius: 10px; font-size: 10.5px; }
-.registrar-grade-change-complete-label { padding: 8px 10px; font-size: 9.5px; }
-.registrar-grade-change-state { margin: 19px; padding: 30px; border-radius: 16px; background: #f4fbf6; }
-.registrar-grade-change-state--error { background: #fff3f2; }
-.registrar-grade-change-state strong { font-size: 12px; }
-.registrar-grade-change-state p { font-size: 10.5px; }
+.registrar-grade-change-modal-summary small {
+  font-size: 9px;
+}
+.registrar-grade-change-context-item strong {
+  font-size: 11px;
+}
+.registrar-grade-change-context-item p {
+  font-size: 9.5px;
+}
+.registrar-grade-change-comparison {
+  gap: 14px;
+  padding: 16px 18px;
+  background: #fcfefc;
+}
+.registrar-grade-change-grade-block {
+  border-color: #dce9e0;
+  border-radius: 13px;
+}
+.registrar-grade-change-grade-block--approved {
+  border-color: #b7e2c7;
+  box-shadow: 0 5px 13px rgba(19, 114, 63, 0.055);
+}
+.registrar-grade-change-grade-block--approved > header {
+  background: #effaf3;
+}
+.registrar-grade-change-grade-block > header {
+  padding: 12px 13px;
+}
+.registrar-grade-change-grade-block header strong {
+  font-size: 11px;
+}
+.registrar-grade-change-grade-grid > div {
+  padding: 11px 12px;
+}
+.registrar-grade-change-grade-grid strong {
+  font-size: 11px;
+}
+.registrar-grade-change-reason {
+  padding: 12px 14px;
+}
+.registrar-grade-change-reason p {
+  font-size: 10px;
+}
+.registrar-grade-change-review-grid {
+  gap: 11px;
+  padding: 15px 18px;
+}
+.registrar-grade-change-review-note {
+  padding: 12px;
+  border-radius: 11px;
+}
+.registrar-grade-change-review-note strong {
+  font-size: 10.5px;
+}
+.registrar-grade-change-review-note p {
+  font-size: 10px;
+}
+.registrar-grade-change-completed-note {
+  margin: 0 18px 15px;
+  padding: 12px 14px;
+}
+.registrar-grade-change-completed-note strong {
+  font-size: 10.5px;
+}
+.registrar-grade-change-completed-note p {
+  font-size: 10px;
+}
+.registrar-grade-change-card-footer {
+  min-height: 65px;
+  padding: 12px 18px;
+  border-top: 1px solid #edf3ee;
+  background: #fff;
+}
+.registrar-grade-change-card-footer > div strong {
+  font-size: 10.5px;
+}
+.registrar-grade-change-process {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 10.5px;
+}
+.registrar-grade-change-complete-label {
+  padding: 8px 10px;
+  font-size: 9.5px;
+}
+.registrar-grade-change-state {
+  margin: 19px;
+  padding: 30px;
+  border-radius: 16px;
+  background: #f4fbf6;
+}
+.registrar-grade-change-state--error {
+  background: #fff3f2;
+}
+.registrar-grade-change-state strong {
+  font-size: 12px;
+}
+.registrar-grade-change-state p {
+  font-size: 10.5px;
+}
 
 /* Action notice. Preserve the critical green success / rose error distinction. */
-.registrar-grade-change-notice { padding: 14px 16px; border-radius: 13px; }
-.registrar-grade-change-notice strong { font-size: 12px; }
-.registrar-grade-change-notice p { font-size: 10.5px; }
+.registrar-grade-change-notice {
+  padding: 14px 16px;
+  border-radius: 13px;
+}
+.registrar-grade-change-notice strong {
+  font-size: 12px;
+}
+.registrar-grade-change-notice p {
+  font-size: 10.5px;
+}
 
 /* Processing dialog with a dark-green title region and clear grade comparison. */
 .registrar-grade-change-modal-backdrop {
   padding: 16px;
-  background: rgba(4,24,13,.66);
+  background: rgba(4, 24, 13, 0.66);
   backdrop-filter: blur(4px);
 }
-.registrar-grade-change-modal { width: min(730px,100%); border-radius: 20px; border-color: #cce2d3; }
+.registrar-grade-change-modal {
+  width: min(730px, 100%);
+  border-radius: 20px;
+  border-color: #cce2d3;
+}
 .registrar-grade-change-modal-header {
   padding: 22px 23px;
-  border-bottom-color: rgba(255,255,255,.16);
-  background: linear-gradient(115deg,#075031,#0e7b47 72%,#24905b);
+  border-bottom-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(115deg, #075031, #0e7b47 72%, #24905b);
 }
-.registrar-grade-change-modal-icon { color: #fff; background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.14); }
+.registrar-grade-change-modal-icon {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.14);
+}
 .registrar-grade-change-modal-header small,
-.registrar-grade-change-modal-header h2 { color: #fff; }
-.registrar-grade-change-modal-header h2 { font-size: 20px; }
-.registrar-grade-change-modal-header p { color: #e1f7e8; font-size: 10.5px; line-height: 1.6; }
-.registrar-grade-change-modal-close { color: #fff; border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.14); }
-.registrar-grade-change-modal-close:hover:not(:disabled) { color: #fff; background: rgba(255,255,255,.23); }
-.registrar-grade-change-modal-summary { gap: 10px; padding: 19px 21px 0; }
-.registrar-grade-change-modal-summary > div { padding: 14px; border-color: #d8eadf; border-radius: 12px; background: #f5fbf7; }
-.registrar-grade-change-modal-summary strong { font-size: 11.5px; }
-.registrar-grade-change-modal-summary span { font-size: 9.5px; }
-.registrar-grade-change-modal-warning { margin: 16px 21px 0; padding: 12px 13px; border-radius: 12px; }
-.registrar-grade-change-modal-warning p { font-size: 10px; }
-.registrar-grade-change-modal-field { padding: 19px 21px 22px; }
-.registrar-grade-change-modal-field label { font-size: 11px; }
-.registrar-grade-change-modal-field textarea { min-height: 125px; padding: 13px; border-radius: 11px; font-size: 11px; }
-.registrar-grade-change-modal > footer { gap: 10px; padding: 16px 21px; }
-.registrar-grade-change-modal > footer button { min-height: 42px; padding: 10px 15px; border-radius: 10px; font-size: 10.5px; }
+.registrar-grade-change-modal-header h2 {
+  color: #fff;
+}
+.registrar-grade-change-modal-header h2 {
+  font-size: 20px;
+}
+.registrar-grade-change-modal-header p {
+  color: #e1f7e8;
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+.registrar-grade-change-modal-close {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+}
+.registrar-grade-change-modal-close:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.23);
+}
+.registrar-grade-change-modal-summary {
+  gap: 10px;
+  padding: 19px 21px 0;
+}
+.registrar-grade-change-modal-summary > div {
+  padding: 14px;
+  border-color: #d8eadf;
+  border-radius: 12px;
+  background: #f5fbf7;
+}
+.registrar-grade-change-modal-summary strong {
+  font-size: 11.5px;
+}
+.registrar-grade-change-modal-summary span {
+  font-size: 9.5px;
+}
+.registrar-grade-change-modal-warning {
+  margin: 16px 21px 0;
+  padding: 12px 13px;
+  border-radius: 12px;
+}
+.registrar-grade-change-modal-warning p {
+  font-size: 10px;
+}
+.registrar-grade-change-modal-field {
+  padding: 19px 21px 22px;
+}
+.registrar-grade-change-modal-field label {
+  font-size: 11px;
+}
+.registrar-grade-change-modal-field textarea {
+  min-height: 125px;
+  padding: 13px;
+  border-radius: 11px;
+  font-size: 11px;
+}
+.registrar-grade-change-modal > footer {
+  gap: 10px;
+  padding: 16px 21px;
+}
+.registrar-grade-change-modal > footer button {
+  min-height: 42px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 10.5px;
+}
 
 /* Responsive: respect original narrow-screen stacks without clipping content. */
 @media (max-width: 1024px) {
-  .registrar-grade-change-page { padding: 22px 20px 34px; }
-  .registrar-grade-change-hero { min-height: 0; padding: 27px 25px; }
+  .registrar-grade-change-page {
+    padding: 22px 20px 34px;
+  }
+  .registrar-grade-change-hero {
+    min-height: 0;
+    padding: 27px 25px;
+  }
 }
 @media (max-width: 850px) {
-  .registrar-grade-change-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .registrar-grade-change-stat-card:last-child { grid-column: 1 / -1; }
-  .registrar-grade-change-toolbar { grid-template-columns: 1fr 1fr; }
+  .registrar-grade-change-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .registrar-grade-change-stat-card:last-child {
+    grid-column: 1 / -1;
+  }
+  .registrar-grade-change-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 @media (max-width: 620px) {
-  .registrar-grade-change-page { padding: 16px 12px 29px; }
-  .registrar-grade-change-hero { padding: 23px 20px; border-radius: 19px; }
-  .registrar-grade-change-hero h1 { font-size: 27px; }
-  .registrar-grade-change-stats { grid-template-columns: 1fr; padding: 9px; border-radius: 18px; }
-  .registrar-grade-change-stat-card:last-child { grid-column: auto; }
-  .registrar-grade-change-stat-card { min-height: 94px; }
-  .registrar-grade-change-panel { border-radius: 19px; }
-  .registrar-grade-change-panel-heading { padding: 20px 17px; }
-  .registrar-grade-change-panel-heading h2 { font-size: 20px; }
-  .registrar-grade-change-toolbar { grid-template-columns: 1fr; padding: 15px; }
-  .registrar-grade-change-request-list { padding: 12px; }
+  .registrar-grade-change-page {
+    padding: 16px 12px 29px;
+  }
+  .registrar-grade-change-hero {
+    padding: 23px 20px;
+    border-radius: 19px;
+  }
+  .registrar-grade-change-hero h1 {
+    font-size: 27px;
+  }
+  .registrar-grade-change-stats {
+    grid-template-columns: 1fr;
+    padding: 9px;
+    border-radius: 18px;
+  }
+  .registrar-grade-change-stat-card:last-child {
+    grid-column: auto;
+  }
+  .registrar-grade-change-stat-card {
+    min-height: 94px;
+  }
+  .registrar-grade-change-panel {
+    border-radius: 19px;
+  }
+  .registrar-grade-change-panel-heading {
+    padding: 20px 17px;
+  }
+  .registrar-grade-change-panel-heading h2 {
+    font-size: 20px;
+  }
+  .registrar-grade-change-toolbar {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+  .registrar-grade-change-request-list {
+    padding: 12px;
+  }
   .registrar-grade-change-card-header,
-  .registrar-grade-change-context-item { padding: 13px; }
-  .registrar-grade-change-comparison { padding: 12px; }
-  .registrar-grade-change-modal-header { padding: 19px 17px; }
-  .registrar-grade-change-modal-summary { padding: 14px 15px 0; }
-  .registrar-grade-change-modal-field { padding: 16px; }
-  .registrar-grade-change-modal-warning { margin: 12px 15px 0; }
-  .registrar-grade-change-modal > footer { padding: 14px 15px; }
+  .registrar-grade-change-context-item {
+    padding: 13px;
+  }
+  .registrar-grade-change-comparison {
+    padding: 12px;
+  }
+  .registrar-grade-change-modal-header {
+    padding: 19px 17px;
+  }
+  .registrar-grade-change-modal-summary {
+    padding: 14px 15px 0;
+  }
+  .registrar-grade-change-modal-field {
+    padding: 16px;
+  }
+  .registrar-grade-change-modal-warning {
+    margin: 12px 15px 0;
+  }
+  .registrar-grade-change-modal > footer {
+    padding: 14px 15px;
+  }
 }
 
 /* Dark mode: charcoal surfaces throughout, especially modal and loading states;
    no white transition, page-entry animation, or white loading overlay. */
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .dashboard-main:has(.registrar-grade-change-page) > .dashboard-content {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .dashboard-main:has(.registrar-grade-change-page)
+  > .dashboard-content {
   background: #111c15;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
   .registrar-grade-change-page {
   --rgc-text-950: #eff8f1;
   --rgc-text-800: #e1f0e5;
@@ -1242,100 +1994,351 @@
   background: #111c15;
   background-image: none;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-stats,.registrar-grade-change-panel) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(.registrar-grade-change-stats, .registrar-grade-change-panel) {
   border-color: #3c5844;
   background: #1b2c20;
-  box-shadow: 0 12px 24px rgba(0,0,0,.2);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-stat-card { border-color: #3a5945; background: #213e2a; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-stat-card:nth-child(2) { background: #423720; border-color: #74613d; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-stat-card:nth-child(3) { background: #273b52; border-color: #456283; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-stat-card small,.registrar-grade-change-stat-card p) { color: #b5cebb; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-stat-card strong { color: #f5fff6; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-panel-heading,.registrar-grade-change-toolbar,.registrar-grade-change-request-list,
-      .registrar-grade-change-card,.registrar-grade-change-card-header,.registrar-grade-change-comparison,
-      .registrar-grade-change-card-footer,.registrar-grade-change-modal > footer) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stat-card {
+  border-color: #3a5945;
+  background: #213e2a;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stat-card:nth-child(2) {
+  background: #423720;
+  border-color: #74613d;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stat-card:nth-child(3) {
+  background: #273b52;
+  border-color: #456283;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-stat-card small,
+    .registrar-grade-change-stat-card p
+  ) {
+  color: #b5cebb;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stat-card
+  strong {
+  color: #f5fff6;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-panel-heading,
+    .registrar-grade-change-toolbar,
+    .registrar-grade-change-request-list,
+    .registrar-grade-change-card,
+    .registrar-grade-change-card-header,
+    .registrar-grade-change-comparison,
+    .registrar-grade-change-card-footer,
+    .registrar-grade-change-modal > footer
+  ) {
   border-color: #395641;
   background: #1c2c21;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-card,.registrar-grade-change-grade-block,
-      .registrar-grade-change-review-note,.registrar-grade-change-completed-note,
-      .registrar-grade-change-context-item,.registrar-grade-change-modal-summary > div,
-      .registrar-grade-change-modal-warning,.registrar-grade-change-state,
-      .registrar-grade-change-reason,.registrar-grade-change-grade-grid > div) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-card,
+    .registrar-grade-change-grade-block,
+    .registrar-grade-change-review-note,
+    .registrar-grade-change-completed-note,
+    .registrar-grade-change-context-item,
+    .registrar-grade-change-modal-summary > div,
+    .registrar-grade-change-modal-warning,
+    .registrar-grade-change-state,
+    .registrar-grade-change-reason,
+    .registrar-grade-change-grade-grid > div
+  ) {
   border-color: #3e5b47;
   background: #23372a;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-grade-block > header,.registrar-grade-change-grade-block--approved > header) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-grade-block > header,
+    .registrar-grade-change-grade-block--approved > header
+  ) {
   background: #2d4433;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-panel-heading h2,.registrar-grade-change-student strong,
-      .registrar-grade-change-context-item strong,.registrar-grade-change-grade-grid strong,
-      .registrar-grade-change-grade-block header strong,.registrar-grade-change-card-footer strong,
-      .registrar-grade-change-review-note strong,.registrar-grade-change-modal-summary strong,
-      .registrar-grade-change-modal-field label) { color: #eff8f1; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-panel-heading p,.registrar-grade-change-student p,
-      .registrar-grade-change-student small,.registrar-grade-change-context-item p,
-      .registrar-grade-change-grade-grid small,.registrar-grade-change-reason p,
-      .registrar-grade-change-review-note p,.registrar-grade-change-modal-summary span,
-      .registrar-grade-change-modal-warning p,.registrar-grade-change-modal-field > div:first-child span) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-panel-heading h2,
+    .registrar-grade-change-student strong,
+    .registrar-grade-change-context-item strong,
+    .registrar-grade-change-grade-grid strong,
+    .registrar-grade-change-grade-block header strong,
+    .registrar-grade-change-card-footer strong,
+    .registrar-grade-change-review-note strong,
+    .registrar-grade-change-modal-summary strong,
+    .registrar-grade-change-modal-field label
+  ) {
+  color: #eff8f1;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-panel-heading p,
+    .registrar-grade-change-student p,
+    .registrar-grade-change-student small,
+    .registrar-grade-change-context-item p,
+    .registrar-grade-change-grade-grid small,
+    .registrar-grade-change-reason p,
+    .registrar-grade-change-review-note p,
+    .registrar-grade-change-modal-summary span,
+    .registrar-grade-change-modal-warning p,
+    .registrar-grade-change-modal-field > div:first-child span
+  ) {
   color: #b5cab9;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-search input,.registrar-grade-change-filter-field select,
-      .registrar-grade-change-modal-field textarea) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-search input,
+    .registrar-grade-change-filter-field select,
+    .registrar-grade-change-modal-field textarea
+  ) {
   border-color: #4a6753;
   color: #eef9f1;
   background: #132418;
   color-scheme: dark;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-search input::placeholder { color: #9db5a4; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  :is(.registrar-grade-change-clear,.registrar-grade-change-modal-close,
-      .registrar-grade-change-modal > footer .cancel) {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-search
+  input::placeholder {
+  color: #9db5a4;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-clear,
+    .registrar-grade-change-modal-close,
+    .registrar-grade-change-modal > footer .cancel
+  ) {
   border-color: #4d7659;
   color: #def3e4;
   background: #254330;
 }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-modal { border-color: #45634e; background: #1c2d21; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-modal-header { background: linear-gradient(110deg,#06472d,#11613d); }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-state--error { border-color: #925b53; color: #ffdcd6; background: #452824; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-state--error p { color: #f2c4ba; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-notice.success { color: #daf5e3; border-color: #47755a; background: #234432; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-notice.error { color: #ffdbd6; border-color: #855348; background: #422724; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-modal-error { color: #ffd4cc; border-color: #8b524a; background: #492826; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-modal-warning { color: #b4e9c9; }
-:is(html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark,.dark-mode,.theme-dark)
-  .registrar-grade-change-hero { color: #fff; }
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-modal {
+  border-color: #45634e;
+  background: #1c2d21;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-modal-header {
+  background: linear-gradient(110deg, #06472d, #11613d);
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-state--error {
+  border-color: #925b53;
+  color: #ffdcd6;
+  background: #452824;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-state--error
+  p {
+  color: #f2c4ba;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-notice.success {
+  color: #daf5e3;
+  border-color: #47755a;
+  background: #234432;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-notice.error {
+  color: #ffdbd6;
+  border-color: #855348;
+  background: #422724;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-modal-error {
+  color: #ffd4cc;
+  border-color: #8b524a;
+  background: #492826;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-modal-warning {
+  color: #b4e9c9;
+}
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-hero {
+  color: #fff;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .registrar-grade-change-hero,
   .registrar-grade-change-stat-card,
   .registrar-grade-change-card,
   .registrar-grade-change-process,
-  .registrar-grade-change-refresh { transition: none; }
+  .registrar-grade-change-refresh {
+    transition: none;
+  }
   .registrar-grade-change-spin,
-  .registrar-grade-change-spinner { animation: none; }
+  .registrar-grade-change-spinner {
+    animation: none;
+  }
 }
 /* =========================================================
    PTC PORTAL — REGISTRAR SEMANTIC STATUS COLORS
@@ -1347,13 +2350,13 @@
 .registrar-grade-change-stats > .registrar-grade-change-stat-card:nth-child(1) {
   --reg-sem-accent: #64748b;
   --reg-sem-surface: #f2f6f9;
-  --reg-sem-watermark: rgba(100,116,139,.10);
+  --reg-sem-watermark: rgba(100, 116, 139, 0.1);
   --reg-sem-icon-bg: #e8eef4;
   --reg-sem-icon-border: #cfdae5;
   --reg-sem-icon-fg: #475569;
   --reg-sem-dark-bg: #26343c;
   --reg-sem-dark-border: #4b606c;
-  --reg-sem-dark-watermark: rgba(148,163,184,.08);
+  --reg-sem-dark-watermark: rgba(148, 163, 184, 0.08);
   --reg-sem-dark-icon-bg: #354956;
   --reg-sem-dark-icon-fg: #d3e0e9;
 }
@@ -1362,13 +2365,13 @@
 .registrar-grade-change-stats > .registrar-grade-change-stat-card:nth-child(2) {
   --reg-sem-accent: #d69b22;
   --reg-sem-surface: #fff8e8;
-  --reg-sem-watermark: rgba(218,164,27,.10);
+  --reg-sem-watermark: rgba(218, 164, 27, 0.1);
   --reg-sem-icon-bg: #fff0cc;
   --reg-sem-icon-border: #efd399;
   --reg-sem-icon-fg: #9c6714;
   --reg-sem-dark-bg: #423520;
   --reg-sem-dark-border: #826536;
-  --reg-sem-dark-watermark: rgba(251,191,36,.08);
+  --reg-sem-dark-watermark: rgba(251, 191, 36, 0.08);
   --reg-sem-dark-icon-bg: #554426;
   --reg-sem-dark-icon-fg: #f8d38d;
 }
@@ -1377,13 +2380,13 @@
 .registrar-grade-change-stats > .registrar-grade-change-stat-card:nth-child(3) {
   --reg-sem-accent: #2867e6;
   --reg-sem-surface: #eef5ff;
-  --reg-sem-watermark: rgba(40,105,237,.09);
+  --reg-sem-watermark: rgba(40, 105, 237, 0.09);
   --reg-sem-icon-bg: #e6f0ff;
   --reg-sem-icon-border: #c9dcff;
   --reg-sem-icon-fg: #1d56ce;
   --reg-sem-dark-bg: #25394f;
   --reg-sem-dark-border: #456995;
-  --reg-sem-dark-watermark: rgba(96,165,250,.08);
+  --reg-sem-dark-watermark: rgba(96, 165, 250, 0.08);
   --reg-sem-dark-icon-bg: #2d4e70;
   --reg-sem-dark-icon-fg: #a4ccff;
 }
@@ -1399,26 +2402,72 @@
 .registrar-grade-change-stats > .registrar-grade-change-stat-card::after {
   background: var(--reg-sem-watermark);
 }
-.registrar-grade-change-stats > .registrar-grade-change-stat-card .registrar-grade-change-stat-icon {
+.registrar-grade-change-stats
+  > .registrar-grade-change-stat-card
+  .registrar-grade-change-stat-icon {
   color: var(--reg-sem-icon-fg);
   border-color: var(--reg-sem-icon-border);
   background: var(--reg-sem-icon-bg);
   box-shadow: none;
 }
-.registrar-grade-change-stats > .registrar-grade-change-stat-card .registrar-grade-change-stat-icon svg { color: inherit; stroke: currentColor; opacity: 1; }
+.registrar-grade-change-stats
+  > .registrar-grade-change-stat-card
+  .registrar-grade-change-stat-icon
+  svg {
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
+}
 
 /* Dark Mode: status colors remain legible on charcoal panels. */
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-grade-change-stats > .registrar-grade-change-stat-card {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stats
+  > .registrar-grade-change-stat-card {
   background: var(--reg-sem-dark-bg) !important;
   border-color: var(--reg-sem-dark-border);
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-grade-change-stats > .registrar-grade-change-stat-card::before {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stats
+  > .registrar-grade-change-stat-card::before {
   background: var(--reg-sem-accent);
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-grade-change-stats > .registrar-grade-change-stat-card::after {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stats
+  > .registrar-grade-change-stat-card::after {
   background: var(--reg-sem-dark-watermark);
 }
-:is(html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark, .dark-mode, .theme-dark) .registrar-grade-change-stats > .registrar-grade-change-stat-card .registrar-grade-change-stat-icon {
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-stats
+  > .registrar-grade-change-stat-card
+  .registrar-grade-change-stat-icon {
   color: var(--reg-sem-dark-icon-fg);
   background: var(--reg-sem-dark-icon-bg);
   border-color: var(--reg-sem-dark-border);
@@ -1426,21 +2475,36 @@
 }
 
 /* Page Layout */
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(.registrar-grade-change-page) {
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]:has(
+    .registrar-grade-change-page
+  ) {
   --ptc-canvas-color: #111719;
   --ptc-canvas-pattern: none;
 }
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   .dashboard-main:has(> .dashboard-content > .registrar-grade-change-page),
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main:has(> .dashboard-content > .registrar-grade-change-page) > .dashboard-content,
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
-  .dashboard-main .dashboard-content > .registrar-grade-change-page {
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .registrar-grade-change-page)
+  > .dashboard-content,
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main
+  .dashboard-content
+  > .registrar-grade-change-page {
   background-color: #111719 !important;
   background-image: none !important;
 }
 .registrar-grade-change-page {
-  padding: calc(28px * var(--ptc-compact-scale, 1)) calc(30px * var(--ptc-compact-scale, 1)) calc(38px * var(--ptc-compact-scale, 1));
+  padding: calc(28px * var(--ptc-compact-scale, 1))
+    calc(30px * var(--ptc-compact-scale, 1))
+    calc(38px * var(--ptc-compact-scale, 1));
 }
 
 /* Header */
@@ -1448,10 +2512,11 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   min-height: 0;
   align-items: center;
   margin-bottom: calc(20px * var(--ptc-compact-scale, 1));
-  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
-  border: 1px solid #0C633B;
+  padding: calc(30px * var(--ptc-compact-scale, 1))
+    calc(32px * var(--ptc-compact-scale, 1));
+  border: 1px solid #0c633b;
   border-radius: 14px;
-  background: linear-gradient(105deg, #07512F, #0D7444);
+  background: linear-gradient(105deg, #07512f, #0d7444);
   box-shadow: none;
 }
 .registrar-grade-change-page .registrar-grade-change-hero::before,
@@ -1460,22 +2525,26 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   display: none;
 }
 .registrar-grade-change-page .registrar-grade-change-eyebrow {
-  color: #F6FFF9;
+  color: #f6fff9;
   font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
 }
 .registrar-grade-change-page .registrar-grade-change-eyebrow-icon {
-  color: #F6FFF9;
-  border: 1px solid rgba(255,255,255,.3);
-  background: rgba(255,255,255,.13);
+  color: #f6fff9;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.13);
 }
 .registrar-grade-change-page .registrar-grade-change-hero h1 {
-  color: #F6FFF9;
-  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), 3vw, calc(40px * var(--ptc-font-scale, 1)));
+  color: #f6fff9;
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    3vw,
+    calc(40px * var(--ptc-font-scale, 1))
+  );
   font-weight: 760;
 }
 .registrar-grade-change-page .registrar-grade-change-hero p {
-  color: #F6FFF9;
+  color: #f6fff9;
   font-size: calc(14px * var(--ptc-font-scale, 1));
   font-weight: 400;
 }
@@ -1490,20 +2559,21 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   gap: calc(8px * var(--ptc-compact-scale, 1));
   min-height: 40px;
   margin: 0;
-  padding: calc(10px * var(--ptc-compact-scale, 1)) calc(15px * var(--ptc-compact-scale, 1));
-  border: 1px solid #B7E4C8;
+  padding: calc(10px * var(--ptc-compact-scale, 1))
+    calc(15px * var(--ptc-compact-scale, 1));
+  border: 1px solid #b7e4c8;
   border-radius: 11px;
-  color: #0A4B2E;
-  background: #E5F7EC;
+  color: #0a4b2e;
+  background: #e5f7ec;
   box-shadow: none;
   font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 650;
   white-space: nowrap;
 }
 .registrar-grade-change-page .registrar-grade-change-back:hover {
-  color: #0A4B2E;
-  border-color: #B7E4C8;
-  background: #D4F0DF;
+  color: #0a4b2e;
+  border-color: #b7e4c8;
+  background: #d4f0df;
   box-shadow: none;
 }
 
@@ -1539,7 +2609,12 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
 .registrar-grade-change-page .registrar-grade-change-panel {
   min-width: 0;
 }
-.registrar-grade-change-page :is(.registrar-grade-change-student,.registrar-grade-change-context-item,.registrar-grade-change-grade-grid > div) {
+.registrar-grade-change-page
+  :is(
+    .registrar-grade-change-student,
+    .registrar-grade-change-context-item,
+    .registrar-grade-change-grade-grid > div
+  ) {
   overflow-wrap: anywhere;
 }
 .registrar-grade-change-page .registrar-grade-change-process,
@@ -1575,119 +2650,151 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
   overflow-y: auto;
 }
 .registrar-grade-change-page .registrar-grade-change-modal-header {
-  background: linear-gradient(105deg, #07512F, #0D7444);
+  background: linear-gradient(105deg, #07512f, #0d7444);
 }
 .registrar-grade-change-page .registrar-grade-change-modal > footer .confirm,
 .registrar-grade-change-page .registrar-grade-change-process {
-  border-color: #0B6338;
+  border-color: #0b6338;
   color: #fff;
-  background: linear-gradient(105deg, #117846, #0B6338);
+  background: linear-gradient(105deg, #117846, #0b6338);
   box-shadow: none;
 }
-.registrar-grade-change-page .registrar-grade-change-modal > footer .confirm:hover:not(:disabled),
-.registrar-grade-change-page .registrar-grade-change-process:hover:not(:disabled) {
-  background: linear-gradient(105deg, #0F6A3E, #084B2D);
+.registrar-grade-change-page
+  .registrar-grade-change-modal
+  > footer
+  .confirm:hover:not(:disabled),
+.registrar-grade-change-page
+  .registrar-grade-change-process:hover:not(:disabled) {
+  background: linear-gradient(105deg, #0f6a3e, #084b2d);
   box-shadow: none;
 }
 
 /* Dark Mode */
 .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page {
-  color: #EFF7F2;
+  color: #eff7f2;
   background-color: #111719 !important;
   background-image: none !important;
-  --rgc-text-950: #F3F6F5;
-  --rgc-text-800: #E1E9E6;
-  --rgc-text-700: #CEDAD5;
-  --rgc-text-600: #BBC9C4;
-  --rgc-text-500: #A8BAB3;
-  --rgc-border: #35464B;
-  --rgc-border-strong: #35464B;
+  --rgc-text-950: #f3f6f5;
+  --rgc-text-800: #e1e9e6;
+  --rgc-text-700: #cedad5;
+  --rgc-text-600: #bbc9c4;
+  --rgc-text-500: #a8bab3;
+  --rgc-border: #35464b;
+  --rgc-border-strong: #35464b;
   --rgc-surface: #192226;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-hero {
-  background: linear-gradient(105deg, #093522, #0B5133);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-hero {
+  background: linear-gradient(105deg, #093522, #0b5133);
   border-color: #245642;
   box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page :is(
-  .registrar-grade-change-panel,
-  .registrar-grade-change-panel-heading,
-  .registrar-grade-change-toolbar,
-  .registrar-grade-change-request-list,
-  .registrar-grade-change-card-header,
-  .registrar-grade-change-comparison,
-  .registrar-grade-change-card-footer,
-  .registrar-grade-change-modal,
-  .registrar-grade-change-modal > footer
-) {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  :is(
+    .registrar-grade-change-panel,
+    .registrar-grade-change-panel-heading,
+    .registrar-grade-change-toolbar,
+    .registrar-grade-change-request-list,
+    .registrar-grade-change-card-header,
+    .registrar-grade-change-comparison,
+    .registrar-grade-change-card-footer,
+    .registrar-grade-change-modal,
+    .registrar-grade-change-modal > footer
+  ) {
   background: #192226;
-  border-color: #35464B;
+  border-color: #35464b;
   box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page :is(
-  .registrar-grade-change-stat-card,
-  .registrar-grade-change-card,
-  .registrar-grade-change-grade-block,
-  .registrar-grade-change-context-item,
-  .registrar-grade-change-review-note,
-  .registrar-grade-change-completed-note,
-  .registrar-grade-change-grade-grid > div,
-  .registrar-grade-change-modal-summary > div,
-  .registrar-grade-change-modal-warning,
-  .registrar-grade-change-reason,
-  .registrar-grade-change-state
-) {
-  background: #20292E;
-  border-color: #35464B;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  :is(
+    .registrar-grade-change-stat-card,
+    .registrar-grade-change-card,
+    .registrar-grade-change-grade-block,
+    .registrar-grade-change-context-item,
+    .registrar-grade-change-review-note,
+    .registrar-grade-change-completed-note,
+    .registrar-grade-change-grade-grid > div,
+    .registrar-grade-change-modal-summary > div,
+    .registrar-grade-change-modal-warning,
+    .registrar-grade-change-reason,
+    .registrar-grade-change-state
+  ) {
+  background: #20292e;
+  border-color: #35464b;
   box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page :is(
-  .registrar-grade-change-grade-block > header,
-  .registrar-grade-change-grade-block--approved > header,
-  .registrar-grade-change-modal-field,
-  .registrar-grade-change-modal-field textarea,
-  .registrar-grade-change-search input,
-  .registrar-grade-change-filter-field select
-) {
-  background: #20292E;
-  border-color: #35464B;
-  color: #F3F6F5;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  :is(
+    .registrar-grade-change-grade-block > header,
+    .registrar-grade-change-grade-block--approved > header,
+    .registrar-grade-change-modal-field,
+    .registrar-grade-change-modal-field textarea,
+    .registrar-grade-change-search input,
+    .registrar-grade-change-filter-field select
+  ) {
+  background: #20292e;
+  border-color: #35464b;
+  color: #f3f6f5;
   color-scheme: dark;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page :is(
-  .registrar-grade-change-student strong,
-  .registrar-grade-change-panel-heading h2,
-  .registrar-grade-change-card-footer strong,
-  .registrar-grade-change-context-item strong,
-  .registrar-grade-change-grade-block header strong,
-  .registrar-grade-change-grade-grid strong,
-  .registrar-grade-change-modal-summary strong,
-  .registrar-grade-change-modal-field label
-) { color: #F3F6F5; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page :is(
-  .registrar-grade-change-student p,
-  .registrar-grade-change-student small,
-  .registrar-grade-change-panel-heading p,
-  .registrar-grade-change-context-item p,
-  .registrar-grade-change-grade-grid small,
-  .registrar-grade-change-review-note p,
-  .registrar-grade-change-modal-summary span,
-  .registrar-grade-change-modal-warning p
-) { color: #C0CDC7; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-modal-header {
-  background: linear-gradient(105deg, #093522, #0B5133);
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  :is(
+    .registrar-grade-change-student strong,
+    .registrar-grade-change-panel-heading h2,
+    .registrar-grade-change-card-footer strong,
+    .registrar-grade-change-context-item strong,
+    .registrar-grade-change-grade-block header strong,
+    .registrar-grade-change-grade-grid strong,
+    .registrar-grade-change-modal-summary strong,
+    .registrar-grade-change-modal-field label
+  ) {
+  color: #f3f6f5;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  :is(
+    .registrar-grade-change-student p,
+    .registrar-grade-change-student small,
+    .registrar-grade-change-panel-heading p,
+    .registrar-grade-change-context-item p,
+    .registrar-grade-change-grade-grid small,
+    .registrar-grade-change-review-note p,
+    .registrar-grade-change-modal-summary span,
+    .registrar-grade-change-modal-warning p
+  ) {
+  color: #c0cdc7;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-modal-header {
+  background: linear-gradient(105deg, #093522, #0b5133);
   border-color: #245642;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-modal-header :is(h2,small,p) {
-  color: #F6FFF9;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-modal-header
+  :is(h2, small, p) {
+  color: #f6fff9;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-modal > footer .cancel {
-  background: #20292E;
-  border-color: #35464B;
-  color: #EFF7F2;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-modal
+  > footer
+  .cancel {
+  background: #20292e;
+  border-color: #35464b;
+  color: #eff7f2;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-search input::placeholder {
-  color: #A8BAB3;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-search
+  input::placeholder {
+  color: #a8bab3;
 }
 
 /* Responsive */
@@ -1702,83 +2809,256 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
 }
 @media (max-width: 620px) {
   .registrar-grade-change-page .registrar-grade-change-hero {
-    padding: calc(22px * var(--ptc-compact-scale, 1)) calc(20px * var(--ptc-compact-scale, 1));
+    padding: calc(22px * var(--ptc-compact-scale, 1))
+      calc(20px * var(--ptc-compact-scale, 1));
   }
   .registrar-grade-change-page .registrar-grade-change-hero-actions,
-  .registrar-grade-change-page .registrar-grade-change-back { width: 100%; }
+  .registrar-grade-change-page .registrar-grade-change-back {
+    width: 100%;
+  }
   .registrar-grade-change-page .registrar-grade-change-modal {
     max-height: calc(100dvh - 20px);
   }
 }
 
 /* Light Mode Header Frame */
-.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"]) .registrar-grade-change-page .registrar-grade-change-hero {
-  margin: calc(12px * var(--ptc-compact-scale, 1)) calc(12px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
-  box-shadow: 0 0 0 11px #ffffff, 0 0 0 12px #d9e9df;
+.dashboard-wrapper:not([data-ptc-sidebar-theme="dark"])
+  .registrar-grade-change-page
+  .registrar-grade-change-hero {
+  margin: calc(12px * var(--ptc-compact-scale, 1))
+    calc(12px * var(--ptc-compact-scale, 1))
+    calc(32px * var(--ptc-compact-scale, 1));
+  box-shadow:
+    0 0 0 11px #ffffff,
+    0 0 0 12px #d9e9df;
 }
 
 /* Summary Cards */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stats {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stats {
   background: #192226;
-  border: 1px solid #35464B;
+  border: 1px solid #35464b;
   box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stats > .registrar-grade-change-stat-card {
-  background: #20292E;
-  border: 1px solid #35464B;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stats
+  > .registrar-grade-change-stat-card {
+  background: #20292e;
+  border: 1px solid #35464b;
   box-shadow: none;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stat-card small {
-  color: #CDD8D3;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stat-card
+  small {
+  color: #cdd8d3;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stat-card strong {
-  color: #F3F6F5;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stat-card
+  strong {
+  color: #f3f6f5;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stat-card p {
-  color: #BAC9C3;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stat-card
+  p {
+  color: #bac9c3;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stats > .registrar-grade-change-stat-card .registrar-grade-change-stat-icon {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stats
+  > .registrar-grade-change-stat-card
+  .registrar-grade-change-stat-icon {
   color: var(--reg-sem-dark-icon-fg);
   background: var(--reg-sem-dark-icon-bg);
-  border-color: #35464B;
+  border-color: #35464b;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-stat-card::after {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-stat-card::after {
   background: var(--reg-sem-dark-watermark);
 }
 
 /* Clear Search */
 .registrar-grade-change-page .registrar-grade-change-clear {
-  border-color: #B7E4C8;
-  color: #0A4B2E;
-  background: #E5F7EC;
+  border-color: #b7e4c8;
+  color: #0a4b2e;
+  background: #e5f7ec;
   box-shadow: none;
   font-weight: 650;
 }
-.registrar-grade-change-page .registrar-grade-change-clear:hover:not(:disabled) {
-  border-color: #B7E4C8;
-  color: #0A4B2E;
-  background: #D4F0DF;
+.registrar-grade-change-page
+  .registrar-grade-change-clear:hover:not(:disabled) {
+  border-color: #b7e4c8;
+  color: #0a4b2e;
+  background: #d4f0df;
 }
 .registrar-grade-change-page .registrar-grade-change-clear:disabled {
   opacity: 1;
-  color: #64776C;
-  border-color: #D7E3DC;
-  background: #F0F4F1;
+  color: #64776c;
+  border-color: #d7e3dc;
+  background: #f0f4f1;
   cursor: not-allowed;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-clear {
-  color: #DDF6E8;
-  border-color: #3B6952;
-  background: #254A39;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-clear {
+  color: #ddf6e8;
+  border-color: #3b6952;
+  background: #254a39;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-clear:hover:not(:disabled) {
-  color: #F3FFF8;
-  border-color: #499A6D;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-clear:hover:not(:disabled) {
+  color: #f3fff8;
+  border-color: #499a6d;
   background: #286044;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-grade-change-page .registrar-grade-change-clear:disabled {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-grade-change-page
+  .registrar-grade-change-clear:disabled {
   opacity: 1;
-  color: #A8BCB2;
-  border-color: #35464B;
-  background: #29363B;
+  color: #a8bcb2;
+  border-color: #35464b;
+  background: #29363b;
+}
+/* Official Sheet Recording */
+
+.registrar-grade-change-sheet-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.registrar-grade-change-sheet-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.registrar-grade-change-sheet-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.registrar-grade-change-sheet-field > span {
+  color: var(--rgc-text-600);
+  font-size: 11px;
+  font-weight: 740;
+}
+
+.registrar-grade-change-sheet-field :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--rgc-border-strong);
+  border-radius: 10px;
+  background: var(--rgc-surface);
+  color: var(--rgc-text-800);
+  font-size: 12px;
+}
+
+.registrar-grade-change-sheet-check,
+.registrar-grade-change-sheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.registrar-grade-change-sheet-check {
+  font-size: 11px;
+  color: var(--rgc-text-700);
+}
+
+.registrar-grade-change-sheet-check input {
+  flex: 0 0 auto;
+  accent-color: #0f7a45;
+}
+
+.registrar-grade-change-sheet-actions {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.registrar-grade-change-sheet-actions small {
+  color: var(--rgc-text-600);
+  font-size: 10px;
+}
+
+.registrar-grade-change-sheet-message {
+  margin: 0;
+  color: var(--rgc-text-700);
+  font-size: 11px;
+}
+
+.registrar-grade-change-sheet-message.error {
+  color: #b42318;
+}
+
+.registrar-grade-change-sheet-message.success {
+  color: #0f7a45;
+}
+
+/* Dark Mode */
+
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-sheet-field
+  :is(input, select) {
+  border-color: #4a6753;
+  color: #eef9f1;
+  background: #132418;
+  color-scheme: dark;
+}
+
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  :is(
+    .registrar-grade-change-sheet-field > span,
+    .registrar-grade-change-sheet-check,
+    .registrar-grade-change-sheet-actions small,
+    .registrar-grade-change-sheet-message
+  ) {
+  color: #b5cab9;
+}
+
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-sheet-message.success {
+  color: #9fddaf;
+}
+
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    html.dark,
+    body.dark,
+    .dark-mode,
+    .theme-dark
+  )
+  .registrar-grade-change-sheet-message.error {
+  color: #ffb3ae;
 }

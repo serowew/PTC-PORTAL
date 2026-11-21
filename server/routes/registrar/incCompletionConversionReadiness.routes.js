@@ -2081,7 +2081,7 @@ router.get("/modern-expiry/grades/:gradeId/readiness", async (req, res) => {
     await connection.query("START TRANSACTION READ ONLY");
     inTransaction = true;
 
-    await assertTestDatabase(connection);
+    // Authorized Registrars may inspect modern INC expiry eligibility.
     await activeRegistrar(connection, req);
 
     const result = await inspectModernIncExpiryReadiness(connection, gradeId);
@@ -2126,10 +2126,26 @@ router.post("/modern-expiry/grades/:gradeId/process", async (req, res) => {
     await connection.beginTransaction();
     inTransaction = true;
 
-    // Registrar grading writes remain QA-only.
-    await assertQaGradingDatabase(connection);
-    await assertTestDatabase(connection);
     const registrarId = await activeRegistrar(connection, req);
+
+    // Expiry processing is disabled until explicitly enabled.
+    const expiryWritesEnabled =
+      process.env.GRADEBOOK_MODERN_INC_EXPIRY_WRITES_ENABLED === "true";
+
+    if (req.body?.dry_run !== true && !expiryWritesEnabled) {
+      requestError(
+        403,
+        "MODERN_INC_EXPIRY_WRITES_DISABLED",
+        "Modern INC expiry processing is not enabled on this server.",
+      );
+    }
+
+    // Preserve QA-only dry runs until the expiry service is generalized.
+    if (!expiryWritesEnabled) {
+      await assertQaGradingDatabase(connection);
+      await assertTestDatabase(connection);
+    }
+
     const result = await processModernIncExpiry(
       connection,
       registrarId,
@@ -2272,6 +2288,329 @@ router.post(
   },
 );
 
+// Modern INC replacement submissions and conversion history
+router.get("/modern-submissions", async (req, res) => {
+  let connection;
+
+  try {
+    if (Object.keys(req.query ?? {}).length !== 0) {
+      requestError(
+        400,
+        "MODERN_INC_LIST_QUERY_UNSUPPORTED",
+        "This list does not accept query parameters.",
+      );
+    }
+
+    connection = await db.getConnection();
+
+    await activeRegistrar(connection, req);
+
+    // Keep the listing aligned with the current conversion QA pilot.
+    const [rows] = await connection.execute(
+      `SELECT
+          ms.submission_id,
+          ms.grade_id,
+          ms.claim_id,
+          ms.claim_version,
+          ms.sheet_id,
+          ms.roster_snapshot_id,
+          ms.submission_status,
+          ms.record_version AS submission_record_version,
+          ms.submitted_at,
+          ms.reviewed_at,
+          ms.review_remarks,
+
+          c.verification_status AS claim_verification_status,
+          c.record_version AS current_claim_version,
+
+          sh.sheet_status,
+          sh.record_version AS sheet_record_version,
+
+          g.grade_status,
+          g.grading_outcome,
+          g.final_rating,
+
+          es.enrollment_subject_id,
+          es.offering_id,
+
+          st.student_number,
+          CONCAT_WS(
+            ' ',
+            st.first_name,
+            NULLIF(st.middle_name, ''),
+            st.last_name
+          ) AS student_name,
+
+          sub.subject_code,
+          sub.subject_name,
+
+          am.amendment_id,
+          am.sheet_revision_number,
+          am.applied_at
+
+       FROM gradebook_modern_inc_submissions ms
+
+       JOIN grades g
+         ON g.grade_id = ms.grade_id
+
+       JOIN enrollment_subjects es
+         ON es.enrollment_subject_id = g.enrollment_subject_id
+
+       JOIN enrollments e
+         ON e.enrollment_id = es.enrollment_id
+
+       JOIN students st
+         ON st.student_id = e.student_id
+
+       JOIN subjects sub
+         ON sub.subject_id = es.subject_id
+
+       JOIN gradebook_inc_completion_claims c
+         ON c.claim_id = ms.claim_id
+        AND c.grade_id = ms.grade_id
+
+       JOIN gradebook_official_sheets sh
+         ON sh.sheet_id = ms.sheet_id
+
+       LEFT JOIN gradebook_sheet_amendments am
+         ON am.modern_inc_submission_id = ms.submission_id
+        AND am.amendment_type = 'INC_COMPLETION'
+
+       ORDER BY ms.submission_id DESC`,
+    );
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json({
+      success: true,
+      read_only: true,
+
+      // Legacy frontend compatibility; not a scope or permission check.
+      qa_pilot_only: true,
+      listing_scope: "ALL_MODERN_INC_SUBMISSIONS",
+
+      count: rows.length,
+
+      submissions: rows.map((row) => {
+        const amended = row.amendment_id != null;
+
+        return {
+          submission_id: String(row.submission_id),
+          grade_id: Number(row.grade_id),
+
+          claim_id: String(row.claim_id),
+          claim_version: Number(row.claim_version),
+          current_claim_version: Number(row.current_claim_version),
+          claim_verification_status: row.claim_verification_status,
+
+          sheet_id: String(row.sheet_id),
+          sheet_status: row.sheet_status,
+          sheet_record_version: Number(row.sheet_record_version),
+
+          roster_snapshot_id: String(row.roster_snapshot_id),
+
+          offering_id: Number(row.offering_id),
+          enrollment_subject_id: Number(row.enrollment_subject_id),
+
+          student_number: row.student_number,
+          student_name: row.student_name,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name,
+
+          submission_status: row.submission_status,
+          submission_record_version: Number(row.submission_record_version),
+
+          submitted_at: row.submitted_at,
+          reviewed_at: row.reviewed_at,
+          review_remarks: row.review_remarks,
+
+          grade_status: row.grade_status,
+          current_grading_outcome: row.grading_outcome,
+          current_final_rating:
+            row.final_rating == null ? null : String(row.final_rating),
+
+          conversion_state: amended
+            ? "AMENDED"
+            : row.submission_status === "APPROVED"
+              ? "REQUIRES_PREFLIGHT"
+              : "NOT_APPROVED",
+
+          amendment: amended
+            ? {
+                amendment_id: String(row.amendment_id),
+                sheet_revision_number: Number(row.sheet_revision_number),
+                applied_at: row.applied_at,
+              }
+            : null,
+        };
+      }),
+    });
+  } catch (error) {
+    return sendError(res, error);
+  } finally {
+    connection?.release();
+  }
+});
+
+// Modern INC conversion readiness
+router.get("/modern-submissions/:submissionId/readiness", async (req, res) => {
+  let connection;
+
+  try {
+    const submissionId = String(req.params.submissionId ?? "");
+
+    if (
+      !/^[1-9]\d{0,19}$/.test(submissionId) ||
+      BigInt(submissionId) > 18446744073709551615n ||
+      Object.keys(req.query ?? {}).length !== 0
+    ) {
+      requestError(
+        400,
+        "MODERN_INC_READINESS_INPUT_INVALID",
+        "A valid submission ID without query parameters is required.",
+      );
+    }
+
+    connection = await db.getConnection();
+    await activeRegistrar(connection, req);
+
+    const [rows] = await connection.execute(
+      `SELECT ms.submission_id, ms.grade_id, ms.claim_id, ms.claim_version,
+              ms.sheet_id, ms.combined_submission_id, ms.roster_snapshot_id,
+              ms.submission_status, ms.record_version AS submission_version,
+              c.grade_id AS claim_grade_id, c.verification_status,
+              c.record_version AS current_claim_version, c.grade_change_request_id,
+              sh.sheet_status, sh.record_version AS sheet_version,
+              g.grade_status, g.grading_policy, g.grading_outcome, g.final_rating,
+              es.enrollment_subject_id, es.status AS subject_status,
+              e.enrollment_status,
+              pub.publication_source, pub.grading_outcome_snapshot,
+              pub.combined_submission_id AS publication_submission_id,
+              pub.enrollment_subject_id AS publication_enrollment_subject_id,
+              EXISTS (
+                SELECT 1 FROM gradebook_sheet_amendments am
+                 WHERE am.modern_inc_submission_id = ms.submission_id
+                    OR (am.sheet_id = ms.sheet_id
+                        AND am.roster_snapshot_id = ms.roster_snapshot_id)
+              ) AS already_amended
+         FROM gradebook_modern_inc_submissions ms
+         JOIN gradebook_inc_completion_claims c ON c.claim_id = ms.claim_id
+         JOIN gradebook_official_sheets sh ON sh.sheet_id = ms.sheet_id
+         JOIN grades g ON g.grade_id = ms.grade_id
+         JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
+         JOIN enrollments e ON e.enrollment_id = es.enrollment_id
+         LEFT JOIN gradebook_official_grade_publications pub ON pub.grade_id = g.grade_id
+        WHERE ms.submission_id = ?`,
+      [submissionId],
+    );
+
+    if (rows.length === 0) {
+      requestError(
+        404,
+        "MODERN_INC_SUBMISSION_NOT_FOUND",
+        "The replacement submission was not found.",
+      );
+    }
+
+    if (rows.length !== 1) {
+      requestError(
+        409,
+        "MODERN_INC_SOURCE_AMBIGUOUS",
+        "The submission has conflicting official publication records.",
+      );
+    }
+
+    const r = rows[0];
+    const blockers = [];
+    const block = (code, message) => blockers.push({ code, message });
+
+    if (
+      r.submission_status !== "APPROVED" ||
+      Number(r.submission_version) !== 2
+    ) {
+      block(
+        "MODERN_INC_NOT_APPROVED",
+        "The replacement submission is not approved at the expected version.",
+      );
+    }
+
+    if (
+      r.verification_status !== "VERIFIED_TIMELY" ||
+      String(r.claim_grade_id) !== String(r.grade_id) ||
+      String(r.claim_version) !== String(r.current_claim_version) ||
+      r.grade_change_request_id !== null
+    ) {
+      block(
+        "MODERN_INC_CLAIM_INVALID",
+        "The verified completion claim is missing, stale, or linked to another workflow.",
+      );
+    }
+
+    if (r.sheet_status !== "FINALIZED") {
+      block(
+        "MODERN_INC_SHEET_NOT_FINALIZED",
+        "The original official sheet is not finalized.",
+      );
+    }
+
+    if (
+      r.grade_status !== "Approved" ||
+      r.grading_policy !== "TWO_TERM_50_50" ||
+      r.grading_outcome !== "INCOMPLETE" ||
+      Number(r.final_rating) !== 4 ||
+      r.enrollment_status !== "Approved" ||
+      r.subject_status !== "Incomplete"
+    ) {
+      block(
+        "MODERN_INC_ORIGINAL_GRADE_CHANGED",
+        "The original approved INC grade or enrollment status has changed.",
+      );
+    }
+
+    if (
+      r.publication_source !== "COMBINED_SEMESTER" ||
+      r.grading_outcome_snapshot !== "INCOMPLETE" ||
+      String(r.publication_submission_id ?? "") !==
+        String(r.combined_submission_id) ||
+      String(r.publication_enrollment_subject_id ?? "") !==
+        String(r.enrollment_subject_id)
+    ) {
+      block(
+        "MODERN_INC_PUBLICATION_MISMATCH",
+        "The original publication does not match the combined INC submission.",
+      );
+    }
+
+    if (Number(r.already_amended) !== 0) {
+      block(
+        "MODERN_INC_ALREADY_AMENDED",
+        "An amendment already exists for this replacement or roster record.",
+      );
+    }
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json({
+      success: true,
+      read_only: true,
+      preflight_only: true,
+      submission_id: String(r.submission_id),
+      expected_record_version: Number(r.submission_version),
+      expected_claim_id: String(r.claim_id),
+      expected_claim_version: Number(r.current_claim_version),
+      expected_sheet_version: Number(r.sheet_version),
+      expected_grade_id: Number(r.grade_id),
+      preflight_passed: blockers.length === 0,
+      requires_conversion_dry_run: true,
+      blockers,
+    });
+  } catch (error) {
+    return sendError(res, error);
+  } finally {
+    connection?.release();
+  }
+});
+
 // Modern INC conversion
 router.post("/modern-submissions/:submissionId/process", async (req, res) => {
   let connection = null;
@@ -2303,10 +2642,26 @@ router.post("/modern-submissions/:submissionId/process", async (req, res) => {
     await connection.beginTransaction();
     transactionOpen = true;
 
-    await assertQaGradingDatabase(connection);
-    await assertTestDatabase(connection);
-
     const registrarId = await activeRegistrar(connection, req);
+
+    // Conversion remains disabled until both rollout gates are enabled.
+    const conversionRolloutEnabled =
+      process.env.GRADEBOOK_MODERN_INC_CONVERSION_WRITES_ENABLED === "true" &&
+      process.env.GRADEBOOK_MODERN_INC_SOURCE_WRITE_SCOPE_ENABLED === "true";
+
+    if (req.body?.dry_run !== true && !conversionRolloutEnabled) {
+      requestError(
+        403,
+        "MODERN_INC_CONVERSION_WRITES_DISABLED",
+        "Registrar INC conversion is not enabled on this server.",
+      );
+    }
+
+    // Preserve the original QA boundary until the full rollout is enabled.
+    if (!conversionRolloutEnabled) {
+      await assertQaGradingDatabase(connection);
+      await assertTestDatabase(connection);
+    }
 
     const result = await processModernIncConversion(
       connection,

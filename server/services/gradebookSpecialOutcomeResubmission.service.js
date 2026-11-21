@@ -49,7 +49,15 @@ export async function resubmitSpecialOutcome(
     special,
     dryRun,
   } = input;
-  await assertQaGradingDatabase(connection);
+
+  // Keep QA-only validation until both rollout gates are enabled.
+  if (
+    process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true" ||
+    process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true"
+  ) {
+    await assertQaGradingDatabase(connection);
+  }
+
   // Require an explicit transaction mode
   if (typeof dryRun !== "boolean") {
     reject(
@@ -59,11 +67,15 @@ export async function resubmitSpecialOutcome(
     );
   }
 
-  // Keep this write pilot tightly bound to the isolated QA case.
-  if (offeringId !== 187 || enrollmentSubjectId !== 341 || actorUserId !== 32) {
+  // Committed INC/UD resubmissions require both grading rollout gates.
+  if (
+    dryRun === false &&
+    (process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true" ||
+      process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true")
+  ) {
     reject(
-      "SPECIAL_RESUBMIT_QA_FIXTURE_ONLY",
-      "Only the isolated Offering #187 QA fixture is supported.",
+      "SPECIAL_RESUBMIT_WRITES_DISABLED",
+      "Combined INC/UD resubmission is not enabled on this server.",
       403,
     );
   }

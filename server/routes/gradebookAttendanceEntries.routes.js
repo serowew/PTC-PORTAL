@@ -3,11 +3,8 @@ import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
 import { assertCombinedSemesterCellEditable } from "../services/gradebookCombinedEditScope.service.js";
 import { requireVerifiedHistoricalIncFinalTermEntry } from "../services/gradebookIncCompletionAccess.service.js";
-import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 
 const router = express.Router();
-const TEST_DATABASE = "databaseforptc1_admission_test";
-const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 const ATTENDANCE_STATUSES = new Set([
   "PENDING",
@@ -356,8 +353,6 @@ router.get(
           lockReason = "TERM_APPROVED_LOCKED";
         else if (meeting.meeting_status !== "HELD")
           lockReason = "MEETING_NOT_HELD";
-        else if (!QA_GRADEBOOK_OFFERINGS.has(offeringId))
-          lockReason = "TEST_OFFERING_ONLY";
         student.latest_term_submission = latest
           ? {
               term_submission_id: Number(latest.term_submission_id),
@@ -597,27 +592,21 @@ router.post(
     let transactionStarted = false;
     try {
       connection = await db.getConnection();
-      await assertQaGradingDatabase(connection);
 
-      const [databaseRows] = await connection.execute(
-        "SELECT DATABASE() AS database_name",
-      );
-      if (databaseRows[0]?.database_name !== TEST_DATABASE) {
+      // Committed attendance entry writes require rollout approval.
+      if (
+        !input.dryRun &&
+        process.env.GRADEBOOK_ATTENDANCE_WRITES_ENABLED !== "true"
+      ) {
         fail(
-          "TEST_DATABASE_ONLY",
-          "Attendance saves are disabled outside the admission-test database.",
+          "GRADEBOOK_ATTENDANCE_WRITES_DISABLED",
+          "Attendance entry saving is not enabled on this server.",
           403,
         );
       }
+
       await connection.beginTransaction();
       transactionStarted = true;
-      if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
-        fail(
-          "TEST_OFFERING_ONLY",
-          "Attendance saves are restricted to QA Offerings #127, #128, and #131.",
-          403,
-        );
-      }
       // Match the offering -> gradebook config -> meeting -> student lock order.
       const [offeringRows] = await connection.execute(
         `SELECT so.offering_id, so.status, so.faculty_id,
@@ -755,19 +744,53 @@ router.post(
         );
       }
 
-      const incCompletion =
-        enrollment.enrollment_subject_status === "Incomplete"
-          ? await requireVerifiedHistoricalIncFinalTermEntry(connection, {
-              offeringId,
-              configId,
-              enrollmentSubjectId: input.enrollmentSubjectId,
-              studentId: enrollment.student_id,
-              actorUserId,
-              facultyId: offering.faculty_id,
-              gradingTerm: meeting.grading_term,
-              changeReason: input.changeReason,
-            })
-          : null;
+      let incCompletion = null;
+
+      if (enrollment.enrollment_subject_status === "Incomplete") {
+        // A published combined-semester INC keeps its original attendance frozen.
+        const [publications] = await connection.execute(
+          `SELECT pub.publication_id, pub.publication_source
+             FROM gradebook_official_grade_publications pub
+             JOIN grades g ON g.grade_id = pub.grade_id
+            WHERE g.enrollment_subject_id = ?
+              AND g.grade_status = 'Approved'
+              AND g.grading_outcome = 'INCOMPLETE'
+            FOR UPDATE`,
+          [input.enrollmentSubjectId],
+        );
+
+        if (publications.length > 1) {
+          fail(
+            "INC_ATTENDANCE_PUBLICATION_CONFLICT",
+            "Conflicting official INC publications require Registrar review.",
+          );
+        }
+
+        if (publications.length === 1) {
+          fail(
+            publications[0].publication_source === "COMBINED_SEMESTER"
+              ? "MODERN_INC_ATTENDANCE_LOCKED"
+              : "INC_ATTENDANCE_SOURCE_UNSUPPORTED",
+            "Published INC attendance requires an authorized correction; the original official attendance evidence cannot be edited here.",
+          );
+        }
+
+        // Historical claims have no modern publication. Their verifier
+        // independently checks the approved INC, sheet and claim evidence.
+        incCompletion = await requireVerifiedHistoricalIncFinalTermEntry(
+          connection,
+          {
+            offeringId,
+            configId,
+            enrollmentSubjectId: input.enrollmentSubjectId,
+            studentId: enrollment.student_id,
+            actorUserId,
+            facultyId: offering.faculty_id,
+            gradingTerm: meeting.grading_term,
+            changeReason: input.changeReason,
+          },
+        );
+      }
 
       if (!incCompletion) {
         const [finalizedSheets] = await connection.execute(

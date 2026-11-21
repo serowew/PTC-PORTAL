@@ -12,6 +12,7 @@ function fixture({ approved = false } = {}) {
     period_id: 1,
   };
   const grade = {
+    grade_id: 700,
     grading_outcome: "UNOFFICIAL_DROP",
     final_rating: "6.00",
     remarks: "Unofficial Drop",
@@ -265,12 +266,12 @@ test("rejects modified current snapshot", async () => {
     (e) => e.code === "SPECIAL_APPROVAL_REVISION_CHAIN_INVALID",
   );
 });
-test("rejects mismatched QA offering", async () => {
+test("rejects offering that disagrees with submitted snapshot", async () => {
   const f = fixture();
   f.target.offering_id = 999;
   await assert.rejects(
     call(f),
-    (e) => e.code === "SPECIAL_APPROVAL_QA_FIXTURE_ONLY",
+    (e) => e.code === "SPECIAL_APPROVAL_SCOPE_INVALID",
   );
 });
 test("rejects absent attendance evidence", async () => {

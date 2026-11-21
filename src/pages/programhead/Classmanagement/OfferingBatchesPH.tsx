@@ -101,6 +101,12 @@ interface BatchDetail extends BatchListItem {
   department_name: string;
   offerings: BatchOffering[];
   faculty_options: FacultyOption[];
+  faculty_requests?: Array<{
+    request_id: number;
+    offering_id: number;
+    proposed_faculty_id: number;
+    status: string;
+  }>;
 }
 
 interface OfferingDraft {
@@ -587,6 +593,80 @@ export default function OfferingBatchesPH() {
     }
   };
 
+  const requestPublishedProfessor = async (offering: BatchOffering) => {
+    if (!selectedBatch || selectedBatch.batch_status !== "Published") return;
+
+    const facultyId = Number(drafts[offering.offering_id]?.faculty_id);
+    if (!Number.isSafeInteger(facultyId) || facultyId < 1) {
+      setRowErrors((current) => ({
+        ...current,
+        [offering.offering_id]: "Select a professor first.",
+      }));
+      return;
+    }
+
+    if (facultyId === Number(offering.faculty_id)) {
+      setRowErrors((current) => ({
+        ...current,
+        [offering.offering_id]: "Select a different professor.",
+      }));
+      return;
+    }
+
+    setSavingOfferingId(offering.offering_id);
+    setRowErrors((current) => ({ ...current, [offering.offering_id]: "" }));
+    setConflicts((current) => ({ ...current, [offering.offering_id]: [] }));
+    setActionMessage("");
+    setActionError("");
+
+    try {
+      const result = await requestJson<ApiResponse & { request_id?: number }>(
+        `${BATCH_API}/${selectedBatch.batch_id}/offerings/${offering.offering_id}/request-faculty`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ faculty_id: facultyId }),
+        },
+      );
+
+      setSelectedBatch((current) =>
+        current && current.batch_id === selectedBatch.batch_id
+          ? {
+              ...current,
+              faculty_requests: [
+                ...(current.faculty_requests ?? []),
+                {
+                  request_id: result.request_id ?? 0,
+                  offering_id: offering.offering_id,
+                  proposed_faculty_id: facultyId,
+                  status: "Pending",
+                },
+              ],
+            }
+          : current,
+      );
+      setActionMessage(
+        result.message ?? "Professor request sent to Registrar for approval.",
+      );
+    } catch (error) {
+      if (error instanceof RequestError && error.conflicts?.length) {
+        setConflicts((current) => ({
+          ...current,
+          [offering.offering_id]: error.conflicts ?? [],
+        }));
+      }
+      setRowErrors((current) => ({
+        ...current,
+        [offering.offering_id]:
+          error instanceof Error
+            ? error.message
+            : "Could not request the professor.",
+      }));
+    } finally {
+      setSavingOfferingId(null);
+    }
+  };
+
   const returnBatch = async () => {
     if (!selectedBatch || !allOfferingsScheduled) return;
 
@@ -642,7 +722,10 @@ export default function OfferingBatchesPH() {
             <header className="ph-offering-batches__page-header">
               <div>
                 <div className="ph-offering-batches__eyebrow">
-                  <span className="ph-offering-batches__eyebrow-icon" aria-hidden="true">
+                  <span
+                    className="ph-offering-batches__eyebrow-icon"
+                    aria-hidden="true"
+                  >
                     <Layers3 size={16} />
                   </span>
                   PROGRAM HEAD · CLASS MANAGEMENT
@@ -653,7 +736,6 @@ export default function OfferingBatchesPH() {
                   Registrar.
                 </p>
               </div>
-
             </header>
 
             {detailError && (
@@ -769,7 +851,10 @@ export default function OfferingBatchesPH() {
               <div className="ph-offering-batches__detail-title">
                 <div>
                   <div className="ph-offering-batches__eyebrow">
-                    <span className="ph-offering-batches__eyebrow-icon" aria-hidden="true">
+                    <span
+                      className="ph-offering-batches__eyebrow-icon"
+                      aria-hidden="true"
+                    >
                       <Layers3 size={16} />
                     </span>
                     PROGRAM HEAD · CLASS MANAGEMENT
@@ -881,6 +966,24 @@ export default function OfferingBatchesPH() {
                             const scheduled = isScheduled(offering);
                             const rowConflictList =
                               conflicts[offering.offering_id] || [];
+                            const pendingProfessorRequest =
+                              selectedBatch.faculty_requests?.some(
+                                (request) =>
+                                  request.offering_id ===
+                                    offering.offering_id &&
+                                  request.status === "Pending",
+                              ) ?? false;
+                            const canRequestProfessor =
+                              selectedBatch.batch_status === "Published" &&
+                              offering.offering_status === "Open" &&
+                              parseDays(offering.schedule_days).length > 0 &&
+                              Boolean(
+                                toTimeInput(offering.schedule_start_time),
+                              ) &&
+                              Boolean(
+                                toTimeInput(offering.schedule_end_time),
+                              ) &&
+                              !pendingProfessorRequest;
 
                             return (
                               <article
@@ -899,7 +1002,12 @@ export default function OfferingBatchesPH() {
                                       scheduled ? "is-ready" : "is-pending"
                                     }`}
                                   >
-                                    {scheduled ? "Scheduled" : "Needs schedule"}
+                                    {scheduled
+                                      ? "Scheduled"
+                                      : canRequestProfessor &&
+                                          !offering.faculty_id
+                                        ? "Professor needed"
+                                        : "Needs schedule"}
                                   </span>
                                 </div>
 
@@ -918,7 +1026,7 @@ export default function OfferingBatchesPH() {
                                         )
                                       }
                                       disabled={
-                                        !canEdit ||
+                                        (!canEdit && !canRequestProfessor) ||
                                         savingOfferingId ===
                                           offering.offering_id
                                       }
@@ -1083,6 +1191,36 @@ export default function OfferingBatchesPH() {
                                         : "Save"}
                                     </button>
                                   )}
+
+                                  {canRequestProfessor && (
+                                    <button
+                                      type="button"
+                                      className="ph-offering-batches__button ph-offering-batches__button--primary"
+                                      onClick={() =>
+                                        void requestPublishedProfessor(offering)
+                                      }
+                                      disabled={
+                                        savingOfferingId ===
+                                          offering.offering_id ||
+                                        !draft.faculty_id ||
+                                        Number(draft.faculty_id) ===
+                                          Number(offering.faculty_id)
+                                      }
+                                    >
+                                      <Send size={14} />
+                                      {savingOfferingId === offering.offering_id
+                                        ? "Requesting…"
+                                        : offering.faculty_id
+                                          ? "Request Professor Change"
+                                          : "Request Professor Assignment"}
+                                    </button>
+                                  )}
+                                  {pendingProfessorRequest && (
+                                    <small>
+                                      Professor request awaiting Registrar
+                                      approval
+                                    </small>
+                                  )}
                                 </footer>
                               </article>
                             );
@@ -1117,8 +1255,9 @@ export default function OfferingBatchesPH() {
               </footer>
             ) : (
               <div className="ph-offering-batches__read-only-note">
-                Scheduling is locked while this batch is{" "}
-                {selectedBatch.batch_status.toLowerCase()}.
+                {selectedBatch.batch_status === "Published"
+                  ? "Published class schedules are locked. You can request a professor assignment or change for Registrar approval."
+                  : `Scheduling is locked while this batch is ${selectedBatch.batch_status.toLowerCase()}.`}
               </div>
             )}
           </>

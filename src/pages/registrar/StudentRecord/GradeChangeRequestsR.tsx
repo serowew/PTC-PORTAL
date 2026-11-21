@@ -325,7 +325,902 @@ function outcomeLabel(value: string | null): string {
   if (value === "UNOFFICIAL_DROP") return "Unofficial Drop";
   return value || "—";
 }
+// Original Official Sheet Submission
 
+interface RegistrarOfficialSheetOption {
+  offering_id: number;
+  offering_status: string;
+  subject_code: string;
+  subject_name: string;
+  section_name: string;
+  academic_year: string;
+  semester_name: string;
+  sheet_id: string | null;
+  sheet_status: string;
+  original_official_submitted_on: string | null;
+  official_submission_reference: string | null;
+  original_date_verified: boolean;
+  official_date_verified_at: string | null;
+  inc_completion_deadline_on: string | null;
+  can_record_original_date: boolean;
+}
+
+interface RegistrarOfficialSheetListResponse {
+  success: boolean;
+  read_only: boolean;
+  offerings: RegistrarOfficialSheetOption[];
+  message?: string;
+}
+
+interface RegistrarOfficialSheetRecordResponse {
+  success: boolean;
+  action: "RECORDED";
+  dry_run: boolean;
+  persisted: boolean;
+  official_sheet: {
+    sheet_id: string | null;
+    sheet_status: string;
+    record_version: number;
+    original_official_submitted_on: string;
+    official_submission_reference: string;
+    deadline_established: boolean;
+  };
+  audit_event: string;
+  audit_event_id: string | null;
+  message?: string;
+  code?: string;
+}
+
+function OriginalOfficialSheetRecorder() {
+  const navigate = useNavigate();
+
+  const [offerings, setOfferings] = useState<RegistrarOfficialSheetOption[]>(
+    [],
+  );
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const [date, setDate] = useState("");
+  const [reference, setReference] = useState("");
+  const [evidenceChecked, setEvidenceChecked] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [listError, setListError] = useState("");
+
+  const [feedback, setFeedback] = useState<ActionNotice | null>(null);
+
+  const sheetsApi = apiUrl("/api/registrar/gradebook/official-sheets");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setLoading(true);
+    setListError("");
+
+    const load = async () => {
+      try {
+        const response = await authService.authFetch(sheetsApi, {
+          method: "GET",
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+
+        const data =
+          await readJsonResponse<RegistrarOfficialSheetListResponse>(response);
+
+        if (controller.signal.aborted) return;
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !data.read_only ||
+          !Array.isArray(data.offerings)
+        ) {
+          throw new Error(data.message || "Could not load official sheets.");
+        }
+
+        setOfferings(data.offerings);
+      } catch (caught) {
+        if (!controller.signal.aborted) {
+          setOfferings([]);
+
+          setListError(
+            caught instanceof Error
+              ? caught.message
+              : "Could not load official sheets.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => controller.abort();
+  }, [navigate, reloadKey, sheetsApi]);
+
+  const selected =
+    offerings.find((item) => item.offering_id === selectedId) ??
+    offerings.find((item) => item.can_record_original_date) ??
+    offerings[0];
+
+  const validDate =
+    /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    !Number.isNaN(Date.parse(`${date}T00:00:00Z`)) &&
+    new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date;
+
+  const validReference =
+    reference.trim().length >= 8 &&
+    reference.trim().length <= 255 &&
+    !Array.from(reference.trim()).some((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127;
+    });
+
+  const canRecord =
+    !loading &&
+    !busy &&
+    selected?.can_record_original_date === true &&
+    validDate &&
+    validReference &&
+    evidenceChecked;
+
+  const recordOriginalDate = async () => {
+    if (!canRecord || !selected) return;
+
+    const offeringId = selected.offering_id;
+    const originalDate = date;
+    const sourceReference = reference.trim();
+
+    setBusy(true);
+    setFeedback(null);
+
+    const submit = async (dryRun: boolean) => {
+      const response = await authService.authFetch(
+        `${sheetsApi}/${offeringId}/record-submission`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            original_official_submitted_on: originalDate,
+            official_submission_reference: sourceReference,
+            confirm_original_submission_evidence: true,
+            dry_run: dryRun,
+          }),
+        },
+      );
+
+      const data =
+        await readJsonResponse<RegistrarOfficialSheetRecordResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.action !== "RECORDED" ||
+        data.dry_run !== dryRun ||
+        data.persisted !== !dryRun ||
+        data.audit_event !== "RECORDED" ||
+        data.official_sheet?.sheet_status !== "IN_PROGRESS" ||
+        data.official_sheet.record_version !== 1 ||
+        data.official_sheet.original_official_submitted_on !== originalDate ||
+        data.official_sheet.official_submission_reference !== sourceReference ||
+        data.official_sheet.deadline_established !== false ||
+        (!dryRun && (!data.official_sheet.sheet_id || !data.audit_event_id))
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The server did not confirm the original submission record.",
+        );
+      }
+
+      return data;
+    };
+
+    try {
+      await submit(true);
+
+      const confirmed = window.confirm(
+        `Record the ORIGINAL official sheet submission?\n\n` +
+          `${selected.subject_code} · ${selected.section_name}\n` +
+          `Date: ${originalDate}\n` +
+          `Reference: ${sourceReference}\n\n` +
+          "Confirm only if you checked the actual original submission evidence. " +
+          "The Program Head must verify the date separately.",
+      );
+
+      if (!confirmed) return;
+
+      const saved = await submit(false);
+
+      setFeedback({
+        type: "success",
+        message:
+          `Original submission recorded (sheet #${saved.official_sheet.sheet_id}). ` +
+          "It is not yet verified. The INC deadline remains unset until Program Head verification.",
+      });
+
+      setDate("");
+      setReference("");
+      setEvidenceChecked(false);
+
+      setReloadKey((value) => value + 1);
+    } catch (caught) {
+      setFeedback({
+        type: "error",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : "Could not record the original submission.",
+      });
+
+      setReloadKey((value) => value + 1);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="registrar-grade-change-panel">
+      <header className="registrar-grade-change-panel-heading">
+        <div>
+          <span>Official Grading Sheets</span>
+          <h2>Record Original Submission Date</h2>
+
+          <p>
+            Enter the authentic date and source reference from the original
+            grading-sheet submission. Program Head verification is a separate
+            step.
+          </p>
+        </div>
+
+        <strong className="registrar-grade-change-count">
+          {loading
+            ? "…"
+            : offerings.filter((item) => item.can_record_original_date)
+                .length}{" "}
+          eligible
+        </strong>
+      </header>
+
+      <form
+        className="registrar-grade-change-sheet-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void recordOriginalDate();
+        }}
+      >
+        {listError && (
+          <p role="alert" className="registrar-grade-change-sheet-message">
+            {listError}
+          </p>
+        )}
+
+        {feedback && (
+          <p
+            role={feedback.type === "error" ? "alert" : "status"}
+            className={`registrar-grade-change-sheet-message ${feedback.type}`}
+          >
+            {feedback.message}
+          </p>
+        )}
+
+        <label className="registrar-grade-change-sheet-field">
+          <span>Subject offering</span>
+
+          <select
+            value={selected?.offering_id ?? ""}
+            disabled={busy || loading || offerings.length === 0}
+            onChange={(event) => {
+              setSelectedId(Number(event.target.value));
+              setDate("");
+              setReference("");
+              setEvidenceChecked(false);
+              setFeedback(null);
+            }}
+          >
+            {offerings.length === 0 && (
+              <option value="">No gradebooks available</option>
+            )}
+
+            {offerings.map((item) => (
+              <option key={item.offering_id} value={item.offering_id}>
+                {item.subject_code} · {item.section_name} · {item.academic_year}{" "}
+                · {item.semester_name}
+                {item.can_record_original_date
+                  ? " · Ready to record"
+                  : ` · ${item.sheet_status.replaceAll("_", " ")}`}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {selected && !selected.can_record_original_date ? (
+          <p className="registrar-grade-change-sheet-message">
+            Recording is unavailable for this offering. Sheet:{" "}
+            {selected.sheet_status.replaceAll("_", " ")}.
+            {selected.original_official_submitted_on
+              ? ` Original date: ${selected.original_official_submitted_on}.`
+              : ""}
+            {selected.original_date_verified
+              ? ` Program Head verification completed on ${
+                  selected.official_date_verified_at ?? "unknown date"
+                }. INC deadline: ${
+                  selected.inc_completion_deadline_on ??
+                  "Unavailable — review required"
+                }.`
+              : selected.original_official_submitted_on
+                ? " Awaiting Program Head verification. INC deadline not established."
+                : ""}
+          </p>
+        ) : selected ? (
+          <>
+            <div className="registrar-grade-change-sheet-fields">
+              <label className="registrar-grade-change-sheet-field">
+                <span>Original submission date</span>
+
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  disabled={busy}
+                  onChange={(event) => setDate(event.target.value)}
+                />
+              </label>
+
+              <label className="registrar-grade-change-sheet-field">
+                <span>Official source reference (8–255 characters)</span>
+
+                <input
+                  type="text"
+                  required
+                  minLength={8}
+                  maxLength={255}
+                  value={reference}
+                  disabled={busy}
+                  onChange={(event) => setReference(event.target.value)}
+                  placeholder="Enter the actual document or filing reference"
+                />
+              </label>
+            </div>
+
+            <label className="registrar-grade-change-sheet-check">
+              <input
+                type="checkbox"
+                checked={evidenceChecked}
+                disabled={busy}
+                onChange={(event) => setEvidenceChecked(event.target.checked)}
+              />
+
+              <span>
+                I checked the original submitted grading-sheet evidence and
+                confirm these details match it.
+              </span>
+            </label>
+
+            <div className="registrar-grade-change-sheet-actions">
+              <small>
+                This records evidence only. It does not verify the date,
+                establish the INC deadline, or finalize grades.
+              </small>
+
+              <button
+                type="submit"
+                className="registrar-grade-change-process"
+                disabled={!canRecord}
+              >
+                <FileCheck2 size={15} />
+
+                {busy ? "Checking…" : "Record Original Date"}
+              </button>
+            </div>
+          </>
+        ) : !loading && !listError ? (
+          <p className="registrar-grade-change-sheet-message">
+            No initialized gradebooks are available for original-date recording.
+          </p>
+        ) : null}
+      </form>
+    </section>
+  );
+}
+
+// Modern INC Conversion
+
+interface ModernIncConversionRow {
+  submission_id: string;
+  grade_id: number;
+  claim_id: string;
+  claim_version: number;
+  current_claim_version: number;
+  claim_verification_status: string;
+  sheet_id: string;
+  sheet_status: string;
+  sheet_record_version: number;
+  roster_snapshot_id: string;
+  offering_id: number;
+  enrollment_subject_id: number;
+  student_number: string;
+  student_name: string;
+  subject_code: string;
+  subject_name: string;
+  submission_status: string;
+  submission_record_version: number;
+  reviewed_at: string | null;
+  review_remarks: string | null;
+  grade_status: string;
+  current_grading_outcome: string;
+  current_final_rating: string | null;
+  conversion_state: "NOT_APPROVED" | "REQUIRES_PREFLIGHT" | "AMENDED";
+  amendment: {
+    amendment_id: string;
+    sheet_revision_number: number;
+    applied_at: string;
+  } | null;
+}
+
+interface ModernIncConversionListResponse {
+  success: boolean;
+  read_only: boolean;
+  qa_pilot_only: boolean;
+  submissions: ModernIncConversionRow[];
+  message?: string;
+}
+
+interface ModernIncConversionResult {
+  success: boolean;
+  dry_run: boolean;
+  persisted: boolean;
+  submission_id: string;
+  claim_id: string;
+  grade_id: number;
+  sheet_id: string;
+  roster_snapshot_id: string;
+  amendment_id: string | null;
+  sheet_revision_number: number;
+  proposed_official_grade: {
+    midterm_grade: string | number;
+    final_grade: string | number;
+    overall_percentage: string | number;
+    final_rating: string | number;
+    remarks: string;
+  };
+  original_snapshot_unchanged: boolean;
+  official_sheet_unchanged: boolean;
+  progression_review_required: boolean;
+  conversion_validated: boolean;
+  grade_conversion_performed: boolean;
+  official_grade_unchanged: boolean;
+  code?: string;
+  message?: string;
+}
+
+function ModernIncConversionQueue({
+  onProcessed,
+}: {
+  onProcessed: () => void;
+}) {
+  const navigate = useNavigate();
+
+  const endpoint = apiUrl(
+    "/api/registrar/gradebook/inc-completion-conversions/modern-submissions",
+  );
+
+  const [rows, setRows] = useState<ModernIncConversionRow[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [remarks, setRemarks] = useState("");
+  const [processing, setProcessing] = useState(false);
+
+  const [notice, setNotice] = useState<ActionNotice | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setLoading(true);
+    setError("");
+
+    const load = async () => {
+      try {
+        const response = await authService.authFetch(endpoint, {
+          method: "GET",
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+
+        const data =
+          await readJsonResponse<ModernIncConversionListResponse>(response);
+
+        if (controller.signal.aborted) return;
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !data.read_only ||
+          !data.qa_pilot_only ||
+          !Array.isArray(data.submissions)
+        ) {
+          throw new Error(
+            data.message || "Could not load modern INC submissions.",
+          );
+        }
+
+        setRows(data.submissions);
+      } catch (caught) {
+        if (!controller.signal.aborted) {
+          setRows([]);
+
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Could not load modern INC submissions.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => controller.abort();
+  }, [endpoint, navigate, reloadKey]);
+
+  const selected = rows.find((item) => item.submission_id === selectedId);
+
+  const canProcess = (row: ModernIncConversionRow) =>
+    row.conversion_state === "REQUIRES_PREFLIGHT" &&
+    row.offering_id === 130 &&
+    row.enrollment_subject_id === 277 &&
+    row.amendment === null &&
+    row.submission_status === "APPROVED" &&
+    row.submission_record_version === 2 &&
+    row.claim_verification_status === "VERIFIED_TIMELY" &&
+    row.claim_version === 2 &&
+    row.current_claim_version === 2 &&
+    row.sheet_status === "FINALIZED" &&
+    row.sheet_record_version === 3 &&
+    row.grade_status === "Approved" &&
+    row.current_grading_outcome === "INCOMPLETE" &&
+    Number(row.current_final_rating) === 4;
+
+  const validRemarks =
+    remarks.trim().length >= 20 &&
+    remarks.trim().length <= 1000 &&
+    !Array.from(remarks).some((character) => {
+      const code = character.charCodeAt(0);
+
+      return (code < 32 && ![9, 10, 13].includes(code)) || code === 127;
+    });
+
+  const process = async () => {
+    if (!selected || !canProcess(selected) || !validRemarks || processing) {
+      return;
+    }
+
+    setProcessing(true);
+    setNotice(null);
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(
+        `${endpoint}/${selected.submission_id}/process`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            expected_record_version: selected.submission_record_version,
+
+            expected_claim_id: selected.claim_id,
+
+            expected_claim_version: selected.current_claim_version,
+
+            expected_sheet_version: selected.sheet_record_version,
+
+            expected_grade_id: selected.grade_id,
+
+            registrar_remarks: remarks.trim(),
+
+            confirm_conversion: true,
+            dry_run: dryRun,
+          }),
+        },
+      );
+
+      const data = await readJsonResponse<ModernIncConversionResult>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+
+        navigate("/login", { replace: true });
+
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.dry_run !== dryRun ||
+        data.persisted !== !dryRun ||
+        data.submission_id !== selected.submission_id ||
+        data.claim_id !== selected.claim_id ||
+        data.grade_id !== selected.grade_id ||
+        data.sheet_id !== selected.sheet_id ||
+        data.roster_snapshot_id !== selected.roster_snapshot_id ||
+        data.original_snapshot_unchanged !== true ||
+        data.official_sheet_unchanged !== true ||
+        data.progression_review_required !== true ||
+        data.conversion_validated !== true ||
+        data.grade_conversion_performed !== !dryRun ||
+        data.official_grade_unchanged !== dryRun ||
+        (dryRun && data.amendment_id !== null) ||
+        (!dryRun && !data.amendment_id) ||
+        !data.proposed_official_grade
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The modern INC conversion was not confirmed.",
+        );
+      }
+
+      return data;
+    };
+
+    try {
+      const preview = await request(true);
+
+      const grade = preview.proposed_official_grade;
+
+      const confirmed = window.confirm(
+        `Process approved INC completion for ${selected.student_name}?\n\n` +
+          `${selected.subject_code} · Grade #${selected.grade_id}\n` +
+          `Midterm: ${grade.midterm_grade}%\n` +
+          `Final Term: ${grade.final_grade}%\n` +
+          `Semester: ${grade.overall_percentage}%\n` +
+          `Numeric equivalent: ${grade.final_rating} (${grade.remarks})\n\n` +
+          "This updates the official INC to a numeric result and records an " +
+          "audited sheet amendment. The original finalized snapshot remains unchanged.",
+      );
+
+      if (!confirmed) return;
+
+      const saved = await request(false);
+
+      setNotice({
+        type: "success",
+        message:
+          `Conversion completed. Amendment #${saved.amendment_id}, ` +
+          `revision ${saved.sheet_revision_number}. ` +
+          "Progression review is required.",
+      });
+
+      setSelectedId(null);
+      setRemarks("");
+
+      setReloadKey((value) => value + 1);
+      onProcessed();
+    } catch (caught) {
+      setNotice({
+        type: "error",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : "The modern INC conversion could not be processed.",
+      });
+
+      setReloadKey((value) => value + 1);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <section className="registrar-grade-change-panel">
+      <header className="registrar-grade-change-panel-heading">
+        <div>
+          <span>Modern Grading · QA Pilot</span>
+
+          <h2>INC Completion Conversions</h2>
+
+          <p>
+            Review approved replacement submissions and existing official-sheet
+            amendments. This workflow remains limited to the authorized QA
+            pilot.
+          </p>
+        </div>
+
+        <strong className="registrar-grade-change-count">
+          {loading ? "…" : rows.length} submissions
+        </strong>
+      </header>
+
+      <div className="registrar-grade-change-sheet-form">
+        {error && (
+          <p
+            role="alert"
+            className="registrar-grade-change-sheet-message error"
+          >
+            {error}
+          </p>
+        )}
+
+        {notice && (
+          <p
+            role={notice.type === "error" ? "alert" : "status"}
+            className={`registrar-grade-change-sheet-message ${notice.type}`}
+          >
+            {notice.message}
+          </p>
+        )}
+
+        {loading && <p>Loading modern INC submissions...</p>}
+
+        {!loading && !error && rows.length === 0 && (
+          <p>
+            No modern INC replacement submissions are available in this QA
+            pilot.
+          </p>
+        )}
+      </div>
+
+      {!loading && !error && rows.length > 0 && (
+        <div className="registrar-grade-change-request-list">
+          {rows.map((row) => (
+            <article
+              key={row.submission_id}
+              className="registrar-grade-change-card"
+            >
+              <header className="registrar-grade-change-card-header">
+                <div className="registrar-grade-change-student">
+                  <div>
+                    <strong>{row.student_name}</strong>
+
+                    <p>
+                      {row.student_number} · {row.subject_code} ·{" "}
+                      {row.subject_name}
+                    </p>
+
+                    <small>
+                      Replacement #{row.submission_id} · Grade #{row.grade_id}
+                    </small>
+                  </div>
+                </div>
+
+                <span
+                  className={`registrar-grade-change-status ${
+                    row.conversion_state === "AMENDED"
+                      ? "registrar-grade-change-status--completed"
+                      : "registrar-grade-change-status--pending"
+                  }`}
+                >
+                  {row.conversion_state.replaceAll("_", " ")}
+                </span>
+              </header>
+
+              <div className="registrar-grade-change-sheet-form">
+                <p>
+                  Submission: {row.submission_status} · Claim:{" "}
+                  {row.claim_verification_status}
+                  {" · "}
+                  Sheet: {row.sheet_status}
+                </p>
+
+                {row.review_remarks && (
+                  <p>Program Head review: {row.review_remarks}</p>
+                )}
+
+                {row.amendment && (
+                  <p role="status">
+                    Amendment #{row.amendment.amendment_id}
+                    {" · "}
+                    Sheet revision {row.amendment.sheet_revision_number}
+                    {" · "}
+                    Applied {row.amendment.applied_at}
+                  </p>
+                )}
+
+                {canProcess(row) && (
+                  <button
+                    type="button"
+                    className="registrar-grade-change-process"
+                    disabled={processing}
+                    onClick={() => {
+                      setSelectedId((current) =>
+                        current === row.submission_id
+                          ? null
+                          : row.submission_id,
+                      );
+
+                      setRemarks("");
+                      setNotice(null);
+                    }}
+                  >
+                    <FileCheck2 size={14} />
+
+                    {selectedId === row.submission_id
+                      ? "Cancel"
+                      : "Process INC Conversion"}
+                  </button>
+                )}
+
+                {selectedId === row.submission_id && canProcess(row) && (
+                  <form
+                    className="registrar-grade-change-sheet-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void process();
+                    }}
+                  >
+                    <label className="registrar-grade-change-modal-field">
+                      <span>
+                        Registrar conversion remarks (20–1000 characters)
+                      </span>
+
+                      <textarea
+                        rows={4}
+                        maxLength={1000}
+                        required
+                        value={remarks}
+                        disabled={processing}
+                        onChange={(event) => setRemarks(event.target.value)}
+                        placeholder="Describe the verified evidence and authorization for this INC conversion"
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      className="registrar-grade-change-process"
+                      disabled={!validRemarks || processing}
+                    >
+                      <ShieldCheck size={14} />
+
+                      {processing
+                        ? "Validating…"
+                        : "Validate & Process Conversion"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 export default function GradeChangeRequestsR() {
   const navigate = useNavigate();
   const session = authService.getSession();
@@ -574,7 +1469,10 @@ export default function GradeChangeRequestsR() {
   if (!authenticated || userRole !== "Registrar") return null;
   return (
     <DashboardLayout>
-      <main className="registrar-grade-change-page" aria-busy={loading || refreshing}>
+      <main
+        className="registrar-grade-change-page"
+        aria-busy={loading || refreshing}
+      >
         <section className="registrar-grade-change-hero">
           <div className="registrar-grade-change-hero-copy">
             <div className="registrar-grade-change-eyebrow">
@@ -670,7 +1568,10 @@ export default function GradeChangeRequestsR() {
             </div>
           </article>
         </section>
-
+        <OriginalOfficialSheetRecorder />
+        <ModernIncConversionQueue
+          onProcessed={() => setRefreshKey((current) => current + 1)}
+        />
         <section className="registrar-grade-change-panel">
           <header className="registrar-grade-change-panel-heading">
             <div>

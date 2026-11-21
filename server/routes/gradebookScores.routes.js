@@ -4,12 +4,7 @@ import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig
 import { assertCombinedSemesterCellEditable } from "../services/gradebookCombinedEditScope.service.js";
 import { requireVerifiedHistoricalIncFinalTermEntry } from "../services/gradebookIncCompletionAccess.service.js";
 import { requireModernIncPendingScoreEntry } from "../services/gradebookModernIncSource.service.js";
-import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 const router = express.Router();
-
-const TEST_DATABASE = "databaseforptc1_admission_test";
-
-const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 function fail(code, message, status = 409) {
   const error = new Error(message);
@@ -252,26 +247,20 @@ router.post("/:offeringId/scores", async (req, res) => {
   try {
     connection = await db.getConnection();
 
-    await assertQaGradingDatabase(connection);
-
-    const [databases] = await connection.execute(
-      "SELECT DATABASE() AS database_name",
-    );
-
-    if (databases[0]?.database_name !== TEST_DATABASE) {
+    // Enable committed score changes only after grading rollout approval.
+    if (
+      !input.dryRun &&
+      process.env.GRADEBOOK_SCORE_WRITES_ENABLED !== "true"
+    ) {
       fail(
-        "TEST_DATABASE_ONLY",
-        "Score saves are restricted to the admission-test database.",
+        "GRADEBOOK_SCORE_WRITE_DISABLED",
+        "Score saving is not enabled on this server.",
         403,
       );
     }
-    if (!input.dryRun && !QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
-      fail(
-        "TEST_OFFERING_ONLY",
-        "Score saves are restricted to QA Offerings #127, #128, and #131.",
-        403,
-      );
-    }
+    // Keep the score and audit write in one transaction.
+    await connection.beginTransaction();
+    transactionStarted = true;
     // Serialize score writes with gradebook assessment/submission operations.
     const [offeringRows] = await connection.execute(
       `SELECT so.offering_id, so.status, so.faculty_id, f.user_id AS assigned_user_id,
@@ -396,7 +385,28 @@ router.post("/:offeringId/scores", async (req, res) => {
     let incCompletion = null;
 
     if (enrollment.enrollment_subject_status === "Incomplete") {
-      if (offeringId === 130) {
+      // Route INC completion by official publication source, not offering ID.
+      const [publicationRows] = await connection.execute(
+        `SELECT config_id, publication_source
+           FROM gradebook_official_grade_publications
+          WHERE enrollment_subject_id = ? FOR UPDATE`,
+        [input.enrollmentSubjectId],
+      );
+
+      if (
+        publicationRows.length > 1 ||
+        (publicationRows.length === 1 &&
+          Number(publicationRows[0].config_id) !== configId)
+      ) {
+        fail(
+          "INC_COMPLETION_SOURCE_INVALID",
+          "The official grade publication does not match this gradebook.",
+        );
+      }
+
+      const publicationSource = publicationRows[0]?.publication_source ?? null;
+
+      if (publicationSource === "COMBINED_SEMESTER") {
         incCompletion = await requireModernIncPendingScoreEntry(connection, {
           offeringId,
           configId,
@@ -408,8 +418,9 @@ router.post("/:offeringId/scores", async (req, res) => {
           assessmentId: input.assessmentId,
           scoreStatus: input.scoreStatus,
           changeReason: input.changeReason,
+          dryRun: input.dryRun,
         });
-      } else {
+      } else if (publicationSource === null) {
         incCompletion = await requireVerifiedHistoricalIncFinalTermEntry(
           connection,
           {
@@ -423,14 +434,12 @@ router.post("/:offeringId/scores", async (req, res) => {
             changeReason: input.changeReason,
           },
         );
+      } else {
+        fail(
+          "INC_COMPLETION_SOURCE_UNSUPPORTED",
+          "This official grade source requires a separate authorized correction workflow.",
+        );
       }
-    } else {
-      await assertCombinedSemesterCellEditable(
-        connection,
-        configId,
-        input.enrollmentSubjectId,
-        gradingTerm,
-      );
     }
 
     // Ordinary score entry still requires an Open offering.

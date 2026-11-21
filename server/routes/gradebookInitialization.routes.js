@@ -268,49 +268,6 @@ router.post("/dry-run/:offeringId", async (req, res) => {
     return sendError(res, error);
   }
 });
-
-// Permanent QA initialization
-// POST /api/gradebook/initialize/:offeringId
-router.post("/initialize/:offeringId", async (req, res) => {
-  const id = positiveId(req.params.offeringId);
-
-  if (!id) {
-    return res.status(400).json({
-      success: false,
-      code: "INVALID_OFFERING_ID",
-    });
-  }
-
-  const body = req.body;
-
-  if (
-    !body ||
-    typeof body !== "object" ||
-    Array.isArray(body) ||
-    Object.keys(body).length !== 1 ||
-    !Object.hasOwn(body, "dry_run") ||
-    body.dry_run !== false
-  ) {
-    return res.status(400).json({
-      success: false,
-      code: "COMMIT_CONFIRMATION_REQUIRED",
-      message: 'Specify {"dry_run": false} to initialize the gradebook.',
-    });
-  }
-
-  try {
-    const result = await initializeGradebookOffering(db, id, req.user.user_id, {
-      dryRun: false,
-    });
-
-    return res.status(result.created ? 201 : 200).json({
-      ...result,
-      success: true,
-    });
-  } catch (error) {
-    return sendError(res, error);
-  }
-});
 // Gradebook Initialization
 router.post("/initialize/:offeringId", async (req, res) => {
   const offeringId = positiveId(req.params.offeringId);
@@ -349,11 +306,8 @@ router.post("/initialize/:offeringId", async (req, res) => {
     });
   }
 
-  // Committed initialization is disabled unless explicitly enabled.
-  if (
-    process.env.NODE_ENV === "production" ||
-    process.env.GRADEBOOK_QA_INITIALIZATION_ENABLED !== "true"
-  ) {
+  // Committed initialization requires explicit activation.
+  if (process.env.GRADEBOOK_INITIALIZATION_ENABLED !== "true") {
     return res.status(403).json({
       success: false,
       code: "GRADEBOOK_INIT_WRITE_DISABLED",
@@ -377,5 +331,4 @@ router.post("/initialize/:offeringId", async (req, res) => {
     return sendError(res, error);
   }
 });
-
 export default router;

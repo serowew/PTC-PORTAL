@@ -17,6 +17,7 @@ import financeHistoryRoutes from "./financehistory.js";
 import academicYearsRoutes from "./academicYears.js";
 import incCompletionConversionReadinessRouter from "./incCompletionConversionReadiness.routes.js";
 import { assertQaGradingDatabase } from "../../services/gradebookQaWriteGuard.service.js";
+import { validateOfficialSheetSpecialEvidence } from "../../services/gradebookOfficialSheetSpecialEvidence.service.js";
 
 const router = express.Router();
 
@@ -1802,9 +1803,14 @@ async function officialSheetRegistrar(connection, req) {
 async function officialSheetScope(connection, offeringId, lock = false) {
   // Keep the same offering → config lock order as score and submission writers.
   const [offeringRows] = await connection.execute(
-    `SELECT offering_id, academic_year_id, semester_id, status
-       FROM subject_offerings WHERE offering_id = ?
+    `SELECT so.offering_id, so.academic_year_id, so.semester_id,
+            so.status, cr.department_id
+       FROM subject_offerings so
+       JOIN sections sec ON sec.section_id = so.section_id
+       JOIN courses cr ON cr.course_id = sec.course_id
+      WHERE so.offering_id = ?
        ${lock ? "FOR UPDATE" : ""}`,
+
     [offeringId],
   );
   if (offeringRows.length !== 1) {
@@ -1826,11 +1832,13 @@ async function officialSheetScope(connection, offeringId, lock = false) {
       404,
     );
   }
+
   return {
     configId: Number(configRows[0].config_id),
     academicYearId: Number(offeringRows[0].academic_year_id),
     semesterId: Number(offeringRows[0].semester_id),
     offeringStatus: offeringRows[0].status,
+    departmentId: Number(offeringRows[0].department_id),
   };
 }
 
@@ -1897,6 +1905,117 @@ async function officialSheetCountInc(connection, configId, offeringId) {
   return Number(row?.official_inc_grade_count ?? 0);
 }
 
+// List initialized gradebooks for original sheet-date recording.
+router.get("/gradebook/official-sheets", async (req, res) => {
+  try {
+    if (Object.keys(req.query ?? {}).length !== 0) {
+      officialSheetFail(
+        "OFFICIAL_SHEET_LIST_QUERY_UNSUPPORTED",
+        "The official-sheet list does not accept query parameters.",
+        400,
+      );
+    }
+
+    await officialSheetRegistrar(db, req);
+
+    const [rows] = await db.execute(
+      `SELECT
+          so.offering_id,
+          so.status AS offering_status,
+          sub.subject_code,
+          sub.subject_name,
+          sec.section_name,
+          ay.academic_year,
+          sem.semester_name,
+          sh.sheet_id,
+          sh.sheet_status,
+          sh.record_version,
+          DATE_FORMAT(sh.original_official_submitted_on, '%Y-%m-%d')
+            AS original_official_submitted_on,
+          sh.official_submission_reference,
+          sh.official_date_verified_by_user_id,
+
+DATE_FORMAT(
+  sh.official_date_verified_at,
+  '%Y-%m-%d %H:%i:%s'
+) AS official_date_verified_at,
+
+CASE
+  WHEN sh.original_official_submitted_on IS NOT NULL
+   AND sh.official_date_verified_by_user_id IS NOT NULL
+   AND sh.official_date_verified_at IS NOT NULL
+  THEN DATE_FORMAT(
+    DATE_ADD(
+      sh.original_official_submitted_on,
+      INTERVAL 1 YEAR
+    ),
+    '%Y-%m-%d'
+  )
+  ELSE NULL
+END AS inc_completion_deadline_on,
+          (SELECT COUNT(*)
+             FROM gradebook_official_sheet_submission_events ev
+            WHERE ev.sheet_id = sh.sheet_id) AS audit_event_count
+       FROM gradebook_offering_config cfg
+       JOIN subject_offerings so ON so.offering_id = cfg.offering_id
+       JOIN subjects sub ON sub.subject_id = so.subject_id
+       JOIN sections sec ON sec.section_id = so.section_id
+       JOIN academic_years ay ON ay.academic_year_id = so.academic_year_id
+       JOIN semesters sem ON sem.semester_id = so.semester_id
+       LEFT JOIN gradebook_official_sheets sh ON sh.config_id = cfg.config_id
+       ORDER BY so.academic_year_id DESC,
+                so.semester_id DESC, so.offering_id DESC`,
+    );
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json({
+      success: true,
+      read_only: true,
+      offerings: rows.map((row) => {
+        const sheetExists = row.sheet_id != null;
+
+        const canRecord =
+          row.offering_status !== "Cancelled" &&
+          (!sheetExists ||
+            (row.sheet_status === "IN_PROGRESS" &&
+              Number(row.record_version) === 1 &&
+              row.original_official_submitted_on == null &&
+              row.official_submission_reference == null &&
+              row.official_date_verified_by_user_id == null &&
+              row.official_date_verified_at == null &&
+              Number(row.audit_event_count) === 0));
+
+        return {
+          offering_id: Number(row.offering_id),
+          offering_status: row.offering_status,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name,
+          section_name: row.section_name,
+          academic_year: row.academic_year,
+          semester_name: row.semester_name,
+          sheet_id: sheetExists ? String(row.sheet_id) : null,
+          sheet_status: row.sheet_status ?? "NOT_RECORDED",
+          sheet_record_version: sheetExists ? Number(row.record_version) : null,
+          original_official_submitted_on: row.original_official_submitted_on,
+          official_submission_reference: row.official_submission_reference,
+          original_date_verified:
+            row.official_date_verified_by_user_id != null &&
+            row.official_date_verified_at != null,
+
+          official_date_verified_at: row.official_date_verified_at,
+
+          inc_completion_deadline_on: row.inc_completion_deadline_on,
+
+          can_record_original_date: canRecord,
+        };
+      }),
+    });
+  } catch (error) {
+    return officialSheetError(res, error);
+  }
+});
+
 // GET /api/registrar/gradebook/official-sheets/:offeringId
 // No writes. Includes initial-date audit events, but never implies the sheet is finalized.
 router.get("/gradebook/official-sheets/:offeringId", async (req, res) => {
@@ -1915,7 +2034,7 @@ router.get("/gradebook/official-sheets/:offeringId", async (req, res) => {
         "offeringId must be a positive integer.",
         400,
       );
-    await officialSheetAssertDatabase(db);
+
     const registrarUserId = await officialSheetRegistrar(db, req);
     const scope = await officialSheetScope(db, offeringId);
     const [sheetRows] = await db.execute(officialSheetSelect, [scope.configId]);
@@ -2029,11 +2148,29 @@ router.post(
       inTransaction = true;
 
       // Official-sheet writes remain QA-only.
-      await assertQaGradingDatabase(connection);
 
-      await officialSheetAssertDatabase(connection);
       const actor = await officialSheetRegistrar(connection, req);
+
+      // Keep committed recording disabled until the official-sheet rollout.
+      const recordWritesEnabled =
+        process.env.GRADEBOOK_OFFICIAL_SHEET_RECORD_WRITES_ENABLED === "true";
+
+      if (!req.body.dry_run && !recordWritesEnabled) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_RECORD_WRITES_DISABLED",
+          "Recording original official-sheet dates is not enabled on this server.",
+          403,
+        );
+      }
+
+      // While disabled, dry-run recording remains limited to the QA database.
+      if (!recordWritesEnabled) {
+        await assertQaGradingDatabase(connection);
+        await officialSheetAssertDatabase(connection);
+      }
+
       const scope = await officialSheetScope(connection, offeringId, true);
+
       if (scope.offeringStatus === "Cancelled") {
         officialSheetFail(
           "OFFICIAL_SHEET_OFFERING_CANCELLED",
@@ -3497,7 +3634,7 @@ router.get(
           400,
         );
       }
-      await officialSheetAssertDatabase(db);
+      // Allow authorized Registrars to inspect finalization readiness.
       await officialSheetRegistrar(db, req);
       const scope = await officialSheetScope(db, offeringId);
       const blockers = [];
@@ -3543,6 +3680,16 @@ router.get(
         const verified = events.find(
           (event) => event.event_type === "VERIFIED",
         );
+
+        // Verify the original date was approved by a Program Head.
+        const [[verifier]] = await db.execute(
+          `SELECT r.role_name
+             FROM users u
+             JOIN roles r ON r.role_id = u.role_id
+            WHERE u.user_id = ?`,
+          [sheet.official_date_verified_by_user_id],
+        );
+
         const validAudit =
           events.length === 2 &&
           first?.previous_record_version == null &&
@@ -3558,7 +3705,8 @@ router.get(
             sheet.official_submission_reference &&
           verified?.official_submission_reference ===
             sheet.official_submission_reference &&
-          Number(sheet.record_version) >= 2;
+          Number(sheet.record_version) === 2 &&
+          verifier?.role_name === "Program Head";
         if (!validAudit) {
           blockers.push({
             code: "SUBMISSION_AUDIT_NOT_VERIFIED",
@@ -3574,22 +3722,97 @@ router.get(
                 e.academic_year_id, e.semester_id, s.student_id,
                 s.student_number, g.grade_id, g.grade_status, g.grading_policy,
                 g.grading_outcome, g.final_rating, g.remarks,
-                (SELECT COUNT(*) FROM gradebook_official_grade_publications p
-                  WHERE p.grade_id = g.grade_id AND p.config_id = ?
+                
+                (SELECT COUNT(*)
+                   FROM gradebook_official_grade_publications p
+                  WHERE p.grade_id = g.grade_id
+                    AND p.config_id = ?
                     AND p.enrollment_subject_id = es.enrollment_subject_id
-                    AND EXISTS (
-                      SELECT 1 FROM gradebook_term_submission_attempts mt
-                      JOIN gradebook_term_submission_attempts ft
-                        ON ft.term_submission_id = p.final_term_submission_id
-                      WHERE mt.term_submission_id = p.midterm_submission_id
-                        AND mt.submission_status = 'APPROVED'
-                        AND mt.grading_term = 'MIDTERM'
-                        AND ft.submission_status = 'APPROVED'
-                        AND ft.grading_term = 'FINAL_TERM'
-                        AND mt.config_id = p.config_id AND ft.config_id = p.config_id
-                        AND mt.enrollment_subject_id = es.enrollment_subject_id
-                        AND ft.enrollment_subject_id = es.enrollment_subject_id
+                    AND p.grading_outcome_snapshot = 'NUMERIC'
+                    AND (
+                      (p.publication_source = 'TERM_PAIR'
+                       AND p.combined_submission_id IS NULL
+                       AND EXISTS (
+                         SELECT 1
+                           FROM gradebook_term_submission_attempts mt
+                           JOIN gradebook_term_submission_attempts ft
+                             ON ft.term_submission_id = p.final_term_submission_id
+                          WHERE mt.term_submission_id = p.midterm_submission_id
+                            AND mt.submission_status = 'APPROVED'
+                            AND mt.grading_term = 'MIDTERM'
+                            AND ft.submission_status = 'APPROVED'
+                            AND ft.grading_term = 'FINAL_TERM'
+                            AND mt.config_id = p.config_id
+                            AND ft.config_id = p.config_id
+                            AND mt.enrollment_subject_id = es.enrollment_subject_id
+                            AND ft.enrollment_subject_id = es.enrollment_subject_id
+                       ))
+                      OR
+                      (p.publication_source = 'COMBINED_SEMESTER'
+                       AND p.midterm_submission_id IS NULL
+                       AND p.final_term_submission_id IS NULL
+                       AND EXISTS (
+                         SELECT 1
+                           FROM gradebook_grade_submission_attempts a
+                           JOIN gradebook_official_sheets sh
+                             ON sh.sheet_id = a.sheet_id
+                            AND sh.config_id = p.config_id
+                           JOIN gradebook_grade_submission_reviews rv
+                             ON rv.submission_id = a.submission_id
+                          WHERE a.submission_id = p.combined_submission_id
+                            AND a.grade_id = p.grade_id
+                            AND a.grading_scope = 'FULL_SEMESTER'
+                            AND a.grading_outcome_snapshot = 'NUMERIC'
+                            AND a.submission_status = 'APPROVED'
+                            AND a.record_version = 2
+                            AND rv.review_decision = 'APPROVED'
+                            AND rv.grading_outcome_snapshot = 'NUMERIC'
+                            AND rv.submission_version_after = a.record_version
+                            AND rv.reviewed_by_user_id = a.reviewed_by_user_id
+                            AND p.published_by_user_id = a.reviewed_by_user_id
+                            AND a.overall_exact_numerator = p.overall_exact_numerator
+                            AND a.overall_exact_denominator = p.overall_exact_denominator
+                       ))
                     )) AS publication_count,
+
+                                    (SELECT COUNT(*)
+                   FROM gradebook_official_grade_publications p
+                   JOIN gradebook_grade_submission_attempts a
+                     ON a.submission_id = p.combined_submission_id
+                    AND a.grade_id = p.grade_id
+                   JOIN gradebook_grade_submission_reviews rv
+                     ON rv.submission_id = a.submission_id
+                  WHERE p.grade_id = g.grade_id
+                    AND p.config_id = ?
+                    AND p.enrollment_subject_id = es.enrollment_subject_id
+                    AND p.publication_source = 'COMBINED_SEMESTER'
+                    AND p.grading_outcome_snapshot = g.grading_outcome
+                    AND p.grading_outcome_snapshot IN
+                        ('INCOMPLETE', 'UNOFFICIAL_DROP')
+                    AND p.midterm_submission_id IS NULL
+                    AND p.final_term_submission_id IS NULL
+                    AND a.sheet_id = ?
+                    AND a.grading_scope = 'FULL_SEMESTER'
+                    AND a.grading_outcome_snapshot = p.grading_outcome_snapshot
+                    AND a.submission_status = 'APPROVED'
+                    AND a.special_outcome_id IS NOT NULL
+                    AND rv.review_decision = 'APPROVED'
+                    AND rv.grading_outcome_snapshot = p.grading_outcome_snapshot
+                    AND rv.submission_version_after = a.record_version
+                    AND rv.reviewed_by_user_id = a.reviewed_by_user_id
+                    AND p.published_by_user_id = a.reviewed_by_user_id
+                ) AS modern_special_approved_count,
+
+                (SELECT COUNT(*)
+                   FROM gradebook_official_grade_publications p
+                  WHERE p.grade_id = g.grade_id
+                ) AS any_publication_count,
+
+                (SELECT COUNT(*)
+                   FROM gradebook_grade_submission_attempts a
+                  WHERE a.grade_id = g.grade_id
+                ) AS combined_attempt_count,
+
                 (SELECT COUNT(*) FROM gradebook_special_outcomes o
                   WHERE o.grade_id = g.grade_id AND o.record_status = 'ACTIVE'
                     AND o.outcome_type = CASE
@@ -3608,9 +3831,23 @@ router.get(
            JOIN enrollments e ON e.enrollment_id = es.enrollment_id
            JOIN students s ON s.student_id = e.student_id
            LEFT JOIN grades g ON g.enrollment_subject_id = es.enrollment_subject_id
+        
           WHERE es.offering_id = ?
-          ORDER BY s.student_number, es.enrollment_subject_id`,
-        [scope.configId, scope.configId, scope.configId, offeringId],
+            AND NOT (
+              COALESCE(e.enrollment_status, '') = 'Rejected'
+              AND COALESCE(es.status, '') = 'Enrolled'
+              AND g.grade_id IS NULL
+            )
+          ORDER BY s.student_number, es.enrollment_subject_id
+`,
+        [
+          scope.configId,
+          scope.configId,
+          sheet?.sheet_id ?? "0",
+          scope.configId,
+          scope.configId,
+          offeringId,
+        ],
       );
       if (roster.length === 0) {
         blockers.push({
@@ -3649,17 +3886,291 @@ router.get(
             ) {
               problems.push("NUMERIC_GRADE_PUBLICATION_INVALID");
             }
-          } else if (row.grading_outcome === "INCOMPLETE") {
-            if (
-              row.subject_status !== "Incomplete" ||
-              Number(row.final_rating) !== 4 ||
-              Number(row.special_outcome_count) !== 1 ||
-              Number(row.inc_approved_count) !== 1
-            ) {
-              problems.push("INCOMPLETE_GRADE_EVIDENCE_INVALID");
-            }
-          } else if (row.grading_outcome === "UNOFFICIAL_DROP") {
-            if (
+          } else if (
+            ["INCOMPLETE", "UNOFFICIAL_DROP"].includes(row.grading_outcome)
+          ) {
+            const modernSourcePresent =
+              Number(row.any_publication_count) > 0 ||
+              Number(row.combined_attempt_count) > 0;
+
+            if (modernSourcePresent) {
+              const isInc = row.grading_outcome === "INCOMPLETE";
+
+              const sourcePrecheckValid =
+                Number(row.any_publication_count) === 1 &&
+                Number(row.modern_special_approved_count) === 1 &&
+                Number(row.special_outcome_count) === 1 &&
+                Number(row.inc_approved_count) === 0 &&
+                Number(row.ud_approved_count) === 0 &&
+                row.subject_status ===
+                  (isInc ? "Incomplete" : "Unofficial Drop") &&
+                Number(row.final_rating) === (isInc ? 4 : 6);
+
+              if (!sourcePrecheckValid || !sheet?.sheet_id) {
+                problems.push("MODERN_SPECIAL_PUBLICATION_INVALID");
+              } else {
+                // Read the approved combined submission and its grade.
+                const [sources] = await db.execute(
+                  `SELECT a.*,
+                          g.grading_outcome AS current_outcome,
+                          g.outcome_reason AS current_reason,
+                          g.remarks AS current_remarks,
+                          g.midterm_grade AS current_midterm,
+                          g.final_grade AS current_final,
+                          g.overall_percentage AS current_overall,
+                          g.final_rating AS current_rating
+                     FROM gradebook_official_grade_publications p
+                     JOIN gradebook_grade_submission_attempts a
+                       ON a.submission_id = p.combined_submission_id
+                      AND a.grade_id = p.grade_id
+                     JOIN grades g
+                       ON g.grade_id = p.grade_id
+                     JOIN gradebook_official_sheets sh
+                       ON sh.sheet_id = a.sheet_id
+                      AND sh.config_id = p.config_id
+                     JOIN gradebook_submission_periods sp
+                       ON sp.period_id = a.period_id
+                    WHERE p.grade_id = ?
+                      AND p.enrollment_subject_id = ?
+                      AND p.config_id = ?
+                      AND p.publication_source = 'COMBINED_SEMESTER'
+                      AND sh.sheet_id = ?
+                      AND sh.sheet_status = 'IN_PROGRESS'
+                    
+                    AND sp.department_id = ?
+                    AND sp.academic_year_id = ?
+                    AND sp.semester_id = ?
+
+                    -- The publication must use the approved submission.
+                    AND a.submission_status = 'APPROVED'
+                    AND a.record_version = 2
+                    AND a.grading_scope = 'FULL_SEMESTER'
+                    AND a.grading_outcome_snapshot = p.grading_outcome_snapshot
+                    AND a.special_outcome_id IS NOT NULL
+                    AND a.returned_edit_scope IS NULL
+                    AND a.submitted_at IS NOT NULL
+                    AND a.reviewed_at IS NOT NULL
+                    AND p.published_at IS NOT NULL
+                    AND p.published_by_user_id = a.reviewed_by_user_id
+                    AND p.midterm_submission_id IS NULL
+                    AND p.final_term_submission_id IS NULL
+                    AND p.overall_exact_numerator IS NULL
+                    AND p.overall_exact_denominator IS NULL
+
+
+                    -- Require the combined-semester structure lock.
+                    AND EXISTS (
+                      SELECT 1
+                        FROM gradebook_structure_locks sl
+                        JOIN gradebook_grade_submission_attempts first_a
+                          ON first_a.submission_id = sl.first_submission_id
+                       WHERE sl.config_id = p.config_id
+                         AND first_a.sheet_id = a.sheet_id
+                    )
+
+                    -- Reject conflicting legacy term locks.
+                    AND NOT EXISTS (
+                      SELECT 1
+                        FROM gradebook_term_structure_locks tl
+                       WHERE tl.config_id = p.config_id
+                    )
+
+                    -- Reject mixed legacy and combined submissions.
+                    AND NOT EXISTS (
+                      SELECT 1
+                        FROM gradebook_term_submission_attempts t
+                       WHERE t.config_id = p.config_id
+                    )
+
+                    -- Reject conflicting legacy INC requests.
+                    AND NOT EXISTS (
+                      SELECT 1
+                        FROM gradebook_inc_outcome_requests ir
+                       WHERE ir.config_id = p.config_id
+                         AND ir.enrollment_subject_id =
+                             p.enrollment_subject_id
+                         AND ir.request_status IN ('SUBMITTED', 'APPROVED')
+                    )
+
+                    -- Reject conflicting legacy UD requests.
+                    AND NOT EXISTS (
+                      SELECT 1
+                        FROM gradebook_ud_outcome_requests ur
+                       WHERE ur.config_id = p.config_id
+                         AND ur.enrollment_subject_id =
+                             p.enrollment_subject_id
+                         AND ur.request_status IN ('SUBMITTED', 'APPROVED')
+                    )
+
+                    -- Modern grades cannot use historical reconciliation.
+                    AND NOT EXISTS (
+                      SELECT 1
+                        FROM gradebook_historical_grade_source_reviews h
+                       WHERE h.grade_id = p.grade_id
+                    )
+
+
+                    -- A newer submission must not exist.
+                    AND NOT EXISTS (
+                      SELECT 1
+                        FROM gradebook_grade_submission_attempts newer
+                       WHERE newer.grade_id = a.grade_id
+                         AND newer.attempt_number > a.attempt_number
+                    )
+
+                    -- Verify the linked Program Head approval.
+                    AND EXISTS (
+                      SELECT 1
+                        FROM gradebook_grade_submission_reviews rv
+                       WHERE rv.submission_id = a.submission_id
+                         AND rv.review_decision = 'APPROVED'
+                         AND rv.grading_outcome_snapshot =
+                             a.grading_outcome_snapshot
+                         AND rv.submission_version_after = a.record_version
+                         AND rv.reviewed_by_user_id = a.reviewed_by_user_id
+                         AND rv.review_notes <=> a.review_remarks
+                         AND rv.returned_edit_scope IS NULL
+                         AND rv.review_batch_ref IS NULL
+                         AND CHAR_LENGTH(TRIM(rv.evidence_review_notes))
+                             BETWEEN 20 AND 1000
+                         AND rv.is_self_approval =
+                             (a.submitted_by_user_id = a.reviewed_by_user_id)
+                    )
+
+                    -- Reviewer must be an active Program Head
+                    -- assigned to the appropriate department.
+                    AND EXISTS (
+                      SELECT 1
+                        FROM users reviewer
+                        JOIN roles role
+                          ON role.role_id = reviewer.role_id
+                       WHERE reviewer.user_id = a.reviewed_by_user_id
+                         AND reviewer.is_active = 1
+                         AND reviewer.is_archived = 0
+                         AND role.role_name = 'Program Head'
+                         AND EXISTS (
+                           SELECT 1
+                             FROM program_heads ph
+                             JOIN faculty pf
+                               ON pf.faculty_id = ph.faculty_id
+                            WHERE pf.user_id = reviewer.user_id
+                              AND ph.department_id = sp.department_id
+                              AND ph.is_active = 1
+                         )
+                    )
+
+                    -- The submitting instructor must match the offering.
+                    AND EXISTS (
+                      SELECT 1
+                        FROM gradebook_offering_config cfg
+                        JOIN subject_offerings so
+                          ON so.offering_id = cfg.offering_id
+                        JOIN faculty instructor
+                          ON instructor.faculty_id = so.faculty_id
+                       WHERE cfg.config_id = p.config_id
+                         AND instructor.faculty_id = g.faculty_id
+                         AND instructor.user_id = a.submitted_by_user_id
+                    )`,
+
+                  [
+                    row.grade_id,
+                    row.enrollment_subject_id,
+                    scope.configId,
+                    String(sheet.sheet_id),
+                    scope.departmentId,
+                    scope.academicYearId,
+                    scope.semesterId,
+                  ],
+                );
+
+                const source = sources.length === 1 ? sources[0] : null;
+
+                let snapshot = null;
+
+                try {
+                  snapshot = source
+                    ? typeof source.calculation_snapshot_json === "string"
+                      ? JSON.parse(source.calculation_snapshot_json)
+                      : source.calculation_snapshot_json
+                    : null;
+                } catch {
+                  // Unreadable snapshots cannot be accepted as evidence.
+                }
+
+                if (
+                  !source ||
+                  !snapshot ||
+                  typeof snapshot !== "object" ||
+                  Array.isArray(snapshot)
+                ) {
+                  problems.push("MODERN_SPECIAL_EVIDENCE_INVALID");
+                } else {
+                  const grade = {
+                    grade_id: row.grade_id,
+                    grading_outcome: source.current_outcome,
+                    outcome_reason: source.current_reason,
+                    remarks: source.current_remarks,
+                    midterm_grade: source.current_midterm,
+                    final_grade: source.current_final,
+                    overall_percentage: source.current_overall,
+                    final_rating: source.current_rating,
+                  };
+
+                  const target = {
+                    offering_id: offeringId,
+                    config_id: scope.configId,
+                    enrollment_subject_id: row.enrollment_subject_id,
+                    grade_id: row.grade_id,
+                    sheet_id: source.sheet_id,
+                    period_id: source.period_id,
+                  };
+
+                  try {
+                    await validateOfficialSheetSpecialEvidence(
+                      db,
+                      target,
+                      grade,
+                      source,
+                      snapshot,
+                      Number(source.reviewed_by_user_id),
+                      {
+                        expectedSubmissionVersion: 2,
+                        lock: false,
+                      },
+                    );
+
+                    // Evidence passed, but full publication-source
+                    // validation is still required before finalization.
+                    problems.push(
+                      "MODERN_SPECIAL_REQUIRES_PROGRAM_HEAD_SOURCE_VALIDATION",
+                    );
+                  } catch (error) {
+                    if (
+                      error?.code ===
+                        "COMBINED_APPROVAL_SPECIAL_EVIDENCE_INVALID" ||
+                      error?.code ===
+                        "COMBINED_APPROVAL_EXACT_SOURCE_INVALID" ||
+                      error?.code === "COMBINED_APPROVAL_PERCENT_INVALID" ||
+                      (typeof error?.code === "string" &&
+                        error.code.startsWith("SPECIAL_APPROVAL_"))
+                    ) {
+                      problems.push("MODERN_SPECIAL_EVIDENCE_INVALID");
+                    } else {
+                      throw error;
+                    }
+                  }
+                }
+              }
+            } else if (row.grading_outcome === "INCOMPLETE") {
+              if (
+                row.subject_status !== "Incomplete" ||
+                Number(row.final_rating) !== 4 ||
+                Number(row.special_outcome_count) !== 1 ||
+                Number(row.inc_approved_count) !== 1
+              ) {
+                problems.push("INCOMPLETE_GRADE_EVIDENCE_INVALID");
+              }
+            } else if (
               row.subject_status !== "Unofficial Drop" ||
               Number(row.final_rating) !== 6 ||
               Number(row.special_outcome_count) !== 1 ||

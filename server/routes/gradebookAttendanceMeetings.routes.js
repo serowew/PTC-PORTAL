@@ -4,7 +4,6 @@ import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig
 import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
 const router = express.Router();
 const TEST_DATABASE = "databaseforptc1_admission_test";
-const QA_GRADEBOOK_OFFERINGS = new Set([127, 128, 130, 131]);
 
 function fail(code, message, status = 409) {
   const error = new Error(message);
@@ -506,29 +505,19 @@ router.post("/:offeringId/attendance/meetings", async (req, res) => {
       message: "An authenticated instructor is required.",
     });
   }
-  // First rollout is deliberately isolated to the verified admission-test offering.
-  if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
-    return res.status(403).json({
-      success: false,
-      code: "TEST_OFFERING_ONLY",
-      message:
-        "Attendance meeting creation is currently limited to Offering #131.",
-    });
-  }
 
   let connection;
   let transactionStarted = false;
   try {
     connection = await db.getConnection();
-    await assertQaGradingDatabase(connection);
-
-    const [databaseRows] = await connection.execute(
-      "SELECT DATABASE() AS database_name",
-    );
-    if (databaseRows[0]?.database_name !== TEST_DATABASE) {
+    // Committed meeting creation requires explicit rollout approval.
+    if (
+      !input.dryRun &&
+      process.env.GRADEBOOK_ATTENDANCE_WRITES_ENABLED !== "true"
+    ) {
       fail(
-        "TEST_DATABASE_ONLY",
-        "Attendance meeting creation is disabled outside the admission-test database.",
+        "GRADEBOOK_ATTENDANCE_WRITES_DISABLED",
+        "Attendance meeting creation is not enabled on this server.",
         403,
       );
     }
@@ -797,28 +786,18 @@ router.post(
         message: "An authenticated instructor is required.",
       });
     }
-    if (!QA_GRADEBOOK_OFFERINGS.has(offeringId)) {
-      return res.status(403).json({
-        success: false,
-        code: "TEST_OFFERING_ONLY",
-        message:
-          "Attendance meeting updates are currently limited to Offering #131.",
-      });
-    }
 
     let connection;
     let transactionStarted = false;
     try {
-      connection = await db.getConnection();
-      await assertQaGradingDatabase(connection);
-
-      const [databaseRows] = await connection.execute(
-        "SELECT DATABASE() AS database_name",
-      );
-      if (databaseRows[0]?.database_name !== TEST_DATABASE) {
+      // Keep committed attendance changes disabled until rollout approval.
+      if (
+        !input.dryRun &&
+        process.env.GRADEBOOK_ATTENDANCE_WRITES_ENABLED !== "true"
+      ) {
         fail(
-          "TEST_DATABASE_ONLY",
-          "Attendance meeting updates are disabled outside the admission-test database.",
+          "GRADEBOOK_ATTENDANCE_WRITES_DISABLED",
+          "Attendance meeting updates are not enabled on this server.",
           403,
         );
       }
