@@ -789,6 +789,7 @@ router.post(
 
     let connection;
     let transactionStarted = false;
+
     try {
       // Keep committed attendance changes disabled until rollout approval.
       if (
@@ -801,6 +802,10 @@ router.post(
           403,
         );
       }
+
+      connection = await db.getConnection();
+      await assertQaGradingDatabase(connection);
+
       await connection.beginTransaction();
       transactionStarted = true;
       // Keep the offering -> config -> meeting lock order used for meeting creation.
