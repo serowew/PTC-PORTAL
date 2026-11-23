@@ -1,9 +1,22 @@
 import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
-import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
+import { assertGradebookAssessmentWriteAllowed } from "../services/gradebookAssessmentWriteGuard.service.js";
 
 const router = express.Router();
+
+function hasDisallowedControlCharacters(value, allowLineBreaks = false) {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    const permittedWhitespace =
+      allowLineBreaks && (code === 9 || code === 10 || code === 13);
+
+    if (code === 127 || (code < 32 && !permittedWhitespace)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function positiveId(value) {
   const raw = String(value ?? "").trim();
@@ -35,8 +48,8 @@ function sendError(res, error) {
   });
 }
 
-// Shared assessment columns become immutable for the submitted grading term.
-// The legacy full-semester lock still blocks both terms until migrated.
+// Submitted gradebooks lock shared assessment columns; combined submissions lock both terms.
+// Combined-semester and legacy structure locks block both terms.
 // Call only after locking the offering and gradebook config rows FOR UPDATE.
 async function assertAssessmentTermEditable(
   connection,
@@ -82,9 +95,34 @@ async function assertAssessmentTermEditable(
   );
   if (legacyLocks.length || legacyAttempts.length) {
     const error = new Error(
-      "Legacy full-semester submissions prevent assessment structure changes.",
+      "Combined or legacy semester submissions prevent assessment structure changes.",
     );
     error.code = "GRADEBOOK_LEGACY_SUBMISSION_LOCKED";
+    error.status = 409;
+    throw error;
+  }
+
+  // Do not add assessment columns over an unmigrated historical grade.
+  const [historicalGrades] = await connection.execute(
+    `SELECT g.grade_id
+       FROM grades g
+       JOIN enrollment_subjects es
+         ON es.enrollment_subject_id = g.enrollment_subject_id
+       JOIN gradebook_offering_config cfg ON cfg.config_id = ?
+      WHERE es.offering_id = ?
+        AND (
+          g.grading_policy = 'LEGACY'
+          OR g.grade_status IN ('Approved', 'Submitted', 'Returned')
+          OR g.created_at < cfg.created_at
+        )
+      LIMIT 1`,
+    [configId, offeringId],
+  );
+  if (historicalGrades.length) {
+    const error = new Error(
+      "This offering includes pre-existing grades requiring historical-record review before assessment structure changes.",
+    );
+    error.code = "GRADEBOOK_HISTORICAL_GRADE_REVIEW_REQUIRED";
     error.status = 409;
     throw error;
   }
@@ -205,10 +243,26 @@ router.get("/:offeringId/assessments", async (req, res) => {
         WHERE es.offering_id = ? LIMIT 1`,
       [offeringId],
     );
+    const [historicalGrades] = await db.execute(
+      `SELECT g.grade_id
+         FROM grades g
+         JOIN enrollment_subjects es
+           ON es.enrollment_subject_id = g.enrollment_subject_id
+         JOIN gradebook_offering_config cfg ON cfg.config_id = ?
+        WHERE es.offering_id = ?
+          AND (
+            g.grading_policy = 'LEGACY'
+            OR g.grade_status IN ('Approved', 'Submitted', 'Returned')
+            OR g.created_at < cfg.created_at
+          )
+        LIMIT 1`,
+      [config.config_id, offeringId],
+    );
     const legacyLocked =
       officialSheetFinalized ||
       legacyLocks.length > 0 ||
-      legacyAttempts.length > 0;
+      legacyAttempts.length > 0 ||
+      historicalGrades.length > 0;
 
     const [termLocks] = await db.execute(
       `SELECT grading_term
@@ -419,7 +473,7 @@ router.post("/:offeringId/assessments", async (req, res) => {
   if (
     !headerName ||
     Array.from(headerName).length > 120 ||
-    /[\x00-\x1f\x7f]/.test(headerName)
+    hasDisallowedControlCharacters(headerName)
   ) {
     return res.status(400).json({
       success: false,
@@ -489,19 +543,7 @@ router.post("/:offeringId/assessments", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
-
-    // Enable committed assessment creation only after rollout approval.
-    if (
-      !body.dry_run &&
-      process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
-    ) {
-      const error = new Error(
-        "Assessment creation is not enabled on this server.",
-      );
-      error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
-      error.status = 403;
-      throw error;
-    }
+    await assertGradebookAssessmentWriteAllowed(connection);
 
     // Serialize assessment structure changes against this offering.
     const [offerings] = await connection.execute(
@@ -802,7 +844,7 @@ router.patch("/:offeringId/assessments/:assessmentId", async (req, res) => {
     if (
       !requestedName ||
       Array.from(requestedName).length > 120 ||
-      /[\x00-\x1f\x7f]/.test(requestedName)
+      hasDisallowedControlCharacters(requestedName)
     ) {
       return res.status(400).json({
         success: false,
@@ -860,19 +902,8 @@ router.patch("/:offeringId/assessments/:assessmentId", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
+    await assertGradebookAssessmentWriteAllowed(connection);
 
-    // Assessment changes require explicit rollout approval.
-    if (
-      !body.dry_run &&
-      process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
-    ) {
-      const error = new Error(
-        "Assessment editing is not enabled on this server.",
-      );
-      error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
-      error.status = 403;
-      throw error;
-    }
     // Use the same lock ordering as assessment creation.
     const [offerings] = await connection.execute(
       `SELECT so.offering_id, so.status,
@@ -1234,7 +1265,7 @@ router.delete("/:offeringId/assessments/:assessmentId", async (req, res) => {
   const requestedReason = String(body.change_reason ?? "").trim();
   if (
     Array.from(requestedReason).length > 2000 ||
-    /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(requestedReason)
+    hasDisallowedControlCharacters(requestedReason, true)
   ) {
     return res.status(400).json({
       success: false,
@@ -1264,19 +1295,7 @@ router.delete("/:offeringId/assessments/:assessmentId", async (req, res) => {
   try {
     await connection.beginTransaction();
     transactionStarted = true;
-
-    // Assessment removal requires explicit rollout approval.
-    if (
-      !body.dry_run &&
-      process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
-    ) {
-      const error = new Error(
-        "Assessment removal is not enabled on this server.",
-      );
-      error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
-      error.status = 403;
-      throw error;
-    }
+    await assertGradebookAssessmentWriteAllowed(connection);
 
     // Use the same lock order as create/update: offering -> config -> assessment -> scores.
     const [offerings] = await connection.execute(
@@ -1614,7 +1633,7 @@ router.post(
     if (
       !changeReason ||
       Array.from(changeReason).length > 2000 ||
-      /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(changeReason)
+      hasDisallowedControlCharacters(changeReason, true)
     ) {
       return res.status(400).json({
         success: false,
@@ -1644,19 +1663,7 @@ router.post(
     try {
       await connection.beginTransaction();
       transactionStarted = true;
-
-      // Restoration writes require explicit rollout approval.
-      if (
-        !body.dry_run &&
-        process.env.GRADEBOOK_ASSESSMENT_WRITES_ENABLED !== "true"
-      ) {
-        const error = new Error(
-          "Assessment restoration is not enabled on this server.",
-        );
-        error.code = "GRADEBOOK_ASSESSMENT_WRITE_DISABLED";
-        error.status = 403;
-        throw error;
-      }
+      await assertGradebookAssessmentWriteAllowed(connection);
 
       // Serialize with all other assessment operations: offering -> config -> assessment -> scores.
       const [offerings] = await connection.execute(

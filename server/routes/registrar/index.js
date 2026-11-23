@@ -1758,16 +1758,67 @@ function officialSheetDate(value) {
   return value;
 }
 
-async function officialSheetAssertDatabase(connection) {
-  const [[row]] = await connection.execute(
-    "SELECT DATABASE() AS database_name",
-  );
-  if (row?.database_name !== officialSheetPilotDb) {
+async function officialSheetAssertDatabase(connection, { write = false } = {}) {
+  const [rows] = await connection.execute("SELECT DATABASE() AS database_name");
+
+  const activeDatabase =
+    Array.isArray(rows) && rows.length === 1 ? rows[0]?.database_name : null;
+
+  if (typeof activeDatabase !== "string" || !activeDatabase.trim()) {
     officialSheetFail(
-      "OFFICIAL_SHEET_TEST_DATABASE_ONLY",
-      "Official grading-sheet pilot is limited to databaseforptc1_admission_test.",
+      "OFFICIAL_SHEET_DATABASE_UNKNOWN",
+      "Could not verify the active database.",
       403,
     );
+  }
+
+  if (activeDatabase === officialSheetPilotDb) {
+    if (process.env.NODE_ENV === "production") {
+      officialSheetFail(
+        "OFFICIAL_SHEET_QA_PRODUCTION_FORBIDDEN",
+        "QA official-sheet operations are disabled in production.",
+        403,
+      );
+    }
+    return;
+  }
+
+  const configuredDatabase = process.env.DB_NAME?.trim();
+  const targetDatabase =
+    process.env.GRADEBOOK_OFFICIAL_SHEET_RECORD_TARGET_DATABASE?.trim();
+
+  if (
+    !configuredDatabase ||
+    !targetDatabase ||
+    activeDatabase !== configuredDatabase ||
+    activeDatabase !== targetDatabase
+  ) {
+    officialSheetFail(
+      "OFFICIAL_SHEET_DATABASE_MISMATCH",
+      "The connected database is not authorized for official-sheet access.",
+      403,
+    );
+  }
+
+  if (write) {
+    if (process.env.GRADEBOOK_OFFICIAL_SHEET_RECORD_WRITES_ENABLED !== "true") {
+      officialSheetFail(
+        "OFFICIAL_SHEET_RECORD_WRITES_DISABLED",
+        "Recording original official-sheet evidence is disabled.",
+        403,
+      );
+    }
+
+    if (
+      process.env.NODE_ENV === "production" &&
+      process.env.GRADEBOOK_OFFICIAL_SHEET_RECORD_PRODUCTION_ENABLED !== "true"
+    ) {
+      officialSheetFail(
+        "OFFICIAL_SHEET_RECORD_PRODUCTION_DISABLED",
+        "Production recording requires separate authorization.",
+        403,
+      );
+    }
   }
 }
 
@@ -2147,8 +2198,6 @@ router.post(
       await connection.beginTransaction();
       inTransaction = true;
 
-      // Official-sheet writes remain QA-only.
-
       const actor = await officialSheetRegistrar(connection, req);
 
       // Keep committed recording disabled until the official-sheet rollout.
@@ -2163,11 +2212,10 @@ router.post(
         );
       }
 
-      // While disabled, dry-run recording remains limited to the QA database.
-      if (!recordWritesEnabled) {
-        await assertQaGradingDatabase(connection);
-        await officialSheetAssertDatabase(connection);
-      }
+      // Verify the authorized database for every recording request.
+      await officialSheetAssertDatabase(connection, {
+        write: !req.body.dry_run,
+      });
 
       const scope = await officialSheetScope(connection, offeringId, true);
 

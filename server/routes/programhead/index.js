@@ -10,8 +10,10 @@ import transferevaluationRouter from "./transferEvaluations.js";
 import offeringBatchesRouter from "./offeringBatches.js";
 import incCompletionClaimReviewRouter from "./incCompletionClaimReview.routes.js";
 import { assertQaGradingDatabase } from "../../services/gradebookQaWriteGuard.service.js";
+import { assertCombinedApprovalWriteAllowed } from "../../services/gradebookCombinedApprovalWriteGuard.service.js";
 import { approveModernIncCompletion } from "../../services/gradebookModernIncSource.service.js";
 import { calculateGradePreview } from "../gradebookRoster.routes.js";
+import { assertSpecialOutcomeReturnWriteAllowed } from "../../services/gradebookSpecialReturnWriteGuard.service.js";
 import { assertCurrentNumericApprovalEvidence } from "../../services/gradebookNumericApprovalEvidence.service.js";
 import { combinedApprovalSpecialEvidence } from "../../services/gradebookFirstAttemptSpecialEvidence.service.js";
 import { reviewModernScoreCorrection } from "../../services/gradebookModernScoreCorrections.service.js";
@@ -361,23 +363,64 @@ async function getSemesterPeriodActor(client, req) {
 
   return actor;
 }
+
 async function assertSemesterPeriodQaScope(connection) {
-  if (process.env.NODE_ENV === "production") {
+  const [rows] = await connection.execute("SELECT DATABASE() AS database_name");
+
+  const activeDatabase =
+    Array.isArray(rows) && rows.length === 1 ? rows[0]?.database_name : null;
+
+  if (typeof activeDatabase !== "string" || !activeDatabase.trim()) {
     periodError(
-      "SEMESTER_PERIOD_QA_PRODUCTION_FORBIDDEN",
-      "Combined submission-period changes are disabled in production mode.",
+      "SEMESTER_PERIOD_DATABASE_UNKNOWN",
+      "Could not verify the active database.",
       403,
     );
   }
 
-  const [[database]] = await connection.execute(
-    "SELECT DATABASE() AS database_name",
-  );
+  if (activeDatabase === SEMESTER_PERIOD_QA_DATABASE) {
+    if (process.env.NODE_ENV === "production") {
+      periodError(
+        "SEMESTER_PERIOD_QA_PRODUCTION_FORBIDDEN",
+        "QA submission-period changes are disabled in production.",
+        403,
+      );
+    }
+    return;
+  }
 
-  if (database?.database_name !== SEMESTER_PERIOD_QA_DATABASE) {
+  if (process.env.GRADEBOOK_SEMESTER_PERIOD_WRITES_ENABLED !== "true") {
     periodError(
-      "SEMESTER_PERIOD_QA_DATABASE_ONLY",
-      "Period changes are restricted to the admission-test database.",
+      "SEMESTER_PERIOD_WRITES_DISABLED",
+      "Combined submission-period changes are disabled on this server.",
+      403,
+    );
+  }
+
+  const configuredDatabase = process.env.DB_NAME?.trim();
+  const targetDatabase =
+    process.env.GRADEBOOK_SEMESTER_PERIOD_TARGET_DATABASE?.trim();
+
+  if (
+    !configuredDatabase ||
+    !targetDatabase ||
+    activeDatabase !== configuredDatabase ||
+    activeDatabase !== targetDatabase
+  ) {
+    periodError(
+      "SEMESTER_PERIOD_DATABASE_MISMATCH",
+      "The active database is not authorized for submission-period changes.",
+      403,
+    );
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.GRADEBOOK_SEMESTER_PERIOD_PRODUCTION_ENABLED !== "true"
+  ) {
+    periodError(
+      "SEMESTER_PERIOD_PRODUCTION_DISABLED",
+      "Production submission-period changes require separate authorization.",
       403,
     );
   }
@@ -5346,23 +5389,84 @@ router.post(
       await connection.beginTransaction();
       inTransaction = true;
 
-      // Verification writes require explicit rollout approval.
-      if (
-        req.body.dry_run !== true &&
-        process.env.GRADEBOOK_OFFICIAL_SHEET_VERIFY_WRITES_ENABLED !== "true"
-      ) {
+      // Authorize date verification against the actual connected database.
+      const [databaseRows] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+
+      const activeDatabase =
+        Array.isArray(databaseRows) && databaseRows.length === 1
+          ? databaseRows[0]?.database_name
+          : null;
+
+      const isQaDatabase = activeDatabase === "databaseforptc1_admission_test";
+
+      if (typeof activeDatabase !== "string" || !activeDatabase.trim()) {
         phSheetFail(
-          "PH_SHEET_VERIFY_WRITES_DISABLED",
-          "Official submission-date verification is not enabled on this server.",
+          "PH_SHEET_VERIFY_DATABASE_UNKNOWN",
+          "Could not verify the connected database.",
           403,
         );
       }
 
-      // Keep disabled-rollout dry runs restricted to the QA database.
-      if (
-        process.env.GRADEBOOK_OFFICIAL_SHEET_VERIFY_WRITES_ENABLED !== "true"
-      ) {
-        await assertQaGradingDatabase(connection);
+      if (isQaDatabase) {
+        if (process.env.NODE_ENV === "production") {
+          phSheetFail(
+            "PH_SHEET_VERIFY_QA_PRODUCTION_FORBIDDEN",
+            "QA date verification is disabled in production.",
+            403,
+          );
+        }
+
+        if (
+          req.body.dry_run !== true &&
+          process.env.GRADEBOOK_OFFICIAL_SHEET_VERIFY_WRITES_ENABLED !== "true"
+        ) {
+          phSheetFail(
+            "PH_SHEET_VERIFY_WRITES_DISABLED",
+            "Official submission-date verification writes are disabled.",
+            403,
+          );
+        }
+      } else {
+        const configuredDatabase = process.env.DB_NAME?.trim();
+        const targetDatabase =
+          process.env.GRADEBOOK_OFFICIAL_SHEET_VERIFY_TARGET_DATABASE?.trim();
+
+        if (
+          process.env.GRADEBOOK_OFFICIAL_SHEET_VERIFY_WRITES_ENABLED !== "true"
+        ) {
+          phSheetFail(
+            "PH_SHEET_VERIFY_WRITES_DISABLED",
+            "Official submission-date verification is disabled.",
+            403,
+          );
+        }
+
+        if (
+          !configuredDatabase ||
+          !targetDatabase ||
+          activeDatabase !== configuredDatabase ||
+          activeDatabase !== targetDatabase
+        ) {
+          phSheetFail(
+            "PH_SHEET_VERIFY_DATABASE_MISMATCH",
+            "The connected database is not authorized for date verification.",
+            403,
+          );
+        }
+
+        if (
+          process.env.NODE_ENV === "production" &&
+          process.env.GRADEBOOK_OFFICIAL_SHEET_VERIFY_PRODUCTION_ENABLED !==
+            "true"
+        ) {
+          phSheetFail(
+            "PH_SHEET_VERIFY_PRODUCTION_DISABLED",
+            "Production verification requires separate authorization.",
+            403,
+          );
+        }
       }
 
       const scope = await phSheetScope(connection, req, offeringId, true);
@@ -7001,25 +7105,84 @@ router.post(
       await connection.beginTransaction();
       inTransaction = true;
 
-      // Committed finalization requires explicit rollout approval.
-      if (
-        req.body.dry_run !== true &&
-        process.env.GRADEBOOK_OFFICIAL_SHEET_FINALIZATION_WRITES_ENABLED !==
-          "true"
-      ) {
+      // Check the connected database before finalization.
+      const [databaseRows] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+
+      const activeDatabase =
+        databaseRows.length === 1 ? databaseRows[0]?.database_name : null;
+
+      const isQaDatabase = activeDatabase === "databaseforptc1_admission_test";
+
+      if (typeof activeDatabase !== "string" || !activeDatabase.trim()) {
         phSheetFail(
-          "PH_SHEET_FINALIZATION_WRITES_DISABLED",
-          "Official-sheet finalization is not enabled on this server.",
+          "PH_SHEET_FINALIZATION_DATABASE_UNKNOWN",
+          "Could not verify the connected database.",
           403,
         );
       }
 
-      // Keep dry runs within QA until finalization rollout is enabled.
-      if (
-        process.env.GRADEBOOK_OFFICIAL_SHEET_FINALIZATION_WRITES_ENABLED !==
-        "true"
-      ) {
-        await assertQaGradingDatabase(connection);
+      if (isQaDatabase) {
+        if (process.env.NODE_ENV === "production") {
+          phSheetFail(
+            "PH_SHEET_FINALIZATION_QA_PRODUCTION_FORBIDDEN",
+            "The QA database cannot be finalized in production mode.",
+            403,
+          );
+        }
+
+        if (
+          req.body.dry_run !== true &&
+          process.env.GRADEBOOK_OFFICIAL_SHEET_FINALIZATION_WRITES_ENABLED !==
+            "true"
+        ) {
+          phSheetFail(
+            "PH_SHEET_FINALIZATION_WRITES_DISABLED",
+            "Official-sheet finalization writes are not enabled.",
+            403,
+          );
+        }
+      } else {
+        const configuredDatabase = process.env.DB_NAME?.trim();
+        const targetDatabase =
+          process.env.GRADEBOOK_OFFICIAL_SHEET_FINALIZATION_TARGET_DATABASE?.trim();
+
+        if (
+          process.env.GRADEBOOK_OFFICIAL_SHEET_FINALIZATION_WRITES_ENABLED !==
+          "true"
+        ) {
+          phSheetFail(
+            "PH_SHEET_FINALIZATION_WRITES_DISABLED",
+            "Official-sheet finalization is disabled for this database.",
+            403,
+          );
+        }
+
+        if (
+          !configuredDatabase ||
+          !targetDatabase ||
+          activeDatabase !== configuredDatabase ||
+          activeDatabase !== targetDatabase
+        ) {
+          phSheetFail(
+            "PH_SHEET_FINALIZATION_DATABASE_MISMATCH",
+            "This database is not authorized for official-sheet finalization.",
+            403,
+          );
+        }
+
+        if (
+          process.env.NODE_ENV === "production" &&
+          process.env
+            .GRADEBOOK_OFFICIAL_SHEET_FINALIZATION_PRODUCTION_ENABLED !== "true"
+        ) {
+          phSheetFail(
+            "PH_SHEET_FINALIZATION_PRODUCTION_DISABLED",
+            "Production finalization requires separate authorization.",
+            403,
+          );
+        }
       }
 
       const scope = await phSheetScope(connection, req, offeringId, true);
@@ -8386,6 +8549,80 @@ function combinedReturnFail(code, message, status = 409) {
   throw error;
 }
 
+async function assertCombinedReturnDatabaseAllowed(connection, dryRun) {
+  const [rows] = await connection.execute("SELECT DATABASE() AS database_name");
+
+  const databaseName =
+    Array.isArray(rows) && rows.length === 1 ? rows[0]?.database_name : null;
+
+  if (typeof databaseName !== "string" || !databaseName.trim()) {
+    combinedReturnFail(
+      "COMBINED_RETURN_DATABASE_UNKNOWN",
+      "Could not verify the active grading database.",
+      403,
+    );
+  }
+
+  if (databaseName === "databaseforptc1_admission_test") {
+    if (process.env.NODE_ENV === "production") {
+      combinedReturnFail(
+        "COMBINED_RETURN_QA_PRODUCTION_FORBIDDEN",
+        "QA grading returns are unavailable in production.",
+        403,
+      );
+    }
+
+    if (
+      !dryRun &&
+      process.env.GRADEBOOK_COMBINED_RETURN_WRITES_ENABLED !== "true"
+    ) {
+      combinedReturnFail(
+        "COMBINED_RETURN_WRITES_DISABLED",
+        "Combined semester returns are not enabled on this server.",
+        403,
+      );
+    }
+
+    return;
+  }
+
+  if (process.env.GRADEBOOK_COMBINED_RETURN_WRITES_ENABLED !== "true") {
+    combinedReturnFail(
+      "COMBINED_RETURN_WRITES_DISABLED",
+      "Combined semester returns are not enabled on this server.",
+      403,
+    );
+  }
+
+  const configuredDatabase = process.env.DB_NAME?.trim();
+  const targetDatabase =
+    process.env.GRADEBOOK_COMBINED_RETURN_TARGET_DATABASE?.trim();
+
+  if (
+    !configuredDatabase ||
+    !targetDatabase ||
+    databaseName !== configuredDatabase ||
+    databaseName !== targetDatabase
+  ) {
+    combinedReturnFail(
+      "COMBINED_RETURN_DATABASE_MISMATCH",
+      "This database is not authorized for combined semester returns.",
+      403,
+    );
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.GRADEBOOK_COMBINED_RETURN_PRODUCTION_ENABLED !== "true"
+  ) {
+    combinedReturnFail(
+      "COMBINED_RETURN_PRODUCTION_DISABLED",
+      "Production grading returns require separate authorization.",
+      403,
+    );
+  }
+}
+
 function combinedReturnRespond(res, error) {
   const status =
     Number.isInteger(error?.status) && error.status >= 400 && error.status < 500
@@ -8460,22 +8697,8 @@ router.post(
       await connection.beginTransaction();
       inTransaction = true;
 
-      // Committed returns require explicit rollout approval.
-      if (
-        body.dry_run !== true &&
-        process.env.GRADEBOOK_COMBINED_RETURN_WRITES_ENABLED !== "true"
-      ) {
-        combinedReturnFail(
-          "COMBINED_RETURN_WRITES_DISABLED",
-          "Combined semester returns are not enabled on this server.",
-          403,
-        );
-      }
-
-      // While rollout is disabled, previews stay within the QA database.
-      if (process.env.GRADEBOOK_COMBINED_RETURN_WRITES_ENABLED !== "true") {
-        await assertQaGradingDatabase(connection);
-      }
+      // Check the actual database before any review writes.
+      await assertCombinedReturnDatabaseAllowed(connection, body.dry_run);
 
       const { userId, departmentId } = await incReviewAssertProgramHead(
         connection,
@@ -9146,9 +9369,39 @@ async function handleCombinedSemesterApproval(req, res) {
     await connection.beginTransaction();
     transactionOpen = true;
 
-    // Committed approvals require explicit rollout approval.
+    // Require explicit database authorization for every approval request.
+    const { isQaDatabase } =
+      await assertCombinedApprovalWriteAllowed(connection);
+
+    // Batch approval has a separate commit permission from individual review.
+    if (isBatch && !body.dry_run) {
+      if (
+        process.env.GRADEBOOK_NUMERIC_BATCH_APPROVAL_WRITES_ENABLED !== "true"
+      ) {
+        combinedApprovalFail(
+          "COMBINED_BATCH_APPROVAL_WRITES_DISABLED",
+          "Numeric batch approval is not enabled on this server.",
+          403,
+        );
+      }
+
+      if (
+        process.env.NODE_ENV === "production" &&
+        process.env.GRADEBOOK_NUMERIC_BATCH_APPROVAL_PRODUCTION_ENABLED !==
+          "true"
+      ) {
+        combinedApprovalFail(
+          "COMBINED_BATCH_APPROVAL_PRODUCTION_DISABLED",
+          "Production numeric batch approvals require separate authorization.",
+          403,
+        );
+      }
+    }
+
+    // Retain the original QA commit opt-in for both approval types.
     if (
-      body.dry_run !== true &&
+      isQaDatabase &&
+      !body.dry_run &&
       process.env.GRADEBOOK_COMBINED_APPROVAL_WRITES_ENABLED !== "true"
     ) {
       combinedApprovalFail(
@@ -9158,27 +9411,6 @@ async function handleCombinedSemesterApproval(req, res) {
       );
     }
 
-    // Batch approval requires its own rollout gate.
-    if (
-      isBatch &&
-      body.dry_run !== true &&
-      process.env.GRADEBOOK_NUMERIC_BATCH_APPROVAL_WRITES_ENABLED !== "true"
-    ) {
-      combinedApprovalFail(
-        "COMBINED_BATCH_APPROVAL_WRITES_DISABLED",
-        "Numeric batch approval is not enabled on this server.",
-        403,
-      );
-    }
-
-    // Keep previews within QA while rollout is disabled.
-    if (
-      process.env.GRADEBOOK_COMBINED_APPROVAL_WRITES_ENABLED !== "true" ||
-      (isBatch &&
-        process.env.GRADEBOOK_NUMERIC_BATCH_APPROVAL_WRITES_ENABLED !== "true")
-    ) {
-      await assertQaGradingDatabase(connection);
-    }
     const { userId, departmentId } = await incReviewAssertProgramHead(
       connection,
       req,
@@ -9661,7 +9893,20 @@ async function handleCombinedSemesterApproval(req, res) {
       }
 
       if (isSpecial) {
-        if (Number(submission.attempt_number) > 1) {
+        const specialAttemptNumber = Number(submission.attempt_number);
+
+        if (
+          !Number.isSafeInteger(specialAttemptNumber) ||
+          specialAttemptNumber < 1 ||
+          specialAttemptNumber >= 4294967295
+        ) {
+          combinedApprovalFail(
+            "COMBINED_APPROVAL_SPECIAL_ATTEMPT_INVALID",
+            "The INC/UD submission attempt number is invalid.",
+          );
+        }
+
+        if (specialAttemptNumber > 1) {
           await validateResubmittedSpecialApproval(
             connection,
             target,
@@ -10067,23 +10312,84 @@ router.post(
       await connection.beginTransaction();
       inTransaction = true;
 
-      // Committed publication requires explicit rollout approval.
-      if (
-        body.dry_run !== true &&
-        process.env.GRADEBOOK_COMBINED_PUBLICATION_WRITES_ENABLED !== "true"
-      ) {
+      // Allow publication only on the explicitly authorized database.
+      const [databaseRows] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+
+      const activeDatabase =
+        Array.isArray(databaseRows) && databaseRows.length === 1
+          ? databaseRows[0]?.database_name
+          : null;
+
+      const isQaDatabase = activeDatabase === "databaseforptc1_admission_test";
+
+      if (typeof activeDatabase !== "string" || !activeDatabase.trim()) {
         combinedPublishFail(
-          "COMBINED_PUBLICATION_WRITES_DISABLED",
-          "Combined semester publication is not enabled on this server.",
+          "COMBINED_PUBLICATION_DATABASE_UNKNOWN",
+          "Could not verify the active grading database.",
           403,
         );
       }
 
-      // Keep dry runs within QA until the publication rollout is enabled.
-      if (
-        process.env.GRADEBOOK_COMBINED_PUBLICATION_WRITES_ENABLED !== "true"
-      ) {
-        await assertQaGradingDatabase(connection);
+      if (isQaDatabase) {
+        if (process.env.NODE_ENV === "production") {
+          combinedPublishFail(
+            "COMBINED_PUBLICATION_QA_PRODUCTION_FORBIDDEN",
+            "QA publication is not allowed in production.",
+            403,
+          );
+        }
+
+        if (
+          !body.dry_run &&
+          process.env.GRADEBOOK_COMBINED_PUBLICATION_WRITES_ENABLED !== "true"
+        ) {
+          combinedPublishFail(
+            "COMBINED_PUBLICATION_WRITES_DISABLED",
+            "Combined semester publication is disabled on this server.",
+            403,
+          );
+        }
+      } else {
+        const configuredDatabase = process.env.DB_NAME?.trim();
+        const targetDatabase =
+          process.env.GRADEBOOK_COMBINED_PUBLICATION_TARGET_DATABASE?.trim();
+
+        if (
+          process.env.GRADEBOOK_COMBINED_PUBLICATION_WRITES_ENABLED !== "true"
+        ) {
+          combinedPublishFail(
+            "COMBINED_PUBLICATION_WRITES_DISABLED",
+            "Combined semester publication is disabled on this server.",
+            403,
+          );
+        }
+
+        if (
+          !configuredDatabase ||
+          !targetDatabase ||
+          activeDatabase !== configuredDatabase ||
+          activeDatabase !== targetDatabase
+        ) {
+          combinedPublishFail(
+            "COMBINED_PUBLICATION_DATABASE_MISMATCH",
+            "The active database is not authorized for publication.",
+            403,
+          );
+        }
+
+        if (
+          process.env.NODE_ENV === "production" &&
+          process.env.GRADEBOOK_COMBINED_PUBLICATION_PRODUCTION_ENABLED !==
+            "true"
+        ) {
+          combinedPublishFail(
+            "COMBINED_PUBLICATION_PRODUCTION_DISABLED",
+            "Production publication requires separate authorization.",
+            403,
+          );
+        }
       }
 
       const { userId, departmentId } = await incReviewAssertProgramHead(
@@ -10286,6 +10592,22 @@ router.post(
       }
 
       const isSpecial = grade.grading_outcome !== "NUMERIC";
+
+      // INC/UD outside QA: development dry-run only; publication stays blocked.
+      if (isSpecial && !isQaDatabase) {
+        if (
+          process.env.NODE_ENV === "production" ||
+          body.dry_run !== true ||
+          process.env
+            .GRADEBOOK_COMBINED_SPECIAL_PUBLICATION_DRY_RUNS_ENABLED !== "true"
+        ) {
+          combinedPublishFail(
+            "COMBINED_SPECIAL_PUBLICATION_NOT_MIGRATED",
+            "INC/UD publication is limited to authorized development dry runs.",
+            403,
+          );
+        }
+      }
 
       // Official sheet
       const [sheets] = await connection.execute(
@@ -10555,7 +10877,20 @@ router.post(
           );
         }
 
-        if (Number(submission.attempt_number) > 1) {
+        const specialAttemptNumber = Number(submission.attempt_number);
+
+        if (
+          !Number.isSafeInteger(specialAttemptNumber) ||
+          specialAttemptNumber < 1 ||
+          specialAttemptNumber >= 4294967295
+        ) {
+          combinedPublishFail(
+            "COMBINED_PUBLISH_SPECIAL_ATTEMPT_INVALID",
+            "The special-outcome submission attempt number is invalid.",
+          );
+        }
+
+        if (specialAttemptNumber > 1) {
           await validateResubmittedSpecialApproval(
             connection,
             target,
@@ -11121,8 +11456,8 @@ router.post(
       connection = await db.getConnection();
       await connection.beginTransaction();
       transactionOpen = true;
-      // Combined grading writes remain QA-only.
-      await assertQaGradingDatabase(connection);
+      await assertSpecialOutcomeReturnWriteAllowed(connection);
+
       const { userId, departmentId } = await incReviewAssertProgramHead(
         connection,
         req,

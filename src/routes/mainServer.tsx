@@ -588,7 +588,10 @@ export default function AppRoutes() {
           path="/programhead/class/management"
           element={<ProgramHeadRoute element={<ClassPROG />} />}
         />
-
+        <Route
+          path="/programhead/grades/enter"
+          element={<ProgramHeadRoute element={<EnterGrades />} />}
+        />
         <Route
           path="/programhead/class/offering-batches"
           element={<ProgramHeadRoute element={<OfferingBatchesPH />} />}
@@ -706,10 +709,10 @@ export default function AppRoutes() {
           path="/registrar/offering/special"
           element={<RegistrarRoute element={<ClassOfferingSpecialR />} />}
         />
-<Route
-  path="/registrar/academic-years"
-  element={<RegistrarRoute element={<AcademicYearsR />} />}
-/>
+        <Route
+          path="/registrar/academic-years"
+          element={<RegistrarRoute element={<AcademicYearsR />} />}
+        />
 
         <Route
           path="/registrar/schedules/faculty"

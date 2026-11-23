@@ -48,6 +48,7 @@ interface SubmittedGrade {
   record_version: number;
   sheet_status: string;
   officially_published: boolean;
+  numeric_batch_candidate: boolean;
   grade_id: number;
   enrollment_subject_id: number;
   grade_status: "Submitted";
@@ -178,6 +179,7 @@ interface CombinedQueueRow {
   review_remarks: string | null;
   sheet_status: string;
   officially_published: boolean;
+  numeric_batch_candidate?: boolean;
 }
 interface CombinedEvidenceAssessment {
   assessment_id: number;
@@ -281,6 +283,10 @@ interface CombinedPublicationResponse {
   grade_id?: number;
   publication_source?: string;
   grade_status?: string;
+  grading_outcome?: string;
+  final_rating?: string | number;
+  special_evidence_verified?: boolean;
+  enrollment_subject_status?: string;
   official_sheet_finalized?: boolean;
   code?: string;
   message?: string;
@@ -292,6 +298,45 @@ interface CombinedReviewResponse {
   submission_id?: string;
   submission_status?: string;
   record_version?: number;
+  code?: string;
+  message?: string;
+  grading_outcome?: string;
+  special_evidence_verified?: boolean;
+  official_grade_published?: boolean;
+}
+
+interface NumericBatchApprovalResponse {
+  success: boolean;
+  dry_run: boolean;
+  persisted: boolean;
+  approved_count: number;
+  review_batch_ref?: string | null;
+  submissions?: Array<{
+    submission_id: string | number;
+    grade_id: number;
+    submission_status: string;
+    grading_outcome: string;
+    official_grade_published: boolean;
+  }>;
+  code?: string;
+  message?: string;
+}
+
+interface SpecialOutcomeReturnResponse {
+  success: boolean;
+  dry_run: boolean;
+  persisted: boolean;
+  submission_id: string;
+  grade_id: number;
+  grading_outcome: string;
+  submission_status: string;
+  grade_status: string;
+  returned_edit_scope: "MIDTERM" | "FINAL_TERM" | "BOTH";
+  record_version: number;
+  original_special_evidence_unchanged: boolean;
+  official_grade_published: boolean;
+  original_sheet_unchanged: boolean;
+  commit_supported?: boolean;
   code?: string;
   message?: string;
 }
@@ -306,6 +351,7 @@ function mapCombinedQueueGrade(row: CombinedQueueRow): SubmittedGrade {
     record_version: Number(row.record_version),
     sheet_status: row.sheet_status,
     officially_published: row.officially_published === true,
+    numeric_batch_candidate: row.numeric_batch_candidate === true,
     grade_id: Number(row.grade_id),
     enrollment_subject_id: Number(row.enrollment_subject_id),
     grade_status: "Submitted",
@@ -435,6 +481,22 @@ function formatPercentage(value: number | null) {
   return value === null || value === undefined
     ? "—"
     : `${Number(value).toFixed(3)}%`;
+}
+
+function hasDisallowedControlCharacters(value: string): boolean {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (
+      code <= 8 ||
+      code === 11 ||
+      code === 12 ||
+      (code >= 14 && code <= 31) ||
+      code === 127
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getOutcomeLabel(value: string | null | undefined) {
@@ -1214,9 +1276,15 @@ export default function PendingGrades() {
   const [facultyFilter, setFacultyFilter] = useState("All");
 
   const [actionGradeId, setActionGradeId] = useState<number | null>(null);
+  const [selectedNumericBatchIds, setSelectedNumericBatchIds] = useState<
+    string[]
+  >([]);
   const [actionNotice, setActionNotice] = useState<ActionNotice | null>(null);
   const [returnGrade, setReturnGrade] = useState<SubmittedGrade | null>(null);
   const [returnReason, setReturnReason] = useState("");
+  const [returnEvidenceNotes, setReturnEvidenceNotes] = useState("");
+  const [returnSpecialEvidenceVerified, setReturnSpecialEvidenceVerified] =
+    useState(false);
   const [returnScope, setReturnScope] = useState<
     "MIDTERM" | "FINAL_TERM" | "BOTH"
   >("BOTH");
@@ -1232,6 +1300,7 @@ export default function PendingGrades() {
   const [evidenceLoading, setEvidenceLoading] = useState(false);
 
   const [evidenceError, setEvidenceError] = useState("");
+  const [specialApprovalError, setSpecialApprovalError] = useState("");
 
   useEffect(() => {
     if (!authenticated) {
@@ -1358,7 +1427,9 @@ export default function PendingGrades() {
             .filter(
               (row) =>
                 row.submission_status === "APPROVED" &&
-                row.grading_outcome_snapshot === "NUMERIC" &&
+                ["NUMERIC", "INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+                  row.grading_outcome_snapshot,
+                ) &&
                 row.sheet_status === "IN_PROGRESS" &&
                 row.officially_published === false,
             )
@@ -1470,6 +1541,34 @@ export default function PendingGrades() {
     facultyFilter,
   ]);
 
+  // Selection is scoped to the current filters and the latest queue refresh.
+  useEffect(() => {
+    setSelectedNumericBatchIds([]);
+  }, [
+    search,
+    academicYearFilter,
+    semesterFilter,
+    courseFilter,
+    facultyFilter,
+    refreshKey,
+  ]);
+
+  const eligibleNumericBatchGrades = filteredGrades.filter(
+    (grade) =>
+      grade.numeric_batch_candidate &&
+      grade.grades.grading_outcome === "NUMERIC" &&
+      grade.sheet_status === "IN_PROGRESS" &&
+      !grade.officially_published &&
+      /^[1-9]\d*$/.test(grade.submission_id) &&
+      Number.isSafeInteger(Number(grade.submission_id)) &&
+      Number.isSafeInteger(grade.record_version) &&
+      grade.record_version > 0,
+  );
+
+  const selectedNumericBatchGrades = eligibleNumericBatchGrades.filter(
+    (grade) => selectedNumericBatchIds.includes(grade.submission_id),
+  );
+
   const summary = useMemo(() => {
     const classIds = new Set<number>();
     const facultyIds = new Set<number>();
@@ -1512,6 +1611,148 @@ export default function PendingGrades() {
   const refreshQueue = () => {
     setActionNotice(null);
     setRefreshKey((current) => current + 1);
+  };
+
+  const approveSelectedNumericBatch = async () => {
+    if (
+      actionGradeId !== null ||
+      loading ||
+      error ||
+      selectedNumericBatchGrades.length < 2
+    ) {
+      return;
+    }
+
+    const selected = [...selectedNumericBatchGrades];
+    const uniqueIds = new Set(selected.map((grade) => grade.submission_id));
+    if (uniqueIds.size !== selected.length) {
+      setActionNotice({
+        type: "error",
+        message: "Duplicate submissions were selected. Reload the queue.",
+      });
+      return;
+    }
+
+    const remarksInput = window.prompt(
+      `Shared approval remarks for ${selected.length} numeric semester submissions (10–500 characters):`,
+      "",
+    );
+    if (remarksInput === null) return;
+
+    const reviewRemarks = remarksInput.trim();
+    if (
+      reviewRemarks.length < 10 ||
+      reviewRemarks.length > 500 ||
+      hasDisallowedControlCharacters(reviewRemarks)
+    ) {
+      setActionNotice({
+        type: "error",
+        message:
+          "Review remarks must be 10–500 characters without control characters.",
+      });
+      return;
+    }
+
+    const items = selected.map((grade) => ({
+      submission_id: Number(grade.submission_id),
+      expected_record_version: grade.record_version,
+    }));
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(
+        `${COMBINED_QUEUE_API}/numeric-batch-approve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            submissions: items,
+            review_remarks: reviewRemarks,
+            confirm_approval: true,
+            dry_run: dryRun,
+          }),
+        },
+      );
+      const data =
+        await readJsonResponse<NumericBatchApprovalResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.dry_run !== dryRun ||
+        data.persisted !== !dryRun ||
+        Number(data.approved_count) !== selected.length
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The batch approval response did not match the selected submissions.",
+        );
+      }
+
+      if (!dryRun) {
+        if (
+          typeof data.review_batch_ref !== "string" ||
+          !data.review_batch_ref ||
+          !Array.isArray(data.submissions) ||
+          data.submissions.length !== selected.length ||
+          !selected.every((grade) =>
+            data.submissions!.some(
+              (saved) =>
+                String(saved.submission_id) === grade.submission_id &&
+                Number(saved.grade_id) === grade.grade_id &&
+                saved.submission_status === "APPROVED" &&
+                saved.grading_outcome === "NUMERIC" &&
+                saved.official_grade_published === false,
+            ),
+          )
+        ) {
+          throw new Error(
+            "The backend did not confirm every committed numeric approval. Refresh the queue before retrying.",
+          );
+        }
+      }
+
+      return data;
+    };
+
+    // -1 reserves the shared action lock for the batch operation.
+    setActionGradeId(-1);
+    setActionNotice(null);
+
+    try {
+      await request(true);
+
+      const confirmed = window.confirm(
+        `Approve ${selected.length} numeric semester submissions together?\n\n` +
+          `${selected.map((grade) => `${grade.student.student_number} · ${grade.class.subject.subject_code}`).join("\n")}\n\n` +
+          "This records Program Head approval only. Official publication remains a separate action.",
+      );
+      if (!confirmed) return;
+
+      const committed = await request(false);
+      setSelectedNumericBatchIds([]);
+      setActionNotice({
+        type: "success",
+        message: `${committed.approved_count} numeric semester submissions approved as batch ${committed.review_batch_ref}. Official publication is still required.`,
+      });
+      setRefreshKey((current) => current + 1);
+    } catch (caught) {
+      setActionNotice({
+        type: "error",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : "Numeric batch approval failed.",
+      });
+      setRefreshKey((current) => current + 1);
+    } finally {
+      setActionGradeId(null);
+    }
   };
 
   const approveGrade = async (grade: SubmittedGrade) => {
@@ -1601,12 +1842,153 @@ export default function PendingGrades() {
     }
   };
 
+  const approveSpecialOutcome = async (grade: SubmittedGrade) => {
+    if (
+      actionGradeId !== null ||
+      evidenceLoading ||
+      Boolean(evidenceError) ||
+      evidenceGrade?.submission_id !== grade.submission_id ||
+      !evidence ||
+      !evidence.read_only ||
+      evidence.submission.submission_id !== grade.submission_id ||
+      evidence.submission.offering_id !== grade.class.offering_id ||
+      evidence.submission.enrollment_subject_id !==
+        grade.enrollment_subject_id ||
+      evidence.submission.record_version !== grade.record_version ||
+      evidence.calculation_snapshot.special_outcome?.outcome_type !==
+        grade.grades.grading_outcome ||
+      !["INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+        grade.grades.grading_outcome,
+      ) ||
+      grade.sheet_status !== "IN_PROGRESS" ||
+      grade.officially_published
+    ) {
+      setSpecialApprovalError(
+        "Open and verify the latest saved INC/UD evidence before approving.",
+      );
+      return;
+    }
+
+    const evidenceInput = window.prompt(
+      `Evidence verification notes for ${grade.student.full_name} (20–1000 characters):`,
+      "",
+    );
+
+    if (evidenceInput === null) return;
+
+    const evidenceNotes = evidenceInput.trim();
+
+    const remarksInput = window.prompt(
+      "Program Head approval remarks (10–500 characters):",
+      "",
+    );
+
+    if (remarksInput === null) return;
+
+    const reviewRemarks = remarksInput.trim();
+
+    if (
+      evidenceNotes.length < 20 ||
+      evidenceNotes.length > 1000 ||
+      reviewRemarks.length < 10 ||
+      reviewRemarks.length > 500 ||
+      hasDisallowedControlCharacters(evidenceNotes + reviewRemarks)
+    ) {
+      setSpecialApprovalError(
+        "Evidence notes must be 20–1000 characters and approval remarks 10–500 characters.",
+      );
+      return;
+    }
+
+    const request = async (dryRun: boolean) => {
+      const response = await authService.authFetch(
+        `${COMBINED_QUEUE_API}/${grade.submission_id}/approve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expected_record_version: grade.record_version,
+            review_remarks: reviewRemarks,
+            confirm_approval: true,
+            confirm_special_evidence: true,
+            evidence_review_notes: evidenceNotes,
+            dry_run: dryRun,
+          }),
+        },
+      );
+
+      const data = await readJsonResponse<CombinedReviewResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.submission_id !== grade.submission_id ||
+        data.submission_status !== "APPROVED" ||
+        data.grading_outcome !== grade.grades.grading_outcome ||
+        data.special_evidence_verified !== true ||
+        data.official_grade_published !== false ||
+        data.dry_run !== dryRun ||
+        data.persisted !== !dryRun
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The server did not confirm the special-outcome review.",
+        );
+      }
+    };
+
+    setActionGradeId(grade.grade_id);
+    setSpecialApprovalError("");
+    setActionNotice(null);
+
+    try {
+      await request(true);
+
+      const confirmed = window.confirm(
+        `Approve ${getOutcomeLabel(grade.grades.grading_outcome)} for ` +
+          `${grade.student.full_name}?\n\n` +
+          "The submitted evidence has been reviewed. " +
+          "Approval is recorded separately from official publication.",
+      );
+
+      if (!confirmed) return;
+
+      await request(false);
+
+      setEvidenceGrade(null);
+      setEvidence(null);
+
+      setActionNotice({
+        type: "success",
+        message:
+          "Special outcome approved after individual evidence review. " +
+          "Official publication is still required.",
+      });
+
+      setRefreshKey((current) => current + 1);
+    } catch (caught) {
+      setSpecialApprovalError(
+        caught instanceof Error ? caught.message : "Special approval failed.",
+      );
+    } finally {
+      setActionGradeId(null);
+    }
+  };
+
   const publishApprovedGrade = async (grade: SubmittedGrade) => {
     if (
       actionGradeId !== null ||
       !programHead ||
       grade.review.reviewed_by !== programHead.user_id ||
-      grade.grades.grading_outcome !== "NUMERIC" ||
+      !["NUMERIC", "INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+        grade.grades.grading_outcome,
+      ) ||
       grade.sheet_status !== "IN_PROGRESS" ||
       grade.officially_published ||
       !Number.isSafeInteger(grade.record_version) ||
@@ -1615,7 +1997,7 @@ export default function PendingGrades() {
       setActionNotice({
         type: "error",
         message:
-          "Only the Program Head who approved this current numeric submission can publish it.",
+          "Only the reviewing Program Head may publish the latest approved submission.",
       });
       return;
     }
@@ -1644,6 +2026,14 @@ export default function PendingGrades() {
         throw new Error("Your session has expired.");
       }
 
+      const special = grade.grades.grading_outcome !== "NUMERIC";
+      const expectedRating =
+        grade.grades.grading_outcome === "INCOMPLETE" ? "4.00" : "6.00";
+      const expectedSubjectStatus =
+        grade.grades.grading_outcome === "INCOMPLETE"
+          ? "Incomplete"
+          : "Unofficial Drop";
+
       if (
         !response.ok ||
         !data.success ||
@@ -1654,7 +2044,12 @@ export default function PendingGrades() {
         data.publication_source !== "COMBINED_SEMESTER" ||
         data.grade_status !== "Approved" ||
         data.official_sheet_finalized !== false ||
-        (!dryRun && !data.publication_id)
+        (!dryRun && !data.publication_id) ||
+        (special &&
+          (data.grading_outcome !== grade.grades.grading_outcome ||
+            data.special_evidence_verified !== true ||
+            String(data.final_rating) !== expectedRating ||
+            data.enrollment_subject_status !== expectedSubjectStatus))
       ) {
         throw new Error(
           [data.code, data.message].filter(Boolean).join(": ") ||
@@ -1671,15 +2066,23 @@ export default function PendingGrades() {
     try {
       await request(true);
 
+      const isSpecial = grade.grades.grading_outcome !== "NUMERIC";
       const confirmed = window.confirm(
-        `Publish the official numeric grade for ${grade.student.full_name}?\n\n` +
-          `${grade.class.subject.subject_code} · ${grade.class.section.section_name}\n` +
-          `Midterm: ${formatGrade(grade.grades.midterm_grade)}%\n` +
-          `Final: ${formatGrade(grade.grades.final_grade)}%\n` +
-          `Semester: ${formatPercentage(grade.grades.overall_percentage)}\n` +
-          `Numeric equivalent: ${formatGrade(grade.grades.final_rating)}\n\n` +
-          "This creates an official publication record and updates the approved grade. " +
-          "It does not finalize the official sheet.",
+        isSpecial
+          ? `Publish the official ${getOutcomeLabel(grade.grades.grading_outcome)} ` +
+              `(${formatGrade(grade.grades.final_rating)}) for ${grade.student.full_name}?\n\n` +
+              `${grade.class.subject.subject_code} · ${grade.class.section.section_name}\n` +
+              `Recorded reason: ${grade.grades.outcome_reason || "Not available"}\n\n` +
+              "The approved evidence and audit history will be checked again. " +
+              "This creates an official publication record, but does not finalize the sheet."
+          : `Publish the official numeric grade for ${grade.student.full_name}?\n\n` +
+              `${grade.class.subject.subject_code} · ${grade.class.section.section_name}\n` +
+              `Midterm: ${formatGrade(grade.grades.midterm_grade)}%\n` +
+              `Final: ${formatGrade(grade.grades.final_grade)}%\n` +
+              `Semester: ${formatPercentage(grade.grades.overall_percentage)}\n` +
+              `Numeric equivalent: ${formatGrade(grade.grades.final_rating)}\n\n` +
+              "This creates an official publication record and updates the approved grade. " +
+              "It does not finalize the official sheet.",
       );
 
       if (!confirmed) return;
@@ -1689,7 +2092,8 @@ export default function PendingGrades() {
       setActionNotice({
         type: "success",
         message:
-          `Official grade published (publication #${saved.publication_id}). ` +
+          `${getOutcomeLabel(grade.grades.grading_outcome)} published officially ` +
+          `(publication #${saved.publication_id}). ` +
           "The official sheet is not yet finalized.",
       });
 
@@ -1710,62 +2114,191 @@ export default function PendingGrades() {
   };
 
   const openReturnModal = (grade: SubmittedGrade) => {
+    if (
+      actionGradeId !== null ||
+      grade.grades.grading_outcome !== "NUMERIC" ||
+      grade.sheet_status !== "IN_PROGRESS" ||
+      grade.officially_published
+    ) {
+      return;
+    }
     setReturnGrade(grade);
     setReturnReason("");
     setReturnScope("BOTH");
+    setReturnEvidenceNotes("");
+    setReturnSpecialEvidenceVerified(false);
     setReturnError("");
+  };
+
+  const openSpecialReturnModal = (grade: SubmittedGrade) => {
+    if (
+      actionGradeId !== null ||
+      !["INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+        grade.grades.grading_outcome,
+      ) ||
+      grade.sheet_status !== "IN_PROGRESS" ||
+      grade.officially_published ||
+      evidenceLoading ||
+      Boolean(evidenceError) ||
+      evidenceGrade?.submission_id !== grade.submission_id ||
+      evidence?.read_only !== true ||
+      evidence.submission.submission_id !== grade.submission_id ||
+      evidence.submission.offering_id !== grade.class.offering_id ||
+      evidence.submission.enrollment_subject_id !==
+        grade.enrollment_subject_id ||
+      evidence.submission.record_version !== grade.record_version ||
+      evidence.calculation_snapshot.special_outcome?.outcome_type !==
+        grade.grades.grading_outcome
+    ) {
+      setSpecialApprovalError(
+        "Load and verify this submission's saved INC/UD evidence before returning it.",
+      );
+      return;
+    }
+
+    setReturnGrade(grade);
+    setReturnReason("");
+    setReturnScope("BOTH");
+    setReturnEvidenceNotes("");
+    setReturnSpecialEvidenceVerified(true);
+    setReturnError("");
+    setEvidenceGrade(null);
+    setEvidence(null);
+    setSpecialApprovalError("");
   };
 
   const closeReturnModal = useCallback(() => {
     if (actionGradeId !== null) return;
     setReturnGrade(null);
     setReturnReason("");
+    setReturnEvidenceNotes("");
+    setReturnSpecialEvidenceVerified(false);
+    setReturnScope("BOTH");
     setReturnError("");
   }, [actionGradeId]);
 
   const submitReturn = async () => {
-    if (!returnGrade || returnGrade.grades.grading_outcome !== "NUMERIC")
-      return;
-    const reason = returnReason.trim();
-    if (reason.length < 15 || reason.length > 500) {
-      setReturnError("Return reason must be 15–500 characters.");
+    const grade = returnGrade;
+    if (!grade || actionGradeId !== null) return;
+
+    const isSpecial = ["INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+      grade.grades.grading_outcome,
+    );
+    if (!isSpecial && grade.grades.grading_outcome !== "NUMERIC") return;
+
+    if (
+      grade.sheet_status !== "IN_PROGRESS" ||
+      grade.officially_published ||
+      !Number.isSafeInteger(grade.record_version) ||
+      grade.record_version <= 0 ||
+      (isSpecial && !returnSpecialEvidenceVerified)
+    ) {
+      setReturnError(
+        "This submission is no longer eligible for return. Reload the review queue.",
+      );
       return;
     }
 
-    const grade = returnGrade;
-    const endpoint = `${COMBINED_QUEUE_API}/${grade.submission_id}/return`;
+    const reason = returnReason.trim();
+    const evidenceNotes = returnEvidenceNotes.trim();
+    if (
+      reason.length < 15 ||
+      reason.length > 500 ||
+      hasDisallowedControlCharacters(reason)
+    ) {
+      setReturnError("Return reason must be 15–500 valid characters.");
+      return;
+    }
+    if (
+      isSpecial &&
+      (evidenceNotes.length < 20 ||
+        evidenceNotes.length > 2000 ||
+        hasDisallowedControlCharacters(evidenceNotes))
+    ) {
+      setReturnError(
+        "INC/UD evidence-review notes must be 20–2000 valid characters.",
+      );
+      return;
+    }
+
+    const endpoint = isSpecial
+      ? api.url(
+          `/api/program-head/gradebook/special-outcome-submissions/${grade.submission_id}/return`,
+        )
+      : `${COMBINED_QUEUE_API}/${grade.submission_id}/return`;
 
     const request = async (dryRun: boolean) => {
       const response = await authService.authFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          expected_record_version: grade.record_version,
-          returned_edit_scope: returnScope,
-          review_remarks: reason,
-          confirm_return: true,
-          dry_run: dryRun,
-        }),
+        body: JSON.stringify(
+          isSpecial
+            ? {
+                expected_grade_id: grade.grade_id,
+                expected_record_version: grade.record_version,
+                returned_edit_scope: returnScope,
+                review_remarks: reason,
+                evidence_review_notes: evidenceNotes,
+                confirm_return: true,
+                dry_run: dryRun,
+              }
+            : {
+                expected_record_version: grade.record_version,
+                returned_edit_scope: returnScope,
+                review_remarks: reason,
+                confirm_return: true,
+                dry_run: dryRun,
+              },
+        ),
       });
-      const data = await readJsonResponse<CombinedReviewResponse>(response);
+
+      const data = isSpecial
+        ? await readJsonResponse<SpecialOutcomeReturnResponse>(response)
+        : await readJsonResponse<CombinedReviewResponse>(response);
+
       if (response.status === 401) {
         authService.logout();
         navigate("/login", { replace: true });
         throw new Error("Your session has expired.");
       }
-      if (
-        !response.ok ||
-        !data.success ||
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "The Program Head return was rejected.",
+        );
+      }
+      if (isSpecial) {
+        const result = data as SpecialOutcomeReturnResponse;
+        if (
+          result.dry_run !== dryRun ||
+          result.persisted !== !dryRun ||
+          result.submission_id !== grade.submission_id ||
+          result.grade_id !== grade.grade_id ||
+          result.grading_outcome !== grade.grades.grading_outcome ||
+          result.submission_status !== "RETURNED" ||
+          result.grade_status !== "Returned" ||
+          result.returned_edit_scope !== returnScope ||
+          result.record_version !== grade.record_version + 1 ||
+          result.original_special_evidence_unchanged !== true ||
+          result.original_sheet_unchanged !== true ||
+          result.official_grade_published !== false
+        ) {
+          throw new Error(
+            "The server did not confirm a safe INC/UD return. Refresh the queue before retrying.",
+          );
+        }
+      } else if (
         data.submission_id !== grade.submission_id ||
         data.submission_status !== "RETURNED" ||
         data.dry_run !== dryRun ||
         data.persisted !== !dryRun
       ) {
         throw new Error(
-          [data.code, data.message].filter(Boolean).join(": ") ||
-            "Combined semester return failed.",
+          "The server did not confirm a safe numeric-grade return.",
         );
       }
+      return data;
     };
 
     setActionGradeId(grade.grade_id);
@@ -1773,21 +2306,37 @@ export default function PendingGrades() {
     setActionNotice(null);
 
     try {
-      await request(true);
+      const validation = await request(true);
       if (
-        !window.confirm(
-          `Return ${grade.student.full_name}'s ${returnScope.replaceAll("_", " ")} grades to Faculty?`,
-        )
-      )
-        return;
+        isSpecial &&
+        (validation as SpecialOutcomeReturnResponse).commit_supported !== true
+      ) {
+        throw new Error(
+          "INC/UD returns are not enabled for this submission in the current backend. Do not attempt a committed return until the guarded service is updated.",
+        );
+      }
+      const label = isSpecial
+        ? `${getOutcomeLabel(grade.grades.grading_outcome)} evidence`
+        : `${returnScope.replaceAll("_", " ")} numeric grades`;
+      const confirmed = window.confirm(
+        `Return ${grade.student.full_name}'s ${label} to Faculty?\n\n` +
+          (isSpecial
+            ? "The original INC/UD evidence is preserved. Faculty may revise only the supporting evidence before resubmitting."
+            : "Faculty may revise only the returned term scope before resubmitting."),
+      );
+      if (!confirmed) return;
+
       await request(false);
       setActionNotice({
         type: "success",
-        message:
-          "Combined semester submission returned for the selected term scope.",
+        message: isSpecial
+          ? "INC/UD submission returned with evidence-review notes. The Faculty must revise and resubmit the evidence."
+          : "Combined numeric semester submission returned for the selected term scope.",
       });
       setReturnGrade(null);
       setReturnReason("");
+      setReturnEvidenceNotes("");
+      setReturnSpecialEvidenceVerified(false);
       setReturnScope("BOTH");
       setRefreshKey((value) => value + 1);
     } catch (caught) {
@@ -1884,7 +2433,7 @@ export default function PendingGrades() {
     if (!evidenceGrade) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && actionGradeId === null) {
         setEvidenceGrade(null);
       }
     };
@@ -1892,7 +2441,7 @@ export default function PendingGrades() {
     window.addEventListener("keydown", onKeyDown);
 
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [evidenceGrade]);
+  }, [evidenceGrade, actionGradeId]);
   if (!authenticated || !session || userRole !== "Program Head") return null;
 
   return (
@@ -2238,6 +2787,57 @@ export default function PendingGrades() {
               </strong>
             </header>
 
+            <div
+              className="program-head-grade-actions"
+              style={{ padding: "12px 18px", flexWrap: "wrap" }}
+            >
+              <button
+                type="button"
+                className="program-head-return-button"
+                disabled={
+                  actionGradeId !== null ||
+                  eligibleNumericBatchGrades.length === 0
+                }
+                onClick={() =>
+                  setSelectedNumericBatchIds(
+                    eligibleNumericBatchGrades.map(
+                      (grade) => grade.submission_id,
+                    ),
+                  )
+                }
+              >
+                Select Eligible Numeric ({eligibleNumericBatchGrades.length})
+              </button>
+              <button
+                type="button"
+                className="program-head-return-button"
+                disabled={
+                  actionGradeId !== null || selectedNumericBatchIds.length === 0
+                }
+                onClick={() => setSelectedNumericBatchIds([])}
+              >
+                Clear Selection
+              </button>
+              <button
+                type="button"
+                className="program-head-approve-button"
+                disabled={
+                  actionGradeId !== null ||
+                  selectedNumericBatchGrades.length < 2
+                }
+                onClick={() => void approveSelectedNumericBatch()}
+              >
+                <Check size={14} />
+                {actionGradeId === -1
+                  ? "Approving Batch..."
+                  : `Approve Selected Numeric (${selectedNumericBatchGrades.length})`}
+              </button>
+              <small>
+                Batch approval is only for eligible numeric submissions. INC and
+                UD require individual review.
+              </small>
+            </div>
+
             <div className="program-head-grade-table-wrapper">
               <table className="program-head-grade-table">
                 <thead>
@@ -2352,6 +2952,42 @@ export default function PendingGrades() {
                         </td>
                         <td>
                           <div className="program-head-grade-actions">
+                            {eligibleNumericBatchGrades.some(
+                              (item) =>
+                                item.submission_id === grade.submission_id,
+                            ) && (
+                              <label
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Select ${grade.student.full_name} for numeric batch approval`}
+                                  checked={selectedNumericBatchIds.includes(
+                                    grade.submission_id,
+                                  )}
+                                  disabled={actionGradeId !== null}
+                                  onChange={(event) =>
+                                    setSelectedNumericBatchIds((current) =>
+                                      event.target.checked
+                                        ? [
+                                            ...new Set([
+                                              ...current,
+                                              grade.submission_id,
+                                            ]),
+                                          ]
+                                        : current.filter(
+                                            (id) => id !== grade.submission_id,
+                                          ),
+                                    )
+                                  }
+                                />
+                                Batch
+                              </label>
+                            )}
                             <button
                               type="button"
                               className="program-head-return-button"
@@ -2397,6 +3033,7 @@ export default function PendingGrades() {
                               onClick={() => {
                                 setEvidence(null);
                                 setEvidenceError("");
+                                setSpecialApprovalError("");
                                 setEvidenceGrade(grade);
                               }}
                               disabled={actionGradeId !== null}
@@ -2422,8 +3059,9 @@ export default function PendingGrades() {
               <h2>Approved for Publication</h2>
 
               <p>
-                Only approved numeric submissions may be published here.
-                Publication is separate from official-sheet finalization.
+                Publish approved numeric, INC, and UD semester submissions.
+                Special outcomes require individual evidence approval first;
+                official-sheet finalization remains separate.
               </p>
             </div>
 
@@ -2450,7 +3088,7 @@ export default function PendingGrades() {
             </div>
           ) : !approvedError && approvedGrades.length === 0 ? (
             <div className="program-head-grade-empty">
-              <p>No approved numeric submissions are awaiting publication.</p>
+              <p>No approved submissions are awaiting publication.</p>
             </div>
           ) : !approvedError ? (
             <div className="program-head-grade-table-wrapper">
@@ -2497,15 +3135,30 @@ export default function PendingGrades() {
 
                         <td>{grade.faculty.faculty_name}</td>
 
-                        <td>{formatGrade(grade.grades.midterm_grade)}%</td>
+                        <td>
+                          {grade.grades.midterm_grade === null
+                            ? "—"
+                            : `${formatGrade(grade.grades.midterm_grade)}%`}
+                        </td>
 
-                        <td>{formatGrade(grade.grades.final_grade)}%</td>
+                        <td>
+                          {grade.grades.final_grade === null
+                            ? "—"
+                            : `${formatGrade(grade.grades.final_grade)}%`}
+                        </td>
 
                         <td>
                           {formatPercentage(grade.grades.overall_percentage)}
                         </td>
 
-                        <td>{formatGrade(grade.grades.final_rating)}</td>
+                        <td>
+                          {formatGrade(grade.grades.final_rating)}
+                          {grade.grades.grading_outcome !== "NUMERIC" && (
+                            <small>
+                              {getOutcomeLabel(grade.grades.grading_outcome)}
+                            </small>
+                          )}
+                        </td>
 
                         <td>{formatDateTime(grade.review.reviewed_at)}</td>
 
@@ -2524,7 +3177,14 @@ export default function PendingGrades() {
                             >
                               <ShieldCheck size={14} />
 
-                              {busy ? "Publishing..." : "Publish Official"}
+                              {busy
+                                ? "Publishing..."
+                                : grade.grades.grading_outcome === "INCOMPLETE"
+                                  ? "Publish INC"
+                                  : grade.grades.grading_outcome ===
+                                      "UNOFFICIAL_DROP"
+                                    ? "Publish UD"
+                                    : "Publish Official"}
                             </button>
                           </div>
                         </td>
@@ -2599,7 +3259,10 @@ export default function PendingGrades() {
           <div
             className="program-head-return-backdrop"
             onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
+              if (
+                event.target === event.currentTarget &&
+                actionGradeId === null
+              ) {
                 setEvidenceGrade(null);
               }
             }}
@@ -2633,6 +3296,7 @@ export default function PendingGrades() {
                   className="program-head-return-close"
                   aria-label="Close evidence review"
                   onClick={() => setEvidenceGrade(null)}
+                  disabled={actionGradeId !== null}
                 >
                   <X size={18} />
                 </button>
@@ -2772,6 +3436,72 @@ export default function PendingGrades() {
                   </>
                 ) : null}
               </div>
+              {evidenceGrade.grades.grading_outcome !== "NUMERIC" && (
+                <>
+                  {specialApprovalError && (
+                    <p role="alert" className="program-head-return-error">
+                      {specialApprovalError}
+                    </p>
+                  )}
+                  <footer className="program-head-return-modal-actions">
+                    <button
+                      type="button"
+                      className="program-head-return-button"
+                      disabled={
+                        actionGradeId !== null ||
+                        evidenceLoading ||
+                        Boolean(evidenceError) ||
+                        evidence?.read_only !== true ||
+                        evidence?.submission.submission_id !==
+                          evidenceGrade.submission_id ||
+                        evidence?.submission.offering_id !==
+                          evidenceGrade.class.offering_id ||
+                        evidence?.submission.enrollment_subject_id !==
+                          evidenceGrade.enrollment_subject_id ||
+                        evidence?.submission.record_version !==
+                          evidenceGrade.record_version ||
+                        evidence?.calculation_snapshot.special_outcome
+                          ?.outcome_type !==
+                          evidenceGrade.grades.grading_outcome ||
+                        evidenceGrade.sheet_status !== "IN_PROGRESS" ||
+                        evidenceGrade.officially_published
+                      }
+                      onClick={() => openSpecialReturnModal(evidenceGrade)}
+                    >
+                      <Undo2 size={14} /> Return INC/UD Evidence
+                    </button>
+                    <button
+                      type="button"
+                      className="program-head-approve-button"
+                      disabled={
+                        actionGradeId !== null ||
+                        evidenceLoading ||
+                        Boolean(evidenceError) ||
+                        evidence?.read_only !== true ||
+                        evidence?.submission.submission_id !==
+                          evidenceGrade.submission_id ||
+                        evidence?.submission.offering_id !==
+                          evidenceGrade.class.offering_id ||
+                        evidence?.submission.enrollment_subject_id !==
+                          evidenceGrade.enrollment_subject_id ||
+                        evidence?.submission.record_version !==
+                          evidenceGrade.record_version ||
+                        evidence?.calculation_snapshot.special_outcome
+                          ?.outcome_type !==
+                          evidenceGrade.grades.grading_outcome ||
+                        evidenceGrade.sheet_status !== "IN_PROGRESS" ||
+                        evidenceGrade.officially_published
+                      }
+                      onClick={() => void approveSpecialOutcome(evidenceGrade)}
+                    >
+                      <Check size={14} />
+                      {actionGradeId === evidenceGrade.grade_id
+                        ? "Processing..."
+                        : "Approve INC/UD Evidence"}
+                    </button>
+                  </footer>
+                </>
+              )}
             </section>
           </div>
         )}
@@ -2800,8 +3530,9 @@ export default function PendingGrades() {
                       Return Grade to Faculty
                     </h2>
                     <p>
-                      Explain what needs to be reviewed or corrected before
-                      resubmission.
+                      {returnGrade.grades.grading_outcome === "NUMERIC"
+                        ? "Explain which scores or attendance need correction before resubmission."
+                        : "Document the evidence concern. Faculty can revise the submitted INC/UD documentation only."}
                     </p>
                   </div>
                 </div>
@@ -2859,7 +3590,9 @@ export default function PendingGrades() {
               <div className="program-head-return-field">
                 <div className="program-head-return-label">
                   <label htmlFor="program-head-return-scope">
-                    Returned Grading Term
+                    {returnGrade.grades.grading_outcome === "NUMERIC"
+                      ? "Returned Grading Term"
+                      : "Evidence Review Scope"}
                   </label>
                 </div>
                 <select
@@ -2886,6 +3619,34 @@ export default function PendingGrades() {
                   <option value="BOTH">Both Terms</option>
                 </select>
               </div>
+
+              {returnGrade.grades.grading_outcome !== "NUMERIC" && (
+                <div className="program-head-return-field">
+                  <div className="program-head-return-label">
+                    <label htmlFor="program-head-return-evidence-notes">
+                      INC/UD Evidence-Review Notes (20–2000 characters)
+                    </label>
+                    <span>{returnEvidenceNotes.length}/2000</span>
+                  </div>
+                  <textarea
+                    id="program-head-return-evidence-notes"
+                    value={returnEvidenceNotes}
+                    onChange={(event) => {
+                      setReturnEvidenceNotes(event.target.value);
+                      setReturnError("");
+                    }}
+                    disabled={actionGradeId !== null}
+                    maxLength={2000}
+                    rows={4}
+                    placeholder="Describe the missing or insufficient INC/UD supporting evidence."
+                  />
+                  <small>
+                    The evidence and original submission are preserved for
+                    audit. The Faculty will revise supporting documentation, not
+                    gradebook scores.
+                  </small>
+                </div>
+              )}
 
               <div className="program-head-return-field">
                 <div className="program-head-return-label">
@@ -2937,13 +3698,19 @@ export default function PendingGrades() {
                   className="program-head-return-confirm"
                   onClick={() => void submitReturn()}
                   disabled={
-                    actionGradeId !== null || returnReason.trim().length < 15
+                    actionGradeId !== null ||
+                    returnReason.trim().length < 15 ||
+                    (returnGrade.grades.grading_outcome !== "NUMERIC" &&
+                      (!returnSpecialEvidenceVerified ||
+                        returnEvidenceNotes.trim().length < 20))
                   }
                 >
                   <Undo2 size={14} />
                   {actionGradeId === returnGrade.grade_id
                     ? "Returning..."
-                    : "Return to Faculty"}
+                    : returnGrade.grades.grading_outcome === "NUMERIC"
+                      ? "Return to Faculty"
+                      : "Return INC/UD Evidence"}
                 </button>
               </footer>
             </section>

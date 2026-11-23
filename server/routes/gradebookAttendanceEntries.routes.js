@@ -3,6 +3,7 @@ import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
 import { assertCombinedSemesterCellEditable } from "../services/gradebookCombinedEditScope.service.js";
 import { requireVerifiedHistoricalIncFinalTermEntry } from "../services/gradebookIncCompletionAccess.service.js";
+import { assertGradebookAttendanceWriteAllowed } from "../services/gradebookAttendanceWriteGuard.service.js";
 
 const router = express.Router();
 
@@ -289,15 +290,53 @@ router.get(
       );
       const [legacySubmissionRows] = await connection.execute(
         `SELECT 1
-         FROM gradebook_grade_submission_attempts sa
-         JOIN grades g ON g.grade_id = sa.grade_id
-         JOIN enrollment_subjects es
-           ON es.enrollment_subject_id = g.enrollment_subject_id
-        WHERE es.offering_id = ? LIMIT 1`,
-        [offeringId],
+           FROM gradebook_grade_submission_attempts sa
+           JOIN grades g ON g.grade_id = sa.grade_id
+           JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
+          WHERE es.offering_id = ?
+            AND NOT EXISTS (
+              SELECT 1 FROM gradebook_official_sheets sh
+               WHERE sh.sheet_id = sa.sheet_id AND sh.config_id = ?
+            )
+          LIMIT 1`,
+        [offeringId, configId],
       );
+      const [currentCombinedRows] = await connection.execute(
+        `SELECT 1
+           FROM gradebook_grade_submission_attempts sa
+           JOIN gradebook_official_sheets sh ON sh.sheet_id = sa.sheet_id
+          WHERE sh.config_id = ? LIMIT 1`,
+        [configId],
+      );
+      // A shared structure lock must not lock every student's attendance cells.
       const legacySubmissionLocked =
-        legacyLockRows.length > 0 || legacySubmissionRows.length > 0;
+        legacySubmissionRows.length > 0 ||
+        Boolean(legacyLockRows.length) !== Boolean(currentCombinedRows.length);
+      const combinedStructureLocked =
+        legacyLockRows.length > 0 || currentCombinedRows.length > 0;
+      const [finalizedSheets] = await connection.execute(
+        `SELECT 1 FROM gradebook_official_sheets
+          WHERE config_id = ? AND sheet_status = 'FINALIZED' LIMIT 1`,
+        [configId],
+      );
+      const officialSheetFinalized = finalizedSheets.length > 0;
+
+      const [unmigratedGradeRows] = await connection.execute(
+        `SELECT g.enrollment_subject_id
+           FROM grades g
+           JOIN enrollment_subjects es ON es.enrollment_subject_id = g.enrollment_subject_id
+          WHERE es.offering_id = ?
+            AND NOT EXISTS (
+              SELECT 1
+                FROM gradebook_grade_submission_attempts sa
+                JOIN gradebook_official_sheets sh ON sh.sheet_id = sa.sheet_id
+               WHERE sa.grade_id = g.grade_id AND sh.config_id = ?
+            )`,
+        [offeringId, configId],
+      );
+      const unmigratedGradeIds = new Set(
+        unmigratedGradeRows.map((row) => Number(row.enrollment_subject_id)),
+      );
 
       // A shared term structure lock forbids changing meeting definitions; it
       // does NOT prevent attendance entries for other Draft students.
@@ -337,6 +376,24 @@ router.get(
         latestByStudent.set(enrollmentSubjectId, attempt);
       }
 
+      const [currentCombinedAttemptRows] = await connection.execute(
+        `SELECT g.enrollment_subject_id, sa.submission_status,
+                sa.returned_edit_scope, sa.attempt_number, sa.submission_id
+           FROM gradebook_grade_submission_attempts sa
+           JOIN grades g ON g.grade_id = sa.grade_id
+           JOIN gradebook_official_sheets sh ON sh.sheet_id = sa.sheet_id
+          WHERE sh.config_id = ?
+          ORDER BY g.enrollment_subject_id, sa.attempt_number DESC, sa.submission_id DESC`,
+        [configId],
+      );
+      const latestCombinedByStudent = new Map();
+      for (const attempt of currentCombinedAttemptRows) {
+        const id = Number(attempt.enrollment_subject_id);
+        if (!latestCombinedByStudent.has(id)) {
+          latestCombinedByStudent.set(id, attempt);
+        }
+      }
+
       let editableStudentCount = 0;
       let lockedStudentCount = 0;
       for (const student of students) {
@@ -345,8 +402,26 @@ router.get(
         const latestStatus = latest?.submission_status ?? null;
         let lockReason = null;
         if (!student.is_current_enrolled) lockReason = "NOT_CURRENTLY_ENROLLED";
+        else if (officialSheetFinalized)
+          lockReason = "OFFICIAL_SHEET_FINALIZED";
         else if (legacySubmissionLocked)
           lockReason = "LEGACY_SUBMISSION_LOCKED";
+        else if (unmigratedGradeIds.has(student.enrollment_subject_id))
+          lockReason = "PREEXISTING_GRADE_REVIEW_REQUIRED";
+        else if (
+          latestCombinedByStudent.has(student.enrollment_subject_id) &&
+          latestCombinedByStudent.get(student.enrollment_subject_id)
+            .submission_status !== "RETURNED"
+        )
+          lockReason = "COMBINED_STUDENT_GRADE_LOCKED";
+        else if (
+          latestCombinedByStudent.has(student.enrollment_subject_id) &&
+          !["BOTH", meeting.grading_term].includes(
+            latestCombinedByStudent.get(student.enrollment_subject_id)
+              .returned_edit_scope,
+          )
+        )
+          lockReason = "COMBINED_TERM_NOT_RETURNED";
         else if (latestStatus === "SUBMITTED")
           lockReason = "TERM_AWAITING_REVIEW";
         else if (latestStatus === "APPROVED")
@@ -397,7 +472,11 @@ router.get(
         },
         // Backward-compatible overall flag describes STRUCTURE only.
         // UI should use attendance_editable on each student for score-cell controls.
-        structure_locked: legacySubmissionLocked || termStructureLocked,
+        structure_locked:
+          officialSheetFinalized ||
+          legacySubmissionLocked ||
+          combinedStructureLocked ||
+          termStructureLocked,
         term_structure_locked: termStructureLocked,
         legacy_submission_locked: legacySubmissionLocked,
         recording_supported: editableStudentCount > 0,
@@ -427,6 +506,22 @@ router.get(
   },
 );
 
+function hasDisallowedControlCharacters(value) {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (
+      code <= 8 ||
+      code === 11 ||
+      code === 12 ||
+      (code >= 14 && code <= 31) ||
+      code === 127
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function normalizeReason(value) {
   if (value === undefined || value === null) return null;
   if (typeof value !== "string") {
@@ -434,7 +529,7 @@ function normalizeReason(value) {
   }
   const reason = value.trim();
   if (!reason) return null;
-  if (reason.length > 1000 || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(reason)) {
+  if (reason.length > 1000 || hasDisallowedControlCharacters(reason)) {
     fail(
       "INVALID_CHANGE_REASON",
       "change_reason must contain at most 1000 printable characters.",
@@ -451,7 +546,7 @@ function normalizeStatusReason(value, attendanceStatus) {
   const reason = typeof value === "string" ? value.trim() : null;
   if (
     reason &&
-    (reason.length > 1000 || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(reason))
+    (reason.length > 1000 || hasDisallowedControlCharacters(reason))
   ) {
     fail(
       "INVALID_STATUS_REASON",
@@ -592,19 +687,8 @@ router.post(
     let transactionStarted = false;
     try {
       connection = await db.getConnection();
-
-      // Committed attendance entry writes require rollout approval.
-      if (
-        !input.dryRun &&
-        process.env.GRADEBOOK_ATTENDANCE_WRITES_ENABLED !== "true"
-      ) {
-        fail(
-          "GRADEBOOK_ATTENDANCE_WRITES_DISABLED",
-          "Attendance entry saving is not enabled on this server.",
-          403,
-        );
-      }
-
+      const { isQaDatabase } =
+        await assertGradebookAttendanceWriteAllowed(connection);
       await connection.beginTransaction();
       transactionStarted = true;
       // Match the offering -> gradebook config -> meeting -> student lock order.
@@ -744,53 +828,31 @@ router.post(
         );
       }
 
-      let incCompletion = null;
-
-      if (enrollment.enrollment_subject_status === "Incomplete") {
-        // A published combined-semester INC keeps its original attendance frozen.
-        const [publications] = await connection.execute(
-          `SELECT pub.publication_id, pub.publication_source
-             FROM gradebook_official_grade_publications pub
-             JOIN grades g ON g.grade_id = pub.grade_id
-            WHERE g.enrollment_subject_id = ?
-              AND g.grade_status = 'Approved'
-              AND g.grading_outcome = 'INCOMPLETE'
-            FOR UPDATE`,
-          [input.enrollmentSubjectId],
-        );
-
-        if (publications.length > 1) {
-          fail(
-            "INC_ATTENDANCE_PUBLICATION_CONFLICT",
-            "Conflicting official INC publications require Registrar review.",
-          );
-        }
-
-        if (publications.length === 1) {
-          fail(
-            publications[0].publication_source === "COMBINED_SEMESTER"
-              ? "MODERN_INC_ATTENDANCE_LOCKED"
-              : "INC_ATTENDANCE_SOURCE_UNSUPPORTED",
-            "Published INC attendance requires an authorized correction; the original official attendance evidence cannot be edited here.",
-          );
-        }
-
-        // Historical claims have no modern publication. Their verifier
-        // independently checks the approved INC, sheet and claim evidence.
-        incCompletion = await requireVerifiedHistoricalIncFinalTermEntry(
-          connection,
-          {
-            offeringId,
-            configId,
-            enrollmentSubjectId: input.enrollmentSubjectId,
-            studentId: enrollment.student_id,
-            actorUserId,
-            facultyId: offering.faculty_id,
-            gradingTerm: meeting.grading_term,
-            changeReason: input.changeReason,
-          },
+      // Do not route non-QA INC attendance through the historical QA claim helper.
+      if (
+        !isQaDatabase &&
+        enrollment.enrollment_subject_status === "Incomplete"
+      ) {
+        fail(
+          "GRADEBOOK_INC_ATTENDANCE_NOT_MIGRATED",
+          "INC completion attendance is not yet enabled outside QA.",
+          403,
         );
       }
+
+      const incCompletion =
+        enrollment.enrollment_subject_status === "Incomplete"
+          ? await requireVerifiedHistoricalIncFinalTermEntry(connection, {
+              offeringId,
+              configId,
+              enrollmentSubjectId: input.enrollmentSubjectId,
+              studentId: enrollment.student_id,
+              actorUserId,
+              facultyId: offering.faculty_id,
+              gradingTerm: meeting.grading_term,
+              changeReason: input.changeReason,
+            })
+          : null;
 
       if (!incCompletion) {
         const [finalizedSheets] = await connection.execute(
@@ -813,6 +875,29 @@ router.post(
             "OFFERING_NOT_OPEN",
             "Attendance encoding requires an Open offering.",
           );
+        }
+
+        if (!isQaDatabase) {
+          // An unmigrated grade without matching combined submission history
+          // cannot be modified by the new attendance entry workflow.
+          const [unmigratedGrades] = await connection.execute(
+            `SELECT g.grade_id
+               FROM grades g
+              WHERE g.enrollment_subject_id = ?
+                AND NOT EXISTS (
+                  SELECT 1 FROM gradebook_grade_submission_attempts sa
+                  JOIN gradebook_official_sheets sh ON sh.sheet_id = sa.sheet_id
+                 WHERE sa.grade_id = g.grade_id AND sh.config_id = ?
+                )
+              LIMIT 1 FOR UPDATE`,
+            [input.enrollmentSubjectId, configId],
+          );
+          if (unmigratedGrades.length) {
+            fail(
+              "COMBINED_PREEXISTING_GRADE_REVIEW_REQUIRED",
+              "This student's pre-existing grade needs review or migration before editing attendance.",
+            );
+          }
         }
 
         await assertCombinedSemesterCellEditable(

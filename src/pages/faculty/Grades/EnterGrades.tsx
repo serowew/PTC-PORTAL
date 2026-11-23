@@ -30,11 +30,12 @@ import { api } from "../../../services/api";
 import "../../../styles/EnterGrades.css";
 
 const API_BASE_URL = `${api.baseUrl}/api/faculty/classes`;
+
+const PROGRAM_HEAD_CLASSES_API_BASE_URL = `${api.baseUrl}/api/program-head/classes`;
+
 const MODERN_GRADEBOOK_API = `${api.baseUrl}/api/gradebook`;
 
 type GradeStatus = "Draft" | "Submitted" | "Returned" | "Approved";
-
-type GradeRemark = "Passed" | "Failed" | "Incomplete" | "Unofficial Drop";
 
 type AssessmentMode = "create" | "edit" | "remove";
 type AssessmentTerm = "MIDTERM" | "FINAL_TERM";
@@ -98,6 +99,10 @@ interface FacultyClass {
     official_students: number;
   };
 
+  faculty?: {
+    faculty_id: number;
+  } | null;
+
   created_at?: string;
 }
 
@@ -112,76 +117,32 @@ interface FacultyClassesResponse {
     closed_classes: number;
     total_official_students: number;
   };
-
+  program_head?: {
+    faculty_id: number;
+    employee_number: string;
+    program_head_name: string;
+  };
   classes?: FacultyClass[];
 
   message?: string;
   error?: string;
 }
-
-interface GradeReview {
-  reviewed_by: number | null;
-  reviewed_by_username: string | null;
-  reviewed_at: string | null;
-  review_remarks: string | null;
-}
-
 interface FacultyGrade {
-  grade_id: number;
-  faculty_id: number | null;
-
-  midterm_grade: number | null;
-  final_grade: number | null;
-  overall_percentage: number | null;
+  midterm_grade?: number | null;
+  final_grade?: number | null;
+  overall_percentage?: number | null;
   final_rating: number | null;
-
-  grading_policy?: string;
   grading_outcome?: string;
-  outcome_reason?: string | null;
-
-  remarks: GradeRemark | null;
-
   grade_status: GradeStatus;
-
-  submitted_at: string | null;
-
-  review: GradeReview;
-
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-type IncCompletionRequestStatus =
-  | "Pending Program Head"
-  | "For Registrar Processing";
-
-interface IncCompletionRequestSummary {
-  grade_change_request_id: number;
-  status: IncCompletionRequestStatus;
-  requested_at: string | null;
-  reviewed_at: string | null;
-  review_remarks: string | null;
 }
 
 interface GradebookStudent {
   enrollment_subject_id: number;
-  enrollment_id: number;
-  student_id: number;
-
   student_number: string;
-
-  first_name: string;
-  middle_name: string | null;
-  last_name: string;
-
   full_name: string;
   email: string | null;
-
-  enrollment_status: string;
   subject_status: string;
-
   grade: FacultyGrade | null;
-  inc_completion_request: IncCompletionRequestSummary | null;
 }
 
 interface GradebookSummary {
@@ -327,6 +288,7 @@ interface AssessmentTarget {
 }
 
 interface TermAssessmentColumn {
+  term: AssessmentTerm;
   category: ModernGradebookCategory;
   assessment: ModernGradebookAssessment | null;
 }
@@ -712,7 +674,6 @@ function AssessmentScoreCell({
           disabled={busy || (!score?.saved && !value.trim())}
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => {
-            setValue("");
             void save("PENDING");
           }}
         >
@@ -1454,7 +1415,7 @@ function AttendanceRegister({
     void loadRegister();
 
     return () => controller.abort();
-  }, [offeringId, meetingId, reloadKey, navigate]);
+  }, [offeringId, meetingId, reloadKey, refreshKey, navigate]);
 
   const updateDraft = (id: number, patch: Partial<AttendanceDraft>) => {
     setDrafts((current) => ({
@@ -1477,6 +1438,22 @@ function AttendanceRegister({
     }
 
     const id = student.enrollment_subject_id;
+
+    const currentStudent = register?.students.find(
+      (item) => item.enrollment_subject_id === id,
+    );
+
+    if (
+      loading ||
+      registerLoading ||
+      register?.offering_id !== offeringId ||
+      register?.meeting?.meeting_id !== meetingId ||
+      currentStudent?.attendance_editable !== true ||
+      currentStudent.attendance.record_version !==
+        student.attendance.record_version
+    ) {
+      return;
+    }
 
     if (lockedStudentIds.has(id)) return;
 
@@ -1538,6 +1515,10 @@ function AttendanceRegister({
 
       const data = await readJsonResponse<{
         success: boolean;
+        persisted?: boolean;
+        offering_id?: number;
+        meeting_id?: number;
+        enrollment_subject_id?: number;
         message?: string;
       }>(response);
 
@@ -1547,8 +1528,22 @@ function AttendanceRegister({
         return;
       }
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Attendance could not be saved.");
+      if (
+        !response.ok ||
+        !data.success ||
+        data.persisted !== true ||
+        Number(data.offering_id) !== offeringId ||
+        Number(data.meeting_id) !== meetingId ||
+        Number(data.enrollment_subject_id) !== id
+      ) {
+        if (response.status === 409 || response.status === 403) {
+          setReloadKey((current) => current + 1);
+        }
+
+        throw new Error(
+          data.message ||
+            "Attendance was not confirmed as saved. Reload the register.",
+        );
       }
 
       setReloadKey((current) => current + 1);
@@ -1572,8 +1567,24 @@ function AttendanceRegister({
       ? register
       : null;
 
+  const attendanceCounts = currentRegister?.students.reduce(
+    (counts, student) => {
+      const status = student.attendance.attendance_status;
+      counts[status] += 1;
+      return counts;
+    },
+    {
+      PENDING: 0,
+      PRESENT: 0,
+      LATE: 0,
+      ABSENT: 0,
+      EXCUSED: 0,
+      NOT_APPLICABLE: 0,
+    } as Record<AttendanceStatus, number>,
+  );
+
   return (
-    <section className="faculty-gradebook">
+    <section id="faculty-attendance-register" className="faculty-gradebook">
       <header className="faculty-gradebook-header">
         <div className="faculty-gradebook-header__title">
           <span className="faculty-gradebook-header__icon">
@@ -1596,7 +1607,7 @@ function AttendanceRegister({
 
             <select
               value={term}
-              disabled={savingId !== null}
+              disabled={savingId !== null || createMeetingBusy || heldBusy}
               onChange={(event) => {
                 setTerm(event.target.value as AssessmentTerm);
                 setSelectedMeetingId(null);
@@ -1612,7 +1623,12 @@ function AttendanceRegister({
 
             <select
               value={meetingId ?? ""}
-              disabled={!meetingOptions.length || savingId !== null}
+              disabled={
+                !meetingOptions.length ||
+                savingId !== null ||
+                createMeetingBusy ||
+                heldBusy
+              }
               onChange={(event) =>
                 setSelectedMeetingId(Number(event.target.value))
               }
@@ -1832,9 +1848,61 @@ function AttendanceRegister({
         </div>
       )}
 
+      {!registerLoading && currentRegister && attendanceCounts && (
+        <div className="faculty-attendance-overview">
+          <div className="faculty-attendance-overview__heading">
+            <div>
+              <strong>Meeting Attendance</strong>
+              <p>
+                {selectedMeeting?.meeting_date} ·{" "}
+                {selectedMeeting?.session_type} ·{" "}
+                {selectedMeeting?.meeting_status}
+              </p>
+            </div>
+            <span className="faculty-attendance-overview__recorded">
+              {currentRegister.students.length - attendanceCounts.PENDING} of{" "}
+              {currentRegister.students.length} recorded
+            </span>
+          </div>
+          <div
+            className="faculty-attendance-overview__statuses"
+            aria-label="Saved attendance counts"
+          >
+            <span className="faculty-attendance-count faculty-attendance-count--present">
+              <strong>{attendanceCounts.PRESENT}</strong> Present
+            </span>
+            <span className="faculty-attendance-count faculty-attendance-count--late">
+              <strong>{attendanceCounts.LATE}</strong> Late
+            </span>
+            <span className="faculty-attendance-count faculty-attendance-count--absent">
+              <strong>{attendanceCounts.ABSENT}</strong> Absent
+            </span>
+            <span className="faculty-attendance-count faculty-attendance-count--excused">
+              <strong>{attendanceCounts.EXCUSED}</strong> Excused
+            </span>
+            <span className="faculty-attendance-count faculty-attendance-count--pending">
+              <strong>{attendanceCounts.PENDING}</strong> Pending
+            </span>
+            <span className="faculty-attendance-count faculty-attendance-count--not-applicable">
+              <strong>{attendanceCounts.NOT_APPLICABLE}</strong> N/A
+            </span>
+          </div>
+          <small>
+            Counts reflect saved attendance for this meeting. Late counts as
+            present when attendance grades are calculated.
+          </small>
+        </div>
+      )}
+
       {!registerLoading && currentRegister && (
-        <div className="faculty-grade-table-wrapper">
-          <table className="faculty-grade-table" style={{ minWidth: 900 }}>
+        <div className="faculty-grade-table-wrapper faculty-attendance-table-wrapper">
+          <table className="faculty-grade-table faculty-attendance-table">
+            <colgroup>
+              <col style={{ width: 230 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 300 }} />
+              <col style={{ width: 190 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>Student</th>
@@ -1868,7 +1936,7 @@ function AttendanceRegister({
 
                 return (
                   <tr key={student.enrollment_subject_id}>
-                    <td>
+                    <td className="faculty-attendance-table__student">
                       <div className="faculty-grade-student">
                         <div>
                           <strong>{student.student_name}</strong>
@@ -1879,7 +1947,8 @@ function AttendanceRegister({
 
                     <td>
                       <select
-                        className="faculty-grade-remarks"
+                        className={`faculty-grade-remarks faculty-attendance-status faculty-attendance-status--${(draft?.status ?? "PENDING").toLowerCase().replaceAll("_", "-")}`}
+                        aria-label={`Attendance status for ${student.student_name}`}
                         value={draft?.status ?? "PENDING"}
                         disabled={!editable}
                         onChange={(event) =>
@@ -2145,9 +2214,9 @@ function SpecialOutcomeSubmission({
       <strong>Special Outcome — INC / UD</strong>
 
       <p>
-        For documented incomplete requirements or unofficial-drop evidence. This
-        QA pilot is limited to authorized students and needs individual Program
-        Head approval.
+        Use this for documented incomplete requirements or unofficial-drop
+        evidence. Each submission requires individual Program Head review and
+        does not become an official grade until published.
       </p>
 
       <div className="faculty-gradebook-tools">
@@ -2497,6 +2566,14 @@ export default function EnterGrades() {
 
   const authenticated = Boolean(session && token);
 
+  const canUseTeachingGradebook =
+    userRole === "Faculty" || userRole === "Program Head";
+
+  const classesApiBase =
+    userRole === "Program Head"
+      ? PROGRAM_HEAD_CLASSES_API_BASE_URL
+      : API_BASE_URL;
+
   const requestedOfferingId = useMemo(
     () => parsePositiveInt(searchParams.get("offering_id")),
     [searchParams],
@@ -2513,6 +2590,11 @@ export default function EnterGrades() {
   const [selectedOfferingId, setSelectedOfferingId] = useState<number | null>(
     null,
   );
+  const activeOfferingIdRef = useRef<number | null>(selectedOfferingId);
+
+  useEffect(() => {
+    activeOfferingIdRef.current = selectedOfferingId;
+  }, [selectedOfferingId]);
 
   const [classSearch, setClassSearch] = useState("");
   const [classSearchFocused, setClassSearchFocused] = useState(false);
@@ -2530,6 +2612,20 @@ export default function EnterGrades() {
   const [gradebookError, setGradebookError] = useState("");
 
   const [gradebookRefreshKey, setGradebookRefreshKey] = useState(0);
+
+  const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
+  const attendanceDialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = attendanceDialogRef.current;
+    if (!dialog) return;
+
+    if (attendanceModalOpen && !dialog.open) {
+      dialog.showModal();
+    } else if (!attendanceModalOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [attendanceModalOpen]);
 
   const [modernGradebook, setModernGradebook] =
     useState<ModernGradebookRosterResponse | null>(null);
@@ -2560,11 +2656,28 @@ export default function EnterGrades() {
   const [studentSearch, setStudentSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [previewStudentId, setPreviewStudentId] = useState<number | null>(null);
+  const activePreviewStudentIdRef = useRef<number | null>(previewStudentId);
+
+  useEffect(() => {
+    activePreviewStudentIdRef.current = previewStudentId;
+  }, [previewStudentId]);
   const [modernPreview, setModernPreview] =
     useState<ModernGradePreviewResponse | null>(null);
   const [modernPreviewLoading, setModernPreviewLoading] = useState(false);
   const [modernPreviewError, setModernPreviewError] = useState("");
   const [modernPreviewRefreshKey, setModernPreviewRefreshKey] = useState(0);
+
+  // Calculated values for the combined semester sheet (read-only).
+  const [rowGradePreviews, setRowGradePreviews] = useState<
+    Record<number, ModernGradePreviewResponse>
+  >({});
+  const [rowGradePreviewsLoading, setRowGradePreviewsLoading] = useState(false);
+  const rowPreviewChangeVersions = useRef<Record<number, number>>({});
+  const [rowPreviewBatchRefreshKey, setRowPreviewBatchRefreshKey] = useState(0);
+  const [rowPreviewRefreshTarget, setRowPreviewRefreshTarget] = useState({
+    studentId: 0,
+    sequence: 0,
+  });
   const [latestCombined, setLatestCombined] =
     useState<LatestCombinedSubmissionResponse | null>(null);
 
@@ -2592,17 +2705,17 @@ export default function EnterGrades() {
       return;
     }
 
-    if (userRole !== "Faculty") {
+    if (!canUseTeachingGradebook) {
       if (session) {
         navigate(authService.getDashboardRoute(session.role), {
           replace: true,
         });
       }
     }
-  }, [authenticated, userRole, session, navigate]);
+  }, [authenticated, canUseTeachingGradebook, session, navigate]);
 
   useEffect(() => {
-    if (!authenticated || userRole !== "Faculty") {
+    if (!authenticated || !canUseTeachingGradebook) {
       return;
     }
 
@@ -2614,7 +2727,7 @@ export default function EnterGrades() {
 
         setClassesError("");
 
-        const response = await authService.authFetch(API_BASE_URL, {
+        const response = await authService.authFetch(classesApiBase, {
           method: "GET",
 
           signal: controller.signal,
@@ -2633,20 +2746,47 @@ export default function EnterGrades() {
         }
 
         if (response.status === 403) {
-          throw new Error(data.message || "Faculty access is required.");
+          throw new Error(
+            data.message || "Teaching gradebook access is required.",
+          );
         }
 
         if (!response.ok || !data.success) {
           throw new Error(
-            data.message || data.error || "Unable to load Faculty classes.",
+            data.message || data.error || "Unable to load assigned classes.",
+          );
+        }
+
+        const programHeadInstructorId = data.program_head?.faculty_id;
+
+        if (
+          userRole === "Program Head" &&
+          (!Number.isSafeInteger(programHeadInstructorId) ||
+            (programHeadInstructorId ?? 0) <= 0)
+        ) {
+          throw new Error(
+            "Your Program Head account has no valid linked instructor record.",
           );
         }
 
         const loadedClasses = Array.isArray(data.classes)
-          ? data.classes.filter((item) => item.offering_status !== "Cancelled")
+          ? data.classes.filter(
+              (item) =>
+                item.offering_status !== "Cancelled" &&
+                (userRole !== "Program Head" ||
+                  item.faculty?.faculty_id === programHeadInstructorId),
+            )
           : [];
 
-        setFaculty(data.faculty || null);
+        setFaculty(
+          userRole === "Program Head" && data.program_head
+            ? {
+                faculty_id: data.program_head.faculty_id,
+                employee_number: data.program_head.employee_number,
+                faculty_name: data.program_head.program_head_name,
+              }
+            : data.faculty || null,
+        );
 
         setClasses(loadedClasses);
 
@@ -2683,7 +2823,7 @@ export default function EnterGrades() {
           return;
         }
 
-        console.error("LOAD FACULTY CLASSES ERROR:", requestError);
+        console.error("LOAD TEACHING CLASSES ERROR:", requestError);
 
         setClasses([]);
         setSelectedOfferingId(null);
@@ -2691,7 +2831,7 @@ export default function EnterGrades() {
         setClassesError(
           requestError instanceof Error
             ? requestError.message
-            : "Unable to load Faculty classes.",
+            : "Unable to load assigned classes.",
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -2705,7 +2845,14 @@ export default function EnterGrades() {
     return () => {
       controller.abort();
     };
-  }, [authenticated, userRole, navigate, requestedOfferingId]);
+  }, [
+    authenticated,
+    canUseTeachingGradebook,
+    userRole,
+    navigate,
+    requestedOfferingId,
+    classesApiBase,
+  ]);
 
   const loadGradebook = useCallback(
     async (signal?: AbortSignal) => {
@@ -2720,11 +2867,14 @@ export default function EnterGrades() {
 
       try {
         setGradebookLoading(true);
-
         setGradebookError("");
 
+        setGradebookClass(null);
+        setStudents([]);
+        setSummary(emptySummary());
+
         const response = await authService.authFetch(
-          `${API_BASE_URL}/${selectedOfferingId}/gradebook`,
+          `${classesApiBase}/${selectedOfferingId}/gradebook`,
           {
             method: "GET",
 
@@ -2733,6 +2883,13 @@ export default function EnterGrades() {
         );
 
         const data = await readJsonResponse<GradebookResponse>(response);
+
+        if (
+          signal?.aborted ||
+          activeOfferingIdRef.current !== selectedOfferingId
+        ) {
+          return;
+        }
 
         if (response.status === 401) {
           authService.logout();
@@ -2805,13 +2962,20 @@ export default function EnterGrades() {
         });
       } catch (requestError) {
         if (
+          signal?.aborted ||
+          activeOfferingIdRef.current !== selectedOfferingId
+        ) {
+          return;
+        }
+
+        if (
           requestError instanceof DOMException &&
           requestError.name === "AbortError"
         ) {
           return;
         }
 
-        console.error("LOAD FACULTY GRADEBOOK ERROR:", requestError);
+        console.error("LOAD TEACHING GRADEBOOK ERROR:", requestError);
 
         setGradebookClass(null);
 
@@ -2829,11 +2993,11 @@ export default function EnterGrades() {
         }
       }
     },
-    [selectedOfferingId, navigate],
+    [selectedOfferingId, navigate, classesApiBase],
   );
 
   useEffect(() => {
-    if (!authenticated || userRole !== "Faculty" || !selectedOfferingId) {
+    if (!authenticated || !canUseTeachingGradebook || !selectedOfferingId) {
       return;
     }
 
@@ -2846,13 +3010,13 @@ export default function EnterGrades() {
     };
   }, [
     authenticated,
-    userRole,
+    canUseTeachingGradebook,
     selectedOfferingId,
     gradebookRefreshKey,
     loadGradebook,
   ]);
   useEffect(() => {
-    if (!authenticated || userRole !== "Faculty" || !selectedOfferingId) {
+    if (!authenticated || !canUseTeachingGradebook || !selectedOfferingId) {
       setModernGradebook(null);
       setModernGradebookError("");
       setModernGradebookLoading(false);
@@ -2919,7 +3083,7 @@ export default function EnterGrades() {
     return () => controller.abort();
   }, [
     authenticated,
-    userRole,
+    canUseTeachingGradebook,
     selectedOfferingId,
     gradebookRefreshKey,
     navigate,
@@ -2935,6 +3099,12 @@ export default function EnterGrades() {
       earnedScore,
       notApplicableReason,
     ) => {
+      if (activeOfferingIdRef.current !== offeringId) {
+        throw new Error(
+          "You switched to another class. The previous score was not saved.",
+        );
+      }
+
       const body = {
         enrollment_subject_id: enrollmentSubjectId,
         assessment_id: assessmentId,
@@ -2981,8 +3151,28 @@ export default function EnterGrades() {
         );
       }
 
+      // Ignore a response that belongs to a class the user has left.
+      if (activeOfferingIdRef.current !== offeringId) return;
+
+      // If the server version is unexpected, reload instead of displaying stale data.
+      if (
+        !Number.isSafeInteger(data.score.record_version) ||
+        data.score.record_version <= (previousVersion ?? 0) ||
+        data.score.score_status !== scoreStatus
+      ) {
+        setGradebookRefreshKey((current) => current + 1);
+        throw new Error(
+          "The server saved an unexpected score version or status. Reload the gradebook before editing again.",
+        );
+      }
+
       setModernGradebook((current) => {
-        if (!current || current.offering_id !== offeringId) return current;
+        if (
+          !current ||
+          current.offering_id !== offeringId ||
+          activeOfferingIdRef.current !== offeringId
+        )
+          return current;
         return {
           ...current,
           students: current.students.map((student) => {
@@ -3012,7 +3202,20 @@ export default function EnterGrades() {
           }),
         };
       });
-      setModernPreviewRefreshKey((current) => current + 1);
+      if (activeOfferingIdRef.current === offeringId) {
+        rowPreviewChangeVersions.current[enrollmentSubjectId] =
+          (rowPreviewChangeVersions.current[enrollmentSubjectId] ?? 0) + 1;
+        setRowGradePreviews((current) => {
+          const next = { ...current };
+          delete next[enrollmentSubjectId];
+          return next;
+        });
+        setModernPreviewRefreshKey((current) => current + 1);
+        setRowPreviewRefreshTarget((current) => ({
+          studentId: enrollmentSubjectId,
+          sequence: current.sequence + 1,
+        }));
+      }
     },
     [navigate],
   );
@@ -3087,10 +3290,7 @@ export default function EnterGrades() {
     category.assessments.map((assessment) => ({ category, assessment })),
   );
   const assessmentWriteAllowed =
-    assessmentStructureEditable &&
-    (assessmentMode === "edit"
-      ? [127, 128, 131].includes(selectedOfferingId ?? -1)
-      : selectedOfferingId === 131);
+    assessmentStructureEditable && !semesterSubmitting && !resubmittingCombined;
 
   const openAssessmentManager = () => {
     setAssessmentMode("create");
@@ -3286,7 +3486,7 @@ export default function EnterGrades() {
 
     if (
       !authenticated ||
-      userRole !== "Faculty" ||
+      !canUseTeachingGradebook ||
       !offeringId ||
       !enrollmentSubjectId ||
       modernGradebook?.offering_id !== offeringId ||
@@ -3343,7 +3543,7 @@ export default function EnterGrades() {
     return () => controller.abort();
   }, [
     authenticated,
-    userRole,
+    canUseTeachingGradebook,
     selectedOfferingId,
     previewStudentId,
     modernGradebook?.offering_id,
@@ -3359,7 +3559,12 @@ export default function EnterGrades() {
     setLatestCombined(null);
     setLatestCombinedError("");
 
-    if (!authenticated || userRole !== "Faculty" || !offeringId || !studentId) {
+    if (
+      !authenticated ||
+      !canUseTeachingGradebook ||
+      !offeringId ||
+      !studentId
+    ) {
       setLatestCombinedLoading(false);
       return () => controller.abort();
     }
@@ -3417,59 +3622,123 @@ export default function EnterGrades() {
     return () => controller.abort();
   }, [
     authenticated,
-    userRole,
+    canUseTeachingGradebook,
     selectedOfferingId,
     previewStudentId,
     gradebookRefreshKey,
     navigate,
   ]);
+
   const selectedClass = useMemo(() => {
+    const assignedClass = classes.find(
+      (item) => item.offering_id === selectedOfferingId,
+    );
+
     return (
-      classes.find((item) => item.offering_id === selectedOfferingId) ||
-      gradebookClass ||
-      null
+      assignedClass ??
+      (gradebookClass?.offering_id === selectedOfferingId
+        ? gradebookClass
+        : null)
     );
   }, [classes, selectedOfferingId, gradebookClass]);
 
-  const termAssessmentColumns = useMemo<TermAssessmentColumn[]>(() => {
+  const attendanceRosterReady = useMemo(() => {
     if (
-      !modernGradebook ||
-      modernGradebook.offering_id !== selectedOfferingId
+      classesLoading ||
+      gradebookLoading ||
+      Boolean(gradebookError) ||
+      !selectedClass ||
+      !selectedOfferingId ||
+      modernGradebook?.offering_id !== selectedOfferingId ||
+      modernGradebook.students.length !== students.length
     ) {
-      return [];
+      return false;
     }
 
-    const categories = modernGradebook.terms[assessmentTerm].categories;
-    if (!Array.isArray(categories)) return [];
-
-    return categories.flatMap<TermAssessmentColumn>((category) => {
-      if (
-        !Array.isArray(category.assessments) ||
-        category.assessments.length === 0
-      ) {
-        return [{ category, assessment: null }];
-      }
-      return category.assessments.map((assessment) => ({
-        category,
-        assessment,
-      }));
-    });
-  }, [modernGradebook, selectedOfferingId, assessmentTerm]);
-
-  const modernStudentByEnrollmentSubject = useMemo(() => {
-    const roster =
-      modernGradebook?.offering_id === selectedOfferingId
-        ? modernGradebook.students
-        : [];
-
-    return new Map(
-      roster.map((student) => [student.enrollment_subject_id, student]),
+    const verifiedStudents = new Map(
+      students.map(
+        (student) =>
+          [
+            student.enrollment_subject_id,
+            student.student_number.trim().toUpperCase(),
+          ] as const,
+      ),
     );
+
+    return modernGradebook.students.every(
+      (student) =>
+        verifiedStudents.get(student.enrollment_subject_id) ===
+        student.student_number.trim().toUpperCase(),
+    );
+  }, [
+    classesLoading,
+    gradebookLoading,
+    gradebookError,
+    selectedClass,
+    selectedOfferingId,
+    modernGradebook,
+    students,
+  ]);
+
+  // Keep Midterm and Final Term visible together, in official category order.
+  const termAssessmentColumns = useMemo<TermAssessmentColumn[]>(() => {
+    if (modernGradebook?.offering_id !== selectedOfferingId) return [];
+
+    return (["MIDTERM", "FINAL_TERM"] as const).flatMap((term) => {
+      const categories = modernGradebook.terms[term]?.categories;
+      if (!Array.isArray(categories)) return [];
+
+      return categories.flatMap<TermAssessmentColumn>((category) => {
+        if (
+          !Array.isArray(category.assessments) ||
+          !category.assessments.length
+        ) {
+          return [{ term, category, assessment: null }];
+        }
+        return category.assessments.map((assessment) => ({
+          term,
+          category,
+          assessment,
+        }));
+      });
+    });
   }, [modernGradebook, selectedOfferingId]);
 
+  const midtermAssessmentColumns = termAssessmentColumns.filter(
+    (column) => column.term === "MIDTERM",
+  );
+  const finalTermAssessmentColumns = termAssessmentColumns.filter(
+    (column) => column.term === "FINAL_TERM",
+  );
+
+  const modernStudentByEnrollmentSubject = useMemo(() => {
+    if (modernGradebook?.offering_id !== selectedOfferingId) {
+      return new Map<number, ModernGradebookStudent>();
+    }
+
+    const officialStudentNumbers = new Map(
+      students.map(
+        (student) =>
+          [
+            student.enrollment_subject_id,
+            student.student_number.trim().toUpperCase(),
+          ] as const,
+      ),
+    );
+
+    return new Map(
+      modernGradebook.students
+        .filter(
+          (student) =>
+            officialStudentNumbers.get(student.enrollment_subject_id) ===
+            student.student_number.trim().toUpperCase(),
+        )
+        .map((student) => [student.enrollment_subject_id, student] as const),
+    );
+  }, [modernGradebook, selectedOfferingId, students]);
+
   const returnedSpecialSubmission =
-    selectedOfferingId === 187 &&
-    previewStudentId === 341 &&
+    selectedClass?.offering_status === "Open" &&
     latestCombined?.offering_id === selectedOfferingId &&
     latestCombined.enrollment_subject_id === previewStudentId &&
     latestCombined.grade?.grade_status === "Returned" &&
@@ -3505,6 +3774,8 @@ export default function EnterGrades() {
 
     if (
       resubmittingCombined ||
+      modernPreviewLoading ||
+      Boolean(modernPreviewError) ||
       !offeringId ||
       !studentId ||
       !previous ||
@@ -3592,6 +3863,16 @@ export default function EnterGrades() {
 
       if (!confirmed) return;
 
+      // Check that the selected class and student have not changed.
+      if (
+        activeOfferingIdRef.current !== offeringId ||
+        activePreviewStudentIdRef.current !== studentId
+      ) {
+        throw new Error(
+          "The selected class or student has changed. Please review the returned grade and resubmit again.",
+        );
+      }
+
       const result = await request(false);
 
       if (!result.persisted || result.dry_run || !result.submission_id) {
@@ -3630,6 +3911,8 @@ export default function EnterGrades() {
 
     if (
       semesterSubmitting ||
+      modernPreviewLoading ||
+      Boolean(modernPreviewError) ||
       !offeringId ||
       !studentId ||
       !student ||
@@ -3716,6 +3999,16 @@ export default function EnterGrades() {
 
       if (!confirmed) return;
 
+      // Make sure the same class and student are still selected.
+      if (
+        activeOfferingIdRef.current !== offeringId ||
+        activePreviewStudentIdRef.current !== studentId
+      ) {
+        throw new Error(
+          "The selected class or student has changed. Please review the grade and submit again.",
+        );
+      }
+
       // Save the combined semester submission.
       const result = await request(false);
 
@@ -3758,7 +4051,163 @@ export default function EnterGrades() {
     });
   }, [students, studentSearch, statusFilter]);
 
+  const rowPreviewStudentIds = useMemo(() => {
+    if (modernGradebook?.offering_id !== selectedOfferingId) return "";
+
+    return filteredStudents
+      .filter(
+        (student) =>
+          student.grade?.grade_status !== "Approved" &&
+          modernStudentByEnrollmentSubject.get(student.enrollment_subject_id)
+            ?.is_current_enrolled === true,
+      )
+      .map((student) => student.enrollment_subject_id)
+      .join(",");
+  }, [
+    filteredStudents,
+    modernStudentByEnrollmentSubject,
+    modernGradebook?.offering_id,
+    selectedOfferingId,
+  ]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const offeringId = selectedOfferingId;
+    const ids = rowPreviewStudentIds.split(",").filter(Boolean).map(Number);
+
+    setRowGradePreviews({});
+    if (
+      !authenticated ||
+      !canUseTeachingGradebook ||
+      !offeringId ||
+      !ids.length
+    ) {
+      setRowGradePreviewsLoading(false);
+      return () => controller.abort();
+    }
+
+    setRowGradePreviewsLoading(true);
+    let nextIndex = 0;
+    // Bound requests so a full class never floods the backend.
+    const worker = async () => {
+      while (!controller.signal.aborted) {
+        const index = nextIndex++;
+        if (index >= ids.length) return;
+        const studentId = ids[index];
+        const versionAtRequest =
+          rowPreviewChangeVersions.current[studentId] ?? 0;
+        try {
+          const response = await authService.authFetch(
+            `${MODERN_GRADEBOOK_API}/${offeringId}/students/${studentId}/grade-preview`,
+            { method: "GET", signal: controller.signal },
+          );
+          if (controller.signal.aborted) return;
+          if (response.status === 401) {
+            controller.abort();
+            authService.logout();
+            navigate("/login", { replace: true });
+            return;
+          }
+          const data =
+            await readJsonResponse<ModernGradePreviewResponse>(response);
+          if (
+            !controller.signal.aborted &&
+            response.ok &&
+            data.success &&
+            data.offering_id === offeringId &&
+            data.student?.enrollment_subject_id === studentId &&
+            data.terms?.MIDTERM &&
+            data.terms?.FINAL_TERM &&
+            data.semester &&
+            (rowPreviewChangeVersions.current[studentId] ?? 0) ===
+              versionAtRequest
+          ) {
+            setRowGradePreviews((current) => ({
+              ...current,
+              [studentId]: data,
+            }));
+          }
+        } catch {
+          // Some historical/locked grades do not expose a live calculation.
+          // Their official numeric rating is displayed separately.
+        }
+      }
+    };
+
+    void Promise.all(
+      Array.from({ length: Math.min(4, ids.length) }, worker),
+    ).finally(() => {
+      if (!controller.signal.aborted) setRowGradePreviewsLoading(false);
+    });
+
+    return () => controller.abort();
+  }, [
+    authenticated,
+    canUseTeachingGradebook,
+    selectedOfferingId,
+    rowPreviewStudentIds,
+    gradebookRefreshKey,
+    rowPreviewBatchRefreshKey,
+    navigate,
+  ]);
+
+  // After a score auto-save, refresh only that student's totals.
+  useEffect(() => {
+    const offeringId = selectedOfferingId;
+    const studentId = rowPreviewRefreshTarget.studentId;
+    if (
+      !offeringId ||
+      !studentId ||
+      !rowPreviewStudentIds.split(",").includes(String(studentId))
+    )
+      return;
+
+    const controller = new AbortController();
+    const versionAtRequest = rowPreviewChangeVersions.current[studentId] ?? 0;
+    const reload = async () => {
+      try {
+        const response = await authService.authFetch(
+          `${MODERN_GRADEBOOK_API}/${offeringId}/students/${studentId}/grade-preview`,
+          { method: "GET", signal: controller.signal },
+        );
+        if (controller.signal.aborted || !response.ok) return;
+        const data =
+          await readJsonResponse<ModernGradePreviewResponse>(response);
+        if (
+          !controller.signal.aborted &&
+          activeOfferingIdRef.current === offeringId &&
+          (rowPreviewChangeVersions.current[studentId] ?? 0) ===
+            versionAtRequest &&
+          data.success &&
+          data.offering_id === offeringId &&
+          data.student?.enrollment_subject_id === studentId &&
+          data.terms?.MIDTERM &&
+          data.terms?.FINAL_TERM &&
+          data.semester
+        ) {
+          setRowGradePreviews((current) => {
+            if (
+              activeOfferingIdRef.current !== offeringId ||
+              (rowPreviewChangeVersions.current[studentId] ?? 0) !==
+                versionAtRequest
+            )
+              return current;
+            return { ...current, [studentId]: data };
+          });
+        }
+      } catch {
+        // Leave the last confirmed calculation visible until the next refresh.
+      }
+    };
+    void reload();
+    return () => controller.abort();
+  }, [rowPreviewRefreshTarget, selectedOfferingId, rowPreviewStudentIds]);
+
   const handleClassChange = (value: string) => {
+    if (semesterSubmitting || resubmittingCombined) {
+      return;
+    }
+
     const nextId = parsePositiveInt(value);
 
     if (!nextId) {
@@ -3771,12 +4220,21 @@ export default function EnterGrades() {
 
     setAssessmentManagerOpen(false);
     setAssessmentStructure(null);
+    setAttendanceModalOpen(false);
+
+    activeOfferingIdRef.current = nextId;
+    activePreviewStudentIdRef.current = null;
     setSelectedOfferingId(nextId);
 
     setStudentSearch("");
     setStatusFilter("All");
 
     setPreviewStudentId(null);
+
+    setSemesterSubmissionError("");
+    setSemesterSubmissionMessage("");
+    setResubmissionError("");
+    setResubmissionMessage("");
 
     setGradebookError("");
   };
@@ -3820,18 +4278,25 @@ export default function EnterGrades() {
   };
 
   const backToClasses = () => {
-    navigate("/faculty/classes");
+    navigate(
+      userRole === "Program Head"
+        ? "/programhead/class/management"
+        : "/faculty/classes",
+    );
   };
 
   const viewRoster = () => {
-    if (!selectedOfferingId) {
+    if (!selectedOfferingId) return;
+
+    if (userRole === "Program Head") {
+      navigate("/programhead/class/management");
       return;
     }
 
     navigate(`/faculty/classes/students?offering_id=${selectedOfferingId}`);
   };
 
-  if (!authenticated || userRole !== "Faculty") {
+  if (!authenticated || !canUseTeachingGradebook) {
     return null;
   }
 
@@ -3844,7 +4309,9 @@ export default function EnterGrades() {
               <span className="faculty-grade-eyebrow__icon">
                 <FilePenLine size={16} strokeWidth={2.2} />
               </span>
-              Faculty · Grade Encoding
+              {userRole === "Program Head"
+                ? "Program Head · Teaching Gradebook"
+                : "Faculty · Grade Encoding"}
             </div>
 
             <h1>Enter Grades</h1>
@@ -3863,7 +4330,9 @@ export default function EnterGrades() {
               disabled={!selectedOfferingId}
             >
               <UsersRound size={16} />
-              View Student List
+              {userRole === "Program Head"
+                ? "Class Management"
+                : "View Student List"}
             </button>
 
             <button
@@ -3872,7 +4341,7 @@ export default function EnterGrades() {
               onClick={backToClasses}
             >
               <ArrowLeft size={16} strokeWidth={2.1} />
-              My Classes
+              {userRole === "Program Head" ? "Class Management" : "My Classes"}
             </button>
           </div>
         </section>
@@ -3884,8 +4353,10 @@ export default function EnterGrades() {
             </span>
 
             <div className="faculty-grade-faculty__copy">
-              <small>Faculty</small>
-              <strong>{faculty?.faculty_name || "Faculty"}</strong>
+              <small>
+                {userRole === "Program Head" ? "Program Head" : "Faculty"}
+              </small>
+              <strong>{faculty?.faculty_name || "Instructor"}</strong>
               <span>
                 {faculty?.employee_number || "Employee number unavailable"}
               </span>
@@ -3927,13 +4398,19 @@ export default function EnterGrades() {
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck={false}
-                    disabled={classesLoading || classes.length === 0}
+                    disabled={
+                      classesLoading ||
+                      classes.length === 0 ||
+                      semesterSubmitting ||
+                      resubmittingCombined
+                    }
                   />
 
                   {classSearch && (
                     <button
                       type="button"
                       aria-label="Clear class search"
+                      disabled={semesterSubmitting || resubmittingCombined}
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => setClassSearch("")}
                     >
@@ -3942,56 +4419,59 @@ export default function EnterGrades() {
                   )}
                 </div>
 
-                {classSearchFocused && classSearch.trim() && (
-                  <div
-                    className="faculty-assigned-class-suggestions"
-                    role="listbox"
-                    aria-label="Matching assigned classes"
-                  >
-                    {filteredAssignedClasses.length === 0 ? (
-                      <div className="faculty-assigned-class-suggestions__empty">
-                        <Search size={16} />
-                        <span>No matching assigned class</span>
-                      </div>
-                    ) : (
-                      filteredAssignedClasses.slice(0, 8).map((item) => {
-                        const isSelected =
-                          item.offering_id === selectedOfferingId;
+                {classSearchFocused &&
+                  !semesterSubmitting &&
+                  !resubmittingCombined &&
+                  classSearch.trim() && (
+                    <div
+                      className="faculty-assigned-class-suggestions"
+                      role="listbox"
+                      aria-label="Matching assigned classes"
+                    >
+                      {filteredAssignedClasses.length === 0 ? (
+                        <div className="faculty-assigned-class-suggestions__empty">
+                          <Search size={16} />
+                          <span>No matching assigned class</span>
+                        </div>
+                      ) : (
+                        filteredAssignedClasses.slice(0, 8).map((item) => {
+                          const isSelected =
+                            item.offering_id === selectedOfferingId;
 
-                        return (
-                          <button
-                            key={item.offering_id}
-                            type="button"
-                            className={`faculty-assigned-class-suggestion ${
-                              isSelected ? "is-selected" : ""
-                            }`}
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              selectAssignedClass(item);
-                              setClassSearchFocused(false);
-                            }}
-                          >
-                            <div>
-                              <strong>
-                                {item.subject.subject_code} —{" "}
-                                {item.section.section_name}
-                              </strong>
-                              <span>
-                                {item.academic_period.academic_year} /{" "}
-                                {item.academic_period.semester_name}
-                              </span>
-                            </div>
+                          return (
+                            <button
+                              key={item.offering_id}
+                              type="button"
+                              className={`faculty-assigned-class-suggestion ${
+                                isSelected ? "is-selected" : ""
+                              }`}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                selectAssignedClass(item);
+                                setClassSearchFocused(false);
+                              }}
+                            >
+                              <div>
+                                <strong>
+                                  {item.subject.subject_code} —{" "}
+                                  {item.section.section_name}
+                                </strong>
+                                <span>
+                                  {item.academic_period.academic_year} /{" "}
+                                  {item.academic_period.semester_name}
+                                </span>
+                              </div>
 
-                            <small>
-                              {item.subject.subject_name} ·{" "}
-                              {item.section.course.course_code}
-                            </small>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                )}
+                              <small>
+                                {item.subject.subject_name} ·{" "}
+                                {item.section.course.course_code}
+                              </small>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
               </div>
 
               <small>Start typing to see matching assigned classes.</small>
@@ -4119,6 +4599,7 @@ export default function EnterGrades() {
         <section
           className="faculty-grade-summary"
           aria-label="Grade status summary"
+          style={gradebookError ? { display: "none" } : undefined}
         >
           <article className="faculty-grade-summary-card faculty-grade-summary-card--total">
             <span className="faculty-grade-summary-icon">
@@ -4205,6 +4686,68 @@ export default function EnterGrades() {
           </section>
         )}
 
+        {gradebookError &&
+          !classesLoading &&
+          modernGradebook?.offering_id === selectedOfferingId && (
+            <section
+              className="faculty-gradebook"
+              aria-label="Read-only assessment roster"
+            >
+              <header className="faculty-gradebook-header">
+                <div className="faculty-gradebook-header__title">
+                  <span className="faculty-gradebook-header__icon">
+                    <BookOpenCheck size={18} />
+                  </span>
+
+                  <div>
+                    <span>Assessment Roster</span>
+                    <h2>Students — Read-only</h2>
+                    <p>
+                      The modern roster loaded, but official grade statuses are
+                      unavailable. Editing and submission remain locked.
+                    </p>
+                  </div>
+                </div>
+              </header>
+
+              <div className="faculty-grade-table-wrapper">
+                <table className="faculty-grade-table">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Subject Status</th>
+                      <th>Official Grade Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {modernGradebook.students.map((student) => (
+                      <tr key={student.enrollment_subject_id}>
+                        <td>
+                          <div className="faculty-grade-student">
+                            <div>
+                              <strong>{student.student_name}</strong>
+                              <span>{student.student_number}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>{student.enrollment_subject_status}</td>
+
+                        <td>
+                          <span className="faculty-grade-locked">
+                            <ShieldCheck size={13} />
+                            Unknown · Read-only
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
         {(classesLoading || gradebookLoading) && (
           <section className="faculty-grade-loading">
             <div className="faculty-grade-spinner" />
@@ -4219,7 +4762,7 @@ export default function EnterGrades() {
         {!classesLoading &&
           !gradebookLoading &&
           !gradebookError &&
-          gradebookClass && (
+          selectedClass && (
             <section className="faculty-gradebook">
               <header className="faculty-gradebook-header">
                 <div className="faculty-gradebook-header__title">
@@ -4228,11 +4771,12 @@ export default function EnterGrades() {
                   </span>
 
                   <div>
-                    <span>Official Class Record</span>
-                    <h2>Class Gradebook</h2>
+                    <span>Assessment-Based Grading · One Sheet</span>
+                    <h2>Semester Gradebook</h2>
                     <p>
-                      Enter assessment scores and view backend-calculated
-                      grades. Existing official results stay read-only.
+                      Midterm and Final Term are displayed together. Enter
+                      scores directly; attendance and semester totals are
+                      calculated by the backend. Official grades stay read-only.
                     </p>
                   </div>
                 </div>
@@ -4312,7 +4856,7 @@ export default function EnterGrades() {
                       Showing <strong>{filteredStudents.length}</strong> of{" "}
                       <strong>{students.length}</strong> students
                       {termAssessmentColumns.length > 0 &&
-                        " · Scroll right to enter assessment scores"}
+                        " · Scroll right to view Midterm, Final Term and semester results"}
                     </span>
                     {modernGradebook?.offering_id === selectedOfferingId ? (
                       <div
@@ -4323,16 +4867,19 @@ export default function EnterGrades() {
                           flexWrap: "wrap",
                         }}
                       >
+                        <span className="faculty-semester-grade-table__hint">
+                          Midterm 50% + Final Term 50% · One sheet
+                        </span>
                         <label className="faculty-gradebook-filter">
-                          <span>Assessment Term</span>
+                          <span>Manage Term</span>
                           <select
                             value={assessmentTerm}
                             onChange={(event) =>
                               setAssessmentTerm(
-                                event.target.value as "MIDTERM" | "FINAL_TERM",
+                                event.target.value as AssessmentTerm,
                               )
                             }
-                            aria-label="Assessment term to display"
+                            aria-label="Term for assessment management"
                           >
                             <option value="MIDTERM">Midterm</option>
                             <option value="FINAL_TERM">Final Term</option>
@@ -4347,6 +4894,33 @@ export default function EnterGrades() {
                           <FilePenLine size={15} />
                           Manage Assessments
                         </button>
+                        <button
+                          type="button"
+                          className="faculty-grade-header-button"
+                          onClick={() => setAttendanceModalOpen(true)}
+                          disabled={!attendanceRosterReady}
+                        >
+                          <CalendarDays size={15} />
+                          Attendance
+                        </button>
+                        <button
+                          type="button"
+                          className="faculty-grade-header-button"
+                          onClick={() =>
+                            document
+                              .getElementById(
+                                "faculty-grade-calculation-preview",
+                              )
+                              ?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                              })
+                          }
+                          disabled={previewStudentId === null}
+                        >
+                          <BookOpenCheck size={15} />
+                          Grade Preview
+                        </button>
                       </div>
                     ) : (
                       <small title={modernGradebookError || undefined}>
@@ -4359,40 +4933,120 @@ export default function EnterGrades() {
                     )}
                   </div>
 
-                  <div className="faculty-grade-table-wrapper">
+                  <div
+                    className="faculty-grade-table-wrapper faculty-grade-table-wrapper--semester"
+                    role="region"
+                    aria-label="Combined Midterm and Final Term gradebook"
+                    tabIndex={0}
+                  >
                     <table
-                      className="faculty-grade-table"
+                      className="faculty-grade-table faculty-semester-grade-table"
                       style={{
-                        minWidth: 860 + termAssessmentColumns.length * 185,
+                        minWidth:
+                          230 +
+                          termAssessmentColumns.length * 155 +
+                          2 * 112 +
+                          3 * 125,
                       }}
                     >
+                      <colgroup>
+                        <col style={{ width: 230 }} />
+                        {midtermAssessmentColumns.map((column, index) => (
+                          <col
+                            key={`midterm-${column.assessment?.assessment_id ?? `category-${index}`}`}
+                            style={{ width: 155 }}
+                          />
+                        ))}
+                        <col style={{ width: 112 }} />
+                        {finalTermAssessmentColumns.map((column, index) => (
+                          <col
+                            key={`final-${column.assessment?.assessment_id ?? `category-${index}`}`}
+                            style={{ width: 155 }}
+                          />
+                        ))}
+                        <col style={{ width: 112 }} />
+                        <col style={{ width: 125 }} />
+                        <col style={{ width: 125 }} />
+                        <col style={{ width: 125 }} />
+                      </colgroup>
                       <thead>
-                        <tr>
-                          <th>Student</th>
-                          <th>Academic Status</th>
-                          <th>Official Record</th>
-                          <th>Grade Calculation</th>
-                          {termAssessmentColumns.map(
-                            ({ category, assessment }) => (
+                        <tr className="faculty-semester-grade-table__groups">
+                          <th
+                            rowSpan={2}
+                            className="faculty-semester-grade-table__sticky"
+                          >
+                            Student / Class Status
+                          </th>
+                          <th
+                            colSpan={midtermAssessmentColumns.length + 1}
+                            className="faculty-semester-grade-table__group faculty-semester-grade-table__group--midterm"
+                          >
+                            Midterm · 50%
+                          </th>
+                          <th
+                            colSpan={finalTermAssessmentColumns.length + 1}
+                            className="faculty-semester-grade-table__group faculty-semester-grade-table__group--final"
+                          >
+                            Final Term · 50%
+                          </th>
+                          <th
+                            colSpan={3}
+                            className="faculty-semester-grade-table__group faculty-semester-grade-table__group--semester"
+                          >
+                            Semester Result
+                          </th>
+                        </tr>
+                        <tr className="faculty-semester-grade-table__columns">
+                          {(["MIDTERM", "FINAL_TERM"] as const).flatMap(
+                            (term) => [
+                              ...termAssessmentColumns
+                                .filter((column) => column.term === term)
+                                .map(({ category, assessment }) => (
+                                  <th
+                                    key={`${term}:${category.category_code}:${assessment?.assessment_id ?? "none"}`}
+                                    className={
+                                      term === "MIDTERM"
+                                        ? "faculty-semester-grade-table__midterm"
+                                        : "faculty-semester-grade-table__final"
+                                    }
+                                    title={`${category.category_name} · ${category.category_percent}% of ${term === "MIDTERM" ? "Midterm" : "Final Term"}`}
+                                  >
+                                    <div>
+                                      {category.category_name} ·{" "}
+                                      {category.category_percent}%
+                                    </div>
+                                    <small>
+                                      {assessment
+                                        ? `${assessment.header_name} · Max ${assessment.maximum_score}`
+                                        : category.category_code ===
+                                            "ATTENDANCE"
+                                          ? "Per held meeting"
+                                          : "Not configured"}
+                                    </small>
+                                  </th>
+                                )),
                               <th
-                                key={`${category.category_code}:${assessment?.assessment_id ?? "none"}`}
-                                title={`${category.category_name} · ${category.category_percent}%`}
-                                style={{ minWidth: 185 }}
+                                key={`${term}:total`}
+                                className={
+                                  term === "MIDTERM"
+                                    ? "faculty-semester-grade-table__term-total-head"
+                                    : "faculty-semester-grade-table__term-total-head faculty-semester-grade-table__final-total-head"
+                                }
                               >
-                                <div>
-                                  {category.category_name} ·{" "}
-                                  {category.category_percent}%
-                                </div>
-                                <small>
-                                  {assessment
-                                    ? `${assessment.header_name} (Max ${assessment.maximum_score})`
-                                    : category.category_code === "ATTENDANCE"
-                                      ? "Attendance per meeting"
-                                      : "No assessments yet"}
-                                </small>
-                              </th>
-                            ),
+                                {term === "MIDTERM" ? "Midterm" : "Final Term"}
+                                <small>Total %</small>
+                              </th>,
+                            ],
                           )}
+                          <th className="faculty-semester-grade-table__result-head">
+                            Semester <small>Percentage</small>
+                          </th>
+                          <th className="faculty-semester-grade-table__result-head">
+                            Numeric <small>Equivalent</small>
+                          </th>
+                          <th className="faculty-semester-grade-table__result-head">
+                            Grade <small>Status</small>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4401,14 +5055,150 @@ export default function EnterGrades() {
                           const record =
                             modernStudentByEnrollmentSubject.get(id);
                           const status = getGradeStatus(student);
+                          const currentPreview =
+                            modernPreview?.offering_id === selectedOfferingId &&
+                            modernPreview.student.enrollment_subject_id ===
+                              id &&
+                            !modernPreviewLoading
+                              ? modernPreview
+                              : (rowGradePreviews[id] ?? null);
+
+                          const officialRating = student.grade?.final_rating;
+                          const savedOfficialTerm = (term: AssessmentTerm) => {
+                            if (status !== "Approved") return null;
+                            const value =
+                              term === "MIDTERM"
+                                ? student.grade?.midterm_grade
+                                : student.grade?.final_grade;
+                            return value == null
+                              ? null
+                              : Number(value).toFixed(2);
+                          };
+                          const savedOfficialSemester =
+                            status === "Approved" &&
+                            student.grade?.overall_percentage != null
+                              ? Number(
+                                  student.grade.overall_percentage,
+                                ).toFixed(2)
+                              : null;
+                          const numeric =
+                            status === "Approved" && officialRating != null
+                              ? Number(officialRating).toFixed(2)
+                              : (currentPreview?.semester.numeric_equivalent ??
+                                (officialRating != null
+                                  ? Number(officialRating).toFixed(2)
+                                  : "—"));
+
+                          const renderTermCells = (term: AssessmentTerm) => {
+                            const columns = termAssessmentColumns.filter(
+                              (column) => column.term === term,
+                            );
+                            return [
+                              ...columns.map(({ category, assessment }) => {
+                                const score = assessment
+                                  ? (record?.scores_by_assessment_id[
+                                      String(assessment.assessment_id)
+                                    ] ?? null)
+                                  : null;
+                                const canEditAssessment = Boolean(
+                                  assessment &&
+                                  record?.is_current_enrolled &&
+                                  selectedClass?.offering_status === "Open" &&
+                                  !semesterSubmitting &&
+                                  !resubmittingCombined &&
+                                  (status === "Not Started" ||
+                                    status === "Draft" ||
+                                    (status === "Returned" &&
+                                      previewStudentId === id &&
+                                      returnedSubmission !== null &&
+                                      (returnedSubmission.returned_edit_scope ===
+                                        "BOTH" ||
+                                        returnedSubmission.returned_edit_scope ===
+                                          term))),
+                                );
+                                const attendance =
+                                  category.category_code === "ATTENDANCE"
+                                    ? currentPreview?.terms?.[
+                                        term
+                                      ]?.categories.find(
+                                        (item) =>
+                                          item.category_code === "ATTENDANCE",
+                                      )
+                                    : null;
+                                return (
+                                  <td
+                                    key={`${term}:${category.category_code}:${assessment?.assessment_id ?? "none"}`}
+                                  >
+                                    {assessment &&
+                                    record &&
+                                    selectedOfferingId ? (
+                                      <AssessmentScoreCell
+                                        key={`${selectedOfferingId}:${id}:${assessment.assessment_id}`}
+                                        offeringId={selectedOfferingId}
+                                        enrollmentSubjectId={id}
+                                        studentNumber={student.student_number}
+                                        assessment={assessment}
+                                        score={score}
+                                        canEdit={canEditAssessment}
+                                        onSave={saveAssessmentScore}
+                                        onConflict={reloadAfterScoreConflict}
+                                      />
+                                    ) : (
+                                      <div className="faculty-grade-rating-field">
+                                        <strong>
+                                          {assessment
+                                            ? "Not on roster"
+                                            : attendance?.state === "READY"
+                                              ? `${attendance.category_percentage?.display ?? "—"}%`
+                                              : category.category_code ===
+                                                  "ATTENDANCE"
+                                                ? "—"
+                                                : "Not configured"}
+                                        </strong>
+                                        <small>
+                                          {category.category_code ===
+                                          "ATTENDANCE"
+                                            ? "From attendance register"
+                                            : "Read-only"}
+                                        </small>
+                                      </div>
+                                    )}
+                                  </td>
+                                );
+                              }),
+                              <td
+                                key={`${term}:total`}
+                                className={`faculty-semester-grade-table__term-total ${term === "FINAL_TERM" ? "faculty-semester-grade-table__term-total--final" : ""}`}
+                              >
+                                <strong>
+                                  {currentPreview?.terms?.[term]
+                                    ?.term_percentage?.display != null
+                                    ? `${currentPreview.terms[term].term_percentage!.display}%`
+                                    : savedOfficialTerm(term) != null
+                                      ? `${savedOfficialTerm(term)}%`
+                                      : "—"}
+                                </strong>
+                                <small>
+                                  {currentPreview?.terms?.[
+                                    term
+                                  ]?.state?.replaceAll("_", " ") ??
+                                    (savedOfficialTerm(term) != null
+                                      ? "Official record"
+                                      : rowGradePreviewsLoading &&
+                                          record?.is_current_enrolled
+                                        ? "Calculating..."
+                                        : "Not available")}
+                                </small>
+                              </td>,
+                            ];
+                          };
+
                           return (
                             <tr
                               key={id}
-                              className={
-                                status === "Returned" ? "returned-row" : ""
-                              }
+                              className={`${status === "Returned" ? "returned-row" : ""} ${previewStudentId === id ? "faculty-semester-grade-table__selected" : ""}`}
                             >
-                              <td>
+                              <td className="faculty-semester-grade-table__sticky">
                                 <div className="faculty-grade-student">
                                   <span className="faculty-grade-student__avatar">
                                     <UserRound size={16} />
@@ -4416,132 +5206,95 @@ export default function EnterGrades() {
                                   <div>
                                     <strong>{student.full_name}</strong>
                                     <span>{student.student_number}</span>
-                                    <small>Enrollment Subject #{id}</small>
+                                    <small>
+                                      {student.subject_status} · #{id}
+                                    </small>
+                                    {record?.is_current_enrolled && (
+                                      <button
+                                        type="button"
+                                        className="faculty-semester-grade-table__view"
+                                        disabled={
+                                          semesterSubmitting ||
+                                          resubmittingCombined
+                                        }
+                                        onClick={() => {
+                                          activePreviewStudentIdRef.current =
+                                            id;
+                                          setPreviewStudentId(id);
+                                          setSemesterSubmissionError("");
+                                          setSemesterSubmissionMessage("");
+                                          setResubmissionError("");
+                                          setResubmissionMessage("");
+                                        }}
+                                        aria-pressed={previewStudentId === id}
+                                      >
+                                        <BookOpenCheck size={13} />
+                                        {previewStudentId === id
+                                          ? "Selected for review"
+                                          : "Review grade"}
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               </td>
-                              <td>
-                                <div className="faculty-grade-status-cell">
-                                  <strong>{student.subject_status}</strong>
-                                  <span
-                                    className={`faculty-grade-status ${status.toLowerCase().replace(/\s+/g, "-")}`}
-                                  >
-                                    {status}
-                                  </span>
-                                </div>
+                              {renderTermCells("MIDTERM")}
+                              {renderTermCells("FINAL_TERM")}
+                              <td className="faculty-semester-grade-table__semester-value">
+                                <strong>
+                                  {currentPreview?.semester.semester_percentage
+                                    ?.display != null
+                                    ? `${currentPreview.semester.semester_percentage.display}%`
+                                    : savedOfficialSemester != null
+                                      ? `${savedOfficialSemester}%`
+                                      : "—"}
+                                </strong>
+                                <small>
+                                  {currentPreview?.semester.state?.replaceAll(
+                                    "_",
+                                    " ",
+                                  ) ??
+                                    (savedOfficialSemester != null
+                                      ? "Official record"
+                                      : "Not available")}
+                                </small>
                               </td>
-                              <td>
-                                <div className="faculty-grade-rating-field">
-                                  <strong>
-                                    {student.grade?.final_rating == null
-                                      ? "—"
-                                      : Number(
-                                          student.grade.final_rating,
-                                        ).toFixed(2)}
-                                  </strong>
+                              <td className="faculty-semester-grade-table__numeric-value">
+                                <strong>{numeric}</strong>
+                                <small>
+                                  {status === "Approved"
+                                    ? "Official"
+                                    : "Calculated / saved"}
+                                </small>
+                              </td>
+                              <td className="faculty-semester-grade-table__status-value">
+                                <span
+                                  className={`faculty-grade-status ${status.toLowerCase().replace(/\s+/g, "-")}`}
+                                >
+                                  {status}
+                                </span>
+                                {status === "Approved" && (
                                   <small>
-                                    {status === "Approved"
-                                      ? "Approved record · Read-only"
-                                      : "Historical / submission record"}
+                                    <ShieldCheck size={12} /> Read-only
                                   </small>
-                                </div>
-                              </td>
-                              <td>
-                                {record?.is_current_enrolled ? (
-                                  <button
-                                    type="button"
-                                    className="faculty-grade-header-button"
-                                    onClick={() => {
-                                      setPreviewStudentId(id);
-                                      setSemesterSubmissionError("");
-                                      setSemesterSubmissionMessage("");
-                                    }}
-                                    aria-pressed={previewStudentId === id}
-                                  >
-                                    <BookOpenCheck size={14} />
-                                    {previewStudentId === id
-                                      ? "Selected"
-                                      : "View Calculation"}
-                                  </button>
-                                ) : (
-                                  <span className="faculty-grade-locked">
-                                    <ShieldCheck size={13} /> Official record
-                                    protected
-                                  </span>
                                 )}
                               </td>
-                              {termAssessmentColumns.map(
-                                ({ category, assessment }) => {
-                                  const score = assessment
-                                    ? (record?.scores_by_assessment_id[
-                                        String(assessment.assessment_id)
-                                      ] ?? null)
-                                    : null;
-                                  const canEditAssessment = Boolean(
-                                    assessment &&
-                                    record?.is_current_enrolled &&
-                                    selectedClass?.offering_status === "Open" &&
-                                    [127, 128, 130, 131].includes(
-                                      selectedOfferingId ?? -1,
-                                    ) &&
-                                    (status === "Not Started" ||
-                                      status === "Draft" ||
-                                      (status === "Returned" &&
-                                        previewStudentId === id &&
-                                        returnedSubmission !== null &&
-                                        (returnedSubmission.returned_edit_scope ===
-                                          "BOTH" ||
-                                          returnedSubmission.returned_edit_scope ===
-                                            assessmentTerm))),
-                                  );
-                                  return (
-                                    <td
-                                      key={`${category.category_code}:${assessment?.assessment_id ?? "none"}`}
-                                    >
-                                      {assessment &&
-                                      record &&
-                                      selectedOfferingId ? (
-                                        <AssessmentScoreCell
-                                          key={`${selectedOfferingId}:${id}:${assessment.assessment_id}`}
-                                          offeringId={selectedOfferingId}
-                                          enrollmentSubjectId={id}
-                                          studentNumber={student.student_number}
-                                          assessment={assessment}
-                                          score={score}
-                                          canEdit={canEditAssessment}
-                                          onSave={saveAssessmentScore}
-                                          onConflict={reloadAfterScoreConflict}
-                                        />
-                                      ) : (
-                                        <div className="faculty-grade-rating-field">
-                                          <strong>
-                                            {assessment
-                                              ? "Not on roster"
-                                              : category.category_code ===
-                                                  "ATTENDANCE"
-                                                ? "Attendance"
-                                                : "Not configured"}
-                                          </strong>
-                                          <small>
-                                            {category.category_code ===
-                                            "ATTENDANCE"
-                                              ? "Use attendance register"
-                                              : "No assessment column"}
-                                          </small>
-                                        </div>
-                                      )}
-                                    </td>
-                                  );
-                                },
-                              )}
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
                   </div>
+                  <div className="faculty-gradebook-table-meta faculty-semester-grade-table__note">
+                    <small>
+                      Midterm and Final Term share one sheet. Attendance comes
+                      from held meetings; all percentages are calculated by the
+                      backend. Unavailable calculations are shown as —. Approved
+                      grades use preserved official results where available.
+                    </small>
+                  </div>
                   {previewStudentId !== null && (
                     <div
+                      id="faculty-grade-calculation-preview"
                       className="faculty-gradebook-table-meta"
                       style={{ display: "block" }}
                     >
@@ -4551,6 +5304,8 @@ export default function EnterGrades() {
                         <p role="alert">{modernPreviewError}</p>
                       )}
                       {modernPreview &&
+                        !modernPreviewLoading &&
+                        modernPreview.offering_id === selectedOfferingId &&
                         modernPreview.student.enrollment_subject_id ===
                           previewStudentId && (
                           <div>
@@ -4671,77 +5426,85 @@ export default function EnterGrades() {
                               <div className="faculty-gradebook-table-meta">
                                 <div>
                                   <strong>
-                                    {returnedSpecialSubmission &&
-                                      selectedOfferingId &&
-                                      selectedClass?.offering_status ===
-                                        "Open" &&
-                                      modernStudentByEnrollmentSubject.get(
-                                        previewStudentId,
-                                      )?.is_current_enrolled &&
-                                      students.some(
-                                        (student) =>
-                                          student.enrollment_subject_id ===
-                                            previewStudentId &&
-                                          student.grade?.grade_status ===
-                                            "Returned",
-                                      ) && (
-                                        <ReturnedSpecialOutcomeResubmission
-                                          key={`${selectedOfferingId}:${previewStudentId}:${returnedSpecialSubmission.previous.submission_id}`}
-                                          offeringId={selectedOfferingId}
-                                          student={
-                                            students.find(
-                                              (student) =>
-                                                student.enrollment_subject_id ===
-                                                previewStudentId,
-                                            )!
-                                          }
-                                          previous={
-                                            returnedSpecialSubmission.previous
-                                          }
-                                          original={
-                                            returnedSpecialSubmission.original
-                                          }
-                                          onSubmitted={(submissionId) => {
-                                            setResubmissionMessage(
-                                              `Revised special-outcome submission #${submissionId} saved for Program Head review.`,
-                                            );
-
-                                            setGradebookRefreshKey(
-                                              (value) => value + 1,
-                                            );
-                                            setModernPreviewRefreshKey(
-                                              (value) => value + 1,
-                                            );
-                                          }}
-                                        />
-                                      )}
-                                    {students.some(
+                                    Returned Grade — Revise and Resubmit
+                                  </strong>
+                                  {returnedSpecialSubmission &&
+                                    selectedOfferingId &&
+                                    selectedClass?.offering_status === "Open" &&
+                                    modernStudentByEnrollmentSubject.get(
+                                      previewStudentId,
+                                    )?.is_current_enrolled &&
+                                    students.some(
                                       (student) =>
                                         student.enrollment_subject_id ===
                                           previewStudentId &&
                                         student.grade?.grade_status ===
-                                          "Returned" &&
-                                        [
-                                          "INCOMPLETE",
-                                          "UNOFFICIAL_DROP",
-                                        ].includes(
-                                          student.grade.grading_outcome ?? "",
-                                        ),
-                                    ) &&
-                                      !returnedSpecialSubmission && (
-                                        <div className="faculty-gradebook-table-meta">
-                                          <strong>Returned INC / UD</strong>
+                                          "Returned",
+                                    ) && (
+                                      <ReturnedSpecialOutcomeResubmission
+                                        key={`${selectedOfferingId}:${previewStudentId}:${returnedSpecialSubmission.previous.submission_id}`}
+                                        offeringId={selectedOfferingId}
+                                        student={
+                                          students.find(
+                                            (student) =>
+                                              student.enrollment_subject_id ===
+                                              previewStudentId,
+                                          )!
+                                        }
+                                        previous={
+                                          returnedSpecialSubmission.previous
+                                        }
+                                        original={
+                                          returnedSpecialSubmission.original
+                                        }
+                                        onSubmitted={(submissionId) => {
+                                          if (
+                                            activeOfferingIdRef.current !==
+                                              selectedOfferingId ||
+                                            activePreviewStudentIdRef.current !==
+                                              previewStudentId
+                                          ) {
+                                            return;
+                                          }
 
-                                          <p>
-                                            {latestCombinedLoading
-                                              ? "Checking return evidence..."
-                                              : latestCombinedError ||
-                                                "Special-outcome evidence resubmission is unavailable for this student. Editing is locked."}
-                                          </p>
-                                        </div>
-                                      )}
-                                    Returned Grade — Revise and Resubmit
-                                  </strong>
+                                          setResubmissionMessage(
+                                            `Revised special-outcome submission #${submissionId} saved for Program Head review.`,
+                                          );
+
+                                          setGradebookRefreshKey(
+                                            (value) => value + 1,
+                                          );
+                                          setModernPreviewRefreshKey(
+                                            (value) => value + 1,
+                                          );
+                                        }}
+                                      />
+                                    )}
+                                  {students.some(
+                                    (student) =>
+                                      student.enrollment_subject_id ===
+                                        previewStudentId &&
+                                      student.grade?.grade_status ===
+                                        "Returned" &&
+                                      [
+                                        "INCOMPLETE",
+                                        "UNOFFICIAL_DROP",
+                                      ].includes(
+                                        student.grade.grading_outcome ?? "",
+                                      ),
+                                  ) &&
+                                    !returnedSpecialSubmission && (
+                                      <div className="faculty-gradebook-table-meta">
+                                        <strong>Returned INC / UD</strong>
+
+                                        <p>
+                                          {latestCombinedLoading
+                                            ? "Checking return evidence..."
+                                            : latestCombinedError ||
+                                              "Special-outcome evidence resubmission is unavailable for this student. Editing is locked."}
+                                        </p>
+                                      </div>
+                                    )}
 
                                   {latestCombinedLoading ? (
                                     <p>Checking return instructions...</p>
@@ -4763,6 +5526,12 @@ export default function EnterGrades() {
                                           "See Program Head comments."}
                                       </p>
                                     </>
+                                  ) : returnedSpecialSubmission ? (
+                                    <p>
+                                      Revise the returned INC/UD evidence using
+                                      the form above. The revised submission
+                                      requires another Program Head review.
+                                    </p>
                                   ) : (
                                     <p>
                                       Returned submission details are
@@ -4775,28 +5544,31 @@ export default function EnterGrades() {
                                   )}
                                 </div>
 
-                                <button
-                                  type="button"
-                                  className="faculty-grade-header-button"
-                                  disabled={
-                                    !returnedSubmission ||
-                                    resubmittingCombined ||
-                                    modernPreviewLoading ||
-                                    modernPreview.semester.state !== "READY" ||
-                                    modernPreview.terms.MIDTERM.state !==
-                                      "READY" ||
-                                    modernPreview.terms.FINAL_TERM.state !==
-                                      "READY"
-                                  }
-                                  onClick={() =>
-                                    void resubmitReturnedSemester()
-                                  }
-                                >
-                                  <Send size={15} />
-                                  {resubmittingCombined
-                                    ? "Validating..."
-                                    : "Resubmit Semester Grade"}
-                                </button>
+                                {returnedSubmission && (
+                                  <button
+                                    type="button"
+                                    className="faculty-grade-header-button"
+                                    disabled={
+                                      resubmittingCombined ||
+                                      modernPreviewLoading ||
+                                      Boolean(modernPreviewError) ||
+                                      modernPreview.semester.state !==
+                                        "READY" ||
+                                      modernPreview.terms.MIDTERM.state !==
+                                        "READY" ||
+                                      modernPreview.terms.FINAL_TERM.state !==
+                                        "READY"
+                                    }
+                                    onClick={() =>
+                                      void resubmitReturnedSemester()
+                                    }
+                                  >
+                                    <Send size={15} />
+                                    {resubmittingCombined
+                                      ? "Validating..."
+                                      : "Resubmit Semester Grade"}
+                                  </button>
+                                )}
                               </div>
                             )}
 
@@ -4807,8 +5579,8 @@ export default function EnterGrades() {
                             {resubmissionMessage && (
                               <p role="status">{resubmissionMessage}</p>
                             )}
-                            {selectedOfferingId === 130 &&
-                              [277, 334].includes(previewStudentId) &&
+                            {selectedOfferingId !== null &&
+                              previewStudentId !== null &&
                               selectedClass?.offering_status === "Open" &&
                               modernStudentByEnrollmentSubject.get(
                                 previewStudentId,
@@ -4829,6 +5601,15 @@ export default function EnterGrades() {
                                     )!
                                   }
                                   onSubmitted={() => {
+                                    if (
+                                      activeOfferingIdRef.current !==
+                                        selectedOfferingId ||
+                                      activePreviewStudentIdRef.current !==
+                                        previewStudentId
+                                    ) {
+                                      return;
+                                    }
+
                                     setGradebookRefreshKey(
                                       (value) => value + 1,
                                     );
@@ -4848,15 +5629,27 @@ export default function EnterGrades() {
                                 </p>
                               </div>
 
-                              {students.some(
-                                (student) =>
+                              {!students.some((student) => {
+                                const rosterStudent =
+                                  modernStudentByEnrollmentSubject.get(
+                                    student.enrollment_subject_id,
+                                  );
+
+                                return (
                                   student.enrollment_subject_id ===
-                                    previewStudentId && student.grade !== null,
-                              ) ? (
+                                    previewStudentId &&
+                                  student.grade === null &&
+                                  rosterStudent?.is_current_enrolled === true &&
+                                  rosterStudent.student_number
+                                    .trim()
+                                    .toUpperCase() ===
+                                    student.student_number.trim().toUpperCase()
+                                );
+                              }) ? (
                                 <small>
-                                  Existing grade record protected. New
-                                  first-time submission is unavailable for this
-                                  student.
+                                  New submission is unavailable. The student
+                                  must have a matching active roster record and
+                                  no existing grade.
                                 </small>
                               ) : (
                                 <button
@@ -4864,7 +5657,9 @@ export default function EnterGrades() {
                                   className="faculty-grade-header-button"
                                   disabled={
                                     semesterSubmitting ||
+                                    resubmittingCombined ||
                                     modernPreviewLoading ||
+                                    Boolean(modernPreviewError) ||
                                     modernPreview.semester.state !== "READY" ||
                                     modernPreview.terms.MIDTERM.state !==
                                       "READY" ||
@@ -4905,46 +5700,107 @@ export default function EnterGrades() {
               )}
             </section>
           )}
-        {!classesLoading &&
-          !gradebookLoading &&
-          !gradebookError &&
-          gradebookClass &&
-          selectedOfferingId && (
-            <AttendanceRegister
-              key={selectedOfferingId}
-              offeringId={selectedOfferingId}
-              refreshKey={gradebookRefreshKey}
-              onAttendanceSaved={() =>
-                setModernPreviewRefreshKey((current) => current + 1)
-              }
-              readOnlyStudentIds={students
-                .filter((student) =>
-                  ["Approved", "Submitted"].includes(
-                    student.grade?.grade_status ?? "",
-                  ),
-                )
-                .map((student) => student.enrollment_subject_id)}
-              returnedStudentIds={students
-                .filter((student) => student.grade?.grade_status === "Returned")
-                .map((student) => student.enrollment_subject_id)}
-              returnedPermission={
-                returnedSubmission && previewStudentId
-                  ? {
-                      enrollmentSubjectId: previewStudentId,
-                      scope: returnedSubmission.returned_edit_scope as
-                        | AssessmentTerm
-                        | "BOTH",
+
+        <dialog
+          ref={attendanceDialogRef}
+          className="faculty-attendance-modal"
+          aria-modal="true"
+          aria-labelledby="faculty-attendance-modal-title"
+          onClose={() => setAttendanceModalOpen(false)}
+        >
+          <div className="faculty-attendance-modal__layout">
+            <header className="faculty-attendance-modal__topbar">
+              <div>
+                <span>Faculty · Class Attendance</span>
+                <h2 id="faculty-attendance-modal-title">Attendance Register</h2>
+                <p>
+                  {selectedClass
+                    ? `${selectedClass.subject.subject_code} · ${selectedClass.section.section_name}`
+                    : "Select a class to manage attendance."}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="faculty-attendance-modal__close"
+                autoFocus
+                aria-label="Close attendance modal"
+                onClick={() => setAttendanceModalOpen(false)}
+              >
+                <X size={19} />
+              </button>
+            </header>
+            <div className="faculty-attendance-modal__content">
+              {attendanceModalOpen &&
+              attendanceRosterReady &&
+              selectedOfferingId ? (
+                <AttendanceRegister
+                  key={selectedOfferingId}
+                  offeringId={selectedOfferingId}
+                  refreshKey={gradebookRefreshKey}
+                  onAttendanceSaved={() => {
+                    if (activeOfferingIdRef.current === selectedOfferingId) {
+                      setModernPreviewRefreshKey((current) => current + 1);
+                      setRowPreviewBatchRefreshKey((current) => current + 1);
                     }
-                  : null
-              }
-            />
-          )}
+                  }}
+                  readOnlyStudentIds={students
+                    .filter((student) =>
+                      ["Approved", "Submitted"].includes(
+                        student.grade?.grade_status ?? "",
+                      ),
+                    )
+                    .map((student) => student.enrollment_subject_id)}
+                  returnedStudentIds={students
+                    .filter(
+                      (student) => student.grade?.grade_status === "Returned",
+                    )
+                    .map((student) => student.enrollment_subject_id)}
+                  returnedPermission={
+                    returnedSubmission && previewStudentId
+                      ? {
+                          enrollmentSubjectId: previewStudentId,
+                          scope: returnedSubmission.returned_edit_scope as
+                            | AssessmentTerm
+                            | "BOTH",
+                        }
+                      : null
+                  }
+                />
+              ) : (
+                <div className="faculty-grade-empty" role="status">
+                  <strong>Attendance is unavailable for this class</strong>
+                  <p>
+                    Wait for the class roster and official grade statuses to
+                    finish loading. Editing stays locked until both student
+                    lists match.
+                  </p>
+                </div>
+              )}
+            </div>
+            <footer className="faculty-attendance-modal__footer">
+              <span>
+                Save each student’s attendance before closing this window.
+              </span>
+              <button
+                type="button"
+                className="faculty-grade-header-button"
+                onClick={() => setAttendanceModalOpen(false)}
+              >
+                Close
+              </button>
+            </footer>
+          </div>
+        </dialog>
         {!classesLoading && classes.length > 0 && (
           <section className="faculty-grade-workflow-section">
             <header>
               <div>
                 <span>Assessment-Based Grading</span>
-                <h2>Faculty Grade Workflow</h2>
+                <h2>
+                  {userRole === "Program Head"
+                    ? "Program Head Teaching Grade Workflow"
+                    : "Faculty Grade Workflow"}
+                </h2>
                 <p>
                   Enter assessment scores, record held-meeting attendance,
                   review the Midterm and Final Term calculation, and submit the
@@ -4973,7 +5829,11 @@ export default function EnterGrades() {
             >
               <header className="faculty-inc-modal__header">
                 <div>
-                  <span>Faculty · Assessment Columns</span>
+                  <span>
+                    {userRole === "Program Head"
+                      ? "Program Head · Assessment Columns"
+                      : "Faculty · Assessment Columns"}
+                  </span>
                   <h2 id="faculty-assessment-modal-title">
                     Manage Assessments
                   </h2>
@@ -5007,8 +5867,6 @@ export default function EnterGrades() {
                       {assessmentStructureEditable
                         ? "This grading term is open for assessment changes."
                         : "This grading term is locked or the class is not Open. Assessment changes are not allowed."}
-                      {selectedOfferingId !== 131 &&
-                        " Creating and removing columns are currently limited to QA Offering #131."}
                     </p>
                   </div>
 
@@ -5055,12 +5913,7 @@ export default function EnterGrades() {
                                   onClick={() =>
                                     beginAssessmentEdit(category, assessment)
                                   }
-                                  disabled={
-                                    assessmentManagerBusy ||
-                                    ![127, 128, 131].includes(
-                                      selectedOfferingId,
-                                    )
-                                  }
+                                  disabled={assessmentManagerBusy}
                                 >
                                   Edit
                                 </button>
@@ -5070,10 +5923,7 @@ export default function EnterGrades() {
                                   onClick={() =>
                                     beginAssessmentRemoval(category, assessment)
                                   }
-                                  disabled={
-                                    assessmentManagerBusy ||
-                                    selectedOfferingId !== 131
-                                  }
+                                  disabled={assessmentManagerBusy}
                                 >
                                   Remove
                                 </button>
@@ -5210,11 +6060,6 @@ export default function EnterGrades() {
                       assessmentManagerLoading ||
                       assessmentManagerBusy ||
                       !assessmentWriteAllowed
-                    }
-                    title={
-                      !assessmentWriteAllowed
-                        ? "QA offering restriction or locked grading term"
-                        : undefined
                     }
                   >
                     <Save size={15} />

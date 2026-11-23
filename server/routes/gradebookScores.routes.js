@@ -1,9 +1,11 @@
 import express from "express";
 import db from "../db.js";
 import { loadGradebookOfferingConfig } from "../services/gradebookOfferingConfig.service.js";
+import { assertGradebookScoreWriteAllowed } from "../services/gradebookScoreWriteGuard.service.js";
 import { assertCombinedSemesterCellEditable } from "../services/gradebookCombinedEditScope.service.js";
 import { requireVerifiedHistoricalIncFinalTermEntry } from "../services/gradebookIncCompletionAccess.service.js";
 import { requireModernIncPendingScoreEntry } from "../services/gradebookModernIncSource.service.js";
+
 const router = express.Router();
 
 function fail(code, message, status = 409) {
@@ -38,6 +40,7 @@ function sendError(res, error) {
 }
 
 // Parse DECIMAL(10,2) exactly. Never round a submitted score implicitly.
+
 function parseScore(value, fieldName) {
   if (typeof value !== "number" && typeof value !== "string") {
     fail(
@@ -64,6 +67,22 @@ function parseScore(value, fieldName) {
   };
 }
 
+function hasDisallowedControlCharacters(value) {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (
+      code <= 8 ||
+      code === 11 ||
+      code === 12 ||
+      (code >= 14 && code <= 31) ||
+      code === 127
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function optionalReason(value, fieldName, { required = false } = {}) {
   if (value === undefined || value === null) {
     if (required) fail("NA_REASON_REQUIRED", `${fieldName} is required.`, 400);
@@ -77,7 +96,7 @@ function optionalReason(value, fieldName, { required = false } = {}) {
     if (required) fail("NA_REASON_REQUIRED", `${fieldName} is required.`, 400);
     return null;
   }
-  if (text.length > 2000 || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(text)) {
+  if (text.length > 2000 || hasDisallowedControlCharacters(text)) {
     fail(
       "INVALID_REASON",
       `${fieldName} must be 1–2000 printable characters.`,
@@ -216,8 +235,11 @@ function validateScoreBody(body) {
 }
 
 // POST /api/gradebook/:offeringId/scores
+
 // Save one score cell, or test the full transaction using dry_run: true.
+
 // Registration in server.js must supply authenticate + Faculty/Program Head role checks.
+
 router.post("/:offeringId/scores", async (req, res) => {
   let input;
   try {
@@ -241,7 +263,6 @@ router.post("/:offeringId/scores", async (req, res) => {
       message: "An authenticated instructor is required.",
     });
   }
-
   let connection;
   let transactionStarted = false;
   try {
@@ -258,9 +279,14 @@ router.post("/:offeringId/scores", async (req, res) => {
         403,
       );
     }
+
+    // Route-scoped rollout authorization, including the active database.
+    const { isQaDatabase } = await assertGradebookScoreWriteAllowed(connection);
+
     // Keep the score and audit write in one transaction.
     await connection.beginTransaction();
     transactionStarted = true;
+
     // Serialize score writes with gradebook assessment/submission operations.
     const [offeringRows] = await connection.execute(
       `SELECT so.offering_id, so.status, so.faculty_id, f.user_id AS assigned_user_id,
@@ -288,7 +314,6 @@ router.post("/:offeringId/scores", async (req, res) => {
         403,
       );
     }
-
     const [configRows] = await connection.execute(
       "SELECT config_id FROM gradebook_offering_config WHERE offering_id = ? FOR UPDATE",
       [offeringId],
@@ -309,9 +334,10 @@ router.post("/:offeringId/scores", async (req, res) => {
     }
 
     // The old FULL_SEMESTER workflow is not migrated to term-specific submissions.
-    // If any legacy grade submission is present, continue to fail closed rather
-    // than inadvertently allowing edits to official historical grading records.
 
+    // If any legacy grade submission is present, continue to fail closed rather
+
+    // than inadvertently allowing edits to official historical grading records.
     const [assessments] = await connection.execute(
       `SELECT a.assessment_id, a.maximum_score, a.record_status,
               a.grading_term, oc.category_code
@@ -381,18 +407,27 @@ router.post("/:offeringId/scores", async (req, res) => {
       );
     }
     const gradingTerm = assessments[0].grading_term;
+    // INC score entry remains QA-only until the complete conversion workflow is approved.
+    if (
+      !isQaDatabase &&
+      enrollment.enrollment_subject_status === "Incomplete"
+    ) {
+      fail(
+        "GRADEBOOK_INC_COMPLETION_NOT_MIGRATED",
+        "INC completion score entry is not yet enabled outside QA.",
+        403,
+      );
+    }
 
     let incCompletion = null;
-
     if (enrollment.enrollment_subject_status === "Incomplete") {
-      // Route INC completion by official publication source, not offering ID.
+      // Use the official publication source, not a hardcoded QA offering ID.
       const [publicationRows] = await connection.execute(
         `SELECT config_id, publication_source
            FROM gradebook_official_grade_publications
           WHERE enrollment_subject_id = ? FOR UPDATE`,
         [input.enrollmentSubjectId],
       );
-
       if (
         publicationRows.length > 1 ||
         (publicationRows.length === 1 &&
@@ -403,9 +438,7 @@ router.post("/:offeringId/scores", async (req, res) => {
           "The official grade publication does not match this gradebook.",
         );
       }
-
       const publicationSource = publicationRows[0]?.publication_source ?? null;
-
       if (publicationSource === "COMBINED_SEMESTER") {
         incCompletion = await requireModernIncPendingScoreEntry(connection, {
           offeringId,
@@ -440,23 +473,43 @@ router.post("/:offeringId/scores", async (req, res) => {
           "This official grade source requires a separate authorized correction workflow.",
         );
       }
+    } else {
+      // Fail closed for old grades that do not belong to the new combined workflow,
+      // even if an older version of the combined-edit helper is installed.
+      const [unmigratedGrades] = await connection.execute(
+        `SELECT g.grade_id
+           FROM grades g
+          WHERE g.enrollment_subject_id = ?
+            AND NOT EXISTS (
+              SELECT 1 FROM gradebook_grade_submission_attempts a
+               WHERE a.grade_id = g.grade_id
+            )
+          FOR UPDATE`,
+        [input.enrollmentSubjectId],
+      );
+      if (unmigratedGrades.length > 0) {
+        fail(
+          "COMBINED_PREEXISTING_GRADE_REVIEW_REQUIRED",
+          "An older grade exists without combined submission history. Review or migrate it before editing scores.",
+          409,
+        );
+      }
+
+      await assertCombinedSemesterCellEditable(
+        connection,
+        configId,
+        input.enrollmentSubjectId,
+        gradingTerm,
+      );
     }
 
-    // Ordinary score entry still requires an Open offering.
-    // Ordinary score entry still requires an Open offering. A verified historical
-    // INC completion may be encoded after the original offering has closed.
+    // Ordinary entry requires an Open offering; verified INC completion may be allowed later.
     if (!incCompletion && offering.status !== "Open") {
       fail("OFFERING_NOT_OPEN", "Score entry requires an Open offering.");
     }
 
-    // The FIRST_TERM_SUBMISSION lock protects shared assessment / meeting
-    // structure, NOT score entry for every student in the class.
-    // Only this student's latest attempt for the assessment's term determines
-    // whether the individual score cell is editable.
-    //
-    // Serialization contract: the future term-submission and Program Head review
-    // handlers MUST acquire the same subject_offerings and gradebook config rows
-    // FOR UPDATE before creating/changing a submission, as this route does.
+    // A term submission locks only the affected student's editable cells.
+    // Review handlers must use the same offering and config row locks.
     const [termSubmissionRows] = await connection.execute(
       `SELECT term_submission_id, attempt_number, submission_status
          FROM gradebook_term_submission_attempts
@@ -492,9 +545,8 @@ router.post("/:offeringId/scores", async (req, res) => {
         409,
       );
     }
-    // RETURNED is the Program Head's explicit student-and-term-only permission
-    // to correct scores; FINAL_TERM stays independent of MIDTERM.
 
+    // RETURNED allows only the affected student's authorized term corrections.
     const [existingRows] = await connection.execute(
       `SELECT score_id, score_status, earned_score, not_applicable_reason,
               record_version
@@ -558,7 +610,6 @@ router.post("/:offeringId/scores", async (req, res) => {
         persisted: !input.dryRun,
       });
     }
-
     let scoreId;
     let version;
     let eventType;
@@ -608,7 +659,6 @@ router.post("/:offeringId/scores", async (req, res) => {
       }
       eventType = "UPDATED";
     }
-
     if (!positiveId(scoreId)) {
       throw new Error("Score write returned an invalid score ID.");
     }
@@ -647,7 +697,6 @@ router.post("/:offeringId/scores", async (req, res) => {
     if (Number(event.affectedRows) !== 1) {
       throw new Error("Score audit event insert did not succeed.");
     }
-
     const result = {
       success: true,
       offering_id: offeringId,
@@ -684,7 +733,6 @@ router.post("/:offeringId/scores", async (req, res) => {
       dry_run: input.dryRun,
       persisted: !input.dryRun,
     };
-
     if (input.dryRun) {
       await connection.rollback();
     } else {

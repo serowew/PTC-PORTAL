@@ -123,6 +123,55 @@ export async function validateResubmittedSpecialApproval(
     "The resubmitted INC/UD grade, sheet, and submission do not match.",
   );
 
+  // Verify the reviewer belongs to the offering's department.
+  const [reviewerRows] = await connection.execute(
+    `SELECT ph.program_head_id
+       FROM gradebook_offering_config c
+       JOIN subject_offerings so
+         ON so.offering_id = c.offering_id
+       JOIN sections sec
+         ON sec.section_id = so.section_id
+       JOIN courses cr
+         ON cr.course_id = sec.course_id
+       JOIN enrollment_subjects es
+         ON es.offering_id = so.offering_id
+       JOIN grades g
+         ON g.enrollment_subject_id = es.enrollment_subject_id
+       JOIN program_heads ph
+         ON ph.department_id = cr.department_id
+       JOIN faculty f
+         ON f.faculty_id = ph.faculty_id
+       JOIN users u
+         ON u.user_id = f.user_id
+       JOIN roles r
+         ON r.role_id = u.role_id
+      WHERE c.config_id = ?
+        AND so.offering_id = ?
+        AND es.enrollment_subject_id = ?
+        AND g.grade_id = ?
+        AND f.user_id = ?
+        AND ph.is_active = 1
+        AND (ph.start_date IS NULL OR ph.start_date <= CURDATE())
+        AND (ph.end_date IS NULL OR ph.end_date >= CURDATE())
+        AND u.is_active = 1
+        AND u.is_archived = 0
+        AND r.role_name = 'Program Head'
+      LIMIT 1`,
+    [
+      target.config_id,
+      target.offering_id,
+      target.enrollment_subject_id,
+      target.grade_id,
+      reviewerUserId,
+    ],
+  );
+
+  check(
+    reviewerRows.length === 1,
+    "SPECIAL_APPROVAL_REVIEWER_SCOPE_INVALID",
+    "The reviewer is not an active Program Head for this offering.",
+  );
+
   const type = grade.grading_outcome;
   const inc = type === "INCOMPLETE";
   const rating = inc ? "4.00" : "6.00";

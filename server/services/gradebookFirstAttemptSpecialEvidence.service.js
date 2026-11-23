@@ -1,4 +1,4 @@
-import { assertQaGradingDatabase } from "./gradebookQaWriteGuard.service.js";
+import { assertCombinedApprovalWriteAllowed } from "./gradebookCombinedApprovalWriteGuard.service.js";
 
 function periodPositiveId(value) {
   const raw = String(value ?? "").trim();
@@ -88,12 +88,21 @@ export async function combinedApprovalSpecialEvidence(
     /^[0-9]+(?:\.[0-9]{1,12})?$/.test(String(right)) &&
     Number(left) === Number(right);
 
-  // Only restrict callers that explicitly require the QA rollout guard.
-  if (
-    restrictToQa &&
-    process.env.GRADEBOOK_COMBINED_SPECIAL_APPROVAL_ENABLED !== "true"
-  ) {
-    await assertQaGradingDatabase(connection);
+  // Verify the grading database before special-outcome approval.
+  if (restrictToQa) {
+    const { isQaDatabase } =
+      await assertCombinedApprovalWriteAllowed(connection);
+
+    if (
+      !isQaDatabase &&
+      process.env.GRADEBOOK_COMBINED_SPECIAL_APPROVAL_ENABLED !== "true"
+    ) {
+      combinedApprovalFail(
+        "COMBINED_SPECIAL_APPROVAL_WRITES_DISABLED",
+        "INC/UD approval is not enabled for this database.",
+        403,
+      );
+    }
   }
 
   // Validate the gradebook and submission scope.

@@ -155,7 +155,11 @@
 .faculty-grade-header h1 {
   margin: 0;
   color: var(--feg-text-950);
-  font-size: clamp(calc(26px * var(--ptc-font-scale, 1)), 3vw, calc(34px * var(--ptc-font-scale, 1)));
+  font-size: clamp(
+    calc(26px * var(--ptc-font-scale, 1)),
+    3vw,
+    calc(34px * var(--ptc-font-scale, 1))
+  );
   font-weight: 770;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -1636,8 +1640,6 @@
   }
 }
 
-
-
 .faculty-grade-inc-complete {
   grid-column: 1 / -1;
   border: 1px solid #d5b66f;
@@ -1658,8 +1660,6 @@
   outline: 3px solid rgba(154, 103, 0, 0.18);
   outline-offset: 2px;
 }
-
-
 
 .faculty-inc-modal-backdrop {
   position: fixed;
@@ -2112,8 +2112,6 @@
   }
 }
 
-
-
 .faculty-grade-inc-request-status {
   grid-column: 1 / -1;
   display: inline-flex;
@@ -2141,8 +2139,6 @@
   color: #285f91;
   background: #f2f8fd;
 }
-
-
 
 .faculty-assigned-class-search {
   display: grid;
@@ -2344,11 +2340,11 @@
   }
 }
 
-
-
-
-
-html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page) > .dashboard-content {
+html
+  body
+  .dashboard-wrapper
+  .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page)
+  > .dashboard-content {
   padding: 0 !important;
   min-width: 0;
   overflow-x: clip;
@@ -2358,12 +2354,18 @@ html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty
   background-position: initial !important;
   background-repeat: no-repeat !important;
 }
-.dashboard-main:has(.faculty-enter-grades-page) > .header-container:has(.app-header.hide) {
+.dashboard-main:has(.faculty-enter-grades-page)
+  > .header-container:has(.app-header.hide) {
   height: 0;
   min-height: 0;
   border: 0;
 }
-html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter-grades-page {
+html
+  body
+  .dashboard-wrapper
+  .dashboard-main
+  .dashboard-content
+  > .faculty-enter-grades-page {
   --feg-green-950: #063e28;
   --feg-green-900: #075431;
   --feg-green-800: #0a7041;
@@ -2388,15 +2390,14 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   background-repeat: no-repeat !important;
 }
 
-
 .faculty-enter-grades-page .faculty-grade-header {
   min-height: 184px;
   margin-bottom: 16px;
   padding: 28px 30px;
-  border: 1px solid rgba(221, 255, 236, .16);
+  border: 1px solid rgba(221, 255, 236, 0.16);
   border-radius: 23px;
   background: linear-gradient(108deg, #06482e 0%, #086b3c 55%, #138848 100%);
-  box-shadow: 0 16px 34px rgba(4, 71, 36, .16);
+  box-shadow: 0 16px 34px rgba(4, 71, 36, 0.16);
 }
 .faculty-enter-grades-page .faculty-grade-header::before,
 .faculty-enter-grades-page .faculty-grade-header::after {
@@ -2406,20 +2407,24 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
 .faculty-enter-grades-page .faculty-grade-eyebrow {
   color: #e6f9ed;
   font-size: calc(12px * var(--ptc-font-scale, 1));
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   font-weight: 800;
 }
 .faculty-enter-grades-page .faculty-grade-eyebrow__icon {
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, .24);
-  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.15);
   width: 31px;
   height: 31px;
 }
 .faculty-enter-grades-page .faculty-grade-header h1 {
   color: #fff !important;
-  font-size: clamp(calc(30px * var(--ptc-font-scale, 1)), 2.5vw, calc(38px * var(--ptc-font-scale, 1)));
-  letter-spacing: -.04em;
+  font-size: clamp(
+    calc(30px * var(--ptc-font-scale, 1)),
+    2.5vw,
+    calc(38px * var(--ptc-font-scale, 1))
+  );
+  letter-spacing: -0.04em;
   font-weight: 820;
 }
 .faculty-enter-grades-page .faculty-grade-header p {
@@ -2429,8 +2434,8 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
 }
 .faculty-enter-grades-page .faculty-grade-back {
   color: #f2fff8;
-  background: rgba(255,255,255,.13);
-  border-color: rgba(255,255,255,.23);
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.23);
 }
 .faculty-enter-grades-page .faculty-grade-back:hover {
   color: #064e2e;
@@ -2440,7 +2445,7 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
 .faculty-enter-grades-page .faculty-grade-header-button {
   min-height: 42px;
   padding: 9px 15px;
-  border-color: rgba(255, 255, 255, .82);
+  border-color: rgba(255, 255, 255, 0.82);
   color: #07512f;
   background: #ffffff;
   border-radius: 9px;
@@ -2456,7 +2461,6 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border-color: #e8f8ed;
 }
 
-
 .faculty-enter-grades-page .faculty-grade-toolbar {
   gap: 13px;
   margin-bottom: 17px;
@@ -2466,16 +2470,16 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border: 1px solid #d5e6dc;
   border-radius: 17px;
   background: #fff;
-  box-shadow: 0 7px 20px rgba(10,66,36,.055);
+  box-shadow: 0 7px 20px rgba(10, 66, 36, 0.055);
 }
 .faculty-enter-grades-page .faculty-grade-faculty__icon {
   width: 43px;
   height: 43px;
   flex-basis: 43px;
   color: #fff;
-  background: linear-gradient(145deg,#0b9955,#065c34);
+  background: linear-gradient(145deg, #0b9955, #065c34);
   border-color: transparent;
-  box-shadow: 0 6px 14px rgba(4,100,57,.16);
+  box-shadow: 0 6px 14px rgba(4, 100, 57, 0.16);
 }
 .faculty-enter-grades-page .faculty-grade-class-select__heading small {
   color: #0a7542;
@@ -2498,9 +2502,8 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
 .faculty-enter-grades-page .faculty-assigned-class-suggestions {
   background: #fff;
   border-color: #cfe0d4;
-  box-shadow: 0 18px 40px rgba(13,67,35,.15);
+  box-shadow: 0 18px 40px rgba(13, 67, 35, 0.15);
 }
-
 
 .faculty-enter-grades-page .faculty-grade-class-card {
   margin-bottom: 16px;
@@ -2508,10 +2511,10 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border: 1px solid #d7e9de;
   border-radius: 20px;
   background: #fff;
-  box-shadow: 0 10px 25px rgba(8,66,36,.07);
+  box-shadow: 0 10px 25px rgba(8, 66, 36, 0.07);
 }
 .faculty-enter-grades-page .faculty-grade-subject {
-  background: linear-gradient(110deg,#f1faf4,#f8fdf9);
+  background: linear-gradient(110deg, #f1faf4, #f8fdf9);
 }
 .faculty-enter-grades-page .faculty-grade-subject__icon,
 .faculty-enter-grades-page .faculty-grade-detail-icon {
@@ -2524,15 +2527,14 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border-color: #e6eee8;
 }
 
-
 .faculty-enter-grades-page .faculty-grade-summary {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   padding: 11px;
-  border: 1px solid rgba(255,255,255,.78);
+  border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 21px;
-  background: rgba(255,255,255,.6);
-  box-shadow: 0 10px 25px rgba(10,66,36,.08);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 25px rgba(10, 66, 36, 0.08);
 }
 .faculty-enter-grades-page .faculty-grade-summary-card {
   min-height: 111px;
@@ -2540,8 +2542,8 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   padding: 14px 12px;
   gap: 9px;
   border: 1px solid #d5eadb;
-  background: linear-gradient(120deg,#f5fcf7,#e8f8ee);
-  box-shadow: 0 5px 14px rgba(13,69,37,.05);
+  background: linear-gradient(120deg, #f5fcf7, #e8f8ee);
+  box-shadow: 0 5px 14px rgba(13, 69, 37, 0.05);
 }
 .faculty-enter-grades-page .faculty-grade-summary-card::before {
   width: 4px;
@@ -2549,27 +2551,35 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
 }
 .faculty-enter-grades-page .faculty-grade-summary-card--empty {
   border-color: #dce6df;
-  background: linear-gradient(120deg,#fcfdfc,#f2f6f3);
+  background: linear-gradient(120deg, #fcfdfc, #f2f6f3);
 }
-.faculty-enter-grades-page .faculty-grade-summary-card--empty::before { background: #93a59a; }
+.faculty-enter-grades-page .faculty-grade-summary-card--empty::before {
+  background: #93a59a;
+}
 .faculty-enter-grades-page .faculty-grade-summary-card--draft {
   border-color: #d3e4fc;
-  background: linear-gradient(120deg,#f6faff,#e8f1ff);
+  background: linear-gradient(120deg, #f6faff, #e8f1ff);
 }
-.faculty-enter-grades-page .faculty-grade-summary-card--draft::before { background: #2563eb; }
+.faculty-enter-grades-page .faculty-grade-summary-card--draft::before {
+  background: #2563eb;
+}
 .faculty-enter-grades-page .faculty-grade-summary-card--submitted {
   border-color: #e5d9ff;
-  background: linear-gradient(120deg,#fbf8ff,#f1e9ff);
+  background: linear-gradient(120deg, #fbf8ff, #f1e9ff);
 }
-.faculty-enter-grades-page .faculty-grade-summary-card--submitted::before { background: #8844dc; }
+.faculty-enter-grades-page .faculty-grade-summary-card--submitted::before {
+  background: #8844dc;
+}
 .faculty-enter-grades-page .faculty-grade-summary-card--returned {
   border-color: #f1e4bf;
-  background: linear-gradient(120deg,#fffaf0,#fff3d9);
+  background: linear-gradient(120deg, #fffaf0, #fff3d9);
 }
-.faculty-enter-grades-page .faculty-grade-summary-card--returned::before { background: #d9a221; }
+.faculty-enter-grades-page .faculty-grade-summary-card--returned::before {
+  background: #d9a221;
+}
 .faculty-enter-grades-page .faculty-grade-summary-card--approved {
   border-color: #d0e9d9;
-  background: linear-gradient(120deg,#f3fcf6,#ddf5e7);
+  background: linear-gradient(120deg, #f3fcf6, #ddf5e7);
 }
 .faculty-enter-grades-page .faculty-grade-summary-icon {
   width: 42px;
@@ -2581,13 +2591,14 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   font-size: calc(10.5px * var(--ptc-font-scale, 1));
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .025em;
+  letter-spacing: 0.025em;
 }
 .faculty-enter-grades-page .faculty-grade-summary-card strong {
   font-size: calc(25px * var(--ptc-font-scale, 1));
 }
-.faculty-enter-grades-page .faculty-grade-summary-card > div > span { white-space: normal; }
-
+.faculty-enter-grades-page .faculty-grade-summary-card > div > span {
+  white-space: normal;
+}
 
 .faculty-enter-grades-page .faculty-gradebook,
 .faculty-enter-grades-page .faculty-grade-workflow-section,
@@ -2596,12 +2607,12 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border-radius: 20px;
   border-color: #d9e9df;
   background: #fff;
-  box-shadow: 0 10px 26px rgba(8,66,36,.065);
+  box-shadow: 0 10px 26px rgba(8, 66, 36, 0.065);
 }
 .faculty-enter-grades-page .faculty-gradebook-header {
   padding: 21px 23px 18px;
   border-bottom-color: #e5eee8;
-  background: linear-gradient(100deg,#fff 60%,#f3fbf6);
+  background: linear-gradient(100deg, #fff 60%, #f3fbf6);
 }
 .faculty-enter-grades-page .faculty-gradebook-header__icon {
   width: 43px;
@@ -2609,7 +2620,11 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   background: #e5f7eb;
   color: #09814a;
 }
-.faculty-enter-grades-page .faculty-gradebook-header h2 { color: #17251e; font-size: calc(18px * var(--ptc-font-scale, 1)); font-weight: 790; }
+.faculty-enter-grades-page .faculty-gradebook-header h2 {
+  color: #17251e;
+  font-size: calc(18px * var(--ptc-font-scale, 1));
+  font-weight: 790;
+}
 .faculty-enter-grades-page .faculty-gradebook-header__title > div > span {
   display: inline-block;
   padding: 5px 9px;
@@ -2629,19 +2644,23 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   overscroll-behavior-inline: contain;
   -webkit-overflow-scrolling: touch;
 }
-.faculty-enter-grades-page .faculty-grade-table { min-width: 1040px; }
+.faculty-enter-grades-page .faculty-grade-table {
+  min-width: 1040px;
+}
 .faculty-enter-grades-page .faculty-grade-table thead th {
   background: #f3f9f5;
   color: #496456;
   border-color: #dfece2;
 }
-.faculty-enter-grades-page .faculty-grade-table tbody tr:hover { background: #f4fbf6; }
+.faculty-enter-grades-page .faculty-grade-table tbody tr:hover {
+  background: #f4fbf6;
+}
 .faculty-enter-grades-page .faculty-grade-empty {
   background: #fff;
 }
 .faculty-enter-grades-page .faculty-grade-workflow-section > header {
   border-color: #e0ede4;
-  background: linear-gradient(100deg,#fff,#f3fbf6);
+  background: linear-gradient(100deg, #fff, #f3fbf6);
 }
 .faculty-enter-grades-page .faculty-grade-workflow article {
   background: #fbfefc;
@@ -2653,7 +2672,6 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   background: #e6f7ed;
 }
 
-
 .faculty-enter-grades-page .faculty-inc-modal-backdrop {
   z-index: 9999;
   position: fixed;
@@ -2663,7 +2681,7 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   align-items: center;
   justify-content: center;
   overflow-y: auto;
-  background: rgba(7, 29, 18, .65);
+  background: rgba(7, 29, 18, 0.65);
   backdrop-filter: blur(4px);
 }
 .faculty-enter-grades-page .faculty-inc-modal {
@@ -2676,25 +2694,29 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border: 1px solid #d7e9de;
   border-radius: 19px;
   background: #fff;
-  box-shadow: 0 25px 70px rgba(4,29,16,.28);
+  box-shadow: 0 25px 70px rgba(4, 29, 16, 0.28);
   animation: none !important;
 }
 .faculty-enter-grades-page .faculty-inc-modal__header {
   padding: 22px 23px 20px;
-  background: linear-gradient(108deg,#06482e,#0a7442 65%,#138848);
-  border-color: rgba(255,255,255,.16);
+  background: linear-gradient(108deg, #06482e, #0a7442 65%, #138848);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 .faculty-enter-grades-page .faculty-inc-modal__header > div > span {
   color: #d6f6e5;
   font-weight: 800;
 }
 .faculty-enter-grades-page .faculty-inc-modal__header h2,
-.faculty-enter-grades-page .faculty-inc-modal__header p { color: #fff !important; }
-.faculty-enter-grades-page .faculty-inc-modal__header p { color: #dcf5e7 !important; }
+.faculty-enter-grades-page .faculty-inc-modal__header p {
+  color: #fff !important;
+}
+.faculty-enter-grades-page .faculty-inc-modal__header p {
+  color: #dcf5e7 !important;
+}
 .faculty-enter-grades-page .faculty-inc-modal__close {
   color: #fff;
-  border-color: rgba(255,255,255,.27);
-  background: rgba(255,255,255,.12);
+  border-color: rgba(255, 255, 255, 0.27);
+  background: rgba(255, 255, 255, 0.12);
 }
 .faculty-enter-grades-page .faculty-inc-modal__close:hover:not(:disabled) {
   color: #075431;
@@ -2735,9 +2757,12 @@ html body .dashboard-wrapper .dashboard-main .dashboard-content > .faculty-enter
   border-color: #075f38;
 }
 
-
 /* Page layout */
-html body .dashboard-wrapper .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page) > .dashboard-content {
+html
+  body
+  .dashboard-wrapper
+  .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page)
+  > .dashboard-content {
   padding: 0 !important;
   background: #ffffff !important;
   overflow-x: hidden;
@@ -2749,23 +2774,54 @@ html body .dashboard-wrapper .dashboard-content > .faculty-enter-grades-page {
 }
 .faculty-enter-grades-page .faculty-grade-header {
   min-height: 0;
-  padding: calc(30px * var(--ptc-compact-scale, 1)) calc(32px * var(--ptc-compact-scale, 1));
+  padding: calc(30px * var(--ptc-compact-scale, 1))
+    calc(32px * var(--ptc-compact-scale, 1));
   border: 1px solid #0c633b;
   border-radius: 14px;
   background: linear-gradient(105deg, #07512f, #0d7444);
   box-shadow: none;
 }
 .faculty-enter-grades-page .faculty-grade-header::before,
-.faculty-enter-grades-page .faculty-grade-header::after { content: none; display: none; }
-.faculty-enter-grades-page .faculty-grade-header h1 { font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), 3vw, calc(40px * var(--ptc-font-scale, 1))); font-weight: 760; }
-.faculty-enter-grades-page .faculty-grade-header p { font-size: calc(14px * var(--ptc-font-scale, 1)); }
-.faculty-enter-grades-page .faculty-grade-eyebrow { font-size: calc(12px * var(--ptc-font-scale, 1)); font-weight: 750; }
-.faculty-enter-grades-page .faculty-gradebook-search input { padding-left: 36px; }
-.faculty-enter-grades-page .faculty-grade-table-wrapper { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
-.faculty-enter-grades-page .faculty-grade-table { min-width: 1100px; }
-.faculty-enter-grades-page :is(.faculty-grade-table td,.faculty-grade-table th) { vertical-align: middle; }
-.faculty-enter-grades-page .faculty-grade-table :is(input,select,textarea) { min-height: 36px; max-width: 100%; }
-.faculty-enter-grades-page :is(.faculty-grade-header-button,.faculty-grade-back) {
+.faculty-enter-grades-page .faculty-grade-header::after {
+  content: none;
+  display: none;
+}
+.faculty-enter-grades-page .faculty-grade-header h1 {
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    3vw,
+    calc(40px * var(--ptc-font-scale, 1))
+  );
+  font-weight: 760;
+}
+.faculty-enter-grades-page .faculty-grade-header p {
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+.faculty-enter-grades-page .faculty-grade-eyebrow {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+.faculty-enter-grades-page .faculty-gradebook-search input {
+  padding-left: 36px;
+}
+.faculty-enter-grades-page .faculty-grade-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.faculty-enter-grades-page .faculty-grade-table {
+  min-width: 1100px;
+}
+.faculty-enter-grades-page
+  :is(.faculty-grade-table td, .faculty-grade-table th) {
+  vertical-align: middle;
+}
+.faculty-enter-grades-page .faculty-grade-table :is(input, select, textarea) {
+  min-height: 36px;
+  max-width: 100%;
+}
+.faculty-enter-grades-page
+  :is(.faculty-grade-header-button, .faculty-grade-back) {
   font-size: calc(13px * var(--ptc-font-scale, 1));
   font-weight: 720;
   line-height: 1.35;
@@ -2775,9 +2831,20 @@ html body .dashboard-wrapper .dashboard-content > .faculty-enter-grades-page {
 }
 
 /* Dark mode */
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page),
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page) > .dashboard-content,
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content > .faculty-enter-grades-page {
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page),
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .faculty-enter-grades-page)
+  > .dashboard-content,
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-content
+  > .faculty-enter-grades-page {
   background: #111719 !important;
   background-image: none !important;
 }
@@ -2794,261 +2861,1431 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-content >
   color: #f1f5f6;
   color-scheme: dark;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-faculty,.faculty-grade-class-select,.faculty-grade-class-card,
-  .faculty-gradebook,.faculty-grade-workflow-section,.faculty-grade-loading,
-  .faculty-grade-empty,.faculty-grade-error
-) { color: #f1f5f6; border-color: #35464b; background: #192226; background-image: none; box-shadow: none; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-subject,.faculty-grade-class-details > div,
-  .faculty-gradebook-header,.faculty-gradebook-table-meta,
-  .faculty-grade-workflow-section > header,.faculty-grade-workflow article,
-  .faculty-grade-summary-card,.faculty-grade-table thead th
-) { color: #f1f5f6; border-color: #35464b; background: #20292e; background-image: none; box-shadow: none; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-summary { border-color: #35464b; background: transparent; box-shadow: none; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-summary-card::before { opacity: 1; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-table,.faculty-grade-table tbody,.faculty-grade-table tbody tr,
-  .faculty-grade-table tbody td,.faculty-gradebook-table-meta,
-  .faculty-assigned-class-suggestions,.faculty-assigned-class-suggestion
-) { border-color: #35464b; background-color: #192226; color: #e0e9eb; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-table tbody tr:hover td { background-color: #202f33; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-summary-card strong,.faculty-grade-summary-card small,
-  .faculty-grade-faculty__copy strong,.faculty-grade-class-select__heading strong,
-  .faculty-grade-subject strong,.faculty-grade-class-details strong,
-  .faculty-gradebook-header h2,.faculty-grade-table td,
-  .faculty-grade-workflow-section h2,.faculty-grade-workflow strong,
-  .faculty-grade-loading strong
-) { color: #f1f5f6; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-gradebook-header p,.faculty-grade-summary-card > div > span,
-  .faculty-grade-class-details p,.faculty-grade-subject p,
-  .faculty-grade-workflow p,.faculty-grade-faculty__copy span,
-  .faculty-grade-faculty__copy small,.faculty-gradebook-table-meta small
-) { color: #aab8bd; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-assigned-class-search__input input,.faculty-gradebook-search input,
-  .faculty-gradebook-filter select,.faculty-grade-input,
-  .faculty-grade-table select,.faculty-grade-table textarea
-) { border-color: #456066; background: #20292e; color: #f1f5f6; box-shadow: none; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(input,textarea)::placeholder { color: #9fb0b5; opacity: 1; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(input,select,textarea):disabled { background: #1a2226; color: #94a3a9; opacity: .8; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(.faculty-grade-locked,.faculty-grade-no-review,.faculty-grade-review,.faculty-grade-status,.faculty-grade-inc-request-status) { border-color: #35464b; color: #c6d5d9; background: #263137; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(.faculty-grade-review strong,.faculty-grade-review p,.faculty-grade-review small) { color: #dce7e9; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(.faculty-grade-error,.faculty-grade-error p) { color: #fecaca; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(.faculty-grade-actions button,.faculty-grade-empty button,.faculty-gradebook-header button) { border-color: #456066; background: #26343a; color: #f1f5f6; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(.faculty-grade-header-button,.faculty-grade-back) { color: #07512f; border-color: #fff; background: #fff; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-header { border-color: #245642; background: linear-gradient(105deg, #093522, #0b5133); }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(.faculty-grade-header h1,.faculty-grade-header p,.faculty-grade-eyebrow) { color: #f6fff9; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-faculty,
+    .faculty-grade-class-select,
+    .faculty-grade-class-card,
+    .faculty-gradebook,
+    .faculty-grade-workflow-section,
+    .faculty-grade-loading,
+    .faculty-grade-empty,
+    .faculty-grade-error
+  ) {
+  color: #f1f5f6;
+  border-color: #35464b;
+  background: #192226;
+  background-image: none;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-subject,
+    .faculty-grade-class-details > div,
+    .faculty-gradebook-header,
+    .faculty-gradebook-table-meta,
+    .faculty-grade-workflow-section > header,
+    .faculty-grade-workflow article,
+    .faculty-grade-summary-card,
+    .faculty-grade-table thead th
+  ) {
+  color: #f1f5f6;
+  border-color: #35464b;
+  background: #20292e;
+  background-image: none;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-summary {
+  border-color: #35464b;
+  background: transparent;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-summary-card::before {
+  opacity: 1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-table,
+    .faculty-grade-table tbody,
+    .faculty-grade-table tbody tr,
+    .faculty-grade-table tbody td,
+    .faculty-gradebook-table-meta,
+    .faculty-assigned-class-suggestions,
+    .faculty-assigned-class-suggestion
+  ) {
+  border-color: #35464b;
+  background-color: #192226;
+  color: #e0e9eb;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-table
+  tbody
+  tr:hover
+  td {
+  background-color: #202f33;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-summary-card strong,
+    .faculty-grade-summary-card small,
+    .faculty-grade-faculty__copy strong,
+    .faculty-grade-class-select__heading strong,
+    .faculty-grade-subject strong,
+    .faculty-grade-class-details strong,
+    .faculty-gradebook-header h2,
+    .faculty-grade-table td,
+    .faculty-grade-workflow-section h2,
+    .faculty-grade-workflow strong,
+    .faculty-grade-loading strong
+  ) {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-gradebook-header p,
+    .faculty-grade-summary-card > div > span,
+    .faculty-grade-class-details p,
+    .faculty-grade-subject p,
+    .faculty-grade-workflow p,
+    .faculty-grade-faculty__copy span,
+    .faculty-grade-faculty__copy small,
+    .faculty-gradebook-table-meta small
+  ) {
+  color: #aab8bd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-assigned-class-search__input input,
+    .faculty-gradebook-search input,
+    .faculty-gradebook-filter select,
+    .faculty-grade-input,
+    .faculty-grade-table select,
+    .faculty-grade-table textarea
+  ) {
+  border-color: #456066;
+  background: #20292e;
+  color: #f1f5f6;
+  box-shadow: none;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(input, textarea)::placeholder {
+  color: #9fb0b5;
+  opacity: 1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(input, select, textarea):disabled {
+  background: #1a2226;
+  color: #94a3a9;
+  opacity: 0.8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-locked,
+    .faculty-grade-no-review,
+    .faculty-grade-review,
+    .faculty-grade-status,
+    .faculty-grade-inc-request-status
+  ) {
+  border-color: #35464b;
+  color: #c6d5d9;
+  background: #263137;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-review strong,
+    .faculty-grade-review p,
+    .faculty-grade-review small
+  ) {
+  color: #dce7e9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(.faculty-grade-error, .faculty-grade-error p) {
+  color: #fecaca;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-actions button,
+    .faculty-grade-empty button,
+    .faculty-gradebook-header button
+  ) {
+  border-color: #456066;
+  background: #26343a;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(.faculty-grade-header-button, .faculty-grade-back) {
+  color: #07512f;
+  border-color: #fff;
+  background: #fff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-header {
+  border-color: #245642;
+  background: linear-gradient(105deg, #093522, #0b5133);
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-header h1,
+    .faculty-grade-header p,
+    .faculty-grade-eyebrow
+  ) {
+  color: #f6fff9;
+}
 
 /* Dark mode text */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-empty strong, .faculty-grade-empty p,
-  .faculty-grade-workflow__number, .faculty-grade-workflow p,
-  .faculty-grade-class-select__heading small,
-  .faculty-gradebook-header > div > span,
-  .faculty-grade-class-details small,
-  .faculty-grade-offering-status,
-  .faculty-grade-summary-card > div > span
-) { color: #aab8bd; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-empty strong, .faculty-grade-workflow strong,
-  .faculty-grade-class-details strong, .faculty-gradebook-header h2
-) { color: #f1f5f6; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-grade-class-select__heading small,
-  .faculty-grade-workflow-section > header > span,
-  .faculty-gradebook-header > div > span
-) { color: #79d9aa; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-workflow__number { color: #c6d5d9; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-offering-status.open {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-empty strong,
+    .faculty-grade-empty p,
+    .faculty-grade-workflow__number,
+    .faculty-grade-workflow p,
+    .faculty-grade-class-select__heading small,
+    .faculty-gradebook-header > div > span,
+    .faculty-grade-class-details small,
+    .faculty-grade-offering-status,
+    .faculty-grade-summary-card > div > span
+  ) {
+  color: #aab8bd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-empty strong,
+    .faculty-grade-workflow strong,
+    .faculty-grade-class-details strong,
+    .faculty-gradebook-header h2
+  ) {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-grade-class-select__heading small,
+    .faculty-grade-workflow-section > header > span,
+    .faculty-gradebook-header > div > span
+  ) {
+  color: #79d9aa;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-workflow__number {
+  color: #c6d5d9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-offering-status.open {
   color: #86e0af;
   background: #183a2c;
   border-color: #327454;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-offering-status.closed {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-offering-status.closed {
   color: #c5d0d5;
   background: #29343a;
   border-color: #405359;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-empty__icon {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-empty__icon {
   color: #86e0af;
   background: #263c32;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-workflow__icon {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-workflow__icon {
   color: #86e0af;
   background: #263c32;
 }
 
 /* Dark mode section colors */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-class-select__heading small,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-workflow-section > header > span {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-class-select__heading
+  small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-workflow-section
+  > header
+  > span {
   color: #8fbaa9;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-header__title > div > span {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-header__title
+  > div
+  > span {
   color: #b5e3cd;
   background: #234337;
   border: 1px solid #345b4c;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-class-select__heading > span {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-class-select__heading
+  > span {
   color: #c1e9d6;
   background: #234337;
   border-color: #345b4c;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-class-select__heading strong,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-workflow-section h2,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-header h2 {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-class-select__heading
+  strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-workflow-section
+  h2,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-header
+  h2 {
   color: #f1f5f6;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-workflow-section header p,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-class-select > label,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-header p,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-search__hint {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-workflow-section
+  header
+  p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-class-select
+  > label,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-header
+  p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-search__hint {
   color: #b3c1c4;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-header__icon {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-header__icon {
   color: #a8dfc2;
   background: #263e35;
   border-color: #365b4c;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-workflow-section > header,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-header {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-workflow-section
+  > header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-header {
   border-color: #35464b;
   background: #20292e;
   background-image: none;
 }
 
 /* Gradebook text contrast */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-suggestion strong {
-  color: #C3E7D5;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-suggestion
+  strong {
+  color: #c3e7d5;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-suggestion > div > span,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-suggestion small {
-  color: #BCCBD0;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-suggestion
+  > div
+  > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-suggestion
+  small {
+  color: #bccbd0;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-suggestion:hover,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-suggestion.is-selected {
-  background-color: #27383B;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-suggestion:hover,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-suggestion.is-selected {
+  background-color: #27383b;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-suggestions__empty {
-  color: #B3C1C4;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-suggestions__empty {
+  color: #b3c1c4;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-student strong {
-  color: #F1F5F6;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-student
+  strong {
+  color: #f1f5f6;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-student > div > span {
-  color: #8DD5B4;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-student
+  > div
+  > span {
+  color: #8dd5b4;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-student small,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-rating-field small,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-status-cell small {
-  color: #AAB8BD;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-student
+  small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-rating-field
+  small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-status-cell
+  small {
+  color: #aab8bd;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-rating-field small strong {
-  color: #D4EAE0;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-rating-field
+  small
+  strong {
+  color: #d4eae0;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-table-meta,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-table-meta > span,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-table-meta small {
-  color: #C4D0D4;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-table-meta,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-table-meta
+  > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-table-meta
+  small {
+  color: #c4d0d4;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-table-meta strong {
-  color: #F1F5F6;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-table-meta
+  strong {
+  color: #f1f5f6;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-search > span,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-gradebook-filter > span,
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-assigned-class-search > label {
-  color: #B3C1C4;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-search
+  > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-gradebook-filter
+  > span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-assigned-class-search
+  > label {
+  color: #b3c1c4;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-table td {
-  color: #DFE8EA;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-table
+  td {
+  color: #dfe8ea;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-table thead th {
-  color: #E8F0F1;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-table
+  thead
+  th {
+  color: #e8f0f1;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-no-review {
-  color: #B3C1C4;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-no-review {
+  color: #b3c1c4;
   background: transparent;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-status.not-started {
-  color: #D6E2E5;
-  border-color: #50656A;
-  background: #29383D;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-status.not-started {
+  color: #d6e2e5;
+  border-color: #50656a;
+  background: #29383d;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-status.draft {
-  color: #A8D0FF;
-  border-color: #35577A;
-  background: #20364C;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-status.draft {
+  color: #a8d0ff;
+  border-color: #35577a;
+  background: #20364c;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-status.submitted {
-  color: #D7BAFF;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-status.submitted {
+  color: #d7baff;
   border-color: #665181;
-  background: #352A46;
+  background: #352a46;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-status.returned {
-  color: #FFD992;
-  border-color: #78613C;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-status.returned {
+  color: #ffd992;
+  border-color: #78613c;
   background: #443725;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-grade-status.approved {
-  color: #A3E9C3;
-  border-color: #3C7557;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-grade-status.approved {
+  color: #a3e9c3;
+  border-color: #3c7557;
   background: #234333;
 }
 
 /* Dialogs */
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-inc-modal
-) { background: #192226; border-color: #35464b; color: #f1f5f6; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-inc-modal__header,.faculty-inc-modal__footer,
-  .faculty-inc-modal__student,.faculty-inc-modal__preview,
-  .faculty-inc-modal__notice,.faculty-inc-modal__form,
-  .faculty-inc-modal__remarks
-) { background: #20292e; background-image: none; border-color: #35464b; color: #f1f5f6; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-inc-modal__header h2,.faculty-inc-modal__student strong,
-  .faculty-inc-modal__preview strong,.faculty-inc-modal__form label,
-  .faculty-inc-modal__remarks label
-) { color: #f1f5f6; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-inc-modal__header p,.faculty-inc-modal__student span,
-  .faculty-inc-modal__preview p,.faculty-inc-modal__notice
-) { color: #aab8bd; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page :is(
-  .faculty-inc-modal__form input,.faculty-inc-modal__remarks textarea,
-  .faculty-inc-modal__cancel,.faculty-inc-modal__close
-) { background: #26343a; color: #f1f5f6; border-color: #456066; }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .faculty-enter-grades-page .faculty-inc-modal__submit { background: #0d7444; color: #ffffff; border-color: #0d7444; }
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(.faculty-inc-modal) {
+  background: #192226;
+  border-color: #35464b;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-inc-modal__header,
+    .faculty-inc-modal__footer,
+    .faculty-inc-modal__student,
+    .faculty-inc-modal__preview,
+    .faculty-inc-modal__notice,
+    .faculty-inc-modal__form,
+    .faculty-inc-modal__remarks
+  ) {
+  background: #20292e;
+  background-image: none;
+  border-color: #35464b;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-inc-modal__header h2,
+    .faculty-inc-modal__student strong,
+    .faculty-inc-modal__preview strong,
+    .faculty-inc-modal__form label,
+    .faculty-inc-modal__remarks label
+  ) {
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-inc-modal__header p,
+    .faculty-inc-modal__student span,
+    .faculty-inc-modal__preview p,
+    .faculty-inc-modal__notice
+  ) {
+  color: #aab8bd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  :is(
+    .faculty-inc-modal__form input,
+    .faculty-inc-modal__remarks textarea,
+    .faculty-inc-modal__cancel,
+    .faculty-inc-modal__close
+  ) {
+  background: #26343a;
+  color: #f1f5f6;
+  border-color: #456066;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-inc-modal__submit {
+  background: #0d7444;
+  color: #ffffff;
+  border-color: #0d7444;
+}
 
 /* Type and spacing preferences */
-.faculty-enter-grades-page :is(.faculty-grade-summary-card strong,.faculty-gradebook-header h2,.faculty-grade-subject strong) {
+.faculty-enter-grades-page
+  :is(
+    .faculty-grade-summary-card strong,
+    .faculty-gradebook-header h2,
+    .faculty-grade-subject strong
+  ) {
   font-size: calc(16px * var(--ptc-font-scale, 1));
 }
-.faculty-enter-grades-page :is(.faculty-grade-table th,.faculty-grade-table td,.faculty-grade-table input,.faculty-grade-table select,.faculty-grade-table textarea) {
+.faculty-enter-grades-page
+  :is(
+    .faculty-grade-table th,
+    .faculty-grade-table td,
+    .faculty-grade-table input,
+    .faculty-grade-table select,
+    .faculty-grade-table textarea
+  ) {
   font-size: calc(11px * var(--ptc-font-scale, 1));
 }
-.faculty-enter-grades-page :is(.faculty-grade-summary-card,.faculty-grade-faculty,.faculty-grade-class-select) {
+.faculty-enter-grades-page
+  :is(
+    .faculty-grade-summary-card,
+    .faculty-grade-faculty,
+    .faculty-grade-class-select
+  ) {
   padding: calc(14px * var(--ptc-compact-scale, 1));
 }
-.faculty-enter-grades-page .faculty-grade-summary-card strong { font-size: calc(25px * var(--ptc-font-scale, 1)); }
+.faculty-enter-grades-page .faculty-grade-summary-card strong {
+  font-size: calc(25px * var(--ptc-font-scale, 1));
+}
 
 /* Responsive */
-@media (max-width: 1300px) { .faculty-enter-grades-page .faculty-grade-summary { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 1300px) {
+  .faculty-enter-grades-page .faculty-grade-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 @media (max-width: 760px) {
-  html body .dashboard-wrapper .dashboard-content > .faculty-enter-grades-page { padding: calc(18px * var(--ptc-compact-scale,1)); }
-  .faculty-enter-grades-page .faculty-grade-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .faculty-enter-grades-page .faculty-gradebook-header { flex-direction: column; }
-  .faculty-enter-grades-page .faculty-gradebook-tools { width:100%; flex:none; }
-  .faculty-enter-grades-page .faculty-inc-modal-backdrop { align-items:flex-start; padding:12px; }
-  .faculty-enter-grades-page .faculty-inc-modal { max-height:calc(100dvh - 24px); }
+  html body .dashboard-wrapper .dashboard-content > .faculty-enter-grades-page {
+    padding: calc(18px * var(--ptc-compact-scale, 1));
+  }
+  .faculty-enter-grades-page .faculty-grade-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .faculty-enter-grades-page .faculty-gradebook-header {
+    flex-direction: column;
+  }
+  .faculty-enter-grades-page .faculty-gradebook-tools {
+    width: 100%;
+    flex: none;
+  }
+  .faculty-enter-grades-page .faculty-inc-modal-backdrop {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .faculty-enter-grades-page .faculty-inc-modal {
+    max-height: calc(100dvh - 24px);
+  }
 }
 @media (max-width: 520px) {
-  .faculty-enter-grades-page .faculty-grade-summary { grid-template-columns: 1fr; }
-  .faculty-enter-grades-page .faculty-gradebook-tools { grid-template-columns: 1fr; }
-  .faculty-enter-grades-page .faculty-inc-modal__footer { flex-direction:column-reverse; }
+  .faculty-enter-grades-page .faculty-grade-summary {
+    grid-template-columns: 1fr;
+  }
+  .faculty-enter-grades-page .faculty-gradebook-tools {
+    grid-template-columns: 1fr;
+  }
+  .faculty-enter-grades-page .faculty-inc-modal__footer {
+    flex-direction: column-reverse;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .faculty-enter-grades-page :is(.faculty-inc-modal,button,input,textarea,select) { animation:none !important; transition-duration:.01ms !important; }
+  .faculty-enter-grades-page
+    :is(.faculty-inc-modal, button, input, textarea, select) {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Combined Semester Gradebook */
+.faculty-enter-grades-page .faculty-grade-table-wrapper--semester {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+  border-top: 1px solid var(--feg-border);
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table th,
+.faculty-enter-grades-page .faculty-semester-grade-table td {
+  padding: 10px 9px;
+  border-right: 1px solid var(--feg-border);
+  border-bottom: 1px solid var(--feg-border);
+  vertical-align: middle;
+  min-width: 118px;
+  width: 155px;
+  text-align: center;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table thead th {
+  white-space: normal;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+  line-height: 1.4;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table thead th small {
+  display: block;
+  margin-top: 4px;
+  color: inherit;
+  font-size: calc(9px * var(--ptc-font-scale, 1));
+  opacity: 0.8;
+  font-weight: 550;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group {
+  color: #fff;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group--midterm {
+  background: #216a4d;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group--final {
+  background: #345d88;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group--semester {
+  background: #29425e;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__midterm {
+  background: #e9f4ed;
+  color: #285b42;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__final {
+  background: #eaf1fa;
+  color: #355e8c;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__term-total-head {
+  background: #dbeee1;
+  color: #215b3a;
+  width: 112px;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__final-total-head {
+  background: #dce8f8;
+  color: #305982;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__result-head {
+  background: #e7edf4;
+  color: #30485f;
+  width: 125px;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  .faculty-semester-grade-table__sticky {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 230px;
+  min-width: 230px;
+  max-width: 230px;
+  text-align: left;
+  background: var(--feg-surface);
+  border-right: 2px solid #b5d1bf;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__sticky {
+  z-index: 4;
+  background: #194c35;
+  color: #fff;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  tr.returned-row
+  .faculty-semester-grade-table__sticky {
+  background: #fff9e8;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  tr.faculty-semester-grade-table__selected
+  td {
+  box-shadow:
+    inset 0 2px 0 #7cbaa0,
+    inset 0 -2px 0 #7cbaa0;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table__view {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  margin-top: 5px;
+  border: 0;
+  background: transparent;
+  color: #0d7444;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table__view:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  :is(
+    .faculty-semester-grade-table__term-total,
+    .faculty-semester-grade-table__semester-value,
+    .faculty-semester-grade-table__numeric-value
+  ) {
+  background: #f0f7f2;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  .faculty-semester-grade-table__term-total--final {
+  background: #eef4fb;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  :is(
+    .faculty-semester-grade-table__semester-value,
+    .faculty-semester-grade-table__numeric-value
+  ) {
+  background: #eef2f6;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  :is(
+    .faculty-semester-grade-table__term-total,
+    .faculty-semester-grade-table__semester-value,
+    .faculty-semester-grade-table__numeric-value
+  )
+  > strong {
+  display: block;
+  color: #155e3a;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 800;
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  .faculty-semester-grade-table__numeric-value
+  > strong {
+  font-size: calc(16px * var(--ptc-font-scale, 1));
+}
+
+.faculty-enter-grades-page
+  .faculty-semester-grade-table
+  :is(
+    .faculty-semester-grade-table__term-total,
+    .faculty-semester-grade-table__semester-value,
+    .faculty-semester-grade-table__numeric-value,
+    .faculty-semester-grade-table__status-value
+  )
+  > small {
+  display: block;
+  margin-top: 5px;
+  color: var(--feg-text-600);
+  font-size: calc(9px * var(--ptc-font-scale, 1));
+  white-space: normal;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table__status-value > small {
+  display: flex !important;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.faculty-enter-grades-page .faculty-semester-grade-table__hint {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  color: var(--feg-text-600);
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group--midterm {
+  background: #135539;
+  color: #eefbf1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group--final {
+  background: #284d78;
+  color: #eef4ff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__group--semester {
+  background: #273d55;
+  color: #f1f5f9;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__sticky {
+  background: #163e2e;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__midterm,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__term-total-head {
+  background: #203c30;
+  color: #cce7d8;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__final,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__final-total-head {
+  background: #24384e;
+  color: #d2e3fa;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  thead
+  .faculty-semester-grade-table__result-head {
+  background: #273645;
+  color: #e5edf4;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  .faculty-semester-grade-table__sticky,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  tr.returned-row
+  .faculty-semester-grade-table__sticky,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  .faculty-semester-grade-table__term-total,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  .faculty-semester-grade-table__semester-value,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  tbody
+  .faculty-semester-grade-table__numeric-value {
+  background: #20292e;
+  color: #f1f5f6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table
+  :is(
+    .faculty-semester-grade-table__term-total,
+    .faculty-semester-grade-table__semester-value,
+    .faculty-semester-grade-table__numeric-value
+  )
+  > strong {
+  color: #b6ebcc;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-semester-grade-table__view {
+  color: #9bdfb9;
+}
+/* Attendance summary */
+.faculty-enter-grades-page .faculty-attendance-overview {
+  display: grid;
+  gap: 11px;
+  padding: 15px 18px;
+  background: #f9fcfa;
+  border-bottom: 1px solid #deece3;
+}
+.faculty-enter-grades-page .faculty-attendance-overview__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.faculty-enter-grades-page .faculty-attendance-overview__heading strong {
+  color: #214734;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+.faculty-enter-grades-page .faculty-attendance-overview__heading p,
+.faculty-enter-grades-page .faculty-attendance-overview > small {
+  margin: 4px 0 0;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+  color: #657e6e;
+}
+.faculty-enter-grades-page .faculty-attendance-overview__recorded {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e7f3e9;
+  color: #1c6740;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+.faculty-enter-grades-page .faculty-attendance-overview__statuses {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.faculty-enter-grades-page .faculty-attendance-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid #dbe8df;
+  border-radius: 8px;
+  background: #fff;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 600;
+  color: #4b6256;
+}
+.faculty-enter-grades-page .faculty-attendance-count strong {
+  font-size: calc(14px * var(--ptc-font-scale, 1));
+}
+.faculty-enter-grades-page .faculty-attendance-count--present {
+  color: #147343;
+  background: #e9f7ee;
+  border-color: #d0ead8;
+}
+.faculty-enter-grades-page .faculty-attendance-count--late {
+  color: #98610d;
+  background: #fff7e5;
+  border-color: #f0dfb5;
+}
+.faculty-enter-grades-page .faculty-attendance-count--absent {
+  color: #aa493e;
+  background: #fff0ee;
+  border-color: #f4d5d0;
+}
+.faculty-enter-grades-page .faculty-attendance-count--excused {
+  color: #3c67a0;
+  background: #eff5ff;
+  border-color: #d7e3f8;
+}
+.faculty-enter-grades-page .faculty-attendance-count--pending {
+  color: #687782;
+  background: #f2f5f7;
+  border-color: #e0e5e8;
+}
+.faculty-enter-grades-page .faculty-attendance-count--not-applicable {
+  color: #6c608b;
+  background: #f4f0fb;
+  border-color: #e3daf4;
+}
+
+/* Attendance register */
+.faculty-enter-grades-page .faculty-grade-table.faculty-attendance-table {
+  width: 100%;
+  min-width: 900px;
+  table-layout: fixed;
+}
+.faculty-enter-grades-page .faculty-attendance-table th,
+.faculty-enter-grades-page .faculty-attendance-table td {
+  padding: 12px 13px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+}
+.faculty-enter-grades-page .faculty-attendance-table thead th:first-child,
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  tbody
+  td.faculty-attendance-table__student {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+  border-right: 2px solid #d9e9df;
+}
+.faculty-enter-grades-page .faculty-attendance-table thead th:first-child {
+  z-index: 3;
+  background: #e8f4eb;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  tbody
+  tr:hover
+  td.faculty-attendance-table__student {
+  background: #f4fbf6;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status {
+  width: 100%;
+  min-width: 0;
+  font-weight: 750;
+  border-radius: 8px;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status--present {
+  color: #177044;
+  border-color: #b6dcc5;
+  background: #eff9f2;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status--late {
+  color: #946012;
+  border-color: #ead6ab;
+  background: #fffaed;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status--absent {
+  color: #ad4c40;
+  border-color: #edc8c5;
+  background: #fff5f2;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status--excused {
+  color: #3e659e;
+  border-color: #ceddf5;
+  background: #f3f7ff;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status--pending {
+  color: #60717b;
+  border-color: #d4dfe3;
+  background: #f8fafb;
+}
+.faculty-enter-grades-page
+  .faculty-attendance-table
+  .faculty-attendance-status--not-applicable {
+  color: #72658b;
+  border-color: #ded6ee;
+  background: #f9f6fd;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-overview {
+  background: #20292e;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-overview__heading
+  strong {
+  color: #eef6f1;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-overview__heading
+  p,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-overview
+  > small {
+  color: #b1c2bd;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-overview__recorded {
+  color: #b7ebcb;
+  background: #194e35;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count {
+  background: #253338;
+  border-color: #42545a;
+  color: #dce8e2;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count--present {
+  color: #ace8c6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count--late {
+  color: #f2d28e;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count--absent {
+  color: #f0aaa3;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count--excused {
+  color: #b6d0ff;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count--pending {
+  color: #c5d0d6;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-count--not-applicable {
+  color: #d4c6ef;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-table
+  thead
+  th:first-child {
+  background: #1f3c31;
+  color: #e9f8ed;
+  border-right-color: #496052;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-table
+  tbody
+  td.faculty-attendance-table__student {
+  background: #192226;
+  border-right-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-table
+  tbody
+  tr:hover
+  td.faculty-attendance-table__student {
+  background: #202f33;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-table
+  select.faculty-attendance-status {
+  color: #e3f0eb;
+  background: #26363a;
+  border-color: #456066;
+}
+@media (max-width: 600px) {
+  .faculty-enter-grades-page .faculty-attendance-overview {
+    padding: 12px;
+  }
+  .faculty-enter-grades-page .faculty-attendance-overview__statuses {
+    gap: 6px;
+  }
+}
+/* Attendance Modal */
+.faculty-enter-grades-page .faculty-attendance-modal {
+  position: fixed;
+  inset: 0;
+  width: min(1140px, calc(100vw - 32px));
+  max-width: none;
+  height: min(90dvh, 920px);
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--feg-border, #d9e7de);
+  border-radius: 16px;
+  background: var(--feg-surface, #fff);
+  color: var(--feg-text, #244131);
+  box-shadow: 0 22px 80px rgba(9, 31, 22, 0.3);
+  overflow: hidden;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal::backdrop {
+  background: rgba(11, 29, 22, 0.68);
+  backdrop-filter: blur(4px);
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  background: linear-gradient(115deg, #07512f, #0d7444);
+  color: #fff;
+  flex: none;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__topbar span {
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d8efdf;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__topbar h2 {
+  margin: 3px 0;
+  color: #fff;
+  font-size: calc(21px * var(--ptc-font-scale, 1));
+  line-height: 1.3;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__topbar p {
+  margin: 0;
+  color: #d8efdf;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__close:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.faculty-enter-grades-page
+  .faculty-attendance-modal__content
+  > .faculty-gradebook {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.faculty-enter-grades-page
+  .faculty-attendance-modal__content
+  .faculty-attendance-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--feg-border, #d9e7de);
+  background: var(--feg-surface, #fff);
+  flex: none;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__footer span {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  color: var(--feg-text-600, #667b6c);
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__footer {
+  background: #192226;
+  color: #edf5f1;
+  border-color: #35464b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__footer
+  span {
+  color: #b6c6c1;
+}
+
+@media (max-width: 680px) {
+  .faculty-enter-grades-page .faculty-attendance-modal {
+    width: calc(100vw - 12px);
+    height: 94dvh;
+    border-radius: 12px;
+  }
+  .faculty-enter-grades-page .faculty-attendance-modal__topbar {
+    padding: 13px 14px;
+  }
+  .faculty-enter-grades-page .faculty-attendance-modal__topbar h2 {
+    font-size: calc(18px * var(--ptc-font-scale, 1));
+  }
+  .faculty-enter-grades-page .faculty-attendance-modal__footer {
+    padding: 10px 12px;
+  }
 }

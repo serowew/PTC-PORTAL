@@ -10,6 +10,7 @@ import {
 } from "../services/gradebookModernIncSource.service.js";
 import { submitModernScoreCorrection } from "../services/gradebookModernScoreCorrections.service.js";
 import { assertQaGradingDatabase } from "../services/gradebookQaWriteGuard.service.js";
+import { assertCombinedSemesterSubmissionWriteAllowed } from "../services/gradebookSemesterSubmissionWriteGuard.service.js";
 
 const router = express.Router();
 
@@ -6187,16 +6188,17 @@ router.post(
           requestedSpecial.missing_requirements?.trim() ?? null,
         evidence_summary: requestedSpecial.evidence_summary.trim(),
       };
-
-      // Special-outcome writes require separate rollout approval.
+      // Special-outcome QA scope
       if (
-        body.dry_run !== true &&
-        process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true"
+        ids.offeringId !== 130 ||
+        ids.actorUserId !== 32 ||
+        ![277, 334].includes(ids.enrollmentSubjectId)
       ) {
         return res.status(403).json({
           success: false,
-          code: "COMBINED_SPECIAL_OUTCOME_WRITES_DISABLED",
-          message: "Combined INC/UD submission is not enabled on this server.",
+          code: "COMBINED_SPECIAL_QA_ONLY",
+          message:
+            "Special-outcome submissions are restricted to the authorized Offering #130 QA students.",
         });
       }
     }
@@ -6208,14 +6210,16 @@ router.post(
       connection = await db.getConnection();
       await connection.beginTransaction();
       transactionOpen = true;
-      // Allow committed combined submissions only after rollout approval.
-      if (
-        body.dry_run !== true &&
-        process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true"
-      ) {
+
+      // Numeric submissions use the controlled rollout gate.
+      const { isQaDatabase } =
+        await assertCombinedSemesterSubmissionWriteAllowed(connection);
+
+      // The INC/UD pilot must not be promoted to other databases yet.
+      if (special && !isQaDatabase) {
         previewFail(
-          "COMBINED_SUBMISSION_WRITES_DISABLED",
-          "Combined semester grade submission is not enabled on this server.",
+          "COMBINED_SPECIAL_NON_QA_DISABLED",
+          "INC/UD submissions are not enabled outside the QA database yet.",
           403,
         );
       }
@@ -7078,17 +7082,8 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // Committed resubmissions require explicit rollout approval.
-      if (
-        body.dry_run !== true &&
-        process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true"
-      ) {
-        previewFail(
-          "COMBINED_RESUBMIT_WRITES_DISABLED",
-          "Combined semester grade resubmission is not enabled on this server.",
-          403,
-        );
-      }
+      // Returned numeric submissions use the controlled rollout gate.
+      await assertCombinedSemesterSubmissionWriteAllowed(connection);
 
       // Offering
       const [offerings] = await connection.execute(
@@ -7912,13 +7907,8 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // The service independently validates the instructor and rollout gates.
-      if (
-        process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true" ||
-        process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true"
-      ) {
-        await assertQaGradingDatabase(connection);
-      }
+      // Combined grading writes remain QA-only.
+      await assertQaGradingDatabase(connection);
 
       const result = await resubmitSpecialOutcome(
         connection,

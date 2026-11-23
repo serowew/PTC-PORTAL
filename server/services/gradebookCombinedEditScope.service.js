@@ -100,8 +100,25 @@ export async function assertCombinedSemesterCellEditable(
     }
   }
 
-  // No combined submission exists yet.
-  if (!attemptsExist.length) return;
+  // Protect existing grades that have not entered the combined workflow.
+  if (!attemptsExist.length) {
+    const [existingGrades] = await connection.execute(
+      `SELECT grade_id
+       FROM grades
+      WHERE enrollment_subject_id = ?
+      FOR UPDATE`,
+      [enrollmentSubjectId],
+    );
+
+    if (existingGrades.length > 0) {
+      combinedEditFail(
+        "COMBINED_PREEXISTING_GRADE_REVIEW_REQUIRED",
+        "This student has an existing grade outside the combined submission workflow. Review or migrate it before entering new scores or attendance.",
+      );
+    }
+
+    return;
+  }
 
   const [grades] = await connection.execute(
     `SELECT grade_id, grade_status
@@ -144,13 +161,10 @@ export async function assertCombinedSemesterCellEditable(
   const current = submissions[0] ?? null;
 
   if (!current) {
-    if (grade.grade_status !== "Draft") {
-      combinedEditFail(
-        "COMBINED_GRADE_WITHOUT_ATTEMPT",
-        "A non-Draft grade without a combined submission cannot be edited.",
-      );
-    }
-    return;
+    combinedEditFail(
+      "COMBINED_GRADE_WITHOUT_ATTEMPT",
+      "A grade exists without a matching combined submission. Review or migrate it before editing.",
+    );
   }
 
   if (current.submission_status !== "RETURNED") {

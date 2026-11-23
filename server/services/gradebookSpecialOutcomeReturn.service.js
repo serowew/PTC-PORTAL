@@ -1,6 +1,4 @@
-// Special outcome (INC/UD) return — QA dry-run pilot.
-import { assertQaGradingDatabase } from "./gradebookQaWriteGuard.service.js";
-
+import { assertSpecialOutcomeReturnWriteAllowed } from "./gradebookSpecialReturnWriteGuard.service.js";
 function reject(code, message, status = 409) {
   const error = new Error(message);
   error.code = code;
@@ -30,7 +28,7 @@ export async function returnSpecialOutcomeSubmission(connection, input) {
     actorDepartmentId,
     dryRun,
   } = input;
-  await assertQaGradingDatabase(connection);
+  await assertSpecialOutcomeReturnWriteAllowed(connection);
   if (typeof dryRun !== "boolean") {
     reject(
       "SPECIAL_RETURN_DRY_RUN_REQUIRED",
@@ -65,19 +63,6 @@ export async function returnSpecialOutcomeSubmission(connection, input) {
     );
   }
 
-  // QA fixture
-  if (
-    dryRun === false &&
-    (!same(target.offering_id, 187) ||
-      !same(target.enrollment_subject_id, 341) ||
-      Number(actorUserId) !== 31)
-  ) {
-    reject(
-      "SPECIAL_RETURN_QA_FIXTURE_ONLY",
-      "Committed return is limited to the isolated Offering #187 QA fixture.",
-      403,
-    );
-  }
   const [offerings] = await connection.execute(
     `SELECT so.offering_id, so.status AS offering_status,
             so.faculty_id, so.academic_year_id, so.semester_id,
@@ -423,8 +408,8 @@ export async function returnSpecialOutcomeSubmission(connection, input) {
 
   return {
     success: true,
-    dry_run: true,
-    persisted: false,
+    dry_run: dryRun,
+    persisted: !dryRun,
     submission_id: String(submissionId),
     grade_id: Number(grade.grade_id),
     grading_outcome: grade.grading_outcome,
@@ -432,13 +417,16 @@ export async function returnSpecialOutcomeSubmission(connection, input) {
     grade_status: "Returned",
     returned_edit_scope: scope,
     record_version: expectedVersion + 1,
-    review_id: null,
+    review_id: dryRun ? null : String(reviewInsert.insertId),
     special_outcome_id: String(outcome.special_outcome_id),
     original_special_evidence_unchanged: true,
     official_grade_published: false,
     original_sheet_unchanged: true,
+    commit_supported: true,
     next_step:
       "Faculty evidence revision and resubmission require a separate guarded implementation.",
-    note: "QA dry-run; caller must roll back this transaction.",
+    note: dryRun
+      ? "Dry-run validation only; caller must roll back this transaction."
+      : "Return committed with an auditable review record.",
   };
 }
