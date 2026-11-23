@@ -24,6 +24,10 @@ export const programHeadNavGroups = [
         path: "/programhead/class/schedule",
       },
       {
+        label: "Pending Student Grades",
+        path: "/programhead/grades/pending",
+      },
+      {
         label: "Classes",
         path: "/programhead/class/management",
       },
@@ -43,7 +47,7 @@ export const programHeadNavGroups = [
     icon: "📋",
     children: [
       {
-        label: "Pending Grades",
+        label: "Pending Grade Approvals",
         path: "/programhead/gradeapproval/pending",
       },
       {

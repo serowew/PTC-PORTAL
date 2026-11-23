@@ -2579,6 +2579,11 @@ export default function EnterGrades() {
     [searchParams],
   );
 
+  const requestedEnrollmentSubjectId = useMemo(
+    () => parsePositiveInt(searchParams.get("enrollment_subject_id")),
+    [searchParams],
+  );
+
   const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
 
   const [classes, setClasses] = useState<FacultyClass[]>([]);
@@ -2657,6 +2662,9 @@ export default function EnterGrades() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [previewStudentId, setPreviewStudentId] = useState<number | null>(null);
   const activePreviewStudentIdRef = useRef<number | null>(previewStudentId);
+  const handledStudentLinkRef = useRef<string | null>(null);
+  const studentLinkScrollRef = useRef<number | null>(null);
+  const [studentLinkError, setStudentLinkError] = useState("");
 
   useEffect(() => {
     activePreviewStudentIdRef.current = previewStudentId;
@@ -4051,6 +4059,72 @@ export default function EnterGrades() {
     });
   }, [students, studentSearch, statusFilter]);
 
+  // Open the exact enrolled student chosen from Pending Grades.
+  useEffect(() => {
+    if (!requestedOfferingId || !requestedEnrollmentSubjectId) return;
+    if (
+      selectedOfferingId !== requestedOfferingId ||
+      gradebookLoading ||
+      Boolean(gradebookError) ||
+      gradebookClass?.offering_id !== requestedOfferingId
+    )
+      return;
+
+    const linkKey = `${requestedOfferingId}:${requestedEnrollmentSubjectId}`;
+    if (handledStudentLinkRef.current === linkKey) return;
+    handledStudentLinkRef.current = linkKey;
+
+    const student = students.find(
+      (item) => item.enrollment_subject_id === requestedEnrollmentSubjectId,
+    );
+
+    if (!student) {
+      setStudentLinkError(
+        "The requested student is not in this class gradebook. Check the student enrollment and class assignment.",
+      );
+      return;
+    }
+
+    setStudentLinkError("");
+    studentLinkScrollRef.current = student.enrollment_subject_id;
+    setStudentSearch(student.student_number);
+    setStatusFilter("All");
+    activePreviewStudentIdRef.current = student.enrollment_subject_id;
+    setPreviewStudentId(student.enrollment_subject_id);
+  }, [
+    requestedOfferingId,
+    requestedEnrollmentSubjectId,
+    selectedOfferingId,
+    gradebookLoading,
+    gradebookError,
+    gradebookClass,
+    students,
+  ]);
+
+  // Scroll after the combined assessment table renders the selected row.
+  useEffect(() => {
+    const linkedId = studentLinkScrollRef.current;
+    if (
+      linkedId === null ||
+      previewStudentId !== linkedId ||
+      modernGradebook?.offering_id !== selectedOfferingId ||
+      !filteredStudents.some(
+        (student) => student.enrollment_subject_id === linkedId,
+      )
+    )
+      return;
+
+    const row = document.getElementById(`semester-grade-student-${linkedId}`);
+    if (!row) return;
+
+    studentLinkScrollRef.current = null;
+    row.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "nearest",
+    });
+  }, [previewStudentId, filteredStudents, modernGradebook, selectedOfferingId]);
+
   const rowPreviewStudentIds = useMemo(() => {
     if (modernGradebook?.offering_id !== selectedOfferingId) return "";
 
@@ -4228,6 +4302,8 @@ export default function EnterGrades() {
 
     setStudentSearch("");
     setStatusFilter("All");
+    setStudentLinkError("");
+    studentLinkScrollRef.current = null;
 
     setPreviewStudentId(null);
 
@@ -4667,6 +4743,18 @@ export default function EnterGrades() {
             </div>
           </article>
         </section>
+
+        {studentLinkError && (
+          <section className="faculty-grade-error" role="alert">
+            <span className="faculty-grade-error__icon">
+              <AlertCircle size={20} />
+            </span>
+            <div>
+              <strong>Requested student not found</strong>
+              <p>{studentLinkError}</p>
+            </div>
+          </section>
+        )}
 
         {gradebookError && (
           <section className="faculty-grade-error" role="alert">
@@ -5196,6 +5284,7 @@ export default function EnterGrades() {
                           return (
                             <tr
                               key={id}
+                              id={`semester-grade-student-${id}`}
                               className={`${status === "Returned" ? "returned-row" : ""} ${previewStudentId === id ? "faculty-semester-grade-table__selected" : ""}`}
                             >
                               <td className="faculty-semester-grade-table__sticky">

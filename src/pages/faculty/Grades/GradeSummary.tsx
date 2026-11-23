@@ -82,9 +82,52 @@ interface GradebookResponse {
   error?: string;
 }
 
+type AssessmentProgress = "NO_SCORES_YET" | "IN_PROGRESS" | "UNVERIFIED";
+
+interface ModernRosterStudent {
+  enrollment_subject_id: number;
+  is_current_enrolled: boolean;
+  scores_by_assessment_id: Record<
+    string,
+    {
+      saved: boolean;
+      score_status: "PENDING" | "SCORED" | "NOT_APPLICABLE";
+    }
+  >;
+}
+
+interface ModernRosterResponse {
+  success: boolean;
+  offering_id: number;
+  students?: ModernRosterStudent[];
+}
+
 interface PendingRow {
   offering: FacultyClass;
   student: GradebookStudent;
+  progress: AssessmentProgress;
+}
+
+function classifyAssessmentProgress(
+  student: GradebookStudent,
+  roster: ModernRosterResponse | null,
+): AssessmentProgress {
+  const match = roster?.students?.find(
+    (entry) =>
+      Number(entry.enrollment_subject_id) ===
+        Number(student.enrollment_subject_id) && entry.is_current_enrolled,
+  );
+
+  if (!match) return "UNVERIFIED";
+
+  const hasSavedScore = Object.values(match.scores_by_assessment_id ?? {}).some(
+    (score) =>
+      score.saved &&
+      (score.score_status === "SCORED" ||
+        score.score_status === "NOT_APPLICABLE"),
+  );
+
+  return hasSavedScore ? "IN_PROGRESS" : "NO_SCORES_YET";
 }
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
@@ -238,18 +281,97 @@ export default function GradeSummary() {
           return;
         }
 
+        // Check modern assessment progress only for classes with missing grades.
+        const classesToCheck = gradebooks.flatMap((result) =>
+          result.status === "fulfilled" &&
+          result.value.students.some(
+            (student) =>
+              student.subject_status === "Enrolled" && student.grade === null,
+          )
+            ? [result.value.offering]
+            : [],
+        );
+
+        const modernRosters = new Map<number, ModernRosterResponse>();
+        let modernCheckIndex = 0;
+        let modernUnavailable = 0;
+        let modernSessionExpired = false;
+
+        await Promise.all(
+          Array.from(
+            { length: Math.min(4, classesToCheck.length) },
+            async () => {
+              while (
+                modernCheckIndex < classesToCheck.length &&
+                !signal?.aborted &&
+                !modernSessionExpired
+              ) {
+                const item = classesToCheck[modernCheckIndex++];
+
+                try {
+                  const response = await authService.authFetch(
+                    `${api.baseUrl}/api/gradebook/${item.offering_id}/roster`,
+                    { method: "GET", signal },
+                  );
+
+                  if (response.status === 401) {
+                    modernSessionExpired = true;
+                    return;
+                  }
+
+                  const data =
+                    await readJsonResponse<ModernRosterResponse>(response);
+
+                  if (
+                    !response.ok ||
+                    !data.success ||
+                    Number(data.offering_id) !== Number(item.offering_id) ||
+                    !Array.isArray(data.students)
+                  ) {
+                    modernUnavailable += 1;
+                    continue;
+                  }
+
+                  modernRosters.set(item.offering_id, data);
+                } catch (requestError) {
+                  if (signal?.aborted) return;
+
+                  modernUnavailable += 1;
+                  console.warn(
+                    `Assessment progress unavailable for offering ${item.offering_id}:`,
+                    requestError,
+                  );
+                }
+              }
+            },
+          ),
+        );
+
+        if (signal?.aborted) return;
+
+        if (modernSessionExpired) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         const nextRows: PendingRow[] = [];
 
         gradebooks.forEach((result) => {
-          if (result.status !== "fulfilled") {
-            return;
-          }
+          if (result.status !== "fulfilled") return;
 
           result.value.students.forEach((student) => {
-            if (student.subject_status === "Enrolled" && student.grade === null) {
+            if (
+              student.subject_status === "Enrolled" &&
+              student.grade === null
+            ) {
               nextRows.push({
                 offering: result.value.offering,
                 student,
+                progress: classifyAssessmentProgress(
+                  student,
+                  modernRosters.get(result.value.offering.offering_id) ?? null,
+                ),
               });
             }
           });
@@ -273,11 +395,21 @@ export default function GradeSummary() {
           (result) => result.status === "rejected",
         ).length;
 
+        const warnings: string[] = [];
+
         if (failed > 0) {
-          setError(
-            `${failed} class${failed === 1 ? "" : "es"} could not be checked. The list shows the classes that loaded successfully.`,
+          warnings.push(
+            `${failed} class${failed === 1 ? "" : "es"} could not be checked. The list shows classes that loaded successfully.`,
           );
         }
+
+        if (modernUnavailable > 0) {
+          warnings.push(
+            `Assessment progress could not be verified for ${modernUnavailable} class${modernUnavailable === 1 ? "" : "es"}. Those students remain listed for review.`,
+          );
+        }
+
+        setError(warnings.join(" "));
       } catch (requestError) {
         if (
           requestError instanceof DOMException &&
@@ -318,8 +450,7 @@ export default function GradeSummary() {
 
     return pendingRows.filter(({ offering, student }) => {
       const matchesClass =
-        classFilter === "All" ||
-        String(offering.offering_id) === classFilter;
+        classFilter === "All" || String(offering.offering_id) === classFilter;
 
       const searchable = [
         student.student_number,
@@ -397,9 +528,9 @@ export default function GradeSummary() {
               <CircleDashed size={18} aria-hidden="true" />
             </span>
             <div>
-              <small>Not Encoded</small>
+              <small>No Semester Record</small>
               <strong>{pendingRows.length}</strong>
-              <span>Students without a grade record</span>
+              <span>Students without a semester grade record</span>
             </div>
           </article>
           <article>
@@ -438,7 +569,9 @@ export default function GradeSummary() {
             <div>
               <span>Filter Pending Records</span>
               <strong>Find students that still need grades</strong>
-              <p>Search pending records or narrow the list to one assigned class.</p>
+              <p>
+                Search pending records or narrow the list to one assigned class.
+              </p>
             </div>
             {(search || classFilter !== "All") && (
               <button
@@ -551,8 +684,10 @@ export default function GradeSummary() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRows.map(({ offering, student }) => (
-                    <tr key={student.enrollment_subject_id}>
+                  {filteredRows.map(({ offering, student, progress }) => (
+                    <tr
+                      key={`${offering.offering_id}-${student.enrollment_subject_id}`}
+                    >
                       <td>
                         <div className="faculty-pending-grades-student">
                           <strong>{student.full_name}</strong>
@@ -572,10 +707,10 @@ export default function GradeSummary() {
                         </small>
                       </td>
                       <td>
-                        <strong>{offering.academic_period.academic_year}</strong>
-                        <small>
-                          {offering.academic_period.semester_name}
-                        </small>
+                        <strong>
+                          {offering.academic_period.academic_year}
+                        </strong>
+                        <small>{offering.academic_period.semester_name}</small>
                       </td>
                       <td>
                         <strong>{formatDays(offering.schedule.days)}</strong>
@@ -585,19 +720,23 @@ export default function GradeSummary() {
                       </td>
                       <td>
                         <span className="faculty-pending-grades-status">
-                          Not Encoded
+                          {progress === "IN_PROGRESS"
+                            ? "In Progress"
+                            : progress === "NO_SCORES_YET"
+                              ? "No Scores Yet"
+                              : "Progress Unavailable"}
                         </span>
                       </td>
                       <td>
                         <button
                           type="button"
                           className="faculty-pending-grades-action"
-                          onClick={() =>
-                            openEnterGrades(offering.offering_id)
-                          }
+                          onClick={() => openEnterGrades(offering.offering_id)}
                         >
                           <FilePenLine size={14} aria-hidden="true" />
-                          Encode Grade
+                          {progress === "IN_PROGRESS"
+                            ? "Continue Grades"
+                            : "Open Gradebook"}
                         </button>
                       </td>
                     </tr>

@@ -106,8 +106,10 @@ import ProgramHeadDashboard from "../pages/programhead/dashboard/Dashboard";
 import AnnouncementProg from "../pages/programhead/Announcement/AnnouncementProg";
 import AnnouncementProgD from "../pages/programhead/Announcement/AnnouncementDProg";
 import PendingGrades from "../pages/programhead/GradeApproval/PendingGrades";
-import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/TransferEvaluationReview";
+import ProgramHeadPendingGrades from "../pages/programhead/Grades/ProgramHeadPendingGrades";
+import ProgramHeadGradeEncoding from "../pages/programhead/Grades/ProgramHeadGradeEncoding";
 
+import TransferEvaluationPROG from "../pages/programhead/TransferEvaluation/TransferEvaluationReview";
 //Registrar
 import RegistrarDashboard from "../pages/registrar/Dashboard";
 
@@ -573,7 +575,15 @@ export default function AppRoutes() {
           path="/programhead/gradeapproval/pending"
           element={<ProgramHeadRoute element={<PendingGrades />} />}
         />
+        <Route
+          path="/programhead/grades/pending"
+          element={<ProgramHeadRoute element={<ProgramHeadPendingGrades />} />}
+        />
 
+        <Route
+          path="/programhead/grades/enter"
+          element={<ProgramHeadRoute element={<ProgramHeadGradeEncoding />} />}
+        />
         <Route
           path="/programhead/grade-change-requests"
           element={<ProgramHeadRoute element={<GradeChangeRequests />} />}
@@ -588,10 +598,7 @@ export default function AppRoutes() {
           path="/programhead/class/management"
           element={<ProgramHeadRoute element={<ClassPROG />} />}
         />
-        <Route
-          path="/programhead/grades/enter"
-          element={<ProgramHeadRoute element={<EnterGrades />} />}
-        />
+
         <Route
           path="/programhead/class/offering-batches"
           element={<ProgramHeadRoute element={<OfferingBatchesPH />} />}
