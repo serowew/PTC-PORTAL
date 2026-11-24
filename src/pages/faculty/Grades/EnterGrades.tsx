@@ -2638,6 +2638,9 @@ export default function EnterGrades() {
   const [modernGradebookLoading, setModernGradebookLoading] = useState(false);
 
   const [modernGradebookError, setModernGradebookError] = useState("");
+  const [gradebookInitNeeded, setGradebookInitNeeded] = useState(false);
+  const [gradebookInitBusy, setGradebookInitBusy] = useState(false);
+  const [gradebookInitError, setGradebookInitError] = useState("");
 
   const [assessmentTerm, setAssessmentTerm] =
     useState<AssessmentTerm>("MIDTERM");
@@ -3028,6 +3031,8 @@ export default function EnterGrades() {
       setModernGradebook(null);
       setModernGradebookError("");
       setModernGradebookLoading(false);
+      setGradebookInitNeeded(false);
+      setGradebookInitError("");
       return;
     }
 
@@ -3037,6 +3042,8 @@ export default function EnterGrades() {
     const loadModernGradebook = async () => {
       setModernGradebook(null);
       setModernGradebookError("");
+      setGradebookInitNeeded(false);
+      setGradebookInitError("");
       setModernGradebookLoading(true);
 
       try {
@@ -3059,6 +3066,13 @@ export default function EnterGrades() {
         if (controller.signal.aborted) return;
 
         if (!response.ok || !data.success) {
+          if (
+            response.status === 409 &&
+            data.code === "GRADEBOOK_NOT_INITIALIZED"
+          ) {
+            setGradebookInitNeeded(true);
+          }
+
           throw new Error(
             data.message || "Unable to load assessment gradebook.",
           );
@@ -4313,6 +4327,8 @@ export default function EnterGrades() {
     setResubmissionMessage("");
 
     setGradebookError("");
+    setGradebookInitNeeded(false);
+    setGradebookInitError("");
   };
 
   const filteredAssignedClasses = useMemo(() => {
@@ -4351,6 +4367,122 @@ export default function EnterGrades() {
 
   const refreshGradebook = () => {
     setGradebookRefreshKey((current) => current + 1);
+  };
+
+  // Class initialization is a one-time, instructor-authorized action.
+  const initializeGradebookFromUI = async () => {
+    const offeringId = selectedOfferingId;
+    if (!offeringId || gradebookInitBusy || modernGradebookLoading) return;
+
+    setGradebookInitBusy(true);
+    setGradebookInitError("");
+
+    try {
+      const checkResponse = await authService.authFetch(
+        `${MODERN_GRADEBOOK_API}/preflight/${offeringId}`,
+        { method: "GET" },
+      );
+
+      if (checkResponse.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const check = await readJsonResponse<{
+        success: boolean;
+        can_initialize?: boolean;
+        configuration_count?: number;
+        blockers?: string[];
+        message?: string;
+        code?: string;
+      }>(checkResponse);
+
+      if (!checkResponse.ok || !check.success) {
+        throw new Error(
+          check.message || check.code || "Gradebook preflight failed.",
+        );
+      }
+
+      if (!check.can_initialize) {
+        if (
+          Number(check.configuration_count) > 0 ||
+          check.blockers?.includes("GRADEBOOK_ALREADY_INITIALIZED")
+        ) {
+          if (activeOfferingIdRef.current === offeringId) {
+            setGradebookInitNeeded(false);
+            refreshGradebook();
+          }
+          return;
+        }
+
+        throw new Error(
+          `Initialization blocked: ${check.blockers?.join(", ") || "Unknown reason"}`,
+        );
+      }
+
+      // Do not initialize a class that the instructor has since left.
+      if (activeOfferingIdRef.current !== offeringId) return;
+
+      if (
+        !window.confirm(
+          `Initialize the assessment gradebook for Offering #${offeringId}?\n\nThis creates the Midterm and Final Term grading configuration for the class.`,
+        )
+      ) {
+        return;
+      }
+
+      if (activeOfferingIdRef.current !== offeringId) return;
+
+      const response = await authService.authFetch(
+        `${MODERN_GRADEBOOK_API}/initialize/${offeringId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm_initialize: true, dry_run: false }),
+        },
+      );
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const data = await readJsonResponse<{
+        success: boolean;
+        offering_id?: number;
+        persisted?: boolean;
+        message?: string;
+        code?: string;
+      }>(response);
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.persisted !== true ||
+        Number(data.offering_id) !== offeringId
+      ) {
+        throw new Error(
+          data.message || data.code || "Gradebook initialization failed.",
+        );
+      }
+
+      if (activeOfferingIdRef.current === offeringId) {
+        setGradebookInitNeeded(false);
+        refreshGradebook();
+      }
+    } catch (error) {
+      if (activeOfferingIdRef.current === offeringId) {
+        setGradebookInitError(
+          error instanceof Error
+            ? error.message
+            : "Unable to initialize gradebook.",
+        );
+      }
+    } finally {
+      setGradebookInitBusy(false);
+    }
   };
 
   const backToClasses = () => {
@@ -5011,13 +5143,53 @@ export default function EnterGrades() {
                         </button>
                       </div>
                     ) : (
-                      <small title={modernGradebookError || undefined}>
-                        {modernGradebookLoading
-                          ? "Loading assessment columns..."
-                          : modernGradebookError
-                            ? `Assessment data unavailable: ${modernGradebookError}`
-                            : "Direct percentage entry is read-only."}
-                      </small>
+                      <div className="faculty-gradebook-init">
+                        {gradebookInitNeeded ? (
+                          <>
+                            <div className="faculty-gradebook-init__copy">
+                              <BookOpenCheck size={18} aria-hidden="true" />
+                              <div>
+                                <strong>Gradebook Setup Required</strong>
+                                <small>
+                                  Initialize this class once to enable
+                                  assessment entry.
+                                </small>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              className="faculty-grade-header-button faculty-gradebook-init__button"
+                              onClick={() => void initializeGradebookFromUI()}
+                              disabled={
+                                gradebookInitBusy || modernGradebookLoading
+                              }
+                            >
+                              <BookOpenCheck size={15} aria-hidden="true" />
+                              {gradebookInitBusy
+                                ? "Initializing..."
+                                : "Initialize Gradebook"}
+                            </button>
+                          </>
+                        ) : (
+                          <small title={modernGradebookError || undefined}>
+                            {modernGradebookLoading
+                              ? "Loading assessment columns..."
+                              : modernGradebookError
+                                ? `Assessment data unavailable: ${modernGradebookError}`
+                                : "Direct percentage entry is read-only."}
+                          </small>
+                        )}
+
+                        {gradebookInitError && (
+                          <small
+                            className="faculty-gradebook-init__error"
+                            role="alert"
+                          >
+                            {gradebookInitError}
+                          </small>
+                        )}
+                      </div>
                     )}
                   </div>
 
