@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
+import AdmissionPeriodsPanel from "./AdmissionPeriodsPanel";
 import { apiUrl } from "../../../services/api";
 import { authService } from "../../../services/auth.service";
 import "../../../styles/RegistrarStudentlist.css";
@@ -718,6 +719,8 @@ export default function AdmissionManagementR() {
             </p>
           </div>
         </section>
+
+        <AdmissionPeriodsPanel />
 
         {/* Summary */}
         <section

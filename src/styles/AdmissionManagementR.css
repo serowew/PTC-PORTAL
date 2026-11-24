@@ -192,48 +192,70 @@
 }
 
 /* Header */
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__hero {
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__hero {
   display: flex;
   align-items: center;
   min-height: 0;
   margin-bottom: calc(20px * var(--adm-density));
   padding: calc(30px * var(--adm-density)) calc(32px * var(--adm-density));
-  border: 1px solid #0C633B !important;
+  border: 1px solid #0c633b !important;
   border-radius: 14px;
-  background: linear-gradient(105deg, #07512F, #0D7444) !important;
-  background-image: linear-gradient(105deg, #07512F, #0D7444) !important;
+  background: linear-gradient(105deg, #07512f, #0d7444) !important;
+  background-image: linear-gradient(105deg, #07512f, #0d7444) !important;
   box-shadow: none !important;
 }
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__hero::before,
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__hero::after {
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__hero::before,
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__hero::after {
   content: none !important;
   display: none !important;
 }
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__hero-copy {
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__hero-copy {
   max-width: 100%;
   min-width: 0;
   flex: 1;
 }
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__eyebrow {
-  color: #F6FFF9 !important;
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__eyebrow {
+  color: #f6fff9 !important;
   font-size: calc(12px * var(--ptc-font-scale, 1));
   font-weight: 750;
-  letter-spacing: .055em;
+  letter-spacing: 0.055em;
 }
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__eyebrow-icon {
-  border: 1px solid rgba(255,255,255,.22) !important;
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__eyebrow-icon {
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
   border-radius: 9px;
-  background: rgba(255,255,255,.12) !important;
-  color: #F6FFF9 !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #f6fff9 !important;
 }
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__hero h1 {
-  color: #F6FFF9 !important;
-  font-size: clamp(calc(27px * var(--ptc-font-scale, 1)), calc(3vw * var(--ptc-font-scale, 1)), calc(40px * var(--ptc-font-scale, 1)));
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__hero
+  h1 {
+  color: #f6fff9 !important;
+  font-size: clamp(
+    calc(27px * var(--ptc-font-scale, 1)),
+    calc(3vw * var(--ptc-font-scale, 1)),
+    calc(40px * var(--ptc-font-scale, 1))
+  );
   font-weight: 760;
   line-height: 1.15;
 }
-.dashboard-wrapper .registrar-admission-management .registrar-student-list__hero p {
-  color: #F6FFF9 !important;
+.dashboard-wrapper
+  .registrar-admission-management
+  .registrar-student-list__hero
+  p {
+  color: #f6fff9 !important;
   font-size: calc(14px * var(--ptc-font-scale, 1));
   line-height: 1.55;
 }
@@ -245,10 +267,14 @@
 .registrar-admission-management .registrar-student-list__stat-card {
   min-width: 0;
 }
-.registrar-admission-management .registrar-student-list__stat-card > div:last-child {
+.registrar-admission-management
+  .registrar-student-list__stat-card
+  > div:last-child {
   min-width: 0;
 }
-.registrar-admission-management .registrar-student-list__stat-card :is(span,small) {
+.registrar-admission-management
+  .registrar-student-list__stat-card
+  :is(span, small) {
   overflow-wrap: anywhere;
 }
 
@@ -256,7 +282,7 @@
 .registrar-admission-management .registrar-student-list__panel-heading h2 {
   font-weight: 700;
 }
-.registrar-admission-management .registrar-student-list__table :is(th,td) {
+.registrar-admission-management .registrar-student-list__table :is(th, td) {
   padding-top: calc(13px * var(--adm-density));
   padding-bottom: calc(13px * var(--adm-density));
 }
@@ -271,7 +297,9 @@
 .registrar-admission-management .registrar-student-list__action--primary {
   font-weight: 600;
 }
-.registrar-admission-management .registrar-student-list__panel :is(input,select,textarea) {
+.registrar-admission-management
+  .registrar-student-list__panel
+  :is(input, select, textarea) {
   max-width: 100%;
 }
 .registrar-admission-management .registrar-student-list__pagination-bar {
@@ -279,113 +307,155 @@
 }
 
 /* Dark Mode */
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main:has(> .dashboard-content > .registrar-admission-management) > .dashboard-content,
-html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main > .dashboard-content > .registrar-admission-management {
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main:has(> .dashboard-content > .registrar-admission-management)
+  > .dashboard-content,
+html
+  body
+  .dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .dashboard-main
+  > .dashboard-content
+  > .registrar-admission-management {
   background: #111719 !important;
   background-image: none !important;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management {
   --rsl-bg: #111719;
   --rsl-surface: #192226;
-  --rsl-border: #35464B;
-  --rsl-border-strong: #4A5B61;
-  --rsl-text-950: #F0F6F2;
-  --rsl-text-800: #E2EBE6;
-  --rsl-text-600: #C0CFC7;
-  --rsl-text-500: #A9B9B1;
-  color: #F0F6F2;
+  --rsl-border: #35464b;
+  --rsl-border-strong: #4a5b61;
+  --rsl-text-950: #f0f6f2;
+  --rsl-text-800: #e2ebe6;
+  --rsl-text-600: #c0cfc7;
+  --rsl-text-500: #a9b9b1;
+  color: #f0f6f2;
   background: #111719 !important;
   background-image: none !important;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management::before {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management::before {
   content: none !important;
   display: none !important;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__hero {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__hero {
   border-color: #245642 !important;
-  background: linear-gradient(105deg, #093522, #0B5133) !important;
-  background-image: linear-gradient(105deg, #093522, #0B5133) !important;
+  background: linear-gradient(105deg, #093522, #0b5133) !important;
+  background-image: linear-gradient(105deg, #093522, #0b5133) !important;
   box-shadow: none !important;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management :is(
-  .registrar-student-list__panel,
-  .registrar-student-list__panel-heading,
-  .registrar-student-list__toolbar,
-  .registrar-student-list__pagination-bar,
-  .registrar-student-list__table-shell,
-  .registrar-student-list__table-scroll,
-  .registrar-student-list__panel > .px-4.pb-4
-) {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  :is(
+    .registrar-student-list__panel,
+    .registrar-student-list__panel-heading,
+    .registrar-student-list__toolbar,
+    .registrar-student-list__pagination-bar,
+    .registrar-student-list__table-shell,
+    .registrar-student-list__table-scroll,
+    .registrar-student-list__panel > .px-4.pb-4
+  ) {
   background: #192226;
-  border-color: #35464B;
-  color: #E2EBE6;
+  border-color: #35464b;
+  color: #e2ebe6;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management :is(
-  .registrar-student-list__stat-card,
-  .registrar-student-list__record-count,
-  .registrar-student-list__filter-summary,
-  .registrar-student-list__state
-) {
-  background: #20292E;
-  border-color: #35464B;
-  color: #E2EBE6;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  :is(
+    .registrar-student-list__stat-card,
+    .registrar-student-list__record-count,
+    .registrar-student-list__filter-summary,
+    .registrar-student-list__state
+  ) {
+  background: #20292e;
+  border-color: #35464b;
+  color: #e2ebe6;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__table th {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table
+  th {
   background: #263238;
-  color: #E4EFE9;
-  border-color: #35464B;
+  color: #e4efe9;
+  border-color: #35464b;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__table td {
-  background: #20292E;
-  color: #E2EBE6;
-  border-color: #35464B;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table
+  td {
+  background: #20292e;
+  color: #e2ebe6;
+  border-color: #35464b;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__table tbody tr:hover td {
-  background: #2B363B;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__table
+  tbody
+  tr:hover
+  td {
+  background: #2b363b;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management :is(
-  .registrar-student-list__search,
-  .registrar-student-list__filters select,
-  .registrar-student-list__table select,
-  .registrar-student-list__panel input:not([type="checkbox"]),
-  .registrar-student-list__panel textarea.form-control
-) {
-  background: #20292E;
-  border-color: #4A5B61;
-  color: #F0F6F2;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  :is(
+    .registrar-student-list__search,
+    .registrar-student-list__filters select,
+    .registrar-student-list__table select,
+    .registrar-student-list__panel input:not([type="checkbox"]),
+    .registrar-student-list__panel textarea.form-control
+  ) {
+  background: #20292e;
+  border-color: #4a5b61;
+  color: #f0f6f2;
   color-scheme: dark;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management :is(
-  .registrar-student-list__panel h2,
-  .registrar-student-list__panel h3,
-  .registrar-student-list__panel strong,
-  .registrar-student-list__stat-card strong
-) {
-  color: #F0F6F2;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  :is(
+    .registrar-student-list__panel h2,
+    .registrar-student-list__panel h3,
+    .registrar-student-list__panel strong,
+    .registrar-student-list__stat-card strong
+  ) {
+  color: #f0f6f2;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management :is(
-  .registrar-student-list__panel label,
-  .registrar-student-list__panel p,
-  .registrar-student-list__panel small,
-  .registrar-student-list__stat-card span,
-  .registrar-student-list__stat-card small,
-  .registrar-student-list__record-count :is(small,div)
-) {
-  color: #C0CFC7;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  :is(
+    .registrar-student-list__panel label,
+    .registrar-student-list__panel p,
+    .registrar-student-list__panel small,
+    .registrar-student-list__stat-card span,
+    .registrar-student-list__stat-card small,
+    .registrar-student-list__record-count :is(small, div)
+  ) {
+  color: #c0cfc7;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__action:not(.registrar-student-list__action--primary),
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__page-btn {
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__action:not(.registrar-student-list__action--primary),
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__page-btn {
   background: #263238;
-  border-color: #4A5B61;
-  color: #EAF2ED;
+  border-color: #4a5b61;
+  color: #eaf2ed;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .registrar-student-list__action--primary {
-  background: linear-gradient(180deg, #117846, #0B6338);
-  border-color: #198B55;
-  color: #FFFFFF;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-student-list__action--primary {
+  background: linear-gradient(180deg, #117846, #0b6338);
+  border-color: #198b55;
+  color: #ffffff;
 }
-.dashboard-wrapper[data-ptc-sidebar-theme="dark"] .registrar-admission-management .text-danger {
-  color: #FF9A94 !important;
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .text-danger {
+  color: #ff9a94 !important;
 }
 
 /* Responsive */
@@ -394,7 +464,6 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main > .d
   .registrar-admission-management .registrar-student-list__panel-heading {
     align-items: stretch;
   }
-
 }
 
 @media (max-width: 640px) {
@@ -415,7 +484,199 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .dashboard-main > .d
     max-width: 100%;
   }
 
-  .dashboard-wrapper .registrar-admission-management .registrar-student-list__hero {
+  .dashboard-wrapper
+    .registrar-admission-management
+    .registrar-student-list__hero {
     padding: calc(22px * var(--adm-density)) calc(18px * var(--adm-density));
+  }
+}
+
+/* Admission Periods */
+.registrar-admission-management .registrar-admission-periods {
+  margin-bottom: 18px;
+}
+
+.registrar-admission-management .registrar-admission-periods__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 24px;
+  padding: 22px 24px 24px;
+}
+
+.registrar-admission-management .registrar-admission-periods__form,
+.registrar-admission-management .registrar-admission-periods__existing {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.registrar-admission-management .registrar-admission-periods__layout h3 {
+  margin: 0;
+  color: var(--rsl-text-950);
+  font-size: calc(16px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+
+.registrar-admission-management .registrar-admission-periods__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-weight: 650;
+}
+
+.registrar-admission-management
+  .registrar-admission-periods__form
+  :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--rsl-border-strong);
+  border-radius: 9px;
+  background: var(--rsl-surface);
+  color: var(--rsl-text-950);
+}
+
+.registrar-admission-management
+  .registrar-admission-periods__form
+  :is(input, select):focus-visible {
+  outline: 2px solid #159452;
+  outline-offset: 2px;
+}
+
+.registrar-admission-management .registrar-admission-periods__dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.registrar-admission-management .registrar-admission-periods__form > button {
+  align-self: flex-start;
+}
+
+.registrar-admission-management .registrar-admission-periods__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--rsl-border);
+  border-radius: 11px;
+}
+
+.registrar-admission-management .registrar-admission-periods__item > div {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.registrar-admission-management .registrar-admission-periods__item small {
+  color: var(--rsl-text-600);
+  overflow-wrap: anywhere;
+}
+
+.registrar-admission-management .registrar-admission-periods__status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 750;
+  background: #edf0f3;
+  color: #435365;
+}
+
+.registrar-admission-management .registrar-admission-periods__status--open {
+  background: #e0f6e8;
+  color: #0c6c3b;
+}
+
+.registrar-admission-management .registrar-admission-periods__status--draft {
+  background: #fff3db;
+  color: #885914;
+}
+
+.registrar-admission-management
+  .registrar-admission-periods__status--scheduled {
+  background: #e6f1fc;
+  color: #1d5d93;
+}
+
+.registrar-admission-management .registrar-admission-periods__message {
+  margin: 0 24px 20px;
+  color: #0c6c3b;
+  font-weight: 650;
+}
+
+.registrar-admission-management .registrar-admission-periods__message--error {
+  color: #b42318;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-admission-periods__form
+  :is(input, select) {
+  background: #20292e;
+  border-color: #4a5b61;
+  color: #f0f6f2;
+  color-scheme: dark;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-admission-periods__status--open {
+  background: #1b4533;
+  color: #b6efca;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-admission-periods__status--draft {
+  background: #504020;
+  color: #ffdfa2;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-admission-periods__status--scheduled {
+  background: #223f56;
+  color: #afd9ff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-admission-periods__status--closed {
+  background: #35464b;
+  color: #d8e1e4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-admission-management
+  .registrar-admission-periods__message--error {
+  color: #ff9a94;
+}
+
+/* Responsive */
+@media (max-width: 920px) {
+  .registrar-admission-management .registrar-admission-periods__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .registrar-admission-management .registrar-admission-periods__layout {
+    padding: 18px 16px;
+  }
+
+  .registrar-admission-management .registrar-admission-periods__dates {
+    grid-template-columns: 1fr;
+  }
+
+  .registrar-admission-management .registrar-admission-periods__item {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
