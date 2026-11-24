@@ -4771,10 +4771,6 @@ export default function EnrollmentDetailsR() {
             <div className="detail-item">
               <span>Home Section</span>
               <strong>{homeSectionLabel}</strong>
-              <small>
-                Designated section for this enrollment. The student profile is
-                updated after approval.
-              </small>
             </div>
 
             <div className="detail-item">
@@ -4784,10 +4780,6 @@ export default function EnrollmentDetailsR() {
                   ? `${enrollment.student_section.section_name} (#${enrollment.student_section.section_id})`
                   : "Not Assigned"}
               </strong>
-              <small>
-                Current student profile reference. Updated when the new
-                enrollment is approved.
-              </small>
             </div>
 
             <div className="detail-item">
@@ -5050,34 +5042,6 @@ export default function EnrollmentDetailsR() {
               </div>
             </>
           )}
-
-          {validation && (validation.errors?.length || 0) > 0 && (
-            <div className="remarks-box">
-              <span>Validation Errors</span>
-
-              <ul>
-                {(validation.errors || []).map((issue, index) => (
-                  <li key={`${issue.code || "error"}-${index}`}>
-                    {issue.message || issue.code || "Validation error"}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {validation && (validation.warnings?.length || 0) > 0 && (
-            <div className="remarks-box">
-              <span>Validation Warnings</span>
-
-              <ul>
-                {(validation.warnings || []).map((issue, index) => (
-                  <li key={`${issue.code || "warning"}-${index}`}>
-                    {issue.message || issue.code || "Validation warning"}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* =================================================
@@ -5287,7 +5251,9 @@ export default function EnrollmentDetailsR() {
                                   validationSubject.valid ? "Valid" : "Invalid",
                                 )}
                               >
-                                {validationSubject.valid ? "VALID" : "INVALID"}
+                                {validationSubject.valid
+                                  ? "VALID"
+                                  : "INCOMPLETE"}
                               </span>
 
                               {validationSubject.errors.length > 0 && (
