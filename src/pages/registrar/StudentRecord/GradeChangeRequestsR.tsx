@@ -580,7 +580,10 @@ function OriginalOfficialSheetRecorder() {
   };
 
   return (
-    <section className="registrar-grade-change-panel">
+    <section
+      id="registrar-official-sheet-recording"
+      className="registrar-grade-change-panel"
+    >
       <header className="registrar-grade-change-panel-heading">
         <div>
           <span>Official Grading Sheets</span>
@@ -1489,6 +1492,14 @@ export default function GradeChangeRequestsR() {
             </p>
           </div>
           <div className="registrar-grade-change-hero-actions">
+            <a
+              href="#registrar-official-sheet-recording"
+              className="registrar-grade-change-back registrar-grade-change-jump"
+            >
+              <FileCheck2 size={16} aria-hidden="true" />
+              Record Official Sheet
+            </a>
+
             <button
               type="button"
               className="registrar-grade-change-back"

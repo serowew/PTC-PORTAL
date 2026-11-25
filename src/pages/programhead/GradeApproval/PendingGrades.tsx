@@ -22,6 +22,7 @@ import {
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
+import CombinedSubmissionPeriods from "./CombinedSubmissionPeriods";
 import { api } from "../../../services/api";
 import "../../../styles/PendingGrades.css";
 
@@ -985,7 +986,10 @@ function OfficialSheetFinalization({
   };
 
   return (
-    <section className="program-head-grade-queue">
+    <section
+      id="program-head-official-sheets"
+      className="program-head-grade-queue"
+    >
       <header className="program-head-grade-queue-header">
         <div>
           <span>Official Semester Records</span>
@@ -2531,6 +2535,23 @@ export default function PendingGrades() {
             </div>
           </section>
         )}
+
+        <nav
+          className="program-head-grade-quick-links"
+          aria-label="Grading administration"
+        >
+          <a href="#program-head-submission-windows">
+            <CalendarDays size={15} aria-hidden="true" />
+            Submission Windows
+          </a>
+
+          <a href="#program-head-official-sheets">
+            <ShieldCheck size={15} aria-hidden="true" />
+            Official Sheet Verification & Finalization
+          </a>
+        </nav>
+
+        <CombinedSubmissionPeriods />
 
         <section
           className="program-head-grade-summary"
