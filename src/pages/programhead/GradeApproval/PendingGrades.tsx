@@ -1272,6 +1272,8 @@ export default function PendingGrades() {
   const [approvedGrades, setApprovedGrades] = useState<SubmittedGrade[]>([]);
   const [approvedLoading, setApprovedLoading] = useState(true);
   const [approvedError, setApprovedError] = useState("");
+  const [bulkPublishing, setBulkPublishing] = useState(false);
+  const [bulkPublishProgress, setBulkPublishProgress] = useState("");
 
   const [search, setSearch] = useState("");
   const [academicYearFilter, setAcademicYearFilter] = useState("All");
@@ -2114,6 +2116,150 @@ export default function PendingGrades() {
       setRefreshKey((current) => current + 1);
     } finally {
       setActionGradeId(null);
+    }
+  };
+
+  const bulkEligibleGrades = approvedGrades.filter(
+    (grade) =>
+      programHead?.user_id === grade.review.reviewed_by &&
+      ["NUMERIC", "INCOMPLETE", "UNOFFICIAL_DROP"].includes(
+        grade.grades.grading_outcome,
+      ) &&
+      grade.sheet_status === "IN_PROGRESS" &&
+      !grade.officially_published &&
+      Number.isSafeInteger(grade.record_version) &&
+      grade.record_version > 0,
+  );
+
+  const publishAllEligibleGrades = async () => {
+    if (bulkPublishing || actionGradeId !== null) return;
+
+    const candidates = [...bulkEligibleGrades];
+
+    if (candidates.length === 0) return;
+
+    const request = async (grade: SubmittedGrade, dryRun: boolean) => {
+      const response = await authService.authFetch(
+        `${COMBINED_QUEUE_API}/${grade.submission_id}/publish`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            expected_record_version: grade.record_version,
+            confirm_publication: true,
+            dry_run: dryRun,
+          }),
+        },
+      );
+
+      const data =
+        await readJsonResponse<CombinedPublicationResponse>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        throw new Error("Your session has expired.");
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.dry_run !== dryRun ||
+        data.persisted !== !dryRun ||
+        data.submission_id !== grade.submission_id ||
+        data.grade_id !== grade.grade_id ||
+        data.publication_source !== "COMBINED_SEMESTER" ||
+        data.grade_status !== "Approved" ||
+        data.official_sheet_finalized !== false ||
+        (!dryRun && !data.publication_id)
+      ) {
+        throw new Error(
+          [data.code, data.message].filter(Boolean).join(": ") ||
+            "Publication was not confirmed by the backend.",
+        );
+      }
+    };
+
+    setBulkPublishing(true);
+    setActionNotice(null);
+
+    let published = 0;
+
+    try {
+      // Validate all selected records before publishing.
+      for (let i = 0; i < candidates.length; i += 1) {
+        const grade = candidates[i];
+
+        setBulkPublishProgress(
+          `Validating ${i + 1} of ${candidates.length}: ` +
+            grade.student.student_number,
+        );
+
+        try {
+          await request(grade, true);
+        } catch (error) {
+          throw new Error(
+            `${grade.student.student_number}: ${
+              error instanceof Error ? error.message : "Validation failed."
+            }`,
+          );
+        }
+      }
+
+      const confirmed = window.confirm(
+        `Publish ${candidates.length} approved semester grade(s)?\n\n` +
+          "All pre-publication checks passed. INC and UD must " +
+          "already have their individual evidence approval.\n\n" +
+          "These grades will be published one at a time, " +
+          "not as one atomic transaction. If a later publication " +
+          "fails, earlier successful ones will remain published.\n\n" +
+          "Official-sheet finalization remains separate.",
+      );
+
+      if (!confirmed) return;
+
+      // Publish each approved submission.
+      for (let i = 0; i < candidates.length; i += 1) {
+        const grade = candidates[i];
+
+        setBulkPublishProgress(
+          `Publishing ${i + 1} of ${candidates.length}: ` +
+            grade.student.student_number,
+        );
+
+        try {
+          await request(grade, false);
+          published += 1;
+        } catch (error) {
+          throw new Error(
+            `${grade.student.student_number}: ${
+              error instanceof Error ? error.message : "Publication failed."
+            }`,
+          );
+        }
+      }
+
+      setActionNotice({
+        type: "success",
+        message:
+          `${published} approved grade(s) published successfully. ` +
+          "Official-sheet finalization remains separate.",
+      });
+    } catch (error) {
+      setActionNotice({
+        type: "error",
+        message:
+          `${published} of ${candidates.length} published. ` +
+          `${error instanceof Error ? error.message : "Publication failed."} ` +
+          "The queue will reload; retry only the remaining " +
+          "eligible grades.",
+      });
+    } finally {
+      setBulkPublishProgress("");
+      setBulkPublishing(false);
+      setRefreshKey((value) => value + 1);
     }
   };
 
@@ -3086,12 +3232,40 @@ export default function PendingGrades() {
               </p>
             </div>
 
-            <strong>
-              {approvedLoading ? "…" : approvedGrades.length} awaiting
-              publication
-            </strong>
-          </header>
+            <div className="program-head-bulk-publish-actions">
+              <strong>
+                {approvedLoading ? "…" : approvedGrades.length} awaiting
+                publication
+              </strong>
 
+              <button
+                type="button"
+                className="program-head-approve-button"
+                disabled={
+                  approvedLoading ||
+                  !!approvedError ||
+                  bulkPublishing ||
+                  actionGradeId !== null ||
+                  bulkEligibleGrades.length === 0
+                }
+                onClick={() => void publishAllEligibleGrades()}
+              >
+                <ShieldCheck size={15} aria-hidden="true" />
+                {bulkPublishing
+                  ? "Publishing..."
+                  : `Publish All Eligible (${bulkEligibleGrades.length})`}
+              </button>
+            </div>
+          </header>
+          {bulkPublishProgress && (
+            <p
+              className="program-head-bulk-publish-progress"
+              role="status"
+              aria-live="polite"
+            >
+              {bulkPublishProgress}
+            </p>
+          )}
           {approvedError && (
             <div className="program-head-grade-error" role="alert">
               <AlertCircle size={16} />
@@ -3188,7 +3362,11 @@ export default function PendingGrades() {
                             <button
                               type="button"
                               className="program-head-approve-button"
-                              disabled={!isReviewer || actionGradeId !== null}
+                              disabled={
+                                !isReviewer ||
+                                actionGradeId !== null ||
+                                bulkPublishing
+                              }
                               title={
                                 !isReviewer
                                   ? "Only the approving Program Head may publish this grade."
