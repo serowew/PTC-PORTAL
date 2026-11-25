@@ -657,7 +657,7 @@ export default function LoginForm() {
                   type="button"
                   className={styles.devBtn}
                   disabled={loading}
-                  onClick={() => handleDevLogin("26BSIT-0043")}
+                  onClick={() => handleDevLogin("26BSIT-0033")}
                 >
                   Login as Student
                 </button>

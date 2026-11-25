@@ -3062,3 +3062,16 @@ html
   .registrar-grade-change-sheet-message.error {
   color: #ffb3ae;
 }
+
+/* Official Sheet Navigation */
+.registrar-grade-change-page #registrar-official-sheet-recording {
+  scroll-margin-top: 20px;
+}
+
+.registrar-grade-change-page .registrar-grade-change-jump {
+  text-decoration: none;
+}
+
+.registrar-grade-change-page .registrar-grade-change-jump:hover {
+  text-decoration: none;
+}

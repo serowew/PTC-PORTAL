@@ -1026,4 +1026,315 @@ router.post(
   },
 );
 
+// POST /api/gradebook/:offeringId/attendance/meetings/:meetingId/cancel
+// Cancel an unheld meeting without deleting its history or any saved attendance.
+router.post(
+  "/:offeringId/attendance/meetings/:meetingId/cancel",
+  async (req, res) => {
+    const offeringId = positiveId(req.params.offeringId);
+    const meetingId = positiveId(req.params.meetingId);
+    if (!offeringId || !meetingId) {
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_MEETING_ID",
+        message: "offeringId and meetingId must be positive integers.",
+      });
+    }
+
+    let input;
+    try {
+      const body = req.body;
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        fail(
+          "INVALID_MEETING_INPUT",
+          "A JSON request object is required.",
+          400,
+        );
+      }
+      const allowed = new Set([
+        "record_version",
+        "cancellation_reason",
+        "dry_run",
+      ]);
+      if (Object.keys(body).some((key) => !allowed.has(key))) {
+        fail(
+          "UNSUPPORTED_MEETING_FIELD",
+          "Cancellation accepts only record_version, cancellation_reason, and dry_run.",
+          400,
+        );
+      }
+      const recordVersion = positiveId(body.record_version);
+      if (!recordVersion) {
+        fail(
+          "INVALID_RECORD_VERSION",
+          "A positive record_version is required.",
+          400,
+        );
+      }
+      if (typeof body.dry_run !== "boolean") {
+        fail("DRY_RUN_REQUIRED", "Specify dry_run: true or false.", 400);
+      }
+      const cancellationReason = cleanOptionalText(
+        body.cancellation_reason,
+        "cancellation_reason",
+        500,
+      );
+      if (!cancellationReason || cancellationReason.length < 5) {
+        fail(
+          "MEETING_CANCELLATION_REASON_REQUIRED",
+          "Enter a cancellation reason of at least 5 characters (maximum 500).",
+          400,
+        );
+      }
+      input = {
+        recordVersion,
+        cancellationReason,
+        dryRun: body.dry_run,
+      };
+    } catch (error) {
+      return sendError(res, error);
+    }
+
+    const actorUserId = positiveId(req.user?.user_id);
+    if (!actorUserId) {
+      return res.status(401).json({
+        success: false,
+        code: "AUTHENTICATION_REQUIRED",
+        message: "An authenticated instructor is required.",
+      });
+    }
+
+    let connection;
+    let transactionStarted = false;
+    try {
+      connection = await db.getConnection();
+      await assertQaGradingDatabase(connection);
+
+      const [databaseRows] = await connection.execute(
+        "SELECT DATABASE() AS database_name",
+      );
+      if (databaseRows[0]?.database_name !== TEST_DATABASE) {
+        fail(
+          "TEST_DATABASE_ONLY",
+          "Attendance meeting cancellation is disabled outside the admission-test database.",
+          403,
+        );
+      }
+
+      await connection.beginTransaction();
+      transactionStarted = true;
+      // Use the same offering -> config -> meeting lock order as the other meeting actions.
+      const [offerings] = await connection.execute(
+        `SELECT so.offering_id, so.status, f.user_id AS assigned_user_id,
+                u.is_active, u.is_archived, r.role_name
+           FROM subject_offerings so
+           LEFT JOIN faculty f ON f.faculty_id = so.faculty_id
+           LEFT JOIN users u ON u.user_id = f.user_id
+           LEFT JOIN roles r ON r.role_id = u.role_id
+          WHERE so.offering_id = ? FOR UPDATE`,
+        [offeringId],
+      );
+      if (offerings.length !== 1) {
+        fail("OFFERING_NOT_FOUND", "Subject offering was not found.", 404);
+      }
+      const offering = offerings[0];
+      if (
+        Number(offering.assigned_user_id) !== actorUserId ||
+        Number(offering.is_active) !== 1 ||
+        Number(offering.is_archived) !== 0 ||
+        !["Faculty", "Program Head"].includes(offering.role_name)
+      ) {
+        fail(
+          "GRADEBOOK_INSTRUCTOR_REQUIRED",
+          "Only the active assigned instructor can cancel attendance meetings.",
+          403,
+        );
+      }
+      if (offering.status !== "Open") {
+        fail(
+          "OFFERING_NOT_OPEN",
+          "Meeting cancellation requires an Open offering.",
+        );
+      }
+
+      const [configRows] = await connection.execute(
+        "SELECT config_id FROM gradebook_offering_config WHERE offering_id = ? FOR UPDATE",
+        [offeringId],
+      );
+      if (configRows.length !== 1) {
+        fail(
+          "GRADEBOOK_NOT_INITIALIZED",
+          "This offering has no initialized gradebook.",
+        );
+      }
+      const configId = Number(configRows[0].config_id);
+      const config = await loadGradebookOfferingConfig(connection, offeringId);
+      if (!config.is_initialized || Number(config.config_id) !== configId) {
+        fail(
+          "GRADEBOOK_CONFIG_INVALID",
+          "The gradebook configuration failed validation.",
+        );
+      }
+
+      const [meetings] = await connection.execute(
+        `SELECT meeting_id, config_id, grading_term,
+                DATE_FORMAT(meeting_date, '%Y-%m-%d') AS meeting_date,
+                session_type,
+                TIME_FORMAT(start_time, '%H:%i:%s') AS start_time,
+                TIME_FORMAT(end_time, '%H:%i:%s') AS end_time,
+                meeting_status, replacement_for_meeting_id,
+                cancellation_reason, meeting_notes, record_version
+           FROM gradebook_attendance_meetings
+          WHERE meeting_id = ? AND config_id = ? FOR UPDATE`,
+        [meetingId, configId],
+      );
+      if (meetings.length !== 1) {
+        fail(
+          "ATTENDANCE_MEETING_NOT_FOUND",
+          "Attendance meeting does not belong to this offering.",
+          404,
+        );
+      }
+      const meeting = meetings[0];
+      const currentVersion = Number(meeting.record_version);
+      if (currentVersion !== input.recordVersion) {
+        fail(
+          "MEETING_VERSION_CONFLICT",
+          "This meeting has changed. Reload the Attendance Register.",
+        );
+      }
+      if (meeting.meeting_status !== "SCHEDULED") {
+        fail(
+          "MEETING_NOT_SCHEDULED",
+          "Only a SCHEDULED meeting can be cancelled. Held attendance remains protected.",
+        );
+      }
+
+      await assertMeetingTermStructureEditable(
+        connection,
+        configId,
+        offeringId,
+        meeting.grading_term,
+      );
+
+      const [savedEntries] = await connection.execute(
+        "SELECT 1 FROM gradebook_attendance_entries WHERE meeting_id = ? LIMIT 1",
+        [meetingId],
+      );
+      if (savedEntries.length > 0) {
+        fail(
+          "MEETING_HAS_ATTENDANCE_RECORDS",
+          "This meeting has attendance records and cannot be cancelled through this action.",
+        );
+      }
+
+      const nextVersion = currentVersion + 1;
+      const [update] = await connection.execute(
+        `UPDATE gradebook_attendance_meetings
+            SET meeting_status = 'CANCELLED',
+                cancellation_reason = ?, record_version = ?, updated_by_user_id = ?
+          WHERE meeting_id = ? AND config_id = ?
+            AND meeting_status = 'SCHEDULED' AND record_version = ?`,
+        [
+          input.cancellationReason,
+          nextVersion,
+          actorUserId,
+          meetingId,
+          configId,
+          currentVersion,
+        ],
+      );
+      if (Number(update.affectedRows) !== 1) {
+        fail(
+          "MEETING_VERSION_CONFLICT",
+          "Meeting changed during cancellation. Reload before trying again.",
+        );
+      }
+
+      const auditValues = [
+        meetingId,
+        "CANCELLED",
+        "DRAFT_STRUCTURE",
+        meeting.grading_term,
+        meeting.meeting_date,
+        meeting.session_type,
+        meeting.start_time,
+        meeting.end_time,
+        meeting.meeting_status,
+        meeting.replacement_for_meeting_id,
+        meeting.cancellation_reason,
+        meeting.meeting_notes,
+        meeting.grading_term,
+        meeting.meeting_date,
+        meeting.session_type,
+        meeting.start_time,
+        meeting.end_time,
+        "CANCELLED",
+        meeting.replacement_for_meeting_id,
+        input.cancellationReason,
+        meeting.meeting_notes,
+        input.cancellationReason,
+        actorUserId,
+        nextVersion,
+      ];
+      const [audit] = await connection.execute(
+        `INSERT INTO gradebook_attendance_meeting_events
+          (meeting_id, event_type, change_context,
+           previous_grading_term, previous_meeting_date, previous_session_type,
+           previous_start_time, previous_end_time, previous_meeting_status,
+           previous_replacement_for_meeting_id, previous_cancellation_reason,
+           previous_meeting_notes,
+           new_grading_term, new_meeting_date, new_session_type,
+           new_start_time, new_end_time, new_meeting_status,
+           new_replacement_for_meeting_id, new_cancellation_reason,
+           new_meeting_notes, change_reason, changed_by_user_id,
+           meeting_version_after)
+         VALUES (${auditValues.map(() => "?").join(", ")})`,
+        auditValues,
+      );
+      if (Number(audit.affectedRows) !== 1) {
+        throw new Error("Attendance cancellation audit could not be saved.");
+      }
+
+      const result = {
+        success: true,
+        offering_id: offeringId,
+        config_id: configId,
+        meeting: {
+          meeting_id: meetingId,
+          grading_term: meeting.grading_term,
+          meeting_date: meeting.meeting_date,
+          meeting_status: "CANCELLED",
+          cancellation_reason: input.cancellationReason,
+          record_version: nextVersion,
+        },
+        audit_event: "CANCELLED",
+        dry_run: input.dryRun,
+        persisted: !input.dryRun,
+      };
+
+      if (input.dryRun) {
+        await connection.rollback();
+      } else {
+        await connection.commit();
+      }
+      transactionStarted = false;
+      return res.status(200).json(result);
+    } catch (error) {
+      if (transactionStarted && connection) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error(
+            "CANCEL ATTENDANCE MEETING ROLLBACK ERROR:",
+            rollbackError,
+          );
+        }
+      }
+      return sendError(res, error);
+    } finally {
+      connection?.release();
+    }
+  },
+);
 export default router;

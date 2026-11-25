@@ -713,6 +713,7 @@ interface AttendanceMeeting {
   start_time: string;
   end_time: string;
   record_version: number;
+  attendance_entry_count?: number;
 }
 
 interface AttendanceMeetingsResponse {
@@ -1044,6 +1045,10 @@ function AttendanceRegister({
   const [heldBusy, setHeldBusy] = useState(false);
   const [heldError, setHeldError] = useState("");
   const [heldSuccess, setHeldSuccess] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [cancelSuccess, setCancelSuccess] = useState("");
   const [error, setError] = useState("");
 
   const [feedback, setFeedback] = useState<Record<number, string>>({});
@@ -1106,7 +1111,8 @@ function AttendanceRegister({
   const canCreateMeeting =
     selectedTermMeetings?.can_edit_structure === true &&
     readOnlyStudentIds.length === 0 &&
-    !loading;
+    !loading &&
+    !cancelBusy;
 
   const createMeeting = async () => {
     if (!canCreateMeeting || createMeetingBusy || savingId !== null) {
@@ -1248,6 +1254,20 @@ function AttendanceRegister({
     Date.now() >= meetingEndTime &&
     !loading &&
     !heldBusy &&
+    !cancelBusy &&
+    !createMeetingBusy &&
+    savingId === null;
+
+  const canCancelMeeting =
+    selectedTermMeetings?.can_edit_structure === true &&
+    readOnlyStudentIds.length === 0 &&
+    selectedMeeting?.meeting_status === "SCHEDULED" &&
+    (selectedMeeting.attendance_entry_count ?? 0) === 0 &&
+    Number.isSafeInteger(selectedMeeting.record_version) &&
+    selectedMeeting.record_version > 0 &&
+    !loading &&
+    !heldBusy &&
+    !cancelBusy &&
     !createMeetingBusy &&
     savingId === null;
 
@@ -1340,6 +1360,91 @@ function AttendanceRegister({
       setMeetingReloadKey((current) => current + 1);
     } finally {
       setHeldBusy(false);
+    }
+  };
+  const cancelScheduledMeeting = async () => {
+    if (!canCancelMeeting || !selectedMeeting) return;
+
+    const reason = cancelReason.trim();
+    if (reason.length < 5 || reason.length > 500) {
+      setCancelError("Enter a cancellation reason of 5–500 characters.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Cancel the ${term === "MIDTERM" ? "Midterm" : "Final Term"} ` +
+        `meeting on ${selectedMeeting.meeting_date}?\n\n` +
+        "This will retain its audit history. Held meetings and saved attendance " +
+        "cannot be deleted. Only cancel a class meeting that did not take place.",
+    );
+    if (!confirmed) return;
+
+    const meetingToCancel = selectedMeeting;
+    setCancelBusy(true);
+    setCancelError("");
+    setCancelSuccess("");
+
+    try {
+      const response = await authService.authFetch(
+        `${MODERN_GRADEBOOK_API}/${offeringId}/attendance/meetings/${meetingToCancel.meeting_id}/cancel`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            record_version: meetingToCancel.record_version,
+            cancellation_reason: reason,
+            dry_run: false,
+          }),
+        },
+      );
+      const data = await readJsonResponse<{
+        success: boolean;
+        offering_id?: number;
+        meeting?: {
+          meeting_id: number;
+          meeting_status: string;
+        };
+        audit_event?: string;
+        persisted?: boolean;
+        code?: string;
+        message?: string;
+      }>(response);
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (
+        !response.ok ||
+        !data.success ||
+        data.offering_id !== offeringId ||
+        data.meeting?.meeting_id !== meetingToCancel.meeting_id ||
+        data.meeting.meeting_status !== "CANCELLED" ||
+        data.persisted !== true
+      ) {
+        if (data.code === "MEETING_VERSION_CONFLICT") {
+          setMeetingReloadKey((current) => current + 1);
+        }
+        throw new Error(
+          data.message || data.code || "Unable to cancel meeting.",
+        );
+      }
+
+      setCancelReason("");
+      setCancelSuccess(
+        `Meeting #${meetingToCancel.meeting_id} cancelled. It will no longer block semester submission.`,
+      );
+      setMeetingReloadKey((current) => current + 1);
+      setReloadKey((current) => current + 1);
+      onAttendanceSaved();
+    } catch (caught) {
+      setCancelError(
+        caught instanceof Error ? caught.message : "Unable to cancel meeting.",
+      );
+    } finally {
+      setCancelBusy(false);
     }
   };
   useEffect(() => {
@@ -1519,6 +1624,7 @@ function AttendanceRegister({
         offering_id?: number;
         meeting_id?: number;
         enrollment_subject_id?: number;
+        code?: string;
         message?: string;
       }>(response);
 
@@ -1536,6 +1642,15 @@ function AttendanceRegister({
         Number(data.meeting_id) !== meetingId ||
         Number(data.enrollment_subject_id) !== id
       ) {
+        if (data.code === "ATTENDANCE_BEFORE_ENROLLMENT") {
+          throw new Error(
+            "This meeting happened before the student's official enrollment. " +
+              "Present, Late, Absent, and Excused cannot be recorded for it. " +
+              "Choose N/A with a reason, or use a held meeting after enrollment.",
+          );
+        }
+
+        // Only reload when permissions or record versions may have changed.
         if (response.status === 409 || response.status === 403) {
           setReloadKey((current) => current + 1);
         }
@@ -1607,10 +1722,15 @@ function AttendanceRegister({
 
             <select
               value={term}
-              disabled={savingId !== null || createMeetingBusy || heldBusy}
+              disabled={
+                savingId !== null || createMeetingBusy || heldBusy || cancelBusy
+              }
               onChange={(event) => {
                 setTerm(event.target.value as AssessmentTerm);
                 setSelectedMeetingId(null);
+                setCancelReason("");
+                setCancelError("");
+                setCancelSuccess("");
               }}
             >
               <option value="MIDTERM">Midterm</option>
@@ -1627,11 +1747,15 @@ function AttendanceRegister({
                 !meetingOptions.length ||
                 savingId !== null ||
                 createMeetingBusy ||
-                heldBusy
+                heldBusy ||
+                cancelBusy
               }
-              onChange={(event) =>
-                setSelectedMeetingId(Number(event.target.value))
-              }
+              onChange={(event) => {
+                setSelectedMeetingId(Number(event.target.value));
+                setCancelReason("");
+                setCancelError("");
+                setCancelSuccess("");
+              }}
             >
               {meetingOptions.length === 0 && (
                 <option value="">No meetings</option>
@@ -1809,6 +1933,56 @@ function AttendanceRegister({
         </div>
       )}
 
+      {selectedMeeting?.meeting_status === "SCHEDULED" && (
+        <div className="faculty-attendance-cancel">
+          <div className="faculty-attendance-cancel__intro">
+            <strong>Meeting did not take place?</strong>
+            <small>
+              Cancel an unused scheduled meeting so it no longer blocks semester
+              submission. Saved attendance and Held meetings cannot be deleted.
+            </small>
+          </div>
+          <label className="faculty-gradebook-filter">
+            <span>Cancellation Reason</span>
+            <input
+              type="text"
+              className="faculty-grade-input"
+              value={cancelReason}
+              maxLength={500}
+              placeholder="Example: Class was cancelled"
+              disabled={!canCancelMeeting}
+              onChange={(event) => {
+                setCancelReason(event.target.value);
+                setCancelError("");
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            className="faculty-grade-header-button faculty-attendance-cancel__button"
+            disabled={!canCancelMeeting || cancelReason.trim().length < 5}
+            onClick={() => void cancelScheduledMeeting()}
+          >
+            <X size={15} aria-hidden="true" />
+            {cancelBusy ? "Cancelling..." : "Cancel Meeting"}
+          </button>
+        </div>
+      )}
+      {selectedMeeting?.meeting_status === "CANCELLED" && (
+        <div className="faculty-attendance-cancel__notice" role="status">
+          This meeting was cancelled and will not block grade submission.
+        </div>
+      )}
+      {cancelError && (
+        <div className="faculty-grade-error" role="alert">
+          {cancelError}
+        </div>
+      )}
+      {cancelSuccess && (
+        <div className="faculty-attendance-cancel__notice" role="status">
+          {cancelSuccess}
+        </div>
+      )}
       {heldError && (
         <div className="faculty-grade-error" role="alert">
           {heldError}
@@ -2008,7 +2182,10 @@ function AttendanceRegister({
                         )}
 
                         {feedback[student.enrollment_subject_id] && (
-                          <small role="alert">
+                          <small
+                            className="faculty-attendance-save-feedback"
+                            role="alert"
+                          >
                             {feedback[student.enrollment_subject_id]}
                           </small>
                         )}
@@ -5976,6 +6153,40 @@ export default function EnterGrades() {
               </div>
 
             </header>
+            <section
+              className="faculty-attendance-modal__schedule"
+              aria-label="Official class schedule"
+            >
+              <div className="faculty-attendance-modal__schedule-heading">
+                <span>
+                  <CalendarDays size={16} aria-hidden="true" />
+                  Official Class Schedule
+                </span>
+                <span className="faculty-attendance-modal__read-only">
+                  Read only
+                </span>
+              </div>
+              <div className="faculty-attendance-modal__schedule-grid">
+                <div className="faculty-attendance-modal__schedule-item">
+                  <span>
+                    <CalendarDays size={14} aria-hidden="true" />
+                    Class Days
+                  </span>
+                  <strong>
+                    {formatDays(selectedClass?.schedule?.days ?? null)}
+                  </strong>
+                </div>
+                <div className="faculty-attendance-modal__schedule-item">
+                  <span>
+                    <Clock3 size={14} aria-hidden="true" />
+                    Class Time
+                  </span>
+                  <strong>
+                    {selectedClass?.schedule?.time?.trim() || "Not scheduled"}
+                  </strong>
+                </div>
+              </div>
+            </section>
             <div className="faculty-attendance-modal__content">
               {attendanceModalOpen &&
               attendanceRosterReady &&
