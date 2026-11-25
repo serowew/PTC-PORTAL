@@ -4,14 +4,12 @@ import {
   AlertCircle,
   BookOpenCheck,
   CalendarDays,
-  CheckCircle2,
   ChevronRight,
   Clock3,
   Filter,
   GraduationCap,
   RotateCcw,
   Search,
-  UsersRound,
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
@@ -332,21 +330,6 @@ export default function MyClasses() {
     });
   }, [classes, search, academicYear, semester, section, status]);
 
-  const summary = useMemo(() => {
-    return {
-      total: filteredClasses.length,
-      open: filteredClasses.filter((item) => item.offering_status === "Open")
-        .length,
-      closed: filteredClasses.filter(
-        (item) => item.offering_status === "Closed",
-      ).length,
-      officialMemberships: filteredClasses.reduce(
-        (total, item) => total + Number(item.capacity.official_students || 0),
-        0,
-      ),
-    };
-  }, [filteredClasses]);
-
   const openClass = (item: FacultyClass) => {
     navigate(`/faculty/classes/students?offering_id=${item.offering_id}`);
   };
@@ -420,56 +403,6 @@ export default function MyClasses() {
             </div>
           </section>
         )}
-
-        <section className="faculty-classes-summary" aria-label="Class summary">
-          <article className="faculty-class-stat">
-            <span className="faculty-class-stat__icon">
-              <BookOpenCheck size={19} />
-            </span>
-
-            <div>
-              <small>Assigned Classes</small>
-              <strong>{loading ? "…" : summary.total}</strong>
-              <span>Matching the current filters</span>
-            </div>
-          </article>
-
-          <article className="faculty-class-stat">
-            <span className="faculty-class-stat__icon">
-              <CheckCircle2 size={19} />
-            </span>
-
-            <div>
-              <small>Open Classes</small>
-              <strong>{loading ? "…" : summary.open}</strong>
-              <span>Currently marked open</span>
-            </div>
-          </article>
-
-          <article className="faculty-class-stat">
-            <span className="faculty-class-stat__icon">
-              <Clock3 size={19} />
-            </span>
-
-            <div>
-              <small>Closed Classes</small>
-              <strong>{loading ? "…" : summary.closed}</strong>
-              <span>Enrollment placement closed</span>
-            </div>
-          </article>
-
-          <article className="faculty-class-stat">
-            <span className="faculty-class-stat__icon">
-              <UsersRound size={19} />
-            </span>
-
-            <div>
-              <small>Official Memberships</small>
-              <strong>{loading ? "…" : summary.officialMemberships}</strong>
-              <span>Approved enrolled students</span>
-            </div>
-          </article>
-        </section>
 
         <section className="faculty-classes-filters">
           <header className="faculty-classes-filters__header">

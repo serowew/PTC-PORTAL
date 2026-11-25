@@ -1673,13 +1673,7 @@ function AttendanceRegister({
 
       {createMeetingOpen && canCreateMeeting && (
         <form
-          className="faculty-gradebook-tools"
-          style={{
-            flex: "none",
-            width: "100%",
-            gridTemplateColumns: "repeat(auto-fit, minmax(155px, 1fr))",
-            padding: "14px 16px",
-          }}
+          className="faculty-gradebook-tools faculty-attendance-meeting-form"
           onSubmit={(event) => {
             event.preventDefault();
             void createMeeting();
@@ -1898,10 +1892,10 @@ function AttendanceRegister({
         <div className="faculty-grade-table-wrapper faculty-attendance-table-wrapper">
           <table className="faculty-grade-table faculty-attendance-table">
             <colgroup>
-              <col style={{ width: 230 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 300 }} />
-              <col style={{ width: 190 }} />
+              <col style={{ width: 210 }} />
+              <col style={{ width: 158 }} />
+              <col style={{ width: 270 }} />
+              <col style={{ width: 175 }} />
             </colgroup>
             <thead>
               <tr>
@@ -5203,31 +5197,31 @@ export default function EnterGrades() {
                       className="faculty-grade-table faculty-semester-grade-table"
                       style={{
                         minWidth:
-                          230 +
-                          termAssessmentColumns.length * 155 +
-                          2 * 112 +
-                          3 * 125,
+                          210 +
+                          termAssessmentColumns.length * 116 +
+                          2 * 100 +
+                          3 * 110,
                       }}
                     >
                       <colgroup>
-                        <col style={{ width: 230 }} />
+                        <col style={{ width: 210 }} />
                         {midtermAssessmentColumns.map((column, index) => (
                           <col
                             key={`midterm-${column.assessment?.assessment_id ?? `category-${index}`}`}
-                            style={{ width: 155 }}
+                            style={{ width: 116 }}
                           />
                         ))}
-                        <col style={{ width: 112 }} />
+                        <col style={{ width: 100 }} />
                         {finalTermAssessmentColumns.map((column, index) => (
                           <col
                             key={`final-${column.assessment?.assessment_id ?? `category-${index}`}`}
-                            style={{ width: 155 }}
+                            style={{ width: 116 }}
                           />
                         ))}
-                        <col style={{ width: 112 }} />
-                        <col style={{ width: 125 }} />
-                        <col style={{ width: 125 }} />
-                        <col style={{ width: 125 }} />
+                        <col style={{ width: 100 }} />
+                        <col style={{ width: 110 }} />
+                        <col style={{ width: 110 }} />
+                        <col style={{ width: 110 }} />
                       </colgroup>
                       <thead>
                         <tr className="faculty-semester-grade-table__groups">
@@ -5980,15 +5974,7 @@ export default function EnterGrades() {
                     : "Select a class to manage attendance."}
                 </p>
               </div>
-              <button
-                type="button"
-                className="faculty-attendance-modal__close"
-                autoFocus
-                aria-label="Close attendance modal"
-                onClick={() => setAttendanceModalOpen(false)}
-              >
-                <X size={19} />
-              </button>
+
             </header>
             <div className="faculty-attendance-modal__content">
               {attendanceModalOpen &&
@@ -6044,7 +6030,7 @@ export default function EnterGrades() {
               </span>
               <button
                 type="button"
-                className="faculty-grade-header-button"
+                className="faculty-grade-header-button faculty-attendance-modal__done"
                 onClick={() => setAttendanceModalOpen(false)}
               >
                 Close
@@ -6104,15 +6090,6 @@ export default function EnterGrades() {
                     policy.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="faculty-inc-modal__close"
-                  onClick={closeAssessmentManager}
-                  disabled={assessmentManagerBusy}
-                  aria-label="Close assessment manager"
-                >
-                  <X size={18} />
-                </button>
               </header>
 
               {assessmentManagerLoading ? (
