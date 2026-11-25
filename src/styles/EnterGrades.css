@@ -4906,3 +4906,273 @@ html
   .faculty-enter-grades-page .faculty-assigned-class-suggestion {
   color: #f1f5f6;
 }
+
+/* Attendance Schedule Reference */
+.faculty-enter-grades-page .faculty-attendance-modal__schedule {
+  flex: none;
+  padding: 13px 20px 15px;
+  border-bottom: 1px solid #dceae1;
+  background: #f5faf7;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__schedule-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.faculty-enter-grades-page
+  .faculty-attendance-modal__schedule-heading
+  > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0b673d;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__read-only {
+  padding: 4px 9px;
+  border: 1px solid #d5e1db;
+  border-radius: 999px;
+  background: #edf2ef;
+  color: #557063;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+  font-weight: 700;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__schedule-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #dce9e1;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__schedule-item > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #637b6e;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  font-weight: 650;
+}
+
+.faculty-enter-grades-page .faculty-attendance-modal__schedule-item > strong {
+  color: #193b2a;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__schedule {
+  background: #20292e;
+  border-color: #35464b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__schedule-heading
+  > span:first-child {
+  color: #91dcaf;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__read-only {
+  background: #29383c;
+  border-color: #40565b;
+  color: #c5d6d0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__schedule-item {
+  background: #192226;
+  border-color: #35464b;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__schedule-item
+  > span {
+  color: #b3c7be;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-modal__schedule-item
+  > strong {
+  color: #edf5f1;
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .faculty-enter-grades-page .faculty-attendance-modal__schedule {
+    padding: 11px 13px 13px;
+  }
+
+  .faculty-enter-grades-page .faculty-attendance-modal__schedule-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .faculty-enter-grades-page .faculty-attendance-modal__schedule-item {
+    padding: 8px 10px;
+  }
+}
+
+/* Attendance Save Feedback */
+.faculty-enter-grades-page .faculty-attendance-save-feedback {
+  display: block;
+  max-width: 260px;
+  color: #ae302b;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-save-feedback {
+  color: #ffb4ad;
+}
+
+/* Attendance Meeting Cancellation */
+.faculty-enter-grades-page .faculty-attendance-cancel {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid #efddd9;
+  border-bottom: 1px solid #efddd9;
+  background: #fff9f7;
+}
+
+.faculty-enter-grades-page .faculty-attendance-cancel__intro {
+  flex: 1 1 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.faculty-enter-grades-page .faculty-attendance-cancel__intro strong {
+  color: #7c2e27;
+  font-size: calc(13px * var(--ptc-font-scale, 1));
+}
+
+.faculty-enter-grades-page .faculty-attendance-cancel__intro small {
+  color: #855e59;
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  line-height: 1.5;
+}
+
+.faculty-enter-grades-page
+  .faculty-attendance-cancel
+  .faculty-gradebook-filter {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.faculty-enter-grades-page .faculty-attendance-cancel__button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  border: 1px solid #a7392f;
+  background: #b63b31;
+  color: #fff;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.faculty-enter-grades-page
+  .faculty-attendance-cancel__button:hover:not(:disabled) {
+  border-color: #85291f;
+  background: #952b22;
+  color: #fff;
+}
+
+.faculty-enter-grades-page .faculty-attendance-cancel__button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.faculty-enter-grades-page .faculty-attendance-cancel__notice {
+  padding: 11px 18px;
+  border-bottom: 1px solid #d5e5da;
+  background: #f0f8f3;
+  color: #22613c;
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  font-weight: 650;
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-cancel {
+  background: #2a2525;
+  border-color: #5a4541;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-cancel__intro
+  strong {
+  color: #ffb6ad;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-cancel__intro
+  small {
+  color: #d4b9b4;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-cancel__button {
+  background: #a9372e;
+  border-color: #c65449;
+  color: #fff;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .faculty-enter-grades-page
+  .faculty-attendance-cancel__notice {
+  background: #20362b;
+  border-color: #345747;
+  color: #a6e5c3;
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+  .faculty-enter-grades-page .faculty-attendance-cancel {
+    padding: 12px;
+    align-items: stretch;
+  }
+
+  .faculty-enter-grades-page .faculty-attendance-cancel__button {
+    width: 100%;
+  }
+
+}
