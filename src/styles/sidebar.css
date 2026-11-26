@@ -954,3 +954,108 @@ html body .dashboard-wrapper[data-ptc-sidebar-theme="dark"] .sidebar .sidebar-na
   color: #f4fff7 !important;
   stroke: currentColor;
 }
+
+/* Desktop collapse */
+.sidebar-desktop-collapse {
+  display: inline-flex;
+  flex: 0 0 31px;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 7px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.sidebar-desktop-collapse:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-desktop-collapse:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (min-width: 769px) {
+  .dashboard-wrapper .sidebar.sidebar--collapsed {
+    flex: 0 0 76px;
+    width: 76px;
+    min-width: 76px;
+    transition: width 0.2s ease, flex-basis 0.2s ease;
+  }
+
+  .sidebar--collapsed .sidebar-header {
+    padding: 12px 7px;
+  }
+
+  .sidebar--collapsed .sidebar-brand {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sidebar--collapsed .sidebar-logo-mark {
+    flex-basis: 45px;
+    width: 45px;
+    height: 45px;
+  }
+
+  .sidebar--collapsed .sidebar-desktop-collapse {
+    margin-left: 0;
+  }
+
+  .sidebar--collapsed .sidebar-brand-copy,
+  .sidebar--collapsed .sidebar-role-card__copy,
+  .sidebar--collapsed .sidebar-section-label,
+  .sidebar--collapsed .sidebar-nav__label,
+  .sidebar--collapsed .sidebar-nav__badge,
+  .sidebar--collapsed .sidebar-nav__chevron,
+  .sidebar--collapsed .sidebar-nav__children,
+  .sidebar--collapsed .sidebar-user__copy,
+  .sidebar--collapsed .sidebar-user__status {
+    display: none;
+  }
+
+  .sidebar--collapsed .sidebar-role-card {
+    justify-content: center;
+    margin-top: 12px;
+    padding: 7px;
+  }
+
+  .sidebar--collapsed .sidebar-content {
+    padding: 12px 7px;
+  }
+
+  .sidebar--collapsed .sidebar-nav__item--root {
+    justify-content: center;
+    min-height: 46px;
+    padding: 6px;
+  }
+
+  .sidebar--collapsed .sidebar-nav__icon {
+    flex: 0 0 32px;
+  }
+
+  .sidebar--collapsed .sidebar-footer {
+    padding: 10px 7px;
+  }
+
+  .sidebar--collapsed .sidebar-user {
+    justify-content: center;
+    padding: 8px 4px;
+  }
+
+  .sidebar--collapsed .sidebar-user__avatar {
+    flex: 0 0 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-desktop-collapse {
+    display: none;
+  }
+}

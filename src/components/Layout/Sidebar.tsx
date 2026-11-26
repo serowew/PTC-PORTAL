@@ -20,6 +20,8 @@ import {
   LayoutDashboard,
   Library,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   LockKeyhole,
   LogOut,
   Palette,
@@ -347,6 +349,7 @@ function NavLevel({
                 }`}
                 onClick={() => onNavigatePage(item)}
                 aria-current={itemIsActive ? "page" : undefined}
+                title={item.label}
               >
                 <span className="sidebar-nav__icon">
                   <NavIcon item={item} />
@@ -368,6 +371,7 @@ function NavLevel({
                   onToggleFolder(levelIndex, isOpen ? undefined : item)
                 }
                 aria-expanded={isOpen}
+                title={item.label}
               >
                 <span className="sidebar-nav__icon">
                   <NavIcon item={item} />
@@ -465,6 +469,26 @@ function NavLevel({
 }
 
 export default function Sidebars({ groups, soloLinks }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem("ptc-sidebar-collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  function toggleCollapsed() {
+    setCollapsed((previous) => {
+      const next = !previous;
+      try {
+        window.localStorage.setItem("ptc-sidebar-collapsed", String(next));
+      } catch {
+        // Sidebar remains functional if browser storage is unavailable.
+      }
+      return next;
+    });
+  }
+
   const location = useLocation();
   const navigate = useNavigate();
   const user = authService.getSession();
@@ -554,7 +578,7 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
     }
     const rect = profileButtonRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const width = Math.min(rect.width, 280, window.innerWidth - 24);
+    const width = Math.min(collapsed ? 248 : rect.width, 280, window.innerWidth - 24);
     const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12);
     setAccountMenu({
       open: true,
@@ -611,6 +635,14 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
   }, [mobileOpen, location.pathname]);
 
   function handleToggleFolder(levelIndex: number, item?: NavItem) {
+    if (collapsed) {
+      setCollapsed(false);
+      try {
+        window.localStorage.setItem("ptc-sidebar-collapsed", "false");
+      } catch {
+        // Storage is optional.
+      }
+    }
     setManualActivePath((previous) => {
       const baseItems =
         previous?.pathname === location.pathname
@@ -671,8 +703,9 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
       />
 
       <nav
-        className={`sidebar ${mobileOpen ? "sidebar--mobile-open" : ""}`}
+        className={`sidebar ${mobileOpen ? "sidebar--mobile-open" : ""} ${collapsed ? "sidebar--collapsed" : ""}`}
         aria-label={`${roleMeta.shortLabel} navigation`}
+        data-sidebar-collapsed={collapsed ? "true" : "false"}
       >
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -684,6 +717,17 @@ export default function Sidebars({ groups, soloLinks }: SidebarProps) {
               <strong>PTC Portal</strong>
               <span>Academic Management System</span>
             </div>
+
+            <button
+              type="button"
+              className="sidebar-desktop-collapse"
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
+            >
+              {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            </button>
 
             <button
               type="button"

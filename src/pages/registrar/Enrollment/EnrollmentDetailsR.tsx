@@ -8,6 +8,32 @@ import "../../../styles/EnrollmementDetailsR.css";
 
 const API_BASE_URL = `${api.baseUrl}/api/registrar/enrollments`;
 
+const enrollmentIssueDescriptions: Record<string, string> = {
+  SECTION_FULL: "The selected section has reached its capacity.",
+  ALL_SECTIONS_FULL: "No available sections have remaining seats.",
+  NO_ELIGIBLE_SECTION: "No eligible section is available for this subject.",
+  SECTION_NOT_PREPARED: "The selected section has not been prepared for enrollment.",
+  SCHEDULE_CONFLICT: "The selected schedule overlaps another enrolled class.",
+  TIME_CONFLICT: "The selected schedule overlaps another enrolled class.",
+  CAPACITY_EXCEEDED: "The selected class has reached its capacity.",
+  PREREQUISITE_NOT_MET: "The student has not completed the required prerequisite.",
+  SUBJECT_NOT_ELIGIBLE: "The student is not eligible for this subject.",
+  ENROLLMENT_NOT_PENDING: "This enrollment is no longer pending review.",
+  ENROLLMENT_ALREADY_APPROVED: "This enrollment has already been approved.",
+  ENROLLMENT_ALREADY_FINALIZED: "This enrollment has already been finalized.",
+};
+
+function readableEnrollmentIssue(message?: string | null, code?: string | null): string {
+  const description = (message || "").trim();
+  if (description && !/^[A-Z][A-Z0-9_]+$/.test(description)) {
+    return description;
+  }
+  const identifier = (code || description).trim();
+  return enrollmentIssueDescriptions[identifier] ||
+    "This item requires Registrar review before enrollment can proceed.";
+}
+
+
 // =====================================================
 // TYPES
 // =====================================================
@@ -1409,11 +1435,11 @@ export default function EnrollmentDetailsR() {
       const messages: string[] = [];
 
       if (typeof data.message === "string" && data.message.trim()) {
-        messages.push(data.message.trim());
+        messages.push(readableEnrollmentIssue(data.message));
       }
 
       if (typeof data.error === "string" && data.error.trim()) {
-        messages.push(data.error.trim());
+        messages.push(readableEnrollmentIssue(data.error));
       }
 
       if (Array.isArray(data.errors)) {
@@ -1423,12 +1449,7 @@ export default function EnrollmentDetailsR() {
 
           const code = typeof issue?.code === "string" ? issue.code.trim() : "";
 
-          const subjectCode =
-            "subject_code" in issue && typeof issue.subject_code === "string"
-              ? issue.subject_code.trim()
-              : "";
-
-          const text = message || code || subjectCode;
+          const text = readableEnrollmentIssue(message, code);
 
           if (text && !messages.includes(text)) {
             messages.push(text);
@@ -1441,7 +1462,7 @@ export default function EnrollmentDetailsR() {
         Array.isArray(data.validation_errors)
       ) {
         for (const issue of data.validation_errors) {
-          const text = issue?.message || issue?.code;
+          const text = readableEnrollmentIssue(issue?.message, issue?.code);
 
           if (
             typeof text === "string" &&
@@ -3035,7 +3056,7 @@ export default function EnrollmentDetailsR() {
     const errors = Array.isArray(eligibility.errors) ? eligibility.errors : [];
 
     return errors
-      .map((issue) => issue.message || issue.code)
+      .map((issue) => readableEnrollmentIssue(issue.message, issue.code))
       .filter(Boolean)
       .join(" ");
   };
@@ -4623,11 +4644,7 @@ export default function EnrollmentDetailsR() {
           <div className="enrollment-details-error">
             <strong>Action could not be completed</strong>
 
-            <p>{actionError}</p>
-
-            {actionErrorDetails?.code && (
-              <small>Code: {actionErrorDetails.code}</small>
-            )}
+            <p>{readableEnrollmentIssue(actionError)}</p>
 
             {actionScheduleConflicts.length > 0 && (
               <div className="schedule-conflict-list">
@@ -4896,7 +4913,7 @@ export default function EnrollmentDetailsR() {
             ENROLLMENT VALIDATION
         ================================================= */}
 
-        <div className="enrollment-details-card">
+        <div className="enrollment-details-card enrollment-validation-card">
           <div className="details-card-header">
             <div>
               <h2>Enrollment Validation</h2>
@@ -4924,7 +4941,7 @@ export default function EnrollmentDetailsR() {
 
           {validationError && (
             <div className="enrollment-details-error">
-              <p>{validationError}</p>
+              <p>{readableEnrollmentIssue(validationError)}</p>
             </div>
           )}
 
@@ -4985,7 +5002,7 @@ export default function EnrollmentDetailsR() {
                 <div className="detail-item">
                   <span>Validation Status</span>
 
-                  <strong>{validation.valid ? "VALID" : "INVALID"}</strong>
+                  <strong>{validation.valid ? "Passed" : "Needs attention"}</strong>
                 </div>
 
                 <div className="detail-item">
@@ -4993,12 +5010,12 @@ export default function EnrollmentDetailsR() {
 
                   <strong>
                     {validation.already_approved
-                      ? "ALREADY APPROVED"
+                      ? "Already approved"
                       : validation.requires_registrar_review
-                        ? "REVIEW REQUIRED"
+                        ? "Review required"
                         : validation.can_approve
-                          ? "READY"
-                          : "NOT READY"}
+                          ? "Ready for approval"
+                          : "Not ready"}
                   </strong>
                 </div>
 
@@ -5048,7 +5065,7 @@ export default function EnrollmentDetailsR() {
             ENROLLED SUBJECTS
         ================================================= */}
 
-        <div className="enrollment-details-card">
+        <div className="enrollment-details-card enrolled-subjects-card">
           <div className="details-card-header">
             <div>
               <h2>Enrolled Subjects</h2>
@@ -5259,7 +5276,7 @@ export default function EnrollmentDetailsR() {
                               {validationSubject.errors.length > 0 && (
                                 <small>
                                   {validationSubject.errors
-                                    .map((item) => item.message || item.code)
+                                    .map((item) => readableEnrollmentIssue(item.message, item.code))
                                     .filter(Boolean)
                                     .join(" • ")}
                                 </small>

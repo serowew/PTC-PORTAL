@@ -597,7 +597,17 @@ export default function PublicAdmission() {
       <div className="ptc-admission-shell">
         <header className="ptc-admission-hero">
           <div className="ptc-admission-hero-top">
-            <ClipboardCheck size={19} /> Pateros Technological College
+            <img
+              className="ptc-admission-logo"
+              src="/ptclogo.png"
+              alt="Pateros Technological College seal"
+              width={48}
+              height={48}
+            />
+            <div className="ptc-admission-hero-brand">
+              <span>Pateros Technological College</span>
+              <small><ClipboardCheck size={13} aria-hidden="true" /> Official online admission</small>
+            </div>
           </div>
           <h1>Online Admission</h1>
           <p>

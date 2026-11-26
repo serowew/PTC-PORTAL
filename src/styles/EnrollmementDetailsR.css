@@ -4413,3 +4413,250 @@ html
     font-size: calc(21px * var(--ptc-font-scale, 1));
   }
 }
+
+
+/* Enrollment Validation */
+.registrar-enrollment-details .enrollment-validation-card .details-card-header {
+  padding: 14px 18px;
+  gap: 12px;
+}
+.registrar-enrollment-details .enrollment-validation-card .details-card-header h2 {
+  font-size: calc(15px * var(--ptc-font-scale, 1));
+}
+.registrar-enrollment-details .enrollment-validation-card .details-card-header span {
+  font-size: calc(11px * var(--ptc-font-scale, 1));
+  line-height: 1.45;
+}
+.registrar-enrollment-details .enrollment-validation-card .details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  padding: 0;
+}
+.registrar-enrollment-details .enrollment-validation-card .detail-item {
+  min-width: 0;
+  min-height: 54px;
+  padding: 9px 13px;
+}
+.registrar-enrollment-details .enrollment-validation-card .detail-item > span:first-child {
+  margin-bottom: 3px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+}
+.registrar-enrollment-details .enrollment-validation-card .detail-item strong {
+  font-size: calc(12px * var(--ptc-font-scale, 1));
+  overflow-wrap: anywhere;
+}
+.registrar-enrollment-details .enrollment-validation-card .remarks-box {
+  margin: 11px 14px;
+  padding: 10px 13px;
+}
+.registrar-enrollment-details .enrollment-validation-card .remarks-box p {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+/* Enrolled Subjects */
+.registrar-enrollment-details .enrolled-subjects-card .details-card-header {
+  padding: 13px 17px;
+  gap: 10px;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subjects-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subject-action-btn {
+  min-height: 30px;
+  padding: 6px 9px;
+  font-size: calc(10px * var(--ptc-font-scale, 1));
+}
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table {
+  table-layout: fixed;
+  min-width: 1150px;
+  width: 100%;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table thead th {
+  padding: 9px 7px;
+  font-size: calc(9px * var(--ptc-font-scale, 1));
+  line-height: 1.25;
+  white-space: normal;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table tbody td {
+  padding: 9px 7px;
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+  line-height: 1.36;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(1) { width: 63px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(2) { width: 168px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(3) { width: 92px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(4) { width: 51px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(5) { width: 146px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(6) { width: 126px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(7) { width: 121px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(8) { width: 63px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(9) { width: 68px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(10) { width: 137px; }
+.registrar-enrollment-details .enrolled-subjects-card .subjects-table :is(th,td):nth-child(11) { width: 115px; }
+.registrar-enrollment-details .enrolled-subjects-card .subject-name-cell,
+.registrar-enrollment-details .enrolled-subjects-card .assigned-class-cell,
+.registrar-enrollment-details .enrolled-subjects-card .subject-validation-cell {
+  gap: 2px;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subject-name-cell strong,
+.registrar-enrollment-details .enrolled-subjects-card .assigned-class-cell strong {
+  font-size: calc(10.5px * var(--ptc-font-scale, 1));
+}
+.registrar-enrollment-details .enrolled-subjects-card .subject-validation-cell small {
+  font-size: calc(9px * var(--ptc-font-scale, 1));
+  line-height: 1.4;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subject-action-group {
+  gap: 5px;
+}
+.registrar-enrollment-details .enrolled-subjects-card .subject-action-group .subject-action-btn {
+  min-height: 29px;
+  padding: 5px 7px;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+@media (max-width: 900px) {
+  .registrar-enrollment-details .enrollment-validation-card .details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .registrar-enrollment-details .enrollment-validation-card .detail-item:not(:nth-child(4n + 1)) {
+    border-left: 0;
+  }
+  .registrar-enrollment-details .enrollment-validation-card .detail-item:nth-child(even) {
+    border-left: 1px solid var(--details-border-soft);
+  }
+}
+@media (max-width: 560px) {
+  .registrar-enrollment-details .enrollment-validation-card .details-card-header,
+  .registrar-enrollment-details .enrolled-subjects-card .details-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 13px;
+  }
+  .registrar-enrollment-details .enrolled-subjects-card .subjects-header-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .registrar-enrollment-details .enrollment-validation-card .detail-item {
+    padding: 9px 10px;
+  }
+}
+
+/* Dark Mode */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrollment-validation-card .details-card-header,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrolled-subjects-card .details-card-header {
+  background: #20292e;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrollment-validation-card .detail-item {
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrolled-subjects-card .subjects-table thead th {
+  background: #20292e;
+  color: #c5d6dc;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrolled-subjects-card .subjects-table tbody td {
+  color: #e1ebee;
+  border-color: #35464b;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrolled-subjects-card .subjects-table tbody tr:nth-child(even) {
+  background: #1d282c;
+}
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrolled-subjects-card .subjects-table tbody tr:hover {
+  background: #28383b;
+}
+
+
+/* Dark Mode Offering Selection */
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .enrollment-type-badge.regular {
+  color: #b7f5d0;
+  background: #254236;
+  border-color: #537766;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option.selected,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option.is-selected {
+  color: #f1f5f6;
+  background: #20292e;
+  border-color: #35464b;
+  box-shadow: none;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option.selected,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option.is-selected {
+  background: #23342f;
+  border-color: #6bc79a;
+  box-shadow: inset 3px 0 0 #6bc79a;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option:hover:not(:disabled) {
+  background: #2a393a;
+  border-color: #85bda1;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-meta > div {
+  background: #192226;
+  border-color: #415358;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option-top strong,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-meta strong {
+  color: #f1f5f6;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option-top small,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option-top span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-meta span {
+  color: #bacbd0;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-option-status span,
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-modal-count {
+  color: #b9f5d1;
+  background: #284638;
+  border-color: #557d65;
+}
+
+.dashboard-wrapper[data-ptc-sidebar-theme="dark"]
+  .registrar-enrollment-details .assignment-offering-select-row {
+  color: #bcebd0;
+}
