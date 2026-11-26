@@ -337,6 +337,7 @@ interface RegistrarOfficialSheetOption {
   semester_name: string;
   sheet_id: string | null;
   sheet_status: string;
+  sheet_record_version: number | null;
   original_official_submitted_on: string | null;
   official_submission_reference: string | null;
   original_date_verified: boolean;
@@ -455,6 +456,113 @@ function OriginalOfficialSheetRecorder() {
     offerings.find((item) => item.can_record_original_date) ??
     offerings[0];
 
+  const selectedOfferingId = selected?.offering_id ?? null;
+
+  const [readiness, setReadiness] = useState<{
+    offering_id: number;
+    reload_key: number;
+    roster_count: number;
+    unresolved_count: number;
+    roster_ready: boolean;
+  } | null>(null);
+
+  const [readinessError, setReadinessError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setReadiness(null);
+    setReadinessError("");
+
+    if (selectedOfferingId === null || loading) {
+      return () => controller.abort();
+    }
+
+    const loadReadiness = async () => {
+      try {
+        const response = await authService.authFetch(
+          `${sheetsApi}/${selectedOfferingId}`,
+          {
+            method: "GET",
+            signal: controller.signal,
+          },
+        );
+
+        if (controller.signal.aborted) return;
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        const result = await readJsonResponse<{
+          success: boolean;
+          read_only: boolean;
+          offering_id: number;
+
+          recording_readiness?: {
+            roster_count: number;
+            unresolved_count: number;
+            roster_ready: boolean;
+          };
+
+          message?: string;
+        }>(response);
+
+        if (controller.signal.aborted) return;
+
+        const r = result.recording_readiness;
+
+        if (
+          !response.ok ||
+          !result.success ||
+          !result.read_only ||
+          result.offering_id !== selectedOfferingId ||
+          !r ||
+          !Number.isSafeInteger(r.roster_count) ||
+          !Number.isSafeInteger(r.unresolved_count) ||
+          r.roster_count < 0 ||
+          r.unresolved_count < 0 ||
+          r.unresolved_count > r.roster_count ||
+          r.roster_ready !== (r.roster_count > 0 && r.unresolved_count === 0)
+        ) {
+          throw new Error(
+            result.message || "Unable to verify class recording readiness.",
+          );
+        }
+
+        setReadiness({
+          ...r,
+          offering_id: selectedOfferingId,
+          reload_key: reloadKey,
+        });
+      } catch (caught) {
+        if (!controller.signal.aborted) {
+          setReadinessError(
+            caught instanceof Error
+              ? caught.message
+              : "Unable to check readiness.",
+          );
+        }
+      }
+    };
+
+    void loadReadiness();
+
+    return () => controller.abort();
+  }, [selectedOfferingId, loading, reloadKey, sheetsApi, navigate]);
+
+  const currentReadiness =
+    readiness &&
+    readiness.offering_id === selectedOfferingId &&
+    readiness.reload_key === reloadKey &&
+    !loading
+      ? readiness
+      : null;
+
+  const rosterReady = currentReadiness?.roster_ready === true;
+
   const validDate =
     /^\d{4}-\d{2}-\d{2}$/.test(date) &&
     !Number.isNaN(Date.parse(`${date}T00:00:00Z`)) &&
@@ -472,6 +580,7 @@ function OriginalOfficialSheetRecorder() {
     !loading &&
     !busy &&
     selected?.can_record_original_date === true &&
+    rosterReady &&
     validDate &&
     validReference &&
     evidenceChecked;
@@ -480,6 +589,12 @@ function OriginalOfficialSheetRecorder() {
     if (!canRecord || !selected) return;
 
     const offeringId = selected.offering_id;
+    const expectedVersion = selected.sheet_record_version;
+
+    const recordedVersion =
+      expectedVersion === null || expectedVersion === 1
+        ? 1
+        : expectedVersion + 1;
     const originalDate = date;
     const sourceReference = reference.trim();
 
@@ -495,6 +610,7 @@ function OriginalOfficialSheetRecorder() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            expected_sheet_version: expectedVersion,
             original_official_submitted_on: originalDate,
             official_submission_reference: sourceReference,
             confirm_original_submission_evidence: true,
@@ -521,7 +637,7 @@ function OriginalOfficialSheetRecorder() {
         data.persisted !== !dryRun ||
         data.audit_event !== "RECORDED" ||
         data.official_sheet?.sheet_status !== "IN_PROGRESS" ||
-        data.official_sheet.record_version !== 1 ||
+        data.official_sheet.record_version !== recordedVersion ||
         data.official_sheet.original_official_submitted_on !== originalDate ||
         data.official_sheet.official_submission_reference !== sourceReference ||
         data.official_sheet.deadline_established !== false ||
@@ -601,7 +717,7 @@ function OriginalOfficialSheetRecorder() {
             ? "…"
             : offerings.filter((item) => item.can_record_original_date)
                 .length}{" "}
-          eligible
+          awaiting recording check{" "}
         </strong>
       </header>
 
@@ -634,6 +750,8 @@ function OriginalOfficialSheetRecorder() {
             value={selected?.offering_id ?? ""}
             disabled={busy || loading || offerings.length === 0}
             onChange={(event) => {
+              setReadiness(null);
+              setReadinessError("");
               setSelectedId(Number(event.target.value));
               setDate("");
               setReference("");
@@ -650,12 +768,40 @@ function OriginalOfficialSheetRecorder() {
                 {item.subject_code} · {item.section_name} · {item.academic_year}{" "}
                 · {item.semester_name}
                 {item.can_record_original_date
-                  ? " · Ready to record"
+                  ? " · Not yet recorded"
                   : ` · ${item.sheet_status.replaceAll("_", " ")}`}
               </option>
             ))}
           </select>
         </label>
+
+        {selected && (
+          <div className="registrar-grade-change-sheet-message" role="status">
+            {readinessError
+              ? readinessError
+              : !currentReadiness
+                ? "Checking class grade readiness…"
+                : currentReadiness.roster_count === 0
+                  ? "No class records are available for recording."
+                  : !rosterReady
+                    ? `${currentReadiness.unresolved_count} of ${currentReadiness.roster_count} class records require resolution, approval, or publication.`
+                    : "Class roster passed the recording precheck."}
+
+            {(readinessError || (currentReadiness && !rosterReady)) && (
+              <button
+                type="button"
+                className="registrar-grade-change-process"
+                disabled={loading || busy}
+                onClick={() => {
+                  setReadiness(null);
+                  setReloadKey((n) => n + 1);
+                }}
+              >
+                Check Readiness Again
+              </button>
+            )}
+          </div>
+        )}
 
         {selected && !selected.can_record_original_date ? (
           <p className="registrar-grade-change-sheet-message">
@@ -675,7 +821,7 @@ function OriginalOfficialSheetRecorder() {
                 ? " Awaiting Program Head verification. INC deadline not established."
                 : ""}
           </p>
-        ) : selected ? (
+        ) : selected && !rosterReady ? null : selected ? (
           <>
             <div className="registrar-grade-change-sheet-fields">
               <label className="registrar-grade-change-sheet-field">
@@ -784,7 +930,7 @@ interface ModernIncConversionRow {
 interface ModernIncConversionListResponse {
   success: boolean;
   read_only: boolean;
-  qa_pilot_only: boolean;
+  listing_scope: "ALL_MODERN_INC_SUBMISSIONS";
   submissions: ModernIncConversionRow[];
   message?: string;
 }
@@ -870,7 +1016,7 @@ function ModernIncConversionQueue({
           !response.ok ||
           !data.success ||
           !data.read_only ||
-          !data.qa_pilot_only ||
+          data.listing_scope !== "ALL_MODERN_INC_SUBMISSIONS" ||
           !Array.isArray(data.submissions)
         ) {
           throw new Error(
@@ -905,16 +1051,16 @@ function ModernIncConversionQueue({
 
   const canProcess = (row: ModernIncConversionRow) =>
     row.conversion_state === "REQUIRES_PREFLIGHT" &&
-    row.offering_id === 130 &&
-    row.enrollment_subject_id === 277 &&
     row.amendment === null &&
     row.submission_status === "APPROVED" &&
     row.submission_record_version === 2 &&
     row.claim_verification_status === "VERIFIED_TIMELY" &&
-    row.claim_version === 2 &&
-    row.current_claim_version === 2 &&
+    Number.isSafeInteger(row.current_claim_version) &&
+    row.current_claim_version >= 2 &&
+    row.claim_version === row.current_claim_version &&
     row.sheet_status === "FINALIZED" &&
-    row.sheet_record_version === 3 &&
+    Number.isSafeInteger(row.sheet_record_version) &&
+    row.sheet_record_version > 0 &&
     row.grade_status === "Approved" &&
     row.current_grading_outcome === "INCOMPLETE" &&
     Number(row.current_final_rating) === 4;
@@ -929,7 +1075,13 @@ function ModernIncConversionQueue({
     });
 
   const process = async () => {
-    if (!selected || !canProcess(selected) || !validRemarks || processing) {
+    if (
+      !selected ||
+      !canProcess(selected) ||
+      !validRemarks ||
+      processing ||
+      loading
+    ) {
       return;
     }
 
@@ -1003,6 +1155,77 @@ function ModernIncConversionQueue({
     };
 
     try {
+      const response = await authService.authFetch(
+        `${endpoint}/${encodeURIComponent(selected.submission_id)}/readiness`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const readiness = await readJsonResponse<{
+        success: boolean;
+        read_only: boolean;
+        preflight_only: boolean;
+        submission_id: string;
+        expected_record_version: number;
+        expected_claim_id: string;
+        expected_claim_version: number;
+        expected_sheet_version: number;
+        expected_grade_id: number;
+        preflight_passed: boolean;
+        requires_conversion_dry_run: boolean;
+
+        blockers: {
+          code: string;
+          message: string;
+        }[];
+
+        message?: string;
+      }>(response);
+
+      if (!response.ok || !readiness.success) {
+        throw new Error(
+          readiness.message || "Could not check conversion readiness.",
+        );
+      }
+
+      if (
+        readiness.read_only !== true ||
+        readiness.preflight_only !== true ||
+        readiness.requires_conversion_dry_run !== true ||
+        !Array.isArray(readiness.blockers) ||
+        readiness.preflight_passed !== true ||
+        readiness.blockers.length !== 0
+      ) {
+        throw new Error(
+          readiness.blockers?.map((blocker) => blocker.message).join("; ") ||
+            "The replacement is not ready for conversion.",
+        );
+      }
+
+      if (
+        readiness.submission_id !== selected.submission_id ||
+        readiness.expected_record_version !==
+          selected.submission_record_version ||
+        readiness.expected_claim_id !== selected.claim_id ||
+        readiness.expected_claim_version !== selected.current_claim_version ||
+        readiness.expected_sheet_version !== selected.sheet_record_version ||
+        readiness.expected_grade_id !== selected.grade_id
+      ) {
+        throw new Error(
+          "The conversion record changed. Select it again after reloading.",
+        );
+      }
+
       const preview = await request(true);
 
       const grade = preview.proposed_official_grade;
@@ -1044,6 +1267,7 @@ function ModernIncConversionQueue({
             : "The modern INC conversion could not be processed.",
       });
 
+      setSelectedId(null);
       setReloadKey((value) => value + 1);
     } finally {
       setProcessing(false);
@@ -1054,14 +1278,13 @@ function ModernIncConversionQueue({
     <section className="registrar-grade-change-panel">
       <header className="registrar-grade-change-panel-heading">
         <div>
-          <span>Modern Grading · QA Pilot</span>
+          <span>Modern Grading</span>
 
           <h2>INC Completion Conversions</h2>
 
           <p>
             Review approved replacement submissions and existing official-sheet
-            amendments. This workflow remains limited to the authorized QA
-            pilot.
+            amendments. Conversion requires server authorization and validation.
           </p>
         </div>
 
@@ -1092,10 +1315,7 @@ function ModernIncConversionQueue({
         {loading && <p>Loading modern INC submissions...</p>}
 
         {!loading && !error && rows.length === 0 && (
-          <p>
-            No modern INC replacement submissions are available in this QA
-            pilot.
-          </p>
+          <p>No modern INC replacement submissions are available.</p>
         )}
       </div>
 

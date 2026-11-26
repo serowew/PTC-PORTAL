@@ -374,9 +374,10 @@ function emptySummary(): GradebookSummary {
 }
 
 interface ModernGradePercent {
+  exact_numerator: string;
+  exact_denominator: string;
   display: string;
 }
-
 interface ModernGradeCategoryPreview {
   category_code: string;
   category_name: string;
@@ -2217,7 +2218,7 @@ function AttendanceRegister({
     </section>
   );
 }
-// Special Outcomes (QA pilot)
+// Special Outcomes
 type SpecialOutcomeType = "INCOMPLETE" | "UNOFFICIAL_DROP";
 
 interface SpecialOutcomeSubmitResponse {
@@ -2234,6 +2235,1488 @@ interface SpecialOutcomeSubmitResponse {
   code?: string;
   message?: string;
   note?: string;
+}
+
+interface IncPendingAssessment {
+  assessment_id: number;
+  grading_term: AssessmentTerm;
+  header_name: string;
+  maximum_score: string;
+  assessment_name?: string;
+  category_code?: string;
+  score_id: number | null;
+  record_version: number | null;
+
+  completion_state: "PENDING" | "SAVED" | "CONFLICT";
+
+  current_score: {
+    score_id: number;
+    score_status: ModernGradebookScoreStatus;
+    earned_score: string | null;
+    record_version: number;
+  } | null;
+}
+
+interface IncCompletionReadinessResponse {
+  replacement_submissions: IncReplacementSubmissionRecord[];
+  success: boolean;
+  message?: string;
+  source_verified?: boolean;
+
+  official_grade: {
+    grade_id: number;
+    grade_status: string;
+    grading_outcome: string;
+    final_rating: string;
+    midterm_grade: string | null;
+    final_grade: string | null;
+  };
+
+  official_sheet: {
+    sheet_id: string;
+    sheet_status: string;
+    original_official_submitted_on: string;
+    inc_completion_deadline_on: string;
+  };
+
+  outstanding_requirements: string;
+
+  pending_assessments?: IncPendingAssessment[];
+  pending_midterm_assessments?: IncPendingAssessment[];
+  pending_final_assessments?: IncPendingAssessment[];
+
+  existing_claims: {
+    claim_id: string;
+    verification_status: string;
+    record_version: number;
+    claimed_completed_on: string | null;
+    verified_completed_on: string | null;
+  }[];
+
+  can_file_completion_claim: boolean;
+  can_dry_run_completion_claim: boolean;
+
+  blockers: {
+    code: string;
+    message: string;
+  }[];
+}
+
+interface IncCompletionClaimResponse {
+  success: boolean;
+  message?: string;
+  code?: string;
+  dry_run: boolean;
+  persisted: boolean;
+
+  claim?: {
+    claim_id: string | null;
+    grade_id: number;
+    verification_status: string;
+    record_version: number;
+    claimed_completed_on: string;
+  };
+}
+
+function IncCompletionScore({
+  offeringId,
+  enrollmentSubjectId,
+  assessment,
+  claimId,
+  onSaved,
+}: {
+  offeringId: number;
+  enrollmentSubjectId: number;
+  assessment: IncPendingAssessment;
+  claimId: string;
+  onSaved: (
+    assessmentId: number,
+    score: NonNullable<IncPendingAssessment["current_score"]>,
+  ) => void;
+}) {
+  const navigate = useNavigate();
+
+  const saved = assessment.completion_state === "SAVED";
+
+  const canEdit = assessment.completion_state === "PENDING";
+
+  const [score, setScore] = useState(
+    saved ? (assessment.current_score?.earned_score ?? "") : "",
+  );
+
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [validated, setValidated] = useState<string | null>(null);
+
+  const savingRef = useRef(false);
+
+  const earned = scoreCents(score);
+  const maximum = scoreCents(assessment.maximum_score);
+
+  const fingerprint = JSON.stringify({
+    assessmentId: assessment.assessment_id,
+    recordVersion: assessment.record_version,
+    score: score.trim(),
+    reason: reason.trim(),
+    claimId,
+  });
+
+  const canValidate =
+    !busy &&
+    canEdit &&
+    earned !== null &&
+    maximum !== null &&
+    earned <= maximum &&
+    reason.trim().length >= 10 &&
+    reason.trim().length <= 1000;
+
+  const canSave = canValidate && validated === fingerprint;
+
+  async function saveCompletionScore(dryRun: boolean) {
+    if (savingRef.current) return;
+
+    if (dryRun ? !canValidate : !canSave) return;
+
+    savingRef.current = true;
+
+    setBusy(true);
+    setError("");
+    setValidated(null);
+
+    try {
+      const response = await authService.authFetch(
+        `${MODERN_GRADEBOOK_API}/${offeringId}/scores`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            enrollment_subject_id: enrollmentSubjectId,
+            assessment_id: assessment.assessment_id,
+            record_version: assessment.record_version,
+            score_status: "SCORED",
+            earned_score: score.trim(),
+            not_applicable_reason: null,
+            change_reason: reason.trim(),
+            dry_run: dryRun,
+          }),
+        },
+      );
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const result = await readJsonResponse<
+        GradebookScoreSaveResponse & {
+          dry_run: boolean;
+          grading_term: AssessmentTerm;
+          inc_completion_claim_id: string | null;
+          official_grade_unchanged: boolean;
+        }
+      >(response);
+
+      if (
+        !response.ok ||
+        !result.success ||
+        result.dry_run !== dryRun ||
+        result.persisted !== !dryRun ||
+        Number(result.offering_id) !== offeringId ||
+        Number(result.enrollment_subject_id) !== enrollmentSubjectId ||
+        Number(result.assessment_id) !== assessment.assessment_id ||
+        result.grading_term !== assessment.grading_term ||
+        String(result.inc_completion_claim_id) !== claimId ||
+        result.official_grade_unchanged !== true ||
+        result.score?.score_status !== "SCORED" ||
+        scoreCents(result.score.earned_score ?? "") !== earned ||
+        Number(result.score.record_version) !==
+          Number(assessment.record_version ?? 0) + 1
+      ) {
+        throw new Error(
+          result.message ||
+            result.code ||
+            "The server did not confirm the completion score.",
+        );
+      }
+
+      if (dryRun) {
+        setValidated(fingerprint);
+      } else if (result.score) {
+        onSaved(assessment.assessment_id, result.score);
+      }
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to save the completion score.",
+      );
+    } finally {
+      savingRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="faculty-inc-score-entry">
+      <div className="faculty-inc-score-heading">
+        <div>
+          <strong>{assessment.header_name}</strong>
+
+          <small>
+            {assessment.grading_term === "MIDTERM" ? "Midterm" : "Final Term"}
+            {" · "}
+            Maximum: {assessment.maximum_score}
+          </small>
+        </div>
+
+        {saved && (
+          <span className="faculty-inc-score-saved">
+            <CheckCircle2 size={14} />
+            Saved · {assessment.current_score?.earned_score ?? score}
+            {" / "}
+            {assessment.maximum_score}
+          </span>
+        )}
+      </div>
+      {assessment.completion_state === "CONFLICT" && (
+        <p role="alert">
+          The current score does not match the original INC completion evidence.
+          This assessment is locked and requires review.
+        </p>
+      )}
+      <fieldset disabled={busy || !canEdit}>
+        <label>
+          Completion Score
+          <input
+            type="text"
+            inputMode="decimal"
+            value={score}
+            placeholder={`0–${assessment.maximum_score}`}
+            onChange={(event) => {
+              setScore(event.target.value);
+              setValidated(null);
+              setError("");
+            }}
+          />
+        </label>
+
+        <label>
+          Completion Score Reason
+          <textarea
+            rows={2}
+            maxLength={1000}
+            value={reason}
+            placeholder="Document the completed assessment and recorded score."
+            onChange={(event) => {
+              setReason(event.target.value);
+              setValidated(null);
+              setError("");
+            }}
+          />
+        </label>
+
+        <div className="faculty-inc-claim-actions">
+          <button
+            type="button"
+            disabled={!canValidate}
+            onClick={() => void saveCompletionScore(true)}
+          >
+            <ShieldCheck size={14} />
+            Validate Score
+          </button>
+
+          <button
+            type="button"
+            disabled={!canSave}
+            onClick={() => void saveCompletionScore(false)}
+          >
+            <Save size={14} />
+            {busy ? "Processing..." : "Save Score"}
+          </button>
+        </div>
+      </fieldset>
+
+      {validated === fingerprint && (
+        <small role="status">Score validation passed.</small>
+      )}
+
+      {error && <p role="alert">{error}</p>}
+
+      {saved && (
+        <small role="status">
+          Completion score saved. The official INC grade remains unchanged.
+        </small>
+      )}
+    </div>
+  );
+}
+
+interface IncReplacementSubmissionRecord {
+  submission_id: string;
+  submission_status: "SUBMITTED" | "APPROVED" | "RETURNED";
+  record_version: number;
+}
+
+interface IncReplacementSubmissionResponse {
+  success: boolean;
+  dry_run: boolean;
+  persisted: boolean;
+  offering_id: number;
+  enrollment_subject_id: number;
+  claim_id: string;
+  original_inc_grade_id: number;
+  publication_source: string;
+  submission_id: string | null;
+  submission_status: string;
+  record_version: number;
+
+  calculated_midterm: ModernGradePercent | null;
+  calculated_final_term: ModernGradePercent | null;
+
+  proposed_semester: ModernGradePreviewResponse["semester"];
+
+  completion_scores: IncReplacementPreviewResponse["completion_scores"];
+
+  audit_event: string;
+  audit_event_id: string | null;
+  official_grade_unchanged: boolean;
+  original_snapshot_unchanged: boolean;
+  grade_conversion_performed: boolean;
+
+  message?: string;
+  code?: string;
+}
+
+interface IncReplacementPreviewResponse extends ModernGradePreviewResponse {
+  publication_source: string;
+
+  protected_official_grade: {
+    grade_id: number;
+    grade_status: string;
+    grading_outcome: string;
+    final_rating: string;
+    unchanged: boolean;
+  };
+
+  verified_claim: {
+    claim_id: string;
+    verification_status: string;
+    record_version: number;
+    verified_completed_on: string;
+  };
+
+  official_sheet: {
+    sheet_id: string;
+    record_version: number;
+  };
+
+  completion_scores: {
+    assessment_id: number;
+    score_id: number;
+    earned_score: string;
+    record_version: number;
+    claim_audit_verified: boolean;
+  }[];
+
+  numeric_preview_only: boolean;
+  inc_completion_submission_enabled: boolean;
+  official_grade_publication_enabled: boolean;
+}
+
+function IncReplacementPreview({
+  offeringId,
+  enrollmentSubjectId,
+  readiness,
+  claim,
+  assessments,
+}: {
+  offeringId: number;
+  enrollmentSubjectId: number;
+  readiness: IncCompletionReadinessResponse;
+  claim: IncCompletionReadinessResponse["existing_claims"][number];
+  assessments: IncPendingAssessment[];
+}) {
+  const navigate = useNavigate();
+
+  const [preview, setPreview] = useState<IncReplacementPreviewResponse | null>(
+    null,
+  );
+
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const requestRef = useRef<AbortController | null>(null);
+
+  const [submissionReason, setSubmissionReason] = useState("");
+
+  const [submissionBusy, setSubmissionBusy] = useState(false);
+
+  const [submissionError, setSubmissionError] = useState("");
+
+  const [validatedSubmission, setValidatedSubmission] = useState<string | null>(
+    null,
+  );
+
+  const [commitAttempted, setCommitAttempted] = useState(false);
+
+  const [localSubmission, setLocalSubmission] =
+    useState<IncReplacementSubmissionRecord | null>(null);
+
+  const submittingRef = useRef(false);
+
+  const replacementRecords = localSubmission
+    ? [localSubmission]
+    : (readiness.replacement_submissions ?? []);
+
+  useEffect(() => {
+    return () => requestRef.current?.abort();
+  }, []);
+
+  const ready =
+    claim.verification_status === "VERIFIED_TIMELY" &&
+    assessments.length > 0 &&
+    assessments.every(
+      (a) =>
+        a.completion_state === "SAVED" &&
+        a.current_score?.score_status === "SCORED" &&
+        scoreCents(a.current_score.earned_score ?? "") !== null,
+    );
+
+  async function loadPreview() {
+    if (
+      !ready ||
+      requestRef.current ||
+      submittingRef.current ||
+      commitAttempted
+    ) {
+      return;
+    }
+
+    setValidatedSubmission(null);
+    setSubmissionError("");
+
+    const controller = new AbortController();
+    requestRef.current = controller;
+
+    setBusy(true);
+    setError("");
+    setPreview(null);
+
+    try {
+      const response = await authService.authFetch(
+        `${MODERN_GRADEBOOK_API}/${offeringId}/students/` +
+          `${enrollmentSubjectId}/inc-completion-grade-preview`,
+        {
+          method: "GET",
+          signal: controller.signal,
+        },
+      );
+
+      if (controller.signal.aborted) return;
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const result =
+        await readJsonResponse<IncReplacementPreviewResponse>(response);
+
+      if (controller.signal.aborted) return;
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message ||
+            result.code ||
+            "Unable to calculate replacement grade.",
+        );
+      }
+
+      const scoresMatch =
+        Array.isArray(result.completion_scores) &&
+        result.completion_scores.length === assessments.length &&
+        new Set(result.completion_scores.map((s) => s.assessment_id)).size ===
+          assessments.length &&
+        assessments.every((a) => {
+          const score = result.completion_scores.find(
+            (s) => s.assessment_id === a.assessment_id,
+          );
+
+          const current = a.current_score;
+
+          return (
+            current !== null &&
+            score?.claim_audit_verified === true &&
+            score.score_id === current.score_id &&
+            score.record_version === current.record_version &&
+            scoreCents(score.earned_score) ===
+              scoreCents(current.earned_score ?? "")
+          );
+        });
+
+      if (
+        result.read_only !== true ||
+        result.publication_source !== "COMBINED_SEMESTER" ||
+        result.offering_id !== offeringId ||
+        result.student?.enrollment_subject_id !== enrollmentSubjectId ||
+        result.protected_official_grade?.grade_id !==
+          readiness.official_grade.grade_id ||
+        result.protected_official_grade.grade_status !== "Approved" ||
+        result.protected_official_grade.grading_outcome !== "INCOMPLETE" ||
+        result.protected_official_grade.unchanged !== true ||
+        result.verified_claim?.claim_id !== claim.claim_id ||
+        result.verified_claim.record_version !== claim.record_version ||
+        result.verified_claim.verification_status !== "VERIFIED_TIMELY" ||
+        result.official_sheet?.sheet_id !== readiness.official_sheet.sheet_id ||
+        !scoresMatch ||
+        result.terms?.MIDTERM?.state !== "READY" ||
+        !result.terms.MIDTERM.term_percentage ||
+        result.terms?.FINAL_TERM?.state !== "READY" ||
+        !result.terms.FINAL_TERM.term_percentage ||
+        result.semester?.state !== "READY" ||
+        !result.semester.semester_percentage ||
+        !result.semester.numeric_equivalent ||
+        !["PASS", "FAIL"].includes(result.semester.pass_fail ?? "") ||
+        result.numeric_preview_only !== true ||
+        result.official_grade_publication_enabled !== false
+      ) {
+        throw new Error(
+          "The replacement preview could not be verified. " +
+            "Reopen the INC panel and try again.",
+        );
+      }
+
+      setPreview(result);
+    } catch (caught) {
+      if (!controller.signal.aborted) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Unable to load replacement grade.",
+        );
+      }
+    } finally {
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+      }
+
+      if (!controller.signal.aborted) {
+        setBusy(false);
+      }
+    }
+  }
+
+  const reason = submissionReason.trim();
+
+  const invalidReason = Array.from(reason).some((character) => {
+    const code = character.charCodeAt(0);
+
+    return (
+      code <= 8 ||
+      code === 11 ||
+      code === 12 ||
+      (code >= 14 && code <= 31) ||
+      code === 127
+    );
+  });
+
+  const submissionBody = preview
+    ? {
+        expected_grade_id: preview.protected_official_grade.grade_id,
+
+        expected_claim_id: preview.verified_claim.claim_id,
+
+        expected_claim_version: preview.verified_claim.record_version,
+
+        expected_sheet_version: preview.official_sheet.record_version,
+
+        expected_score_versions: preview.completion_scores.map((score) => ({
+          assessment_id: score.assessment_id,
+          score_id: score.score_id,
+          record_version: score.record_version,
+        })),
+
+        expected_latest_submission_id: null,
+
+        change_reason: reason,
+      }
+    : null;
+
+  const fingerprint = JSON.stringify(submissionBody);
+
+  const canValidateSubmission =
+    ready &&
+    !busy &&
+    !submissionBusy &&
+    !commitAttempted &&
+    replacementRecords.length === 0 &&
+    preview?.inc_completion_submission_enabled === true &&
+    reason.length >= 10 &&
+    reason.length <= 1000 &&
+    !invalidReason;
+
+  const canSubmit =
+    canValidateSubmission && validatedSubmission === fingerprint;
+
+  async function submitReplacement(dryRun: boolean) {
+    if (
+      !preview ||
+      !submissionBody ||
+      submittingRef.current ||
+      (dryRun ? !canValidateSubmission : !canSubmit)
+    ) {
+      return;
+    }
+
+    submittingRef.current = true;
+
+    setSubmissionBusy(true);
+    setSubmissionError("");
+    setValidatedSubmission(null);
+
+    if (!dryRun) {
+      setCommitAttempted(true);
+    }
+
+    try {
+      const response = await authService.authFetch(
+        `${MODERN_GRADEBOOK_API}/${offeringId}/students/` +
+          `${enrollmentSubjectId}/modern-inc-completion-submissions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...submissionBody,
+            dry_run: dryRun,
+          }),
+        },
+      );
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const result =
+        await readJsonResponse<IncReplacementSubmissionResponse>(response);
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || result.code || "Replacement submission failed.",
+        );
+      }
+
+      const samePercent = (
+        a: ModernGradePercent | null | undefined,
+        b: ModernGradePercent | null | undefined,
+      ) =>
+        !!a &&
+        !!b &&
+        typeof a.exact_numerator === "string" &&
+        typeof a.exact_denominator === "string" &&
+        a.exact_numerator === b.exact_numerator &&
+        a.exact_denominator === b.exact_denominator;
+
+      const scoresMatch =
+        Array.isArray(result.completion_scores) &&
+        result.completion_scores.length === preview.completion_scores.length &&
+        new Set(result.completion_scores.map((s) => s.assessment_id)).size ===
+          preview.completion_scores.length &&
+        preview.completion_scores.every((expected) => {
+          const actual = result.completion_scores.find(
+            (s) => s.assessment_id === expected.assessment_id,
+          );
+
+          return (
+            actual?.score_id === expected.score_id &&
+            actual.record_version === expected.record_version &&
+            actual.claim_audit_verified === true &&
+            scoreCents(actual.earned_score) ===
+              scoreCents(expected.earned_score)
+          );
+        });
+
+      if (
+        result.dry_run !== dryRun ||
+        result.persisted !== !dryRun ||
+        result.offering_id !== offeringId ||
+        result.enrollment_subject_id !== enrollmentSubjectId ||
+        result.claim_id !== submissionBody.expected_claim_id ||
+        result.original_inc_grade_id !== submissionBody.expected_grade_id ||
+        result.publication_source !== "COMBINED_SEMESTER" ||
+        result.submission_status !== "SUBMITTED" ||
+        result.record_version !== 1 ||
+        (dryRun
+          ? result.submission_id !== null
+          : !/^[1-9]\d*$/.test(result.submission_id ?? "")) ||
+        result.audit_event !== "SUBMITTED" ||
+        (dryRun
+          ? result.audit_event_id !== null
+          : !/^[1-9]\d*$/.test(result.audit_event_id ?? "")) ||
+        result.official_grade_unchanged !== true ||
+        result.original_snapshot_unchanged !== true ||
+        result.grade_conversion_performed !== false ||
+        !scoresMatch ||
+        !samePercent(
+          result.calculated_midterm,
+          preview.terms.MIDTERM.term_percentage,
+        ) ||
+        !samePercent(
+          result.calculated_final_term,
+          preview.terms.FINAL_TERM.term_percentage,
+        ) ||
+        !samePercent(
+          result.proposed_semester?.semester_percentage,
+          preview.semester.semester_percentage,
+        ) ||
+        result.proposed_semester?.state !== "READY" ||
+        result.proposed_semester.numeric_equivalent !==
+          preview.semester.numeric_equivalent ||
+        result.proposed_semester.pass_fail !== preview.semester.pass_fail
+      ) {
+        throw new Error(
+          "The server did not confirm the expected replacement submission.",
+        );
+      }
+
+      if (dryRun) {
+        setValidatedSubmission(fingerprint);
+      } else if (result.submission_id) {
+        setLocalSubmission({
+          submission_id: result.submission_id,
+          submission_status: "SUBMITTED",
+          record_version: result.record_version,
+        });
+      }
+    } catch (caught) {
+      const message =
+        caught instanceof Error
+          ? caught.message
+          : "Unable to submit replacement grade.";
+
+      setSubmissionError(
+        dryRun
+          ? message
+          : `${message} Reopen the INC panel to check the saved submission before retrying.`,
+      );
+    } finally {
+      submittingRef.current = false;
+      setSubmissionBusy(false);
+    }
+  }
+
+  if (
+    !Array.isArray(readiness.replacement_submissions) ||
+    replacementRecords.length > 1
+  ) {
+    return (
+      <p role="alert">
+        Replacement submission status is unavailable or inconsistent. Reopen the
+        INC panel.
+      </p>
+    );
+  }
+
+  if (replacementRecords.length === 1) {
+    const record = replacementRecords[0];
+
+    return (
+      <div className="faculty-inc-claim-form" role="status">
+        <strong>Replacement Grade Submission</strong>
+
+        <p>
+          Submission #{record.submission_id} —{" "}
+          {record.submission_status === "SUBMITTED"
+            ? "Awaiting Program Head Review"
+            : record.submission_status === "APPROVED"
+              ? "Approved — Awaiting Registrar Conversion"
+              : "Returned — Requires review"}
+        </p>
+
+        <small>The official INC grade remains unchanged.</small>
+      </div>
+    );
+  }
+
+  return (
+    <div className="faculty-inc-claim-form">
+      <strong>Replacement Grade Preview</strong>
+      <p>
+        Review the server-calculated semester grade after all outstanding
+        assessments have been completed.
+      </p>
+
+      {!ready && (
+        <small>Complete all outstanding assessments before calculating.</small>
+      )}
+
+      <div className="faculty-inc-claim-actions">
+        <button
+          type="button"
+          disabled={!ready || busy || submissionBusy || commitAttempted}
+          onClick={() => void loadPreview()}
+        >
+          <BookOpenCheck size={14} />
+
+          {busy ? "Calculating..." : "Calculate Replacement Grade"}
+        </button>
+      </div>
+
+      {error && <p role="alert">{error}</p>}
+
+      {ready && preview && (
+        <div className="faculty-inc-score-entry" role="status">
+          <div>
+            Midterm:{" "}
+            <strong>{preview.terms.MIDTERM.term_percentage?.display}%</strong>
+          </div>
+
+          <div>
+            Final Term:{" "}
+            <strong>
+              {preview.terms.FINAL_TERM.term_percentage?.display}%
+            </strong>
+          </div>
+
+          <div>
+            Semester:{" "}
+            <strong>{preview.semester.semester_percentage?.display}%</strong>
+          </div>
+
+          <div>
+            Numeric Equivalent:{" "}
+            <strong>{preview.semester.numeric_equivalent}</strong>
+          </div>
+
+          <div>
+            Result:{" "}
+            <strong>
+              {preview.semester.pass_fail === "PASS" ? "Passed" : "Failed"}
+            </strong>
+          </div>
+
+          <small>
+            Official INC ({readiness.official_grade.final_rating}) remains
+            unchanged. This is a preview only.
+          </small>
+        </div>
+      )}
+      {ready && preview && (
+        <div className="faculty-inc-claim-form">
+          <strong>Submit Replacement Grade</strong>
+
+          <label>
+            Submission Reason
+            <textarea
+              rows={3}
+              maxLength={1000}
+              value={submissionReason}
+              disabled={busy || submissionBusy || commitAttempted}
+              onChange={(event) => {
+                setSubmissionReason(event.target.value);
+                setValidatedSubmission(null);
+                setSubmissionError("");
+              }}
+              placeholder="Document the completed requirements and reason for submitting the replacement grade."
+            />
+          </label>
+
+          <small>{reason.length}/1000 characters · Minimum 10</small>
+
+          <div className="faculty-inc-claim-actions">
+            <button
+              type="button"
+              disabled={!canValidateSubmission}
+              onClick={() => void submitReplacement(true)}
+            >
+              <ShieldCheck size={14} />
+              Validate Submission
+            </button>
+
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={() => void submitReplacement(false)}
+            >
+              <Send size={14} />
+
+              {submissionBusy ? "Processing..." : "Submit to Program Head"}
+            </button>
+          </div>
+
+          {validatedSubmission === fingerprint && (
+            <small role="status">
+              Validation passed. You may submit the replacement grade.
+            </small>
+          )}
+
+          {submissionError && <p role="alert">{submissionError}</p>}
+
+          <small>
+            Submitting the replacement does not publish or convert the official
+            grade.
+          </small>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IncCompletionPanel({
+  offeringId,
+  enrollmentSubjectId,
+}: {
+  offeringId: number;
+  enrollmentSubjectId: number;
+}) {
+  const navigate = useNavigate();
+
+  const [data, setData] = useState<IncCompletionReadinessResponse | null>(null);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [completedOn, setCompletedOn] = useState("");
+  const [completionReason, setCompletionReason] = useState("");
+  const [completionEvidence, setCompletionEvidence] = useState("");
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [claimError, setClaimError] = useState("");
+  const [claimSuccess, setClaimSuccess] = useState("");
+
+  const [validatedClaim, setValidatedClaim] = useState<string | null>(null);
+
+  const loadReadiness = useCallback(
+    async (signal: AbortSignal) => {
+      setLoading(true);
+      setError("");
+      setData(null);
+
+      try {
+        const endpoint =
+          `${MODERN_GRADEBOOK_API}/${offeringId}/students/` +
+          `${enrollmentSubjectId}/inc-completion-readiness`;
+
+        const response = await authService.authFetch(endpoint, {
+          method: "GET",
+          signal,
+        });
+
+        if (response.status === 401) {
+          authService.logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        const result =
+          await readJsonResponse<IncCompletionReadinessResponse>(response);
+
+        if (
+          !response.ok ||
+          !result.success ||
+          result.source_verified !== true
+        ) {
+          throw new Error(
+            result.message ||
+              "The official INC completion record is unavailable.",
+          );
+        }
+
+        if (!signal.aborted) {
+          setData(result);
+        }
+      } catch (caught) {
+        if (!signal.aborted) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Unable to load INC completion details.",
+          );
+        }
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+        }
+      }
+    },
+    [offeringId, enrollmentSubjectId, navigate],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void loadReadiness(controller.signal);
+
+    return () => controller.abort();
+  }, [loadReadiness]);
+
+  const pending = data?.pending_assessments ?? [
+    ...(data?.pending_midterm_assessments ?? []),
+    ...(data?.pending_final_assessments ?? []),
+  ];
+
+  const verifiedClaim =
+    data?.existing_claims.length === 1 &&
+    data.existing_claims[0].verification_status === "VERIFIED_TIMELY"
+      ? data.existing_claims[0]
+      : null;
+
+  function markCompletionScoreSaved(
+    assessmentId: number,
+    score: NonNullable<IncPendingAssessment["current_score"]>,
+  ) {
+    const updateAssessments = (assessments?: IncPendingAssessment[]) =>
+      assessments?.map((assessment) =>
+        assessment.assessment_id === assessmentId
+          ? {
+              ...assessment,
+              completion_state: "SAVED" as const,
+              current_score: score,
+            }
+          : assessment,
+      );
+
+    setData((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+
+        pending_assessments: updateAssessments(current.pending_assessments),
+
+        pending_midterm_assessments: updateAssessments(
+          current.pending_midterm_assessments,
+        ),
+
+        pending_final_assessments: updateAssessments(
+          current.pending_final_assessments,
+        ),
+      };
+    });
+  }
+
+  const validClaimText = (value: string, maxLength: number) => {
+    const normalized = value.trim();
+
+    const hasInvalidControlCharacters = Array.from(normalized).some(
+      (character) => {
+        const code = character.charCodeAt(0);
+
+        return (
+          code <= 8 ||
+          code === 11 ||
+          code === 12 ||
+          (code >= 14 && code <= 31) ||
+          code === 127
+        );
+      },
+    );
+
+    return (
+      normalized.length >= 10 &&
+      normalized.length <= maxLength &&
+      !hasInvalidControlCharacters
+    );
+  };
+
+  const claimFingerprint = JSON.stringify({
+    gradeId: data?.official_grade.grade_id,
+    completedOn,
+    reason: completionReason.trim(),
+    evidence: completionEvidence.trim(),
+  });
+
+  const claimInputValid =
+    data !== null &&
+    /^\d{4}-\d{2}-\d{2}$/.test(completedOn) &&
+    validClaimText(completionReason, 500) &&
+    validClaimText(completionEvidence, 4000);
+
+  const canValidateClaim =
+    claimInputValid &&
+    !claimBusy &&
+    !loading &&
+    !claimSuccess &&
+    data?.can_dry_run_completion_claim === true;
+
+  const canSubmitClaim =
+    claimInputValid &&
+    !claimBusy &&
+    !loading &&
+    !claimSuccess &&
+    data?.can_file_completion_claim === true &&
+    validatedClaim === claimFingerprint;
+
+  async function submitCompletionClaim(dryRun: boolean) {
+    if (!data || claimBusy) return;
+
+    if (dryRun ? !canValidateClaim : !canSubmitClaim) {
+      return;
+    }
+
+    setClaimBusy(true);
+    setClaimError("");
+    setValidatedClaim(null);
+
+    try {
+      const endpoint =
+        `${MODERN_GRADEBOOK_API}/${offeringId}/students/` +
+        `${enrollmentSubjectId}/inc-completion-claims`;
+
+      const response = await authService.authFetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_grade_id: data.official_grade.grade_id,
+          claimed_completed_on: completedOn,
+          completion_reason: completionReason.trim(),
+          evidence_summary: completionEvidence.trim(),
+          dry_run: dryRun,
+        }),
+      });
+
+      if (response.status === 401) {
+        authService.logout();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const result =
+        await readJsonResponse<IncCompletionClaimResponse>(response);
+
+      if (
+        !response.ok ||
+        !result.success ||
+        result.dry_run !== dryRun ||
+        result.persisted !== !dryRun ||
+        result.claim?.grade_id !== data.official_grade.grade_id ||
+        result.claim?.verification_status !== "PENDING_VERIFICATION"
+      ) {
+        throw new Error(
+          result.message ||
+            result.code ||
+            "Unable to process the INC completion claim.",
+        );
+      }
+
+      if (dryRun) {
+        setValidatedClaim(claimFingerprint);
+      } else {
+        setClaimSuccess(
+          "Completion claim submitted successfully. Awaiting Program Head verification.",
+        );
+
+        setCompletedOn("");
+        setCompletionReason("");
+        setCompletionEvidence("");
+
+        const controller = new AbortController();
+
+        await loadReadiness(controller.signal);
+      }
+    } catch (caught) {
+      setClaimError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to process the completion claim.",
+      );
+    } finally {
+      setClaimBusy(false);
+    }
+  }
+
+  const formatPercentage = (value: string | null) => {
+    if (value === null || !Number.isFinite(Number(value))) {
+      return "Incomplete";
+    }
+
+    return `${Number(value).toFixed(2)}%`;
+  };
+
+  return (
+    <div className="faculty-gradebook-table-meta" style={{ display: "block" }}>
+      <strong>INC Completion</strong>
+
+      <p>
+        Review the official incomplete grade and its documented outstanding
+        assessments.
+      </p>
+
+      {loading && <p>Checking INC completion eligibility...</p>}
+
+      {error && <p role="alert">{error}</p>}
+
+      {claimSuccess && (
+        <p role="status">
+          <CheckCircle2 size={15} />
+          {claimSuccess}
+        </p>
+      )}
+
+      {data && (
+        <>
+          <p>
+            Official rating: <strong>{data.official_grade.final_rating}</strong>
+          </p>
+
+          <p>
+            Midterm:{" "}
+            <strong>
+              {formatPercentage(data.official_grade.midterm_grade)}
+            </strong>
+          </p>
+
+          <p>
+            Final Term:{" "}
+            <strong>{formatPercentage(data.official_grade.final_grade)}</strong>
+          </p>
+
+          <p>
+            Completion deadline:{" "}
+            <strong>{data.official_sheet.inc_completion_deadline_on}</strong>
+          </p>
+
+          <p>Outstanding requirements: {data.outstanding_requirements}</p>
+
+          {(["MIDTERM", "FINAL_TERM"] as const).map((term) => {
+            const assessments = pending.filter(
+              (assessment) => assessment.grading_term === term,
+            );
+
+            return (
+              <div key={term}>
+                <strong>
+                  {term === "MIDTERM" ? "Midterm" : "Final Term"}
+                  {" — "}
+                  {
+                    assessments.filter((a) => a.completion_state === "PENDING")
+                      .length
+                  }{" "}
+                  pending
+                  {" · "}
+                  {
+                    assessments.filter((a) => a.completion_state === "SAVED")
+                      .length
+                  }{" "}
+                  completed
+                  {" · "}
+                  {
+                    assessments.filter((a) => a.completion_state === "CONFLICT")
+                      .length
+                  }{" "}
+                  requires review
+                </strong>
+
+                {assessments.length === 0 ? (
+                  <p>No outstanding assessments.</p>
+                ) : (
+                  assessments.map((assessment) => (
+                    <p key={assessment.assessment_id}>
+                      {assessment.header_name ||
+                        assessment.assessment_name ||
+                        `Assessment #${assessment.assessment_id}`}
+                    </p>
+                  ))
+                )}
+              </div>
+            );
+          })}
+
+          <strong>Completion Claim</strong>
+
+          {data.existing_claims.length === 0 ? (
+            <p>No completion claim submitted.</p>
+          ) : (
+            data.existing_claims.map((claim) => (
+              <p key={claim.claim_id}>
+                {claim.verification_status.replaceAll("_", " ")}
+              </p>
+            ))
+          )}
+          {data.existing_claims.length === 0 &&
+            !claimSuccess &&
+            (data.can_dry_run_completion_claim ||
+              data.can_file_completion_claim) && (
+              <div className="faculty-inc-claim-form">
+                <strong>File Completion Claim</strong>
+
+                <p>
+                  Provide the actual date the student completed the outstanding
+                  requirements and supporting evidence.
+                </p>
+
+                <fieldset disabled={claimBusy}>
+                  <label>
+                    Completion Date
+                    <input
+                      type="date"
+                      value={completedOn}
+                      onChange={(event) => {
+                        setCompletedOn(event.target.value);
+                        setValidatedClaim(null);
+                      }}
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Completion Reason
+                    <textarea
+                      value={completionReason}
+                      onChange={(event) => {
+                        setCompletionReason(event.target.value);
+                        setValidatedClaim(null);
+                      }}
+                      placeholder="Describe the completed academic requirements."
+                      maxLength={500}
+                      rows={3}
+                      required
+                    />
+                  </label>
+
+                  <small>{completionReason.trim().length}/500 characters</small>
+
+                  <label>
+                    Supporting Evidence
+                    <textarea
+                      value={completionEvidence}
+                      onChange={(event) => {
+                        setCompletionEvidence(event.target.value);
+                        setValidatedClaim(null);
+                      }}
+                      placeholder="Describe the evidence confirming completion of the outstanding requirements."
+                      maxLength={4000}
+                      rows={4}
+                      required
+                    />
+                  </label>
+
+                  <small>
+                    {completionEvidence.trim().length}/4000 characters
+                  </small>
+
+                  <div className="faculty-inc-claim-actions">
+                    <button
+                      type="button"
+                      disabled={!canValidateClaim}
+                      onClick={() => void submitCompletionClaim(true)}
+                    >
+                      <ShieldCheck size={15} />
+                      {claimBusy ? "Processing..." : "Validate Claim"}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!canSubmitClaim}
+                      onClick={() => void submitCompletionClaim(false)}
+                    >
+                      <Send size={15} />
+                      Submit Completion Claim
+                    </button>
+                  </div>
+                </fieldset>
+
+                {validatedClaim === claimFingerprint && (
+                  <p role="status">
+                    Claim validation passed. You may now submit the completion
+                    claim if submission is enabled.
+                  </p>
+                )}
+
+                {claimError && <p role="alert">{claimError}</p>}
+
+                <small>
+                  Submitting a completion claim does not change the official INC
+                  grade. Program Head verification is required before completion
+                  scores can be processed.
+                </small>
+              </div>
+            )}
+          {verifiedClaim && pending.length > 0 && (
+            <div className="faculty-inc-claim-form">
+              <strong>Completion Score Entry</strong>
+
+              <p>
+                Enter scores only for assessments documented as outstanding in
+                the original INC record.
+              </p>
+
+              {(["MIDTERM", "FINAL_TERM"] as const).map((term) => {
+                const assessments = pending.filter(
+                  (assessment) => assessment.grading_term === term,
+                );
+
+                if (assessments.length === 0) return null;
+
+                return (
+                  <div key={term} className="faculty-inc-score-group">
+                    <strong>
+                      {term === "MIDTERM" ? "Midterm" : "Final Term"}
+                    </strong>
+
+                    {assessments.map((assessment) => (
+                      <IncCompletionScore
+                        key={`${verifiedClaim.claim_id}:${assessment.assessment_id}`}
+                        offeringId={offeringId}
+                        enrollmentSubjectId={enrollmentSubjectId}
+                        assessment={assessment}
+                        claimId={verifiedClaim.claim_id}
+                        onSaved={markCompletionScoreSaved}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+
+              <small>
+                Previously recorded scores and official grades remain protected.
+                Completion scores require a separate replacement-grade
+                submission and approval.
+              </small>
+            </div>
+          )}
+
+          {verifiedClaim && pending.length > 0 && (
+            <IncReplacementPreview
+              key={JSON.stringify([
+                verifiedClaim.claim_id,
+                verifiedClaim.record_version,
+                pending.map((a) => [
+                  a.assessment_id,
+                  a.completion_state,
+                  a.current_score?.score_id,
+                  a.current_score?.record_version,
+                  a.current_score?.earned_score,
+                ]),
+              ])}
+              offeringId={offeringId}
+              enrollmentSubjectId={enrollmentSubjectId}
+              readiness={data}
+              claim={verifiedClaim}
+              assessments={pending}
+            />
+          )}
+          {data.blockers.length > 0 && (
+            <div>
+              <strong>Completion Requirements</strong>
+
+              {data.blockers.map((blocker, index) => (
+                <p key={`${blocker.code}-${index}`}>{blocker.message}</p>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 function SpecialOutcomeSubmission({
@@ -2476,9 +3959,10 @@ function SpecialOutcomeSubmission({
       {success && <p role="status">{success}</p>}
 
       <small>
-        INC requires a complete Midterm and pending Final Term assessments. UD
-        requires recorded absences and supporting evidence. The backend verifies
-        attendance, submission period, and official-sheet locks.
+        INC requires outstanding assessments in Midterm, Final Term, or both,
+        with documented missing requirements and supporting evidence. UD
+        requires recorded absences and supporting evidence. The system verifies
+        the student's eligibility, submission period, and official-sheet locks.
       </small>
     </div>
   );
@@ -4250,6 +5734,16 @@ export default function EnterGrades() {
     });
   }, [students, studentSearch, statusFilter]);
 
+  const selectedIncStudent =
+    gradebookClass?.offering_id === selectedOfferingId
+      ? students.find(
+          (student) =>
+            student.enrollment_subject_id === previewStudentId &&
+            student.grade?.grade_status === "Approved" &&
+            student.grade?.grading_outcome === "INCOMPLETE",
+        )
+      : undefined;
+
   // Open the exact enrolled student chosen from Pending Grades.
   useEffect(() => {
     if (!requestedOfferingId || !requestedEnrollmentSubjectId) return;
@@ -5492,6 +6986,9 @@ export default function EnterGrades() {
                           const record =
                             modernStudentByEnrollmentSubject.get(id);
                           const status = getGradeStatus(student);
+                          const isApprovedInc =
+                            status === "Approved" &&
+                            student.grade?.grading_outcome === "INCOMPLETE";
                           const currentPreview =
                             modernPreview?.offering_id === selectedOfferingId &&
                             modernPreview.student.enrollment_subject_id ===
@@ -5647,7 +7144,8 @@ export default function EnterGrades() {
                                     <small>
                                       {student.subject_status} · #{id}
                                     </small>
-                                    {record?.is_current_enrolled && (
+                                    {(record?.is_current_enrolled ||
+                                      isApprovedInc) && (
                                       <button
                                         type="button"
                                         className="faculty-semester-grade-table__view"
@@ -5667,9 +7165,11 @@ export default function EnterGrades() {
                                         aria-pressed={previewStudentId === id}
                                       >
                                         <BookOpenCheck size={13} />
-                                        {previewStudentId === id
-                                          ? "Selected for review"
-                                          : "Review grade"}
+                                        {isApprovedInc
+                                          ? "INC Completion"
+                                          : previewStudentId === id
+                                            ? "Selected for review"
+                                            : "Review grade"}
                                       </button>
                                     )}
                                   </div>
@@ -5730,7 +7230,17 @@ export default function EnterGrades() {
                       grades use preserved official results where available.
                     </small>
                   </div>
-                  {previewStudentId !== null && (
+                  {selectedOfferingId !== null && selectedIncStudent && (
+                    <IncCompletionPanel
+                      key={`inc:${selectedOfferingId}:${selectedIncStudent.enrollment_subject_id}`}
+                      offeringId={selectedOfferingId}
+                      enrollmentSubjectId={
+                        selectedIncStudent.enrollment_subject_id
+                      }
+                    />
+                  )}
+
+                  {previewStudentId !== null && !selectedIncStudent && (
                     <div
                       id="faculty-grade-calculation-preview"
                       className="faculty-gradebook-table-meta"
@@ -6057,6 +7567,7 @@ export default function EnterGrades() {
                                   }}
                                 />
                               )}
+
                             <div className="faculty-gradebook-table-meta">
                               <div>
                                 <strong>Combined Semester Submission</strong>

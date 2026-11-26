@@ -1,5 +1,5 @@
 import { inspectModernIncExpiryReadiness } from "./gradebookModernIncExpiryReadiness.service.js";
-import { assertQaGradingDatabase } from "./gradebookQaWriteGuard.service.js";
+import { assertModernIncWriteAllowed } from "./gradebookModernIncWriteGuard.service.js";
 function fail(httpStatus, code, message) {
   const error = new Error(message);
   error.httpStatus = httpStatus;
@@ -70,10 +70,8 @@ export async function processModernIncExpiry(
     );
   }
 
-  // Keep QA-only validation while committed expiry writes are disabled.
-  if (process.env.GRADEBOOK_MODERN_INC_EXPIRY_WRITES_ENABLED !== "true") {
-    await assertQaGradingDatabase(connection);
-  }
+  await assertModernIncWriteAllowed(connection);
+
   const [registrars] = await connection.execute(
     `SELECT u.user_id
      FROM users u
@@ -99,6 +97,8 @@ export async function processModernIncExpiry(
     "grades",
     "enrollment_subjects",
     "gradebook_official_sheets",
+    "gradebook_official_sheet_submission_events",
+    "gradebook_official_sheet_reopen_requests",
     "gradebook_finalized_roster",
     "gradebook_official_grade_publications",
     "gradebook_grade_submission_attempts",
@@ -351,10 +351,11 @@ export async function processModernIncExpiry(
           AND grade_status = 'Approved'
           AND grading_policy = 'TWO_TERM_50_50'
           AND grading_outcome = 'INCOMPLETE'
-          AND final_rating = 4.00
-          AND remarks = 'Incomplete'
-          AND final_grade IS NULL
-          AND overall_percentage IS NULL
+        AND final_rating = 4.00
+AND remarks = 'Incomplete'
+AND midterm_grade <=> ?
+AND final_grade <=> ?
+AND overall_percentage IS NULL
           AND EXISTS (
             SELECT 1
               FROM gradebook_official_grade_publications pub
@@ -382,6 +383,8 @@ export async function processModernIncExpiry(
         outcomeReason,
         gradeId,
         readiness.enrollment_subject_id,
+        originalGrade.midterm_grade,
+        originalGrade.final_grade,
         readiness.source.publication_id,
         sheetId,
         body.expected_sheet_record_version,
@@ -399,19 +402,35 @@ export async function processModernIncExpiry(
     );
   }
   const [[currentGrade]] = await connection.execute(
-    `SELECT grade_status, grading_outcome, overall_percentage, final_rating, remarks
-       FROM grades WHERE grade_id = ?`,
+    `SELECT grade_status, grading_outcome,
+          midterm_grade, final_grade,
+          overall_percentage, final_rating, remarks
+     FROM grades WHERE grade_id = ?`,
     [gradeId],
   );
   const [[currentSubject]] = await connection.execute(
     "SELECT status FROM enrollment_subjects WHERE enrollment_subject_id = ?",
     [readiness.enrollment_subject_id],
   );
+  const sameExpiredTerm = (current, original) => {
+    if (current === null || original === null) {
+      return current === null && original === null;
+    }
+
+    return (
+      Number.isFinite(Number(current)) &&
+      Number.isFinite(Number(original)) &&
+      Number(current) === Number(original)
+    );
+  };
+
   if (
     currentGrade?.grade_status !== "Approved" ||
     currentGrade.grading_outcome !== "EXPIRED_INCOMPLETE" ||
     Number(currentGrade.final_rating) !== 5 ||
     currentGrade.overall_percentage !== null ||
+    !sameExpiredTerm(currentGrade.midterm_grade, originalGrade.midterm_grade) ||
+    !sameExpiredTerm(currentGrade.final_grade, originalGrade.final_grade) ||
     currentGrade.remarks !== "Failed" ||
     currentSubject?.status !== "Failed"
   ) {

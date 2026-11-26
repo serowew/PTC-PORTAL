@@ -407,17 +407,6 @@ router.post("/:offeringId/scores", async (req, res) => {
       );
     }
     const gradingTerm = assessments[0].grading_term;
-    // INC score entry remains QA-only until the complete conversion workflow is approved.
-    if (
-      !isQaDatabase &&
-      enrollment.enrollment_subject_status === "Incomplete"
-    ) {
-      fail(
-        "GRADEBOOK_INC_COMPLETION_NOT_MIGRATED",
-        "INC completion score entry is not yet enabled outside QA.",
-        403,
-      );
-    }
 
     let incCompletion = null;
     if (enrollment.enrollment_subject_status === "Incomplete") {
@@ -454,6 +443,14 @@ router.post("/:offeringId/scores", async (req, res) => {
           dryRun: input.dryRun,
         });
       } else if (publicationSource === null) {
+        if (!isQaDatabase) {
+          fail(
+            "GRADEBOOK_INC_COMPLETION_NOT_MIGRATED",
+            "Historical INC completion score entry is not yet enabled outside QA.",
+            403,
+          );
+        }
+
         incCompletion = await requireVerifiedHistoricalIncFinalTermEntry(
           connection,
           {

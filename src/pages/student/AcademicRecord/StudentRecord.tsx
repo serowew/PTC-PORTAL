@@ -24,6 +24,7 @@ type GradeClassification =
   | "Passed"
   | "Incomplete"
   | "Failed"
+  | "Unofficial Drop"
   | "Credited"
   | "Unknown";
 type AcademicRecordType = "PTC_GRADE" | "TRANSFER_CREDIT";
@@ -357,6 +358,9 @@ function classifyFinalRating(value: number | null): GradeClassification {
   if (rating === 5) {
     return "Failed";
   }
+  if (rating === 6) {
+    return "Unofficial Drop";
+  }
   return "Unknown";
 }
 function getClassification(record: AcademicRecord): GradeClassification {
@@ -367,6 +371,7 @@ function getClassification(record: AcademicRecord): GradeClassification {
     record.classification === "Passed" ||
     record.classification === "Incomplete" ||
     record.classification === "Failed" ||
+    record.classification === "Unofficial Drop" ||
     record.classification === "Credited"
   ) {
     return record.classification;
@@ -381,7 +386,11 @@ function requiresRetake(record: AcademicRecord): boolean {
     return record.retake;
   }
   const result = getClassification(record);
-  return result === "Failed" || result === "Incomplete";
+  return (
+    result === "Failed" ||
+    result === "Incomplete" ||
+    result === "Unofficial Drop"
+  );
 }
 function formatDateTime(value: string | null | undefined): string {
   if (!value) {
@@ -436,6 +445,11 @@ function getResultClass(classification: GradeClassification): string {
   if (classification === "Credited") {
     return "passed";
   }
+
+  if (classification === "Unofficial Drop") {
+    return "failed";
+  }
+
   return classification.toLowerCase();
 }
 function getSubjectStatusClass(status: string): string {
@@ -1541,6 +1555,7 @@ export default function StudentRecord() {
                 <option value="Credited">Credited</option>
                 <option value="Incomplete">Incomplete</option>
                 <option value="Failed">Failed</option>
+                <option value="Unofficial Drop">Unofficial Drop</option>
               </select>
             </div>
             <button

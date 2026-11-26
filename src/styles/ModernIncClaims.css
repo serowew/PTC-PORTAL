@@ -1,0 +1,246 @@
+/* INC Completion Claims */
+
+.ph-modern-inc {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(128, 128, 128, 0.28);
+  border-radius: 12px;
+  color: inherit;
+}
+
+.ph-modern-inc-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ph-modern-inc-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  color: #168653;
+  background: rgba(22, 134, 83, 0.12);
+}
+
+.ph-modern-inc-heading h2,
+.ph-modern-inc-review-heading h3 {
+  margin: 0;
+  font-size: 1.08em;
+  color: inherit;
+}
+
+.ph-modern-inc p {
+  margin: 5px 0;
+  font-size: 0.88em;
+}
+
+.ph-modern-inc-count {
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(202, 138, 4, 0.12);
+  color: #b78319;
+  font-size: 0.8em;
+  font-weight: 650;
+}
+
+/* Claims Table */
+
+.ph-modern-inc-table-wrap {
+  overflow-x: auto;
+}
+
+.ph-modern-inc-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.ph-modern-inc-table th,
+.ph-modern-inc-table td {
+  padding: 11px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+  font-size: 0.85em;
+}
+
+.ph-modern-inc-table th {
+  font-weight: 650;
+  background: rgba(128, 128, 128, 0.07);
+}
+
+.ph-modern-inc-table td small {
+  display: block;
+  margin-top: 3px;
+  opacity: 0.7;
+}
+
+.ph-modern-inc-pending {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: rgba(202, 138, 4, 0.13);
+  color: #b78319;
+  font-weight: 600;
+}
+
+/* Claim Review */
+
+.ph-modern-inc-review {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 10px;
+}
+
+.ph-modern-inc-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ph-modern-inc-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.ph-modern-inc-details > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(128, 128, 128, 0.07);
+}
+
+.ph-modern-inc-details small {
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.ph-modern-inc-evidence {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(22, 134, 83, 0.06);
+  overflow-wrap: anywhere;
+}
+
+.ph-modern-inc-evidence p {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.ph-modern-inc fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.ph-modern-inc label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.86em;
+  font-weight: 600;
+}
+
+.ph-modern-inc input:not([type="checkbox"]),
+.ph-modern-inc textarea,
+.ph-modern-inc select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  color-scheme: inherit;
+}
+
+.ph-modern-inc textarea {
+  resize: vertical;
+}
+
+.ph-modern-inc .ph-modern-inc-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-weight: 500;
+}
+
+.ph-modern-inc-checkbox input {
+  accent-color: #0d7444;
+}
+
+/* Actions */
+
+.ph-modern-inc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ph-modern-inc button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ph-modern-inc button.ph-modern-inc-confirm {
+  background: #0d7444;
+  border-color: #0d7444;
+  color: #fff;
+}
+
+.ph-modern-inc button.ph-modern-inc-reject {
+  background: #b42318;
+  border-color: #b42318;
+  color: #fff;
+}
+
+.ph-modern-inc button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ph-modern-inc-error,
+.ph-modern-inc-success {
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+.ph-modern-inc-error {
+  color: #d45149;
+  background: rgba(180, 35, 24, 0.09);
+}
+
+.ph-modern-inc-success {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #168653;
+  background: rgba(22, 134, 83, 0.09);
+}

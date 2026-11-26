@@ -14,6 +14,67 @@ import { assertCombinedSemesterSubmissionWriteAllowed } from "../services/gradeb
 
 const router = express.Router();
 
+async function usesModernIncSource(connection, ids) {
+  const [rows] = await connection.execute(
+    `SELECT p.publication_source
+       FROM grades g
+       JOIN enrollment_subjects es
+         ON es.enrollment_subject_id = g.enrollment_subject_id
+       JOIN subject_offerings so
+         ON so.offering_id = es.offering_id
+       JOIN faculty f
+         ON f.faculty_id = so.faculty_id
+       JOIN users u
+         ON u.user_id = f.user_id
+       JOIN roles r
+         ON r.role_id = u.role_id
+       JOIN gradebook_official_grade_publications p
+         ON p.grade_id = g.grade_id
+        AND p.enrollment_subject_id = es.enrollment_subject_id
+      WHERE es.enrollment_subject_id = ?
+        AND es.offering_id = ?
+        AND f.user_id = ?
+        AND u.is_active = 1
+        AND u.is_archived = 0
+        AND r.role_name IN ('Faculty', 'Program Head')
+        AND g.grade_status = 'Approved'
+        AND g.grading_outcome = 'INCOMPLETE'
+        AND p.grading_outcome_snapshot = 'INCOMPLETE'`,
+    [ids.enrollmentSubjectId, ids.offeringId, ids.actorUserId],
+  );
+
+  if (rows.length !== 1) {
+    fail(
+      "INC_PUBLICATION_SOURCE_INVALID",
+      "A unique authorized official INC publication is required.",
+      409,
+    );
+  }
+
+  const source = rows[0].publication_source;
+
+  if (!["COMBINED_SEMESTER", "TERM_PAIR"].includes(source)) {
+    fail(
+      "INC_PUBLICATION_SOURCE_UNSUPPORTED",
+      "The original INC publication source is unsupported.",
+      409,
+    );
+  }
+
+  return source === "COMBINED_SEMESTER";
+}
+
+async function resolveModernIncSource(ids) {
+  let connection;
+
+  try {
+    connection = await db.getConnection();
+
+    return await usesModernIncSource(connection, ids);
+  } finally {
+    connection?.release();
+  }
+}
 function positiveId(value) {
   const text = String(value ?? "").trim();
   if (!/^[1-9]\d*$/.test(text)) return null;
@@ -1327,8 +1388,9 @@ router.get(
       connection = await db.getConnection();
       await connection.beginTransaction();
       transactionStarted = true;
+
       // Modern combined INC preview
-      if (ids.offeringId === 130) {
+      if (await usesModernIncSource(connection, ids)) {
         const result = await previewModernIncCompletion(
           connection,
           ids,
@@ -2921,9 +2983,17 @@ router.get(
         message: "This endpoint does not accept query parameters.",
       });
     }
-    // Modern INC readiness for all offerings except the legacy #131 pilot.
-    // Modern claim creation remains restricted to the authorized QA pilot.
-    if (ids.offeringId !== TERM_SUBMISSION_TEST_OFFERING) {
+
+    let modernSource;
+
+    try {
+      modernSource = await resolveModernIncSource(ids);
+    } catch (error) {
+      return sendError(res, error);
+    }
+
+    // Select the original INC publication workflow.
+    if (modernSource) {
       let modernConnection;
       let transactionOpen = false;
       try {
@@ -3282,9 +3352,16 @@ router.post(
       return sendError(res, error);
     }
 
-    // Modern claim validation for all offerings except legacy #131.
-    // Non-pilot commits remain blocked by the service.
-    if (ids.offeringId !== TERM_SUBMISSION_TEST_OFFERING) {
+    let modernSource;
+
+    try {
+      modernSource = await resolveModernIncSource(ids);
+    } catch (error) {
+      return sendError(res, error);
+    }
+
+    // Select the original INC completion workflow.
+    if (modernSource) {
       let connection;
       let transactionOpen = false;
 
@@ -6188,19 +6265,6 @@ router.post(
           requestedSpecial.missing_requirements?.trim() ?? null,
         evidence_summary: requestedSpecial.evidence_summary.trim(),
       };
-      // Special-outcome QA scope
-      if (
-        ids.offeringId !== 130 ||
-        ids.actorUserId !== 32 ||
-        ![277, 334].includes(ids.enrollmentSubjectId)
-      ) {
-        return res.status(403).json({
-          success: false,
-          code: "COMBINED_SPECIAL_QA_ONLY",
-          message:
-            "Special-outcome submissions are restricted to the authorized Offering #130 QA students.",
-        });
-      }
     }
 
     let connection;
@@ -6211,18 +6275,8 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // Numeric submissions use the controlled rollout gate.
-      const { isQaDatabase } =
-        await assertCombinedSemesterSubmissionWriteAllowed(connection);
-
-      // The INC/UD pilot must not be promoted to other databases yet.
-      if (special && !isQaDatabase) {
-        previewFail(
-          "COMBINED_SPECIAL_NON_QA_DISABLED",
-          "INC/UD submissions are not enabled outside the QA database yet.",
-          403,
-        );
-      }
+      // Combined semester submission write validation
+      await assertCombinedSemesterSubmissionWriteAllowed(connection);
 
       // Offering and instructor
       const [offeringRows] = await connection.execute(
@@ -6579,19 +6633,37 @@ router.post(
             Number(a.record_version) > 0,
         );
         if (outcome === "INCOMPLETE") {
-          // Initial pilot covers completed Midterm with documented missing Final requirements.
+          const midReady = preview.terms.MIDTERM?.state === "READY";
+          const finalReady = preview.terms.FINAL_TERM?.state === "READY";
+
+          const pendingMidterm = pending.some(
+            (a) => a.grading_term === "MIDTERM",
+          );
+
+          const pendingFinal = pending.some(
+            (a) => a.grading_term === "FINAL_TERM",
+          );
+
           if (
-            preview.terms.MIDTERM?.state !== "READY" ||
-            !validFraction(mid, 255) ||
-            preview.terms.FINAL_TERM?.state === "READY" ||
-            !pending.some((a) => a.grading_term === "FINAL_TERM")
+            (midReady && finalReady) ||
+            (!pendingMidterm && !pendingFinal) ||
+            (!midReady && !pendingMidterm) ||
+            (!finalReady && !pendingFinal) ||
+            (midReady && pendingMidterm) ||
+            (finalReady && pendingFinal) ||
+            (midReady && !validFraction(mid, 255)) ||
+            (finalReady && !validFraction(fin, 255))
           ) {
             previewFail(
               "COMBINED_INC_REQUIREMENTS_INVALID",
-              "This INC pilot requires a calculated Midterm and genuinely pending Final Term assessments.",
+              "INC requires genuinely outstanding assessments in Midterm, Final Term, or both.",
               422,
             );
           }
+
+          mid = midReady ? mid : null;
+          fin = finalReady ? fin : null;
+
           rating = "4.00";
         } else {
           if (!absences.length) {
@@ -6602,9 +6674,10 @@ router.post(
             );
           }
           mid = null;
+          fin = null;
           rating = "6.00";
         }
-        fin = null;
+
         overall = null;
         specialEvidence = {
           ...special,
@@ -6839,12 +6912,17 @@ router.post(
         savedGrade.grading_outcome !== outcome ||
         Number(savedGrade.final_rating) !== Number(rating) ||
         (special &&
-          (savedGrade.final_grade !== null ||
-            savedGrade.overall_percentage !== null ||
-            (outcome === "INCOMPLETE"
-              ? savedGrade.midterm_grade === null ||
-                Number(savedGrade.midterm_grade) !== Number(mid.decimal_preview)
-              : savedGrade.midterm_grade !== null) ||
+          (savedGrade.overall_percentage !== null ||
+            (mid === null
+              ? savedGrade.midterm_grade !== null
+              : savedGrade.midterm_grade === null ||
+                Number(savedGrade.midterm_grade) !==
+                  Number(mid.decimal_preview)) ||
+            (fin === null
+              ? savedGrade.final_grade !== null
+              : savedGrade.final_grade === null ||
+                Number(savedGrade.final_grade) !==
+                  Number(fin.decimal_preview)) ||
             savedGrade.remarks !==
               (outcome === "INCOMPLETE" ? "Incomplete" : "Unofficial Drop") ||
             savedGrade.outcome_reason !== special.outcome_reason))
@@ -6878,7 +6956,7 @@ router.post(
               special_outcome: specialEvidence,
               official_result: {
                 midterm_grade: mid?.decimal_preview ?? null,
-                final_grade: null,
+                final_grade: fin?.decimal_preview ?? null,
                 overall_percentage: null,
                 final_rating: rating,
               },
@@ -7907,8 +7985,8 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // Combined grading writes remain QA-only.
-      await assertQaGradingDatabase(connection);
+      // Validate combined semester submission writes.
+      await assertCombinedSemesterSubmissionWriteAllowed(connection);
 
       const result = await resubmitSpecialOutcome(
         connection,

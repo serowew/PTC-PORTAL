@@ -19,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+import ModernIncClaims from "./ModernIncClaims";
 import DashboardLayout from "../../../components/Layout/DashboardLayout";
 import { authService } from "../../../services/auth.service";
 import { api } from "../../../services/api";
@@ -606,9 +607,8 @@ export default function GradeChangeRequests() {
               posting.
             </p>
           </div>
-
         </section>
-
+        <ModernIncClaims />
         {actionNotice && (
           <section
             className={`ph-grade-change-notice ${actionNotice.type}`}

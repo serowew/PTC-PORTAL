@@ -264,8 +264,7 @@ export async function returnSpecialOutcomeSubmission(connection, input) {
     Number(attempt.final_rating_snapshot) !== expectedRating ||
     (grade.grading_outcome === "INCOMPLETE"
       ? grade.remarks !== "Incomplete" ||
-        grade.midterm_grade === null ||
-        grade.final_grade !== null ||
+        (grade.midterm_grade !== null && grade.final_grade !== null) ||
         grade.overall_percentage !== null
       : grade.remarks !== "Unofficial Drop" ||
         grade.midterm_grade !== null ||
@@ -346,6 +345,108 @@ export async function returnSpecialOutcomeSubmission(connection, input) {
       "SPECIAL_RETURN_SNAPSHOT_INVALID",
       "Submitted special-outcome snapshot or evidence changed.",
     );
+  }
+
+  // Preserve both grading term snapshots.
+  const inc = grade.grading_outcome === "INCOMPLETE";
+  const result = snapshot.official_result;
+  const pending = snapshot.special_outcome?.pending_assessments;
+
+  const validTermCodes = ["MIDTERM", "FINAL_TERM"];
+
+  const validDecimal = (value) =>
+    value != null &&
+    /^\d+(?:\.\d{1,12})?$/.test(String(value)) &&
+    Number(value) >= 0 &&
+    Number(value) <= 100;
+
+  if (
+    !result ||
+    Number(result.final_rating) !== expectedRating ||
+    result.overall_percentage !== null ||
+    attempt.overall_percentage_snapshot !== null ||
+    attempt.overall_exact_numerator !== null ||
+    attempt.overall_exact_denominator !== null ||
+    (inc &&
+      (!Array.isArray(pending) ||
+        pending.length === 0 ||
+        pending.some((a) => !validTermCodes.includes(a?.grading_term))))
+  ) {
+    reject(
+      "SPECIAL_RETURN_GRADE_SNAPSHOT_CHANGED",
+      "The saved special-outcome calculation is inconsistent.",
+    );
+  }
+
+  for (const term of validTermCodes) {
+    const prefix = term === "MIDTERM" ? "midterm" : "final_term";
+
+    const gradeKey = term === "MIDTERM" ? "midterm_grade" : "final_grade";
+
+    const calculation = snapshot.calculated_terms?.[term];
+
+    const numerator = attempt[`${prefix}_exact_numerator`];
+    const denominator = attempt[`${prefix}_exact_denominator`];
+
+    const values = [
+      grade[gradeKey],
+      attempt[`${prefix}_percentage_snapshot`],
+      result[gradeKey],
+    ];
+
+    const invalid = () =>
+      reject(
+        "SPECIAL_RETURN_GRADE_SNAPSHOT_CHANGED",
+        `The protected ${term} calculation is inconsistent.`,
+      );
+
+    const ready = calculation?.state === "READY";
+
+    if (inc) {
+      const hasPending = pending.some((a) => a.grading_term === term);
+
+      if (!calculation || ready === hasPending) {
+        invalid();
+      }
+    }
+
+    if (!inc || !ready) {
+      if ([...values, numerator, denominator].some((v) => v !== null)) {
+        invalid();
+      }
+
+      continue;
+    }
+
+    const n = String(numerator ?? "");
+    const d = String(denominator ?? "");
+    const source = calculation.term_percentage;
+
+    if (
+      !/^(0|[1-9]\d{0,254})$/.test(n) ||
+      !/^[1-9]\d{0,254}$/.test(d) ||
+      n !== String(source?.exact_numerator ?? "") ||
+      d !== String(source?.exact_denominator ?? "")
+    ) {
+      invalid();
+    }
+
+    const num = BigInt(n);
+    const den = BigInt(d);
+    const scale = 1000000000000n;
+
+    const rounded = (num * scale * 2n + den) / (den * 2n);
+
+    const expected = Number(
+      `${rounded / scale}.${String(rounded % scale).padStart(12, "0")}`,
+    );
+
+    if (
+      num > 100n * den ||
+      values.some((v) => !validDecimal(v) || Number(v) !== expected)
+    ) {
+      invalid();
+    }
   }
 
   const [reviews] = await connection.execute(

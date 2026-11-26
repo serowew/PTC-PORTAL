@@ -5,6 +5,7 @@ import {
   evaluateModernIncExpiryEligibility,
   ptcToday,
 } from "./gradebookModernIncExpiryPolicy.service.js";
+import { readOfficialSheetAudit } from "./gradebookOfficialSheetAudit.service.js";
 
 const eq = (a, b) => a != null && b != null && String(a) === String(b);
 const yyyyMmDd = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
@@ -125,32 +126,24 @@ export async function inspectModernIncExpiryReadiness(connection, gradeId) {
     );
 
     if (sheet) {
-      const [events] = await connection.execute(
-        `SELECT event_type, previous_record_version, record_version_after,
-                original_official_submitted_on AS raw_date,
-                DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS event_date,
-                official_submission_reference, performed_by_user_id
-           FROM gradebook_official_sheet_submission_events
-          WHERE sheet_id = ? ORDER BY record_version_after, event_id`,
-        [sheet.sheet_id],
-      );
+      const {
+        sheet: auditedSheet,
+        requests,
+        audit,
+      } = await readOfficialSheetAudit(connection, sheet.sheet_id);
+
       const dateAuditValid =
-        events.length === 2 &&
-        events[0].event_type === "RECORDED" &&
-        events[0].previous_record_version === null &&
-        Number(events[0].record_version_after) === 1 &&
-        events[1].event_type === "VERIFIED" &&
-        Number(events[1].previous_record_version) === 1 &&
-        Number(events[1].record_version_after) === 2 &&
+        audit.valid &&
+        audit.state === "FINALIZED" &&
+        !requests.some((request) => request.request_status === "PENDING") &&
+        eq(auditedSheet.config_id, sheet.config_id) &&
+        Number(auditedSheet.record_version) === Number(sheet.record_version) &&
+        auditedSheet.original_date === sheet.original_official_submitted_on &&
+        auditedSheet.official_submission_reference ===
+          sheet.official_submission_reference &&
         eq(
-          events[1].performed_by_user_id,
+          auditedSheet.official_date_verified_by_user_id,
           sheet.official_date_verified_by_user_id,
-        ) &&
-        events.every(
-          (e) =>
-            e.event_date === sheet.original_official_submitted_on &&
-            e.official_submission_reference ===
-              sheet.official_submission_reference,
         );
       addBlocker(
         blockers,
@@ -182,20 +175,32 @@ export async function inspectModernIncExpiryReadiness(connection, gradeId) {
           Number(roster.final_rating_snapshot) === 4 &&
           roster.enrollment_subject_status_snapshot === "Incomplete" &&
           roster.grade_remarks_snapshot === "Incomplete" &&
-          roster.final_grade_snapshot === null &&
+          (roster.midterm_grade_snapshot === null ||
+            roster.final_grade_snapshot === null) &&
           roster.overall_percentage_snapshot === null,
         "INC_EXPIRY_ORIGINAL_ROSTER_INVALID",
         "The immutable finalized roster must contain the original Approved INC 4.00.",
       );
       if (activeInc && roster) {
+        const sameTermGrade = (current, original) => {
+          if (current === null || original === null) {
+            return current === null && original === null;
+          }
+
+          return (
+            Number.isFinite(Number(current)) &&
+            Number.isFinite(Number(original)) &&
+            Number(current) === Number(original)
+          );
+        };
+
         addBlocker(
           blockers,
-          Number(grade.midterm_grade) ===
-            Number(roster.midterm_grade_snapshot) &&
-            grade.final_grade === null &&
+          sameTermGrade(grade.midterm_grade, roster.midterm_grade_snapshot) &&
+            sameTermGrade(grade.final_grade, roster.final_grade_snapshot) &&
             grade.overall_percentage === null,
           "INC_EXPIRY_LIVE_GRADE_DIFFERS_FROM_ORIGINAL",
-          "The active INC grade must still match its original Midterm snapshot.",
+          "The active INC grade must still match its original grading term snapshots.",
         );
       }
     }
@@ -232,7 +237,11 @@ export async function inspectModernIncExpiryReadiness(connection, gradeId) {
          FROM gradebook_grade_submission_attempts WHERE grade_id = ?`,
       [gradeId],
     );
-    submission = attempts.length === 1 ? attempts[0] : null;
+    const publishedAttempts = attempts.filter((attempt) =>
+      eq(attempt.submission_id, publication.combined_submission_id),
+    );
+
+    submission = publishedAttempts.length === 1 ? publishedAttempts[0] : null;
     addBlocker(
       blockers,
       !!submission &&

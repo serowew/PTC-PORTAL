@@ -145,15 +145,10 @@ export async function combinedApprovalSpecialEvidence(
     !equalDecimal(submission.final_rating_snapshot, rating) ||
     !equalDecimal(result?.final_rating, rating) ||
     [
-      grade.final_grade,
       grade.overall_percentage,
-      submission.final_term_percentage_snapshot,
       submission.overall_percentage_snapshot,
-      submission.final_term_exact_numerator,
-      submission.final_term_exact_denominator,
       submission.overall_exact_numerator,
       submission.overall_exact_denominator,
-      result?.final_grade,
       result?.overall_percentage,
     ].some((v) => v !== null)
   ) {
@@ -295,45 +290,94 @@ export async function combinedApprovalSpecialEvidence(
     );
   }
 
-  // INC requires completed Midterm evidence.
+  // Validate special-outcome term evidence.
   if (inc) {
+    const terms = [
+      {
+        code: "MIDTERM",
+        gradeValue: grade.midterm_grade,
+        snapshotValue: submission.midterm_percentage_snapshot,
+        numerator: submission.midterm_exact_numerator,
+        denominator: submission.midterm_exact_denominator,
+        resultValue: result.midterm_grade,
+      },
+      {
+        code: "FINAL_TERM",
+        gradeValue: grade.final_grade,
+        snapshotValue: submission.final_term_percentage_snapshot,
+        numerator: submission.final_term_exact_numerator,
+        denominator: submission.final_term_exact_denominator,
+        resultValue: result.final_grade,
+      },
+    ];
+
     if (
-      snapshot.calculated_terms?.MIDTERM?.state !== "READY" ||
-      snapshot.calculated_terms?.FINAL_TERM?.state === "READY" ||
-      !pending.some((r) => r.grading_term === "FINAL_TERM") ||
-      pending.some((r) => r.grading_term === "MIDTERM")
+      !pending.some((r) => ["MIDTERM", "FINAL_TERM"].includes(r.grading_term))
     ) {
-      fail(
-        "INC requires a completed Midterm and outstanding Final Term requirements.",
-      );
+      fail("INC requires genuinely outstanding assessments.");
     }
 
-    const mid = combinedApprovalFraction(
-      submission.midterm_exact_numerator,
-      submission.midterm_exact_denominator,
-      snapshot.calculated_terms.MIDTERM.term_percentage,
-      255,
-    );
+    for (const term of terms) {
+      const calculation = snapshot.calculated_terms?.[term.code];
 
-    const expected = combinedApprovalDecimal12(mid);
+      const ready = calculation?.state === "READY";
 
-    if (
-      !equalDecimal(grade.midterm_grade, expected) ||
-      !equalDecimal(submission.midterm_percentage_snapshot, expected) ||
-      !equalDecimal(result.midterm_grade, expected)
-    ) {
-      fail(
-        "The preserved Midterm percentage does not match its exact calculation.",
-      );
+      const hasPending = pending.some((r) => r.grading_term === term.code);
+
+      if (!calculation || ready === hasPending) {
+        fail(
+          `The ${term.code} calculation does not match its outstanding assessment evidence.`,
+        );
+      }
+
+      if (ready) {
+        const fraction = combinedApprovalFraction(
+          term.numerator,
+          term.denominator,
+          calculation.term_percentage,
+          255,
+        );
+
+        const expected = combinedApprovalDecimal12(fraction);
+
+        if (
+          !equalDecimal(term.gradeValue, expected) ||
+          !equalDecimal(term.snapshotValue, expected) ||
+          !equalDecimal(term.resultValue, expected)
+        ) {
+          fail(
+            `The preserved ${term.code} percentage does not match its exact calculation.`,
+          );
+        }
+      } else {
+        if (
+          [
+            term.gradeValue,
+            term.snapshotValue,
+            term.numerator,
+            term.denominator,
+            term.resultValue,
+          ].some((v) => v !== null)
+        ) {
+          fail(
+            `The incomplete ${term.code} must not contain a finalized numeric percentage.`,
+          );
+        }
+      }
     }
   } else if (
     !absences.length ||
     [
       grade.midterm_grade,
+      grade.final_grade,
       submission.midterm_percentage_snapshot,
+      submission.final_term_percentage_snapshot,
       submission.midterm_exact_numerator,
       submission.midterm_exact_denominator,
+      submission.final_term_exact_numerator,
+      submission.final_term_exact_denominator,
       result.midterm_grade,
+      result.final_grade,
     ].some((v) => v !== null)
   ) {
     fail(

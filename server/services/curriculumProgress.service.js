@@ -839,16 +839,15 @@ export async function getCurriculumProgressForStudent(
       };
     }
 
-    // ===============================================
-    // RETAKE REQUIRED
-    //
     // 4.00 = Incomplete
     // 5.00 = Failed
-    // ===============================================
+    // 6.00 = Unofficial Drop
 
     if (
       latestPtcRecord &&
-      ["Incomplete", "Failed"].includes(latestPtcRecord.classification)
+      ["Incomplete", "Failed", "Unofficial Drop"].includes(
+        latestPtcRecord.classification,
+      )
     ) {
       return {
         ...baseSubject,

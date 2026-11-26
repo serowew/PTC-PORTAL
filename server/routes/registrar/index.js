@@ -15,6 +15,7 @@ import documentRequestsRoutes from "./documentRequests.js";
 import gradeChangeRequestRoutes from "./gradeChangeRequests.js";
 import financeHistoryRoutes from "./financehistory.js";
 import academicYearsRoutes from "./academicYears.js";
+import { readOfficialSheetAudit } from "../../services/gradebookOfficialSheetAudit.service.js";
 import incCompletionConversionReadinessRouter from "./incCompletionConversionReadiness.routes.js";
 import { assertQaGradingDatabase } from "../../services/gradebookQaWriteGuard.service.js";
 import { validateOfficialSheetSpecialEvidence } from "../../services/gradebookOfficialSheetSpecialEvidence.service.js";
@@ -1956,6 +1957,98 @@ async function officialSheetCountInc(connection, configId, offeringId) {
   return Number(row?.official_inc_grade_count ?? 0);
 }
 
+async function officialSheetRecordingReadiness(
+  connection,
+  scope,
+  offeringId,
+  lock = false,
+) {
+  // Do not record submission evidence while class grades remain unresolved.
+  const [roster] = await connection.execute(
+    `SELECT es.enrollment_subject_id,
+          es.status AS subject_status,
+          e.enrollment_status,
+          e.academic_year_id,
+          e.semester_id,
+          g.grade_id,
+          g.grade_status,
+          g.grading_outcome,
+          EXISTS (
+            SELECT 1
+            FROM gradebook_grade_submission_attempts a
+            WHERE a.grade_id = g.grade_id
+          ) AS has_combined_attempt,
+          (
+            SELECT COUNT(*)
+            FROM gradebook_official_grade_publications p
+            JOIN gradebook_grade_submission_attempts a
+              ON a.submission_id = p.combined_submission_id
+            JOIN gradebook_official_sheets sh
+              ON sh.sheet_id = a.sheet_id
+            WHERE p.grade_id = g.grade_id
+              AND p.config_id = ?
+              AND p.enrollment_subject_id = es.enrollment_subject_id
+              AND p.publication_source = 'COMBINED_SEMESTER'
+              AND p.grading_outcome_snapshot = g.grading_outcome
+              AND a.grade_id = g.grade_id
+              AND a.submission_status = 'APPROVED'
+              AND a.grading_outcome_snapshot = g.grading_outcome
+              AND sh.config_id = p.config_id
+              AND a.submission_id = (
+                SELECT latest.submission_id
+                FROM gradebook_grade_submission_attempts latest
+                WHERE latest.grade_id = g.grade_id
+                ORDER BY latest.attempt_number DESC,
+                         latest.submission_id DESC
+                LIMIT 1
+              )
+          ) AS combined_publication_count
+     FROM enrollment_subjects es
+     JOIN enrollments e
+       ON e.enrollment_id = es.enrollment_id
+     LEFT JOIN grades g
+       ON g.enrollment_subject_id = es.enrollment_subject_id
+    WHERE es.offering_id = ?
+      AND NOT (
+        COALESCE(e.enrollment_status, '') = 'Rejected'
+        AND COALESCE(es.status, '') = 'Enrolled'
+        AND g.grade_id IS NULL
+      )
+ ORDER BY es.enrollment_subject_id
+${lock ? "FOR UPDATE" : ""}`,
+    [scope.configId, offeringId],
+  );
+
+  const unresolved = roster.filter((row) => {
+    if (
+      row.enrollment_status !== "Approved" ||
+      Number(row.academic_year_id) !== scope.academicYearId ||
+      Number(row.semester_id) !== scope.semesterId
+    ) {
+      return true;
+    }
+
+    if (["Dropped", "Withdrawn"].includes(row.subject_status)) {
+      return row.grade_status === "Approved";
+    }
+
+    if (row.grade_id == null || row.grade_status !== "Approved") {
+      return true;
+    }
+
+    return (
+      Number(row.has_combined_attempt) === 1 &&
+      Number(row.combined_publication_count) !== 1
+    );
+  });
+
+  return {
+    roster_count: roster.length,
+    unresolved_count: unresolved.length,
+    roster_ready: roster.length > 0 && unresolved.length === 0,
+  };
+}
+
 // List initialized gradebooks for original sheet-date recording.
 router.get("/gradebook/official-sheets", async (req, res) => {
   try {
@@ -2004,9 +2097,21 @@ CASE
   )
   ELSE NULL
 END AS inc_completion_deadline_on,
-          (SELECT COUNT(*)
-             FROM gradebook_official_sheet_submission_events ev
-            WHERE ev.sheet_id = sh.sheet_id) AS audit_event_count
+        (SELECT COUNT(*)
+   FROM gradebook_official_sheet_submission_events ev
+  WHERE ev.sheet_id = sh.sheet_id) AS audit_event_count,
+
+EXISTS (
+  SELECT 1
+  FROM gradebook_official_sheet_submission_events ev
+  JOIN gradebook_official_sheet_reopen_requests rr
+    ON rr.reopened_event_id = ev.event_id
+   AND rr.sheet_id = ev.sheet_id
+   AND rr.request_status = 'APPROVED'
+  WHERE ev.sheet_id = sh.sheet_id
+    AND ev.event_type = 'REOPENED'
+    AND ev.record_version_after = sh.record_version
+) AS has_current_reopen_event
        FROM gradebook_offering_config cfg
        JOIN subject_offerings so ON so.offering_id = cfg.offering_id
        JOIN subjects sub ON sub.subject_id = so.subject_id
@@ -2030,13 +2135,13 @@ END AS inc_completion_deadline_on,
           row.offering_status !== "Cancelled" &&
           (!sheetExists ||
             (row.sheet_status === "IN_PROGRESS" &&
-              Number(row.record_version) === 1 &&
               row.original_official_submitted_on == null &&
               row.official_submission_reference == null &&
               row.official_date_verified_by_user_id == null &&
               row.official_date_verified_at == null &&
-              Number(row.audit_event_count) === 0));
-
+              ((Number(row.record_version) === 1 &&
+                Number(row.audit_event_count) === 0) ||
+                Number(row.has_current_reopen_event) === 1)));
         return {
           offering_id: Number(row.offering_id),
           offering_status: row.offering_status,
@@ -2119,6 +2224,11 @@ router.get("/gradebook/official-sheets/:offeringId", async (req, res) => {
       config_id: scope.configId,
       academic_year_id: scope.academicYearId,
       semester_id: scope.semesterId,
+      recording_readiness: await officialSheetRecordingReadiness(
+        db,
+        scope,
+        offeringId,
+      ),
       official_inc_grade_count: incGradeCount,
       official_sheet: sheet,
       submission_events: events.map((event) => ({
@@ -2168,7 +2278,21 @@ router.post(
         "official_submission_reference",
         "confirm_original_submission_evidence",
         "dry_run",
+        "expected_sheet_version",
       ]);
+
+      const expectedVersion = req.body.expected_sheet_version;
+
+      if (
+        expectedVersion !== null &&
+        (!Number.isSafeInteger(expectedVersion) || expectedVersion < 1)
+      ) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_VERSION_INVALID",
+          "Send the current sheet version or null for a new sheet.",
+          400,
+        );
+      }
       const originalDate = officialSheetDate(
         req.body.original_official_submitted_on,
       );
@@ -2256,7 +2380,42 @@ router.post(
         );
       }
 
+      const currentVersion =
+        existing.length === 0 ? null : Number(existing[0].record_version);
+
+      if (currentVersion !== expectedVersion) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_RECORD_CONFLICT",
+          "The sheet changed. Reload the class before recording.",
+          409,
+        );
+      }
+
+      const readiness = await officialSheetRecordingReadiness(
+        connection,
+        scope,
+        offeringId,
+        true,
+      );
+
+      if (readiness.roster_count === 0) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_ROSTER_EMPTY",
+          "Cannot record submission evidence for an empty class.",
+          409,
+        );
+      }
+
+      if (!readiness.roster_ready) {
+        officialSheetFail(
+          "OFFICIAL_SHEET_ROSTER_NOT_READY",
+          `Cannot record submission evidence. ${readiness.unresolved_count} of ${readiness.roster_count} class records require resolution, approval, or publication.`,
+          409,
+        );
+      }
       let sheetId;
+      let previousRecordVersion = null;
+      let recordVersionAfter = 1;
 
       if (existing.length === 0) {
         // Older workflow: create a sheet when none exists.
@@ -2281,52 +2440,54 @@ router.post(
 
         sheetId = String(insert.insertId);
       } else {
-        // Combined workflow: use the existing blank draft.
-        const sheet = existing[0];
-        sheetId = String(sheet.sheet_id);
+        // Validate the existing blank or reopened sheet.
+        sheetId = String(existing[0].sheet_id);
+
+        const { sheet, events, requests, audit } = await readOfficialSheetAudit(
+          connection,
+          sheetId,
+          true,
+        );
 
         if (
-          sheet.sheet_status !== "IN_PROGRESS" ||
-          Number(sheet.record_version) !== 1 ||
-          sheet.original_official_submitted_on != null ||
-          sheet.official_submission_reference != null ||
-          sheet.official_date_verified_by_user_id != null ||
-          sheet.official_date_verified_at != null
+          !audit.valid ||
+          audit.state !== "BLANK" ||
+          requests.some((r) => r.request_status === "PENDING")
         ) {
           officialSheetFail(
-            "OFFICIAL_SHEET_ALREADY_RECORDED",
-            "The original submission evidence has already been recorded or verified.",
+            "OFFICIAL_SHEET_NOT_RECORDABLE",
+            "The sheet is not an authorized blank or reopened sheet.",
+            409,
           );
         }
 
-        const [events] = await connection.execute(
-          `SELECT event_id
-             FROM gradebook_official_sheet_submission_events
-            WHERE sheet_id = ?
-            FOR UPDATE`,
-          [sheetId],
-        );
-
-        if (events.length !== 0) {
-          officialSheetFail(
-            "OFFICIAL_SHEET_AUDIT_ALREADY_EXISTS",
-            "This sheet already contains submission audit events.",
-          );
+        // Preserve the initial version for a newly recorded sheet.
+        if (events.length > 0) {
+          previousRecordVersion = Number(sheet.record_version);
+          recordVersionAfter = previousRecordVersion + 1;
         }
 
         const [updated] = await connection.execute(
           `UPDATE gradebook_official_sheets
-              SET original_official_submitted_on = ?,
-                  official_submission_reference = ?,
-                  updated_by_user_id = ?
-            WHERE sheet_id = ?
-              AND sheet_status = 'IN_PROGRESS'
-              AND record_version = 1
-              AND original_official_submitted_on IS NULL
-              AND official_submission_reference IS NULL
-              AND official_date_verified_by_user_id IS NULL
-              AND official_date_verified_at IS NULL`,
-          [originalDate, reference, actor, sheetId],
+      SET original_official_submitted_on = ?,
+          official_submission_reference = ?,
+          updated_by_user_id = ?,
+          record_version = ?
+    WHERE sheet_id = ?
+      AND sheet_status = 'IN_PROGRESS'
+      AND record_version = ?
+      AND original_official_submitted_on IS NULL
+      AND official_submission_reference IS NULL
+      AND official_date_verified_by_user_id IS NULL
+      AND official_date_verified_at IS NULL`,
+          [
+            originalDate,
+            reference,
+            actor,
+            recordVersionAfter,
+            sheetId,
+            Number(sheet.record_version),
+          ],
         );
 
         if (Number(updated.affectedRows) !== 1) {
@@ -2337,24 +2498,44 @@ router.post(
         }
       }
 
-      // Preserve the existing original-date audit format.
+      // Record submission evidence with its current version.
       const [audit] = await connection.execute(
         `INSERT INTO gradebook_official_sheet_submission_events
-         (
-           sheet_id,
-           event_type,
-           previous_record_version,
-           record_version_after,
-           original_official_submitted_on,
-           official_submission_reference,
-           performed_by_user_id
-         )
-         VALUES (?, 'RECORDED', NULL, 1, ?, ?, ?)`,
-        [sheetId, originalDate, reference, actor],
+   (
+     sheet_id,
+     event_type,
+     previous_record_version,
+     record_version_after,
+     original_official_submitted_on,
+     official_submission_reference,
+     performed_by_user_id
+   )
+   VALUES (?, 'RECORDED', ?, ?, ?, ?, ?)`,
+        [
+          sheetId,
+          previousRecordVersion,
+          recordVersionAfter,
+          originalDate,
+          reference,
+          actor,
+        ],
       );
-
       if (Number(audit.affectedRows) !== 1) {
         throw new Error("Original submission audit was not saved.");
+      }
+
+      const { audit: recordedAudit } = await readOfficialSheetAudit(
+        connection,
+        sheetId,
+        true,
+      );
+
+      if (!recordedAudit.valid || recordedAudit.state !== "RECORDED") {
+        officialSheetFail(
+          "OFFICIAL_SHEET_AUDIT_INVALID",
+          "Recording would produce an invalid audit history.",
+          409,
+        );
       }
 
       if (req.body.dry_run) await connection.rollback();
@@ -2367,7 +2548,7 @@ router.post(
           sheet_id: req.body.dry_run ? null : sheetId,
           config_id: scope.configId,
           sheet_status: "IN_PROGRESS",
-          record_version: 1,
+          record_version: recordVersionAfter,
           original_official_submitted_on: originalDate,
           official_submission_reference: reference,
           official_date_verified_by_user_id: null,

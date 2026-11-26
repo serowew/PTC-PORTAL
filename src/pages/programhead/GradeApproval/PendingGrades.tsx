@@ -756,7 +756,10 @@ function OfficialSheetFinalization({
     !listLoading &&
     selected?.sheet_status === "IN_PROGRESS" &&
     selected.original_date_verified === false &&
-    selected.sheet_record_version === 1 &&
+    typeof selected.sheet_record_version === "number" &&
+    Number.isSafeInteger(selected.sheet_record_version) &&
+    selected.sheet_record_version > 0 &&
+    selected.sheet_record_version < 4294967294 &&
     typeof selected.sheet_id === "string" &&
     /^\d+$/.test(selected.sheet_id) &&
     /^\d{4}-\d{2}-\d{2}$/.test(selected.original_official_submitted_on ?? "") &&
@@ -1113,10 +1116,10 @@ function OfficialSheetFinalization({
                       against the actual submission record before verifying.
                     </p>
 
-                    {selected.sheet_record_version !== 1 && (
+                    {!selected.original_official_submitted_on && (
                       <p role="alert">
-                        This sheet is not at the original verification version.
-                        Refresh its records before proceeding.
+                        The Registrar must record the submission date before
+                        verification.
                       </p>
                     )}
                   </div>

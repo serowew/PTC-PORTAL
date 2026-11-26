@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { assertQaGradingDatabase } from "./gradebookQaWriteGuard.service.js";
-
+import { assertCombinedSemesterSubmissionWriteAllowed } from "./gradebookSemesterSubmissionWriteGuard.service.js";
 function reject(code, message, status = 409) {
   const error = new Error(message);
   error.code = code;
@@ -50,13 +49,7 @@ export async function resubmitSpecialOutcome(
     dryRun,
   } = input;
 
-  // Keep QA-only validation until both rollout gates are enabled.
-  if (
-    process.env.GRADEBOOK_COMBINED_SUBMISSION_WRITES_ENABLED !== "true" ||
-    process.env.GRADEBOOK_COMBINED_SPECIAL_OUTCOME_WRITES_ENABLED !== "true"
-  ) {
-    await assertQaGradingDatabase(connection);
-  }
+  await assertCombinedSemesterSubmissionWriteAllowed(connection);
 
   // Require an explicit transaction mode
   if (typeof dryRun !== "boolean") {
@@ -384,49 +377,118 @@ export async function resubmitSpecialOutcome(
     Number(old.final_rating_snapshot) !== Number(rating) ||
     Number(official?.final_rating) !== Number(rating) ||
     grade.remarks !== (rating === "4.00" ? "Incomplete" : "Unofficial Drop") ||
-    grade.final_grade !== null ||
     grade.overall_percentage !== null ||
-    old.final_term_percentage_snapshot !== null ||
     old.overall_percentage_snapshot !== null ||
-    old.final_term_exact_numerator !== null ||
-    old.overall_exact_numerator !== null
+    old.overall_exact_numerator !== null ||
+    old.overall_exact_denominator !== null ||
+    official?.overall_percentage !== null
   ) {
     reject(
       "SPECIAL_RESUBMIT_ORIGINAL_SNAPSHOT_INVALID",
       "The returned special-grade snapshot no longer matches.",
     );
   }
-  if (
-    rating === "6.00" &&
-    (grade.midterm_grade !== null ||
-      old.midterm_percentage_snapshot !== null ||
-      old.midterm_exact_numerator !== null)
-  ) {
-    reject(
-      "SPECIAL_RESUBMIT_UD_NUMERIC_CONFLICT",
-      "UD must not contain numeric term grades.",
+  const protectedTerms = [
+    {
+      code: "MIDTERM",
+      gradeValue: grade.midterm_grade,
+      snapshotValue: old.midterm_percentage_snapshot,
+      numerator: old.midterm_exact_numerator,
+      denominator: old.midterm_exact_denominator,
+      resultValue: official.midterm_grade,
+    },
+    {
+      code: "FINAL_TERM",
+      gradeValue: grade.final_grade,
+      snapshotValue: old.final_term_percentage_snapshot,
+      numerator: old.final_term_exact_numerator,
+      denominator: old.final_term_exact_denominator,
+      resultValue: official.final_grade,
+    },
+  ];
+
+  for (const term of protectedTerms) {
+    const calculation = previous.calculated_terms?.[term.code];
+
+    const values = [
+      term.gradeValue,
+      term.snapshotValue,
+      term.numerator,
+      term.denominator,
+      term.resultValue,
+    ];
+
+    if (rating === "6.00") {
+      if (values.some((value) => value !== null)) {
+        reject(
+          "SPECIAL_RESUBMIT_UD_NUMERIC_CONFLICT",
+          "UD must not contain numeric term grades.",
+        );
+      }
+
+      continue;
+    }
+
+    if (!calculation) {
+      reject(
+        "SPECIAL_RESUBMIT_INC_TERM_INVALID",
+        `The ${term.code} calculation snapshot is missing.`,
+      );
+    }
+
+    if (calculation.state !== "READY") {
+      if (values.some((value) => value !== null)) {
+        reject(
+          "SPECIAL_RESUBMIT_INC_TERM_INVALID",
+          `The incomplete ${term.code} contains a numeric grade.`,
+        );
+      }
+
+      continue;
+    }
+
+    const n = String(term.numerator ?? "");
+    const d = String(term.denominator ?? "");
+    const source = calculation.term_percentage;
+
+    if (
+      values.some((value) => value === null) ||
+      !/^(0|[1-9]\d*)$/.test(n) ||
+      !/^[1-9]\d*$/.test(d) ||
+      n.length > 255 ||
+      d.length > 255 ||
+      n !== String(source?.exact_numerator ?? "") ||
+      d !== String(source?.exact_denominator ?? "")
+    ) {
+      reject(
+        "SPECIAL_RESUBMIT_INC_TERM_INVALID",
+        `The protected ${term.code} fraction is inconsistent.`,
+      );
+    }
+
+    const num = BigInt(n);
+    const den = BigInt(d);
+    const scale = 1000000000000n;
+
+    const rounded = (num * scale * 2n + den) / (den * 2n);
+
+    const expected = Number(
+      `${rounded / scale}.${String(rounded % scale).padStart(12, "0")}`,
     );
-  }
-  if (
-    rating === "4.00" &&
-    (grade.midterm_grade === null ||
-      Number(old.midterm_percentage_snapshot) !== Number(grade.midterm_grade) ||
-      !/^\d+$/.test(String(old.midterm_exact_numerator ?? "")) ||
-      !/^[1-9]\d*$/.test(String(old.midterm_exact_denominator ?? "")) ||
-      String(old.midterm_exact_numerator) !==
-        String(
-          previous.calculated_terms?.MIDTERM?.term_percentage?.exact_numerator,
-        ) ||
-      String(old.midterm_exact_denominator) !==
-        String(
-          previous.calculated_terms?.MIDTERM?.term_percentage
-            ?.exact_denominator,
-        ))
-  ) {
-    reject(
-      "SPECIAL_RESUBMIT_INC_MIDTERM_INVALID",
-      "The protected INC Midterm grade is inconsistent.",
-    );
+
+    if (
+      num > 100n * den ||
+      [term.gradeValue, term.snapshotValue, term.resultValue].some(
+        (value) =>
+          !/^\d+(?:\.\d{1,12})?$/.test(String(value)) ||
+          Number(value) !== expected,
+      )
+    ) {
+      reject(
+        "SPECIAL_RESUBMIT_INC_TERM_INVALID",
+        `The protected ${term.code} percentage is inconsistent.`,
+      );
+    }
   }
 
   // Evidence-only resubmission: no assessment scores or attendance are edited here.
@@ -489,9 +551,18 @@ export async function resubmitSpecialOutcome(
     Number(pastEvidence.absent_meetings) !== absences.length ||
     (rating === "6.00" && !absences.length) ||
     (rating === "4.00" &&
-      (current.terms?.MIDTERM?.state !== "READY" ||
-        current.terms?.FINAL_TERM?.state === "READY" ||
-        !pending.some((a) => a.grading_term === "FINAL_TERM")))
+      (!pending.some((a) =>
+        ["MIDTERM", "FINAL_TERM"].includes(a.grading_term),
+      ) ||
+        ["MIDTERM", "FINAL_TERM"].some((term) => {
+          const calculation = current.terms?.[term];
+
+          const ready = calculation?.state === "READY";
+
+          const hasPending = pending.some((a) => a.grading_term === term);
+
+          return !calculation || ready === hasPending;
+        })))
   ) {
     reject(
       "SPECIAL_RESUBMIT_ATTENDANCE_SOURCE_CHANGED",
@@ -604,13 +675,15 @@ export async function resubmitSpecialOutcome(
     verified.reviewed_by !== null ||
     verified.reviewed_at !== null ||
     Number(verified.final_rating) !== Number(rating) ||
-    verified.final_grade !== null ||
     verified.overall_percentage !== null ||
     verified.remarks !==
       (rating === "4.00" ? "Incomplete" : "Unofficial Drop") ||
-    (rating === "4.00"
-      ? Number(verified.midterm_grade) !== Number(grade.midterm_grade)
-      : verified.midterm_grade !== null)
+    ["midterm_grade", "final_grade"].some((key) =>
+      grade[key] === null
+        ? verified[key] !== null
+        : verified[key] === null ||
+          Number(verified[key]) !== Number(grade[key]),
+    )
   ) {
     reject(
       "SPECIAL_RESUBMIT_TRIGGER_CONFLICT",
@@ -643,8 +716,8 @@ export async function resubmitSpecialOutcome(
         midterm_exact_numerator, midterm_exact_denominator,
         final_term_exact_numerator, final_term_exact_denominator,
         overall_exact_numerator, overall_exact_denominator)
-     VALUES (?, ?, ?, ?, ?, ?, 'FULL_SEMESTER', ?, ?, NULL, NULL, ?, ?,
-             'SUBMITTED', ?, 1, ?, ?, ?, NULL, NULL, NULL, NULL)`,
+   VALUES (?, ?, ?, ?, ?, ?, 'FULL_SEMESTER', ?, ?, ?, NULL, ?, ?,
+        'SUBMITTED', ?, 1, ?, ?, ?, ?, ?, NULL, NULL)`,
     [
       sheet.sheet_id,
       period.period_id,
@@ -654,12 +727,15 @@ export async function resubmitSpecialOutcome(
       randomUUID(),
       grade.grading_outcome,
       old.midterm_percentage_snapshot,
+      old.final_term_percentage_snapshot,
       rating,
       nextReason,
       actorUserId,
       JSON.stringify(snapshot),
       old.midterm_exact_numerator,
       old.midterm_exact_denominator,
+      old.final_term_exact_numerator,
+      old.final_term_exact_denominator,
     ],
   );
   if (Number(inserted.affectedRows) !== 1) {

@@ -13,6 +13,8 @@ import { assertQaGradingDatabase } from "../../services/gradebookQaWriteGuard.se
 import { assertCombinedApprovalWriteAllowed } from "../../services/gradebookCombinedApprovalWriteGuard.service.js";
 import { approveModernIncCompletion } from "../../services/gradebookModernIncSource.service.js";
 import { calculateGradePreview } from "../gradebookRoster.routes.js";
+import { readOfficialSheetAudit } from "../../services/gradebookOfficialSheetAudit.service.js";
+import { assertModernIncWriteAllowed } from "../../services/gradebookModernIncWriteGuard.service.js";
 import { assertSpecialOutcomeReturnWriteAllowed } from "../../services/gradebookSpecialReturnWriteGuard.service.js";
 import { assertCurrentNumericApprovalEvidence } from "../../services/gradebookNumericApprovalEvidence.service.js";
 import { combinedApprovalSpecialEvidence } from "../../services/gradebookFirstAttemptSpecialEvidence.service.js";
@@ -5306,50 +5308,51 @@ async function phSheetRead(connection, configId, lock = false) {
   }
   return rows[0];
 }
-
 async function phSheetAudit(connection, sheet, lock = false) {
-  const [events] = await connection.execute(
-    `SELECT event_type, previous_record_version, record_version_after,
-            DATE_FORMAT(original_official_submitted_on, '%Y-%m-%d') AS original_date,
-            official_submission_reference, performed_by_user_id
-       FROM gradebook_official_sheet_submission_events
-      WHERE sheet_id = ? ORDER BY record_version_after, event_id
-      ${lock ? "FOR UPDATE" : ""}`,
-    [String(sheet.sheet_id)],
-  );
-  const recorded = events[0];
-  const verified = events[1];
-  const baseValid =
-    recorded?.event_type === "RECORDED" &&
-    recorded.previous_record_version == null &&
-    Number(recorded.record_version_after) === 1 &&
-    recorded.original_date === sheet.original_date &&
-    recorded.official_submission_reference ===
-      sheet.official_submission_reference &&
-    Number(recorded.performed_by_user_id) > 0;
+  const {
+    sheet: current,
+    events,
+    requests,
+    audit,
+  } = await readOfficialSheetAudit(connection, String(sheet.sheet_id), lock);
+
+  const consistent =
+    Number(current.record_version) === Number(sheet.record_version) &&
+    current.sheet_status === sheet.sheet_status &&
+    current.original_date === sheet.original_date &&
+    current.official_submission_reference ===
+      sheet.official_submission_reference;
+
+  const valid = consistent && audit.valid;
+
+  const baseValid = valid && audit.recorded != null;
+
   const verifiedValid =
-    baseValid &&
-    events.length === 2 &&
-    verified?.event_type === "VERIFIED" &&
-    Number(verified.previous_record_version) === 1 &&
-    Number(verified.record_version_after) === 2 &&
-    verified.original_date === sheet.original_date &&
-    verified.official_submission_reference ===
-      sheet.official_submission_reference &&
-    Number(verified.performed_by_user_id) ===
-      Number(sheet.official_date_verified_by_user_id);
+    baseValid && ["VERIFIED", "FINALIZED"].includes(audit.state);
+
   let verifiedByProgramHead = false;
+
   if (verifiedValid) {
     const [[actor]] = await connection.execute(
       `SELECT r.role_name FROM users u
-       JOIN roles r ON r.role_id = u.role_id WHERE u.user_id = ?`,
-      [sheet.official_date_verified_by_user_id],
+       JOIN roles r ON r.role_id = u.role_id
+       WHERE u.user_id = ?`,
+      [current.official_date_verified_by_user_id],
     );
+
     verifiedByProgramHead = actor?.role_name === "Program Head";
   }
-  return { events, baseValid, verifiedValid, verifiedByProgramHead };
-}
 
+  return {
+    events,
+    baseValid,
+    verifiedValid,
+    verifiedByProgramHead,
+    state: valid ? audit.state : "INVALID",
+    recorded: valid ? audit.recorded : null,
+    hasPendingReopen: requests.some((r) => r.request_status === "PENDING"),
+  };
+}
 // PH verification is separate from Registrar's record-submission action.
 // POST /api/program-head/gradebook/official-sheets/:offeringId/verify-submission
 router.post(
@@ -5479,7 +5482,7 @@ router.post(
       if (
         sheet.sheet_status !== "IN_PROGRESS" ||
         Number(sheet.record_version) !== version ||
-        version !== 1 ||
+        version >= 4294967294 ||
         sheet.official_date_verified_at != null ||
         sheet.official_date_verified_by_user_id != null
       ) {
@@ -5490,7 +5493,9 @@ router.post(
       }
       if (
         !audit.baseValid ||
-        audit.events.length !== 1 ||
+        audit.state !== "RECORDED" ||
+        audit.hasPendingReopen ||
+        String(audit.recorded?.performed_by_user_id) === String(scope.userId) ||
         !sheet.original_date ||
         !String(sheet.official_submission_reference ?? "").trim() ||
         sheet.original_date > clock.today
@@ -5500,13 +5505,32 @@ router.post(
           "Recorded source and RECORDED audit must agree with a genuine nonfuture date.",
         );
       }
+      // Do not verify a prematurely recorded or incomplete sheet.
+      const readiness = await phSheetInspect(connection, scope, true);
+
+      const unresolved = readiness.blockers.filter(
+        (code) => code !== "PROGRAM_HEAD_ORIGINAL_DATE_VERIFICATION_REQUIRED",
+      );
+
+      if (unresolved.length > 0) {
+        phSheetFail(
+          "PH_SHEET_VERIFY_ROSTER_NOT_READY",
+          `Verification blocked: ${unresolved.join(", ")}`,
+          409,
+        );
+      }
       const [update] = await connection.execute(
         `UPDATE gradebook_official_sheets
-          SET official_date_verified_by_user_id = ?, official_date_verified_at = NOW(),
-              updated_by_user_id = ?, record_version = record_version + 1
-        WHERE sheet_id = ? AND sheet_status = 'IN_PROGRESS' AND record_version = 1
-          AND official_date_verified_by_user_id IS NULL AND official_date_verified_at IS NULL`,
-        [scope.userId, scope.userId, String(sheet.sheet_id)],
+      SET official_date_verified_by_user_id = ?,
+          official_date_verified_at = NOW(),
+          updated_by_user_id = ?,
+          record_version = record_version + 1
+    WHERE sheet_id = ?
+      AND sheet_status = 'IN_PROGRESS'
+      AND record_version = ?
+      AND official_date_verified_by_user_id IS NULL
+      AND official_date_verified_at IS NULL`,
+        [scope.userId, scope.userId, String(sheet.sheet_id), version],
       );
       if (Number(update.affectedRows) !== 1)
         phSheetFail(
@@ -5515,11 +5539,20 @@ router.post(
         );
       const [event] = await connection.execute(
         `INSERT INTO gradebook_official_sheet_submission_events
-       (sheet_id, event_type, previous_record_version, record_version_after,
-        original_official_submitted_on, official_submission_reference, performed_by_user_id)
-       VALUES (?, 'VERIFIED', 1, 2, ?, ?, ?)`,
+   (
+     sheet_id,
+     event_type,
+     previous_record_version,
+     record_version_after,
+     original_official_submitted_on,
+     official_submission_reference,
+     performed_by_user_id
+   )
+   VALUES (?, 'VERIFIED', ?, ?, ?, ?, ?)`,
         [
           String(sheet.sheet_id),
+          version,
+          version + 1,
           sheet.original_date,
           sheet.official_submission_reference,
           scope.userId,
@@ -5527,6 +5560,18 @@ router.post(
       );
       if (Number(event.affectedRows) !== 1)
         throw new Error("Verification audit insert failed.");
+      const { audit: verifiedAudit } = await readOfficialSheetAudit(
+        connection,
+        String(sheet.sheet_id),
+        true,
+      );
+
+      if (!verifiedAudit.valid || verifiedAudit.state !== "VERIFIED") {
+        phSheetFail(
+          "PH_SHEET_VERIFY_AUDIT_INVALID",
+          "Verification would produce an inconsistent audit history.",
+        );
+      }
       const [[deadlineRow]] = await connection.execute(
         "SELECT DATE_FORMAT(DATE_ADD(?, INTERVAL 1 YEAR), '%Y-%m-%d') AS deadline",
         [sheet.original_date],
@@ -6390,15 +6435,56 @@ async function phSheetPublishedCombinedSpecialValid(
       },
     );
 
-    if (inc) {
-      const mid = phSheetRational(source.midterm_n, source.midterm_d);
-      if (
-        !mid ||
-        !phSheetSameRounded12(row.midterm_grade, mid) ||
-        !phSheetSameRounded12(source.midterm_percentage_snapshot, mid) ||
-        !phSheetSameRounded12(snapshot.official_result.midterm_grade, mid)
-      )
+    const specialTerms = [
+      {
+        code: "MIDTERM",
+        numerator: source.midterm_n,
+        denominator: source.midterm_d,
+        gradeValue: row.midterm_grade,
+        snapshotValue: source.midterm_percentage_snapshot,
+        resultValue: snapshot.official_result.midterm_grade,
+      },
+      {
+        code: "FINAL_TERM",
+        numerator: source.final_n,
+        denominator: source.final_d,
+        gradeValue: row.final_grade,
+        snapshotValue: source.final_term_percentage_snapshot,
+        resultValue: snapshot.official_result.final_grade,
+      },
+    ];
+
+    for (const term of specialTerms) {
+      const calculation = snapshot.calculated_terms?.[term.code];
+
+      if (inc && !calculation) {
         return false;
+      }
+
+      if (inc && calculation.state === "READY") {
+        const fraction = phSheetRational(term.numerator, term.denominator);
+
+        if (
+          !fraction ||
+          !phSheetSameRounded12(term.gradeValue, fraction) ||
+          !phSheetSameRounded12(term.snapshotValue, fraction) ||
+          !phSheetSameRounded12(term.resultValue, fraction)
+        ) {
+          return false;
+        }
+      } else {
+        if (
+          [
+            term.numerator,
+            term.denominator,
+            term.gradeValue,
+            term.snapshotValue,
+            term.resultValue,
+          ].some((value) => value !== null)
+        ) {
+          return false;
+        }
+      }
     }
   } catch (error) {
     if (
@@ -6421,6 +6507,9 @@ async function phSheetInspect(connection, scope, lock = false) {
   const sheet = await phSheetRead(connection, scope.config_id, lock);
   const audit = await phSheetAudit(connection, sheet, lock);
   if (sheet.sheet_status !== "IN_PROGRESS") blockers.push("ALREADY_FINALIZED");
+  if (audit.hasPendingReopen) {
+    blockers.push("SHEET_REOPEN_REQUEST_PENDING");
+  }
   if (
     !sheet.original_date ||
     !String(sheet.official_submission_reference ?? "").trim() ||
@@ -6428,7 +6517,7 @@ async function phSheetInspect(connection, scope, lock = false) {
     !sheet.official_date_verified_by_user_id ||
     !audit.verifiedValid ||
     !audit.verifiedByProgramHead ||
-    Number(sheet.record_version) !== 2
+    audit.state !== "VERIFIED"
   ) {
     blockers.push("PROGRAM_HEAD_ORIGINAL_DATE_VERIFICATION_REQUIRED");
   }
@@ -7276,6 +7365,19 @@ router.post(
         phSheetFail(
           "PH_SHEET_FINALIZE_CONFLICT",
           "Sheet changed during finalization.",
+        );
+      }
+
+      const { audit: finalizedAudit } = await readOfficialSheetAudit(
+        connection,
+        sheetId,
+        true,
+      );
+
+      if (!finalizedAudit.valid || finalizedAudit.state !== "FINALIZED") {
+        phSheetFail(
+          "PH_SHEET_FINALIZE_AUDIT_INVALID",
+          "Finalization would produce an inconsistent audit history.",
         );
       }
       if (req.body.dry_run) await connection.rollback();
@@ -10593,17 +10695,40 @@ router.post(
 
       const isSpecial = grade.grading_outcome !== "NUMERIC";
 
-      // INC/UD outside QA: development dry-run only; publication stays blocked.
+      // Separate rollout permissions for INC and UD publication.
       if (isSpecial && !isQaDatabase) {
         if (
-          process.env.NODE_ENV === "production" ||
-          body.dry_run !== true ||
+          process.env.NODE_ENV === "production" &&
           process.env
-            .GRADEBOOK_COMBINED_SPECIAL_PUBLICATION_DRY_RUNS_ENABLED !== "true"
+            .GRADEBOOK_COMBINED_SPECIAL_PUBLICATION_PRODUCTION_ENABLED !==
+            "true"
         ) {
           combinedPublishFail(
-            "COMBINED_SPECIAL_PUBLICATION_NOT_MIGRATED",
-            "INC/UD publication is limited to authorized development dry runs.",
+            "COMBINED_SPECIAL_PUBLICATION_PRODUCTION_DISABLED",
+            "Production INC/UD publication requires separate authorization.",
+            403,
+          );
+        }
+
+        if (body.dry_run === true) {
+          if (
+            process.env
+              .GRADEBOOK_COMBINED_SPECIAL_PUBLICATION_DRY_RUNS_ENABLED !==
+            "true"
+          ) {
+            combinedPublishFail(
+              "COMBINED_SPECIAL_PUBLICATION_DRY_RUNS_DISABLED",
+              "INC/UD publication validation is disabled on this server.",
+              403,
+            );
+          }
+        } else if (
+          process.env.GRADEBOOK_COMBINED_SPECIAL_PUBLICATION_WRITES_ENABLED !==
+          "true"
+        ) {
+          combinedPublishFail(
+            "COMBINED_SPECIAL_PUBLICATION_WRITES_DISABLED",
+            "INC/UD official publication is disabled on this server.",
             403,
           );
         }
@@ -10915,28 +11040,50 @@ router.post(
         const inc = grade.grading_outcome === "INCOMPLETE";
         const specialRating = inc ? "4.00" : "6.00";
         const specialRemarks = inc ? "Incomplete" : "Unofficial Drop";
-        const midUnits = inc
-          ? combinedPublishRoundedUnits(
-              combinedPublishRatio(
-                submission.midterm_exact_numerator,
-                submission.midterm_exact_denominator,
-                snapshot.calculated_terms.MIDTERM.term_percentage,
-                255,
-              ),
-            )
-          : null;
-        const sameMid = (value) =>
-          inc
-            ? combinedPublishDecimalUnits(value) === midUnits
-            : value === null;
+
+        const specialTermUnits = (term) => {
+          const calculation = snapshot.calculated_terms?.[term];
+
+          if (!inc || calculation?.state !== "READY") {
+            return null;
+          }
+
+          const prefix = term === "MIDTERM" ? "midterm" : "final_term";
+
+          return combinedPublishRoundedUnits(
+            combinedPublishRatio(
+              submission[`${prefix}_exact_numerator`],
+              submission[`${prefix}_exact_denominator`],
+              calculation.term_percentage,
+              255,
+            ),
+          );
+        };
+
+        const midUnits = specialTermUnits("MIDTERM");
+        const finalUnits = specialTermUnits("FINAL_TERM");
+
+        const sameSpecialTerm = (value, units) =>
+          units === null
+            ? value === null
+            : value !== null &&
+              value !== undefined &&
+              combinedPublishDecimalUnits(value) === units;
+
+        const sameMid = (value) => sameSpecialTerm(value, midUnits);
+        const sameFinal = (value) => sameSpecialTerm(value, finalUnits);
+
         if (
           !sameMid(grade.midterm_grade) ||
           !sameMid(submission.midterm_percentage_snapshot) ||
-          !sameMid(snapshot.official_result.midterm_grade)
+          !sameMid(snapshot.official_result.midterm_grade) ||
+          !sameFinal(grade.final_grade) ||
+          !sameFinal(submission.final_term_percentage_snapshot) ||
+          !sameFinal(snapshot.official_result.final_grade)
         ) {
           combinedPublishFail(
-            "COMBINED_PUBLISH_SPECIAL_MIDTERM_MISMATCH",
-            "The preserved Midterm grade differs from its exact source.",
+            "COMBINED_PUBLISH_SPECIAL_TERM_MISMATCH",
+            "The preserved term grades differ from their exact sources.",
           );
         }
 
@@ -10986,7 +11133,7 @@ router.post(
           approved.grading_outcome !== grade.grading_outcome ||
           Number(approved.reviewed_by) !== Number(userId) ||
           !sameMid(approved.midterm_grade) ||
-          approved.final_grade !== null ||
+          !sameFinal(approved.final_grade) ||
           approved.overall_percentage !== null ||
           String(approved.final_rating) !== specialRating ||
           approved.remarks !== specialRemarks ||
@@ -11030,7 +11177,7 @@ router.post(
           grade_status: "Approved",
           enrollment_subject_status: specialRemarks,
           midterm_percentage: approved.midterm_grade,
-          final_term_percentage: null,
+          final_term_percentage: approved.final_grade,
           overall_percentage: null,
           final_rating: specialRating,
           is_self_approval: selfApproval,
@@ -11270,6 +11417,206 @@ router.post(
     }
   },
 );
+
+// Pending modern INC replacements for the assigned department.
+router.get("/gradebook/modern-inc-completion-submissions", async (req, res) => {
+  try {
+    const { departmentId } = await incReviewAssertProgramHead(db, req);
+
+    const raw = req.query.after;
+
+    if (
+      Object.keys(req.query).some((key) => key !== "after") ||
+      (raw !== undefined &&
+        (typeof raw !== "string" ||
+          !/^[1-9]\d{0,19}$/.test(raw) ||
+          BigInt(raw) > 18446744073709551615n))
+    ) {
+      incReviewFail(
+        "MODERN_INC_LIST_QUERY_INVALID",
+        "Invalid submission cursor.",
+        400,
+      );
+    }
+
+    const [rows] = await db.execute(
+      `SELECT
+            CAST(ms.submission_id AS CHAR) AS submission_id,
+            CAST(ms.claim_id AS CHAR) AS claim_id,
+            ms.grade_id,
+            ms.record_version,
+            ms.submission_status,
+            ms.submission_reason,
+            ms.calculation_snapshot_json,
+
+            DATE_FORMAT(
+              ms.submitted_at,
+              '%Y-%m-%d %H:%i:%s'
+            ) AS submitted_at,
+
+            es.enrollment_subject_id,
+            so.offering_id,
+
+            s.student_number,
+
+            CONCAT_WS(
+              ' ',
+              s.first_name,
+              NULLIF(s.middle_name, ''),
+              s.last_name
+            ) AS student_name,
+
+            sub.subject_code,
+            sub.subject_name,
+            sec.section_name,
+
+            g.grade_status,
+            g.grading_outcome,
+            g.final_rating,
+
+            c.verification_status,
+
+            DATE_FORMAT(
+              c.verified_completed_on,
+              '%Y-%m-%d'
+            ) AS verified_completed_on,
+
+            c.record_version AS current_claim_version,
+            ms.claim_version
+
+         FROM gradebook_modern_inc_submissions ms
+
+         JOIN grades g
+           ON g.grade_id = ms.grade_id
+
+         JOIN enrollment_subjects es
+           ON es.enrollment_subject_id =
+              g.enrollment_subject_id
+
+         JOIN enrollments e
+           ON e.enrollment_id = es.enrollment_id
+
+         JOIN students s
+           ON s.student_id = e.student_id
+
+         JOIN subject_offerings so
+           ON so.offering_id = es.offering_id
+
+         JOIN subjects sub
+           ON sub.subject_id = es.subject_id
+
+         JOIN sections sec
+           ON sec.section_id = so.section_id
+
+         JOIN courses cr
+           ON cr.course_id = sec.course_id
+
+         JOIN gradebook_inc_completion_claims c
+           ON c.claim_id = ms.claim_id
+          AND c.grade_id = ms.grade_id
+
+         WHERE cr.department_id = ?
+           AND ms.submission_status = 'SUBMITTED'
+           AND ms.submission_id > CAST(? AS UNSIGNED)
+
+         ORDER BY ms.submission_id ASC
+
+         LIMIT 101`,
+
+      [departmentId, raw ?? "0"],
+    );
+
+    const submissions = rows.slice(0, 100).map((row) => {
+      let snapshot = null;
+
+      try {
+        snapshot =
+          typeof row.calculation_snapshot_json === "string"
+            ? JSON.parse(row.calculation_snapshot_json)
+            : row.calculation_snapshot_json;
+      } catch {
+        // Keep an invalid submission visible, but block review.
+      }
+
+      const scores =
+        snapshot?.completion_scores ??
+        (snapshot?.completion_score ? [snapshot.completion_score] : []);
+
+      const validSnapshot =
+        snapshot?.publication_source === "COMBINED_SEMESTER" &&
+        Number(snapshot.original_inc_grade_id) === Number(row.grade_id) &&
+        Number(snapshot.offering_id) === Number(row.offering_id) &&
+        Number(snapshot.enrollment_subject_id) ===
+          Number(row.enrollment_subject_id) &&
+        String(snapshot.verified_claim?.claim_id) === row.claim_id &&
+        Number(snapshot.verified_claim?.record_version) ===
+          Number(row.claim_version) &&
+        snapshot.terms?.MIDTERM?.state === "READY" &&
+        snapshot.terms?.FINAL_TERM?.state === "READY" &&
+        snapshot.semester?.state === "READY" &&
+        Array.isArray(scores) &&
+        scores.length > 0;
+
+      return {
+        submission_id: row.submission_id,
+        claim_id: row.claim_id,
+        grade_id: Number(row.grade_id),
+
+        record_version: Number(row.record_version),
+        submission_status: row.submission_status,
+
+        offering_id: Number(row.offering_id),
+        enrollment_subject_id: Number(row.enrollment_subject_id),
+
+        student_number: row.student_number,
+        student_name: row.student_name,
+
+        subject_code: row.subject_code,
+        subject_name: row.subject_name,
+        section_name: row.section_name,
+
+        submitted_at: row.submitted_at,
+        submission_reason: row.submission_reason,
+
+        verified_completed_on: row.verified_completed_on,
+
+        official_rating: String(row.final_rating),
+
+        calculated_midterm: validSnapshot
+          ? snapshot.terms.MIDTERM.term_percentage
+          : null,
+
+        calculated_final_term: validSnapshot
+          ? snapshot.terms.FINAL_TERM.term_percentage
+          : null,
+
+        proposed_semester: validSnapshot ? snapshot.semester : null,
+
+        completion_scores: validSnapshot ? scores : [],
+
+        can_validate_approval:
+          validSnapshot &&
+          Number(row.record_version) === 1 &&
+          row.grade_status === "Approved" &&
+          row.grading_outcome === "INCOMPLETE" &&
+          Number(row.final_rating) === 4 &&
+          row.verification_status === "VERIFIED_TIMELY" &&
+          Number(row.current_claim_version) === Number(row.claim_version),
+      };
+    });
+
+    return res.json({
+      success: true,
+      read_only: true,
+      submissions,
+
+      next_cursor: rows.length > 100 ? submissions[99].submission_id : null,
+    });
+  } catch (error) {
+    return incReviewSendError(res, error);
+  }
+});
+
 // Approve the modern INC replacement without updating the official grade.
 router.post(
   "/gradebook/modern-inc-completion-submissions/:submissionId/approve",
@@ -11294,8 +11641,20 @@ router.post(
       await connection.beginTransaction();
       transactionOpen = true;
 
-      // Modern INC approval remains QA-only
-      await assertQaGradingDatabase(connection);
+      // Authorize the modern INC deployment and committed approval.
+      const { isQaDatabase } = await assertModernIncWriteAllowed(connection);
+
+      if (
+        !isQaDatabase &&
+        req.body?.dry_run !== true &&
+        process.env.GRADEBOOK_MODERN_INC_APPROVAL_WRITES_ENABLED !== "true"
+      ) {
+        incReviewFail(
+          "MODERN_INC_APPROVAL_WRITES_DISABLED",
+          "Modern INC replacement approval is not enabled on this server.",
+          403,
+        );
+      }
 
       const actor = await incReviewAssertProgramHead(connection, req);
       const result = await approveModernIncCompletion(
